@@ -1,0 +1,85 @@
+[build-system]
+requires = ["hatchling", "hatch-vcs"]
+build-backend = "hatchling.build"
+
+[project]
+name = "citebench"
+dynamic = ["version"]
+description = "A benchmark for evaluating citation hallucination detection tools"
+readme = "README.md"
+license = "MIT"
+requires-python = ">=3.10"
+authors = [
+    { name = "Patrik Reizinger", email = "patrik.reizinger@gmail.com" },
+]
+keywords = ["benchmark", "citations", "hallucination", "bibtex", "verification"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Scientific/Engineering",
+    "Topic :: Text Processing :: Markup :: LaTeX",
+]
+dependencies = [
+    "bibtexparser>=2.0.0b",
+    "requests>=2.28",
+    "httpx>=0.24",
+    "rapidfuzz>=3.0",
+]
+
+[project.optional-dependencies]
+baselines = [
+    "bibtex-updater>=0.5.0",
+    "openai>=1.0",
+    "anthropic>=0.20",
+]
+scraping = [
+    "beautifulsoup4>=4.12",
+    "lxml>=4.9",
+]
+dev = [
+    "pytest>=7.0",
+    "pytest-cov>=4.0",
+    "ruff>=0.4",
+    "mypy>=1.0",
+]
+all = ["citebench[baselines,scraping,dev]"]
+
+[project.scripts]
+citebench = "citebench.cli:main"
+
+[project.urls]
+Homepage = "https://github.com/rpatrik96/citebench"
+Documentation = "https://github.com/rpatrik96/citebench#readme"
+Repository = "https://github.com/rpatrik96/citebench.git"
+Issues = "https://github.com/rpatrik96/citebench/issues"
+
+[tool.hatch.version]
+source = "vcs"
+
+[tool.hatch.version.raw-options]
+version_scheme = "no-guess-dev"
+
+[tool.hatch.build.targets.wheel]
+packages = ["citebench"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-v --tb=short"
+
+[tool.ruff]
+target-version = "py310"
+line-length = 100
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "W", "UP"]
+
+[tool.mypy]
+python_version = "3.10"
+warn_return_any = true
+warn_unused_configs = true

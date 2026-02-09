@@ -1,0 +1,62 @@
+{
+    "name": "CiteBench",
+    "version": "1.0",
+    "description": "Citation hallucination detection benchmark",
+    "created": "2026-02-09",
+    "license": "MIT",
+    "splits": {
+        "dev_public": {
+            "file": "dev_public.jsonl",
+            "total": 500,
+            "valid": 450,
+            "hallucinated": 50,
+            "purpose": "Public development and tuning"
+        },
+        "test_public": {
+            "file": "test_public.jsonl",
+            "total": 300,
+            "valid": 270,
+            "hallucinated": 30,
+            "purpose": "Public leaderboard evaluation"
+        },
+        "test_hidden": {
+            "file": "test_hidden.jsonl",
+            "total": 200,
+            "valid": 180,
+            "hallucinated": 20,
+            "purpose": "Hidden evaluation (anti-gaming)"
+        }
+    },
+    "hallucination_tier_distribution": {
+        "tier_1_easy": 0.40,
+        "tier_2_medium": 0.35,
+        "tier_3_hard": 0.25
+    },
+    "temporal_segments": {
+        "historical": {"start": "2015-01-01", "end": "2023-12-31"},
+        "recent": {"start": "2024-01-01", "end": "2025-12-31"},
+        "future": {"start": "2026-01-01", "end": "2030-12-31"}
+    },
+    "venues": [
+        "NeurIPS", "ICML", "ICLR", "AAAI", "ACL", "CVPR"
+    ],
+    "hallucination_types": {
+        "tier_1": ["fabricated_doi", "nonexistent_venue", "placeholder_authors", "future_date"],
+        "tier_2": ["chimeric_title", "wrong_venue", "swapped_authors", "preprint_as_published"],
+        "tier_3": ["near_miss_title", "plausible_fabrication", "retracted_paper", "version_confusion"]
+    },
+    "subtests": [
+        "doi_resolves",
+        "title_exists",
+        "authors_match",
+        "venue_real",
+        "fields_complete",
+        "cross_db_agreement"
+    ],
+    "benchmarks_inspired_by": {
+        "HumanEval": "Multi-criteria per sample, detect@k metric",
+        "SWE-bench": "Contamination awareness",
+        "LiveCodeBench": "Temporal segmentation, continuous updates",
+        "ONEBench": "Sample-level atomic evaluation, ever-expanding pool, heterogeneous aggregation"
+    }
+}
