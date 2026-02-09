@@ -66,7 +66,7 @@ class PoolManager:
                     "errors": r.errors,
                     "warnings": r.warnings,
                 }
-                for e, r in zip(entries, results)
+                for e, r in zip(entries, results, strict=True)
             ],
         }
 
@@ -80,7 +80,7 @@ class PoolManager:
         existing = self.load_validated_pool()
         results = validate_batch(entries, existing)
 
-        valid_entries = [e for e, r in zip(entries, results) if r.valid]
+        valid_entries = [e for e, r in zip(entries, results, strict=True) if r.valid]
         if not valid_entries:
             logger.warning("No valid entries to accept")
             return 0
@@ -113,17 +113,19 @@ class PoolManager:
         results = []
         for path in sorted(self.contributions_dir.glob("*.jsonl")):
             entries = load_entries(path)
-            results.append({
-                "path": str(path),
-                "filename": path.name,
-                "num_entries": len(entries),
-            })
+            results.append(
+                {
+                    "path": str(path),
+                    "filename": path.name,
+                    "num_entries": len(entries),
+                }
+            )
         return results
 
     def create_sub_benchmark(
         self,
         name: str,
-        filter_fn: callable | None = None,
+        filter_fn: callable | None = None,  # type: ignore[valid-type]
         tier: int | None = None,
         venue: str | None = None,
     ) -> list[BenchmarkEntry]:
@@ -138,19 +140,14 @@ class PoolManager:
             pool = [e for e in pool if filter_fn(e)]
 
         if tier is not None:
-            pool = [
-                e
-                for e in pool
-                if e.difficulty_tier == tier or e.label == "VALID"
-            ]
+            pool = [e for e in pool if e.difficulty_tier == tier or e.label == "VALID"]
 
         if venue is not None:
             venue_lower = venue.lower()
             pool = [
                 e
                 for e in pool
-                if e.source_conference
-                and venue_lower in e.source_conference.lower()
+                if e.source_conference and venue_lower in e.source_conference.lower()
             ]
 
         logger.info(f"Sub-benchmark '{name}': {len(pool)} entries")
@@ -167,9 +164,7 @@ class PoolManager:
         for e in pool:
             label_counts[e.label] = label_counts.get(e.label, 0) + 1
             if e.difficulty_tier:
-                tier_counts[e.difficulty_tier] = (
-                    tier_counts.get(e.difficulty_tier, 0) + 1
-                )
+                tier_counts[e.difficulty_tier] = tier_counts.get(e.difficulty_tier, 0) + 1
 
         return {
             "pool_size": len(pool),

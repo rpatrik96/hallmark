@@ -109,7 +109,9 @@ def tier_weighted_f1(
             if pred is not None and pred.label == "HALLUCINATED":
                 weighted_fp += w
 
-    precision = weighted_tp / (weighted_tp + weighted_fp) if (weighted_tp + weighted_fp) > 0 else 0.0
+    precision = (
+        weighted_tp / (weighted_tp + weighted_fp) if (weighted_tp + weighted_fp) > 0 else 0.0
+    )
     recall = weighted_tp / (weighted_tp + weighted_fn) if (weighted_tp + weighted_fn) > 0 else 0.0
     if precision + recall == 0:
         return 0.0

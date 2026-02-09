@@ -1,0 +1,86 @@
+# Contributing to HALLMARK
+
+HALLMARK uses an ever-expanding pool inspired by [ONEBench](https://arxiv.org/abs/2412.07689). We welcome community contributions of new benchmark entries.
+
+## Entry Requirements
+
+### Valid Entries
+
+Valid entries must:
+- Be real, published papers verifiable in at least 2 databases (DBLP, CrossRef, Semantic Scholar)
+- Include accurate metadata: title, authors, year, venue, and DOI (if available)
+- Have `label: "VALID"` and all subtests set to `true`
+
+### Hallucinated Entries
+
+Hallucinated entries must:
+- Have `label: "HALLUCINATED"` with a valid `hallucination_type` from the taxonomy
+- Include a `difficulty_tier` (1, 2, or 3)
+- Include an `explanation` describing what is wrong and how to detect it
+- Have accurate `subtests` indicating which verification checks would fail
+
+### Supported Hallucination Types
+
+**Tier 1 (Easy):** `fabricated_doi`, `nonexistent_venue`, `placeholder_authors`, `future_date`
+
+**Tier 2 (Medium):** `chimeric_title`, `wrong_venue`, `swapped_authors`, `preprint_as_published`
+
+**Tier 3 (Hard):** `near_miss_title`, `plausible_fabrication`, `retracted_paper`, `version_confusion`
+
+## How to Contribute
+
+### 1. Prepare your entries
+
+Create a JSONL file with one entry per line following the schema in [examples/05_contribute_entries.py](examples/05_contribute_entries.py).
+
+### 2. Validate locally
+
+```bash
+# Run validation
+python -c "
+from hallmark.dataset.schema import load_entries
+from hallmark.contribution.validate_entry import validate_batch
+
+entries = load_entries('my_entries.jsonl')
+result = validate_batch(entries)
+print(f'{result[\"valid\"]}/{result[\"total\"]} entries valid')
+for r in result['results']:
+    if not r['valid']:
+        print(f'  INVALID {r[\"key\"]}: {r[\"errors\"]}')
+"
+```
+
+### 3. Submit
+
+```bash
+hallmark contribute --file my_entries.jsonl --contributor "Your Name"
+```
+
+Or open a pull request adding your entries to `data/pool/contributions/`.
+
+### 4. Review process
+
+- Automated validation checks entry format, required fields, and consistency
+- Maintainers verify hallucinated entries are genuinely undetectable at claimed difficulty tier
+- Accepted entries are added to the validated pool and may appear in future benchmark versions
+
+## Development Setup
+
+```bash
+git clone https://github.com/rpatrik96/hallmark.git
+cd hallmark
+pip install -e ".[dev]"
+
+# Run tests
+pytest
+
+# Run linter
+ruff check .
+```
+
+## Reporting Issues
+
+If you find errors in existing benchmark entries (e.g., a "valid" entry that is actually hallucinated, or incorrect metadata), please open an issue with:
+- The `bibtex_key` of the affected entry
+- The split it appears in
+- Evidence of the error

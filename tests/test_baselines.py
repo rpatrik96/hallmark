@@ -42,7 +42,7 @@ class TestDOIOnly:
         mock_resp.url = "https://example.com"
         mock_head.return_value = mock_resp
 
-        resolves, detail = check_doi("10.1234/test")
+        resolves, _detail = check_doi("10.1234/test")
         assert resolves is True
 
     @patch("hallmark.baselines.doi_only.httpx.head")
@@ -51,11 +51,11 @@ class TestDOIOnly:
         mock_resp.status_code = 404
         mock_head.return_value = mock_resp
 
-        resolves, detail = check_doi("10.9999/fake")
+        resolves, _detail = check_doi("10.9999/fake")
         assert resolves is False
 
     def test_empty_doi(self):
-        resolves, detail = check_doi("")
+        resolves, _detail = check_doi("")
         assert resolves is True  # No DOI to check = assume valid
 
 
@@ -64,11 +64,13 @@ class TestDOIOnly:
 
 class TestLLMVerifierParsing:
     def test_parse_valid_json(self):
-        content = json.dumps({
-            "label": "HALLUCINATED",
-            "confidence": 0.85,
-            "reason": "Title does not exist",
-        })
+        content = json.dumps(
+            {
+                "label": "HALLUCINATED",
+                "confidence": 0.85,
+                "reason": "Title does not exist",
+            }
+        )
         pred = _parse_llm_response(content, "test_key")
         assert pred.label == "HALLUCINATED"
         assert pred.confidence == 0.85

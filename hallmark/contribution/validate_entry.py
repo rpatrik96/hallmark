@@ -72,8 +72,7 @@ def validate_entry(
             valid_types = {t.value for t in HallucinationType}
             if entry.hallucination_type not in valid_types:
                 errors.append(
-                    f"Unknown hallucination_type: {entry.hallucination_type}. "
-                    f"Valid: {valid_types}"
+                    f"Unknown hallucination_type: {entry.hallucination_type}. Valid: {valid_types}"
                 )
 
         if entry.difficulty_tier is None:
@@ -85,16 +84,14 @@ def validate_entry(
             errors.append("Hallucinated entry missing explanation")
 
     # 4. Valid entry constraints
-    if entry.label == "VALID":
-        if entry.hallucination_type is not None:
-            errors.append("Valid entry should not have hallucination_type")
+    if entry.label == "VALID" and entry.hallucination_type is not None:
+        errors.append("Valid entry should not have hallucination_type")
 
     # 5. Generation method
     valid_methods = {m.value for m in GenerationMethod}
     if entry.generation_method not in valid_methods:
         warnings.append(
-            f"Unknown generation_method: {entry.generation_method}. "
-            f"Valid: {valid_methods}"
+            f"Unknown generation_method: {entry.generation_method}. Valid: {valid_methods}"
         )
 
     # 6. Sub-test ground truth
@@ -115,9 +112,7 @@ def validate_entry(
     if existing_entries:
         for existing in existing_entries:
             if _is_duplicate(entry, existing):
-                errors.append(
-                    f"Duplicate of existing entry: {existing.bibtex_key}"
-                )
+                errors.append(f"Duplicate of existing entry: {existing.bibtex_key}")
                 break
 
     return ValidationResult(

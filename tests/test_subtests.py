@@ -1,6 +1,5 @@
 """Tests for hallmark.evaluation.subtests."""
 
-
 from hallmark.evaluation.subtests import (
     _extract_last_names,
     _normalize_title,

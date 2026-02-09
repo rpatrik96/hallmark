@@ -31,16 +31,12 @@ def main(argv: list[str] | None = None) -> int:
         prog="hallmark",
         description="HALLMARK: Citation Hallucination Detection Benchmark",
     )
-    parser.add_argument(
-        "-v", "--verbose", action="store_true", help="Enable debug logging"
-    )
+    parser.add_argument("-v", "--verbose", action="store_true", help="Enable debug logging")
 
     subparsers = parser.add_subparsers(dest="command", help="Available commands")
 
     # --- evaluate ---
-    eval_parser = subparsers.add_parser(
-        "evaluate", help="Evaluate a tool on a benchmark split"
-    )
+    eval_parser = subparsers.add_parser("evaluate", help="Evaluate a tool on a benchmark split")
     eval_parser.add_argument(
         "--split",
         default="dev_public",
@@ -57,15 +53,9 @@ def main(argv: list[str] | None = None) -> int:
         type=str,
         help="Path to predictions JSONL file (alternative to --baseline)",
     )
-    eval_parser.add_argument(
-        "--output", type=str, help="Path to write evaluation results JSON"
-    )
-    eval_parser.add_argument(
-        "--data-dir", type=str, help="Override data directory"
-    )
-    eval_parser.add_argument(
-        "--version", default="v1.0", help="Dataset version"
-    )
+    eval_parser.add_argument("--output", type=str, help="Path to write evaluation results JSON")
+    eval_parser.add_argument("--data-dir", type=str, help="Override data directory")
+    eval_parser.add_argument("--version", default="v1.0", help="Dataset version")
     eval_parser.add_argument(
         "--tool-name", default="unknown", help="Name of the tool being evaluated"
     )
@@ -80,14 +70,10 @@ def main(argv: list[str] | None = None) -> int:
     contrib_parser.add_argument(
         "--contributor", required=True, type=str, help="Contributor name/identifier"
     )
-    contrib_parser.add_argument(
-        "--data-dir", type=str, help="Override data directory"
-    )
+    contrib_parser.add_argument("--data-dir", type=str, help="Override data directory")
 
     # --- stats ---
-    stats_parser = subparsers.add_parser(
-        "stats", help="Show statistics for a benchmark split"
-    )
+    stats_parser = subparsers.add_parser("stats", help="Show statistics for a benchmark split")
     stats_parser.add_argument(
         "--split",
         default="dev_public",
@@ -97,9 +83,7 @@ def main(argv: list[str] | None = None) -> int:
     stats_parser.add_argument("--version", default="v1.0", help="Dataset version")
 
     # --- leaderboard ---
-    lb_parser = subparsers.add_parser(
-        "leaderboard", help="Show leaderboard for a split"
-    )
+    lb_parser = subparsers.add_parser("leaderboard", help="Show leaderboard for a split")
     lb_parser.add_argument(
         "--split",
         default="test_public",
@@ -173,14 +157,14 @@ def _cmd_evaluate(args: argparse.Namespace) -> int:
     )
 
     # Print results
-    print(f"\n{'='*60}")
+    print(f"\n{'=' * 60}")
     print(f"  HALLMARK Evaluation: {result.tool_name}")
     print(f"  Split: {result.split_name}")
-    print(f"{'='*60}")
+    print(f"{'=' * 60}")
     print(f"  Entries:          {result.num_entries}")
     print(f"  Hallucinated:     {result.num_hallucinated}")
     print(f"  Valid:            {result.num_valid}")
-    print(f"{'─'*60}")
+    print(f"{'─' * 60}")
     print(f"  Detection Rate:   {result.detection_rate:.3f}")
     print(f"  False Pos. Rate:  {result.false_positive_rate:.3f}")
     print(f"  F1 (Halluc.):     {result.f1_hallucination:.3f}")
@@ -189,7 +173,7 @@ def _cmd_evaluate(args: argparse.Namespace) -> int:
         print(f"  Entries/sec:      {result.cost_efficiency:.1f}")
     if result.mean_api_calls:
         print(f"  Mean API calls:   {result.mean_api_calls:.1f}")
-    print(f"{'─'*60}")
+    print(f"{'─' * 60}")
 
     if result.per_tier_metrics:
         print("  Per-tier breakdown:")
@@ -200,7 +184,7 @@ def _cmd_evaluate(args: argparse.Namespace) -> int:
                 f"    Tier {tier}: DR={metrics['detection_rate']:.3f} "
                 f"F1={metrics['f1']:.3f} (n={metrics['count']:.0f})"
             )
-    print(f"{'='*60}\n")
+    print(f"{'=' * 60}\n")
 
     # Save results
     if args.output:
@@ -254,14 +238,14 @@ def _cmd_stats(args: argparse.Namespace) -> int:
 
     stats = get_statistics(entries)
 
-    print(f"\n{'='*50}")
+    print(f"\n{'=' * 50}")
     print(f"  HALLMARK Statistics: {args.split}")
-    print(f"{'='*50}")
+    print(f"{'=' * 50}")
     print(f"  Total entries:    {stats['total']}")
     print(f"  Valid:            {stats['valid']}")
     print(f"  Hallucinated:     {stats['hallucinated']}")
     print(f"  Hall. rate:       {stats['hallucination_rate']:.1%}")
-    print(f"{'─'*50}")
+    print(f"{'─' * 50}")
     print("  Tier distribution:")
     for tier, count in sorted(stats["tier_distribution"].items()):
         print(f"    Tier {tier}: {count}")
@@ -269,7 +253,7 @@ def _cmd_stats(args: argparse.Namespace) -> int:
         print("  Type distribution:")
         for h_type, count in sorted(stats["type_distribution"].items()):
             print(f"    {h_type}: {count}")
-    print(f"{'='*50}\n")
+    print(f"{'=' * 50}\n")
 
     return 0
 
@@ -294,11 +278,11 @@ def _cmd_leaderboard(args: argparse.Namespace) -> int:
     # Sort by F1
     results.sort(key=lambda r: r.get("f1_hallucination", 0), reverse=True)
 
-    print(f"\n{'='*70}")
+    print(f"\n{'=' * 70}")
     print(f"  HALLMARK Leaderboard: {args.split}")
-    print(f"{'='*70}")
+    print(f"{'=' * 70}")
     print(f"  {'Rank':<6}{'Tool':<25}{'F1':<8}{'DR':<8}{'FPR':<8}{'TW-F1':<8}")
-    print(f"  {'─'*62}")
+    print(f"  {'─' * 62}")
 
     for i, r in enumerate(results, 1):
         print(
@@ -309,7 +293,7 @@ def _cmd_leaderboard(args: argparse.Namespace) -> int:
             f"{r.get('tier_weighted_f1', 0):<8.3f}"
         )
 
-    print(f"{'='*70}\n")
+    print(f"{'=' * 70}\n")
     return 0
 
 

@@ -46,7 +46,7 @@ def load_split(
 def load_metadata(
     version: str = "v1.0",
     data_dir: str | Path | None = None,
-) -> dict:
+) -> dict[str, object]:
     """Load metadata for a benchmark version."""
     if data_dir is None:
         data_dir = DEFAULT_DATA_DIR
@@ -58,7 +58,8 @@ def load_metadata(
         raise FileNotFoundError(f"Metadata file not found: {path}")
 
     with open(path) as f:
-        return json.load(f)
+        result: dict[str, object] = json.load(f)
+        return result
 
 
 def filter_by_tier(
@@ -75,11 +76,7 @@ def filter_by_type(
     hallucination_type: str,
 ) -> list[BenchmarkEntry]:
     """Filter entries to a specific hallucination type (plus all valid entries)."""
-    return [
-        e
-        for e in entries
-        if e.hallucination_type == hallucination_type or e.label == "VALID"
-    ]
+    return [e for e in entries if e.hallucination_type == hallucination_type or e.label == "VALID"]
 
 
 def filter_by_date_range(
@@ -107,9 +104,7 @@ def filter_by_venue(
     """Filter entries by source conference/venue."""
     venue_lower = venue.lower()
     return [
-        e
-        for e in entries
-        if e.source_conference and venue_lower in e.source_conference.lower()
+        e for e in entries if e.source_conference and venue_lower in e.source_conference.lower()
     ]
 
 

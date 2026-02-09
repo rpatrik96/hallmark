@@ -77,9 +77,24 @@ target-version = "py310"
 line-length = 100
 
 [tool.ruff.lint]
-select = ["E", "F", "I", "W", "UP"]
+select = ["E", "F", "I", "W", "UP", "B", "SIM", "RUF"]
+ignore = ["E501"]  # line length handled by formatter
+
+[tool.ruff.lint.isort]
+known-first-party = ["hallmark"]
+
+[tool.ruff.format]
+quote-style = "double"
 
 [tool.mypy]
 python_version = "3.10"
 warn_return_any = true
 warn_unused_configs = true
+
+[tool.coverage.run]
+source = ["hallmark"]
+omit = ["hallmark/baselines/llm_verifier.py"]
+
+[tool.coverage.report]
+show_missing = true
+skip_empty = true

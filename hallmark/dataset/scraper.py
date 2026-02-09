@@ -64,7 +64,7 @@ def scrape_dblp_venue(
     config = config or ScraperConfig()
     query = f"venue:{venue_key}/{year}"
 
-    params = {
+    params: dict[str, str | int] = {
         "q": query,
         "format": "json",
         "h": min(max_results, 1000),
@@ -74,7 +74,7 @@ def scrape_dblp_venue(
         with httpx.Client(timeout=config.timeout) as client:
             resp = client.get(
                 DBLP_API_BASE,
-                params=params,
+                params=params,  # type: ignore[arg-type]
                 headers={"User-Agent": config.user_agent},
             )
             resp.raise_for_status()
@@ -144,7 +144,7 @@ def dblp_hit_to_entry(
         publication_date=f"{year}-01-01" if year else "",
         added_to_benchmark=today,
         subtests={
-            "doi_resolves": True if doi else None,
+            "doi_resolves": bool(doi),
             "title_exists": True,
             "authors_match": True,
             "venue_real": True,

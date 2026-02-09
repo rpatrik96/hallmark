@@ -70,7 +70,9 @@ def check_title_exists(
         return SubTestResult(name="title_exists", passed=None, detail="No title provided")
 
     if api_results is None:
-        return SubTestResult(name="title_exists", passed=None, detail="No API results to check against")
+        return SubTestResult(
+            name="title_exists", passed=None, detail="No API results to check against"
+        )
 
     title_normalized = _normalize_title(title)
     best_score = 0.0
@@ -90,7 +92,9 @@ def check_title_exists(
     return SubTestResult(
         name="title_exists",
         passed=passed,
-        detail=f"Best match ({best_score:.2f}): {best_match[:80]}" if best_match else "No matches found",
+        detail=f"Best match ({best_score:.2f}): {best_match[:80]}"
+        if best_match
+        else "No matches found",
         score=best_score,
     )
 
@@ -105,13 +109,17 @@ def check_authors_match(
         return SubTestResult(name="authors_match", passed=None, detail="No authors provided")
 
     if authors_api is None:
-        return SubTestResult(name="authors_match", passed=None, detail="No API authors to check against")
+        return SubTestResult(
+            name="authors_match", passed=None, detail="No API authors to check against"
+        )
 
     entry_names = _extract_last_names(authors_entry)
     api_names = {n.lower() for n in authors_api}
 
     if not entry_names or not api_names:
-        return SubTestResult(name="authors_match", passed=None, detail="Could not parse author names")
+        return SubTestResult(
+            name="authors_match", passed=None, detail="Could not parse author names"
+        )
 
     intersection = entry_names & api_names
     union = entry_names | api_names
@@ -263,7 +271,9 @@ def run_all_subtests(
 
     # DOI resolution (network call)
     if skip_network:
-        results.append(SubTestResult(name="doi_resolves", passed=None, detail="Skipped (no network)"))
+        results.append(
+            SubTestResult(name="doi_resolves", passed=None, detail="Skipped (no network)")
+        )
     else:
         results.append(check_doi_resolves(doi))
 

@@ -98,8 +98,7 @@ def create_splits(
 
         if len(split_valid) < n_valid:
             logger.warning(
-                f"{split_name}: requested {n_valid} valid but only "
-                f"{len(split_valid)} available"
+                f"{split_name}: requested {n_valid} valid but only {len(split_valid)} available"
             )
 
         # Allocate hallucinated by tier

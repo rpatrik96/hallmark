@@ -110,9 +110,7 @@ def run_bibtex_check(
             if result.returncode not in (0, 2, 4):
                 logger.error(f"bibtex-check failed (exit {result.returncode}): {result.stderr}")
         except FileNotFoundError:
-            logger.error(
-                "bibtex-check not found. Install with: pip install bibtex-updater"
-            )
+            logger.error("bibtex-check not found. Install with: pip install bibtex-updater")
             return _fallback_predictions(entries)
         except subprocess.TimeoutExpired:
             logger.error(f"bibtex-check timed out after {timeout}s")
@@ -182,7 +180,7 @@ def _parse_jsonl_output(
             predictions.append(
                 Prediction(
                     bibtex_key=key,
-                    label=label,
+                    label=label,  # type: ignore[arg-type]
                     confidence=confidence,
                     reason="; ".join(reason_parts),
                     api_sources_queried=api_sources,

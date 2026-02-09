@@ -27,7 +27,7 @@ def check_doi(doi: str, timeout: float = 10.0) -> tuple[bool, str]:
         # Extract DOI from URL
         for prefix in ["https://doi.org/", "http://doi.org/", "https://dx.doi.org/"]:
             if doi.startswith(prefix):
-                doi = doi[len(prefix):]
+                doi = doi[len(prefix) :]
                 break
 
     url = f"https://doi.org/{doi}"

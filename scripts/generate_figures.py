@@ -29,18 +29,20 @@ matplotlib.use("Agg")  # Non-interactive backend
 logger = logging.getLogger(__name__)
 
 # Publication-quality settings
-plt.rcParams.update({
-    "font.size": 10,
-    "font.family": "serif",
-    "axes.labelsize": 11,
-    "axes.titlesize": 12,
-    "xtick.labelsize": 9,
-    "ytick.labelsize": 9,
-    "legend.fontsize": 9,
-    "figure.dpi": 300,
-    "savefig.bbox": "tight",
-    "savefig.pad_inches": 0.05,
-})
+plt.rcParams.update(
+    {
+        "font.size": 10,
+        "font.family": "serif",
+        "axes.labelsize": 11,
+        "axes.titlesize": 12,
+        "xtick.labelsize": 9,
+        "ytick.labelsize": 9,
+        "legend.fontsize": 9,
+        "figure.dpi": 300,
+        "savefig.bbox": "tight",
+        "savefig.pad_inches": 0.05,
+    }
+)
 
 # Colorblind-safe palette (IBM Design Library)
 COLORS = ["#648FFF", "#785EF0", "#DC267F", "#FE6100", "#FFB000"]
@@ -75,14 +77,16 @@ def fig_tier_detection_rates(results: list[dict], output_dir: Path) -> None:
 
         offset = (i - len(tools) / 2 + 0.5) * width
         bars = ax.bar(
-            x + offset, rates, width * 0.9,
+            x + offset,
+            rates,
+            width * 0.9,
             label=result["tool_name"],
             color=COLORS[i % len(COLORS)],
             edgecolor="white",
             linewidth=0.5,
         )
         # Add value labels
-        for bar, rate in zip(bars, rates):
+        for bar, rate in zip(bars, rates, strict=True):
             if rate > 0:
                 ax.text(
                     bar.get_x() + bar.get_width() / 2,
@@ -169,7 +173,8 @@ def fig_cost_accuracy(results: list[dict], output_dir: Path) -> None:
             continue
 
         ax.scatter(
-            cost, f1,
+            cost,
+            f1,
             s=100,
             color=COLORS[i % len(COLORS)],
             edgecolors="black",
@@ -212,17 +217,19 @@ def fig_overall_comparison(results: list[dict], output_dir: Path) -> None:
     x = np.arange(len(tools))
     width = 0.8 / len(metrics)
 
-    for i, (metric, label) in enumerate(zip(metrics, metric_labels)):
+    for i, (metric, label) in enumerate(zip(metrics, metric_labels, strict=True)):
         values = [r.get(metric, 0) for r in results]
         offset = (i - len(metrics) / 2 + 0.5) * width
         bars = ax.bar(
-            x + offset, values, width * 0.9,
+            x + offset,
+            values,
+            width * 0.9,
             label=label,
             color=COLORS[i % len(COLORS)],
             edgecolor="white",
             linewidth=0.5,
         )
-        for bar, val in zip(bars, values):
+        for bar, val in zip(bars, values, strict=True):
             if val > 0:
                 ax.text(
                     bar.get_x() + bar.get_width() / 2,

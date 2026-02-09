@@ -178,7 +178,11 @@ def _aggregate_pairwise(sparse_eval: SparseEvaluation) -> list[ToolScore]:
 
     results = []
     for tool_name in tools:
-        win_rate = wins[tool_name] / total_comparisons[tool_name] if total_comparisons[tool_name] > 0 else 0.0
+        win_rate = (
+            wins[tool_name] / total_comparisons[tool_name]
+            if total_comparisons[tool_name] > 0
+            else 0.0
+        )
         total_possible = len(sparse_eval.entry_keys) * len(sparse_eval.subtest_names)
         evaluated = sum(
             1

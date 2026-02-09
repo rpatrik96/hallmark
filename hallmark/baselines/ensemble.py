@@ -80,6 +80,7 @@ def _weighted_vote(
     total_time = 0.0
     total_api_calls = 0
 
+    assert config.weights is not None
     for name, pred_map in indexed.items():
         pred = pred_map.get(entry.bibtex_key)
         w = config.weights.get(name, 1.0)
@@ -124,7 +125,7 @@ def _max_confidence(
     best_pred = None
     best_confidence = -1.0
 
-    for name, pred_map in indexed.items():
+    for _name, pred_map in indexed.items():
         pred = pred_map.get(entry.bibtex_key)
         if pred and pred.confidence > best_confidence:
             best_confidence = pred.confidence

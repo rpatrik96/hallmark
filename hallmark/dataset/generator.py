@@ -22,7 +22,9 @@ from hallmark.dataset.schema import (
 )
 
 
-def generate_fabricated_doi(entry: BenchmarkEntry, rng: random.Random | None = None) -> BenchmarkEntry:
+def generate_fabricated_doi(
+    entry: BenchmarkEntry, rng: random.Random | None = None
+) -> BenchmarkEntry:
     """Tier 1: Replace DOI with a non-resolving fabricated DOI."""
     rng = rng or random.Random()
     new_entry = _clone_entry(entry)
@@ -46,7 +48,9 @@ def generate_fabricated_doi(entry: BenchmarkEntry, rng: random.Random | None = N
     return new_entry
 
 
-def generate_nonexistent_venue(entry: BenchmarkEntry, rng: random.Random | None = None) -> BenchmarkEntry:
+def generate_nonexistent_venue(
+    entry: BenchmarkEntry, rng: random.Random | None = None
+) -> BenchmarkEntry:
     """Tier 1: Replace venue with an invented conference/journal name."""
     rng = rng or random.Random()
     new_entry = _clone_entry(entry)
@@ -78,7 +82,9 @@ def generate_nonexistent_venue(entry: BenchmarkEntry, rng: random.Random | None 
     return new_entry
 
 
-def generate_placeholder_authors(entry: BenchmarkEntry, rng: random.Random | None = None) -> BenchmarkEntry:
+def generate_placeholder_authors(
+    entry: BenchmarkEntry, rng: random.Random | None = None
+) -> BenchmarkEntry:
     """Tier 1: Replace authors with generic/fake names."""
     rng = rng or random.Random()
     new_entry = _clone_entry(entry)
@@ -313,7 +319,7 @@ def generate_tier1_batch(
     """Generate a batch of Tier 1 hallucinated entries from valid entries."""
     rng = random.Random(seed)
     results = []
-    for i in range(count):
+    for _i in range(count):
         source = rng.choice(valid_entries)
         generator = rng.choice(TIER1_GENERATORS)
         results.append(generator(source, rng))
@@ -329,11 +335,19 @@ def generate_tier2_batch(
     rng = random.Random(seed)
     results = []
     venues = [
-        "NeurIPS", "ICML", "ICLR", "AAAI", "ACL", "CVPR",
-        "ECCV", "EMNLP", "AISTATS", "UAI",
+        "NeurIPS",
+        "ICML",
+        "ICLR",
+        "AAAI",
+        "ACL",
+        "CVPR",
+        "ECCV",
+        "EMNLP",
+        "AISTATS",
+        "UAI",
     ]
 
-    for i in range(count):
+    for _i in range(count):
         source = rng.choice(valid_entries)
         method = rng.choice(["wrong_venue", "swapped_authors", "preprint_as_published"])
 
@@ -360,7 +374,7 @@ def generate_tier3_batch(
     """Generate a batch of Tier 3 hallucinated entries (near-miss titles)."""
     rng = random.Random(seed)
     results = []
-    for i in range(count):
+    for _i in range(count):
         source = rng.choice(valid_entries)
         results.append(generate_near_miss_title(source, rng))
     return results

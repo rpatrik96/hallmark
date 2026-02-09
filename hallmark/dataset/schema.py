@@ -115,9 +115,8 @@ class BenchmarkEntry:
                 raise ValueError("Hallucinated entries must have a hallucination_type")
             if self.difficulty_tier is None:
                 raise ValueError("Hallucinated entries must have a difficulty_tier")
-        if self.label == "VALID":
-            if self.hallucination_type is not None:
-                raise ValueError("Valid entries must not have a hallucination_type")
+        if self.label == "VALID" and self.hallucination_type is not None:
+            raise ValueError("Valid entries must not have a hallucination_type")
 
     @property
     def title(self) -> str:
