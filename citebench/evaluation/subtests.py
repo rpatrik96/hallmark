@@ -139,8 +139,21 @@ def check_venue_real(
     # Check against known venues list
     if known_venues:
         venue_lower = venue.lower().strip()
-        if any(fuzz.token_sort_ratio(venue_lower, kv.lower()) / 100.0 >= threshold for kv in known_venues):
-            return SubTestResult(name="venue_real", passed=True, detail="Venue found in known venues list", score=1.0)
+        best = max(
+            (fuzz.token_sort_ratio(venue_lower, kv.lower()) / 100.0 for kv in known_venues),
+            default=0.0,
+        )
+        if best >= threshold:
+            return SubTestResult(
+                name="venue_real", passed=True, detail="Venue found in known venues list", score=1.0
+            )
+        else:
+            return SubTestResult(
+                name="venue_real",
+                passed=False,
+                detail=f"Venue not in known venues (best match: {best:.2f})",
+                score=best,
+            )
 
     # Check against API result
     if api_venue:
