@@ -13,12 +13,12 @@ from __future__ import annotations
 import argparse
 import logging
 
-from citebench.dataset.generator import (
+from hallmark.dataset.generator import (
     generate_tier1_batch,
     generate_tier2_batch,
     generate_tier3_batch,
 )
-from citebench.dataset.schema import load_entries, save_entries
+from hallmark.dataset.schema import load_entries, save_entries
 
 
 def main() -> None:

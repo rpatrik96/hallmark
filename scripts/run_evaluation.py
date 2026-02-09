@@ -14,9 +14,9 @@ import argparse
 import logging
 import sys
 
-from citebench.cli import _run_baseline
-from citebench.dataset.loader import load_split
-from citebench.evaluation.metrics import evaluate
+from hallmark.cli import _run_baseline
+from hallmark.dataset.loader import load_split
+from hallmark.evaluation.metrics import evaluate
 
 
 def main() -> None:

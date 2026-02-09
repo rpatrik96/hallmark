@@ -1,9 +1,9 @@
-"""Tests for citebench.evaluation.metrics."""
+"""Tests for hallmark.evaluation.metrics."""
 
 import pytest
 
-from citebench.dataset.schema import BenchmarkEntry, Prediction
-from citebench.evaluation.metrics import (
+from hallmark.dataset.schema import BenchmarkEntry, Prediction
+from hallmark.evaluation.metrics import (
     ConfusionMatrix,
     build_confusion_matrix,
     cost_efficiency,

@@ -1,4 +1,4 @@
-"""Core data schema for CiteBench benchmark entries and predictions."""
+"""Core data schema for HALLMARK benchmark entries and predictions."""
 
 from __future__ import annotations
 

@@ -1,11 +1,11 @@
-"""Tests for citebench.dataset.schema."""
+"""Tests for hallmark.dataset.schema."""
 
 import tempfile
 from pathlib import Path
 
 import pytest
 
-from citebench.dataset.schema import (
+from hallmark.dataset.schema import (
     BenchmarkEntry,
     DifficultyTier,
     GenerationMethod,

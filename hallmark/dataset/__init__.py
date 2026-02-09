@@ -1,6 +1,6 @@
-"""Dataset construction and loading for CiteBench."""
+"""Dataset construction and loading for HALLMARK."""
 
-from citebench.dataset.schema import (
+from hallmark.dataset.schema import (
     BenchmarkEntry,
     DifficultyTier,
     GenerationMethod,

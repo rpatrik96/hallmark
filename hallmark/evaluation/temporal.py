@@ -1,4 +1,4 @@
-"""Temporal segmentation analysis for CiteBench (LiveCodeBench-inspired).
+"""Temporal segmentation analysis for HALLMARK (LiveCodeBench-inspired).
 
 Enables contamination detection by comparing tool performance on entries
 from different time periods (pre-cutoff vs post-cutoff).
@@ -9,8 +9,8 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from datetime import date, datetime
 
-from citebench.dataset.schema import BenchmarkEntry, Prediction
-from citebench.evaluation.metrics import build_confusion_matrix
+from hallmark.dataset.schema import BenchmarkEntry, Prediction
+from hallmark.evaluation.metrics import build_confusion_matrix
 
 
 @dataclass

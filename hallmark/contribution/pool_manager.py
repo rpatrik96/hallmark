@@ -9,8 +9,8 @@ import logging
 from datetime import date
 from pathlib import Path
 
-from citebench.contribution.validate_entry import validate_batch
-from citebench.dataset.schema import BenchmarkEntry, load_entries, save_entries
+from hallmark.contribution.validate_entry import validate_batch
+from hallmark.dataset.schema import BenchmarkEntry, load_entries, save_entries
 
 logger = logging.getLogger(__name__)
 

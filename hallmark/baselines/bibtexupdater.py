@@ -1,6 +1,6 @@
 """Baseline wrapper for bibtex-updater's fact-checking CLI (bibtex-check).
 
-Maps bibtex-check JSONL output to CiteBench Prediction format.
+Maps bibtex-check JSONL output to HALLMARK Prediction format.
 bibtex-updater verifies citations against CrossRef, DBLP, Semantic Scholar.
 """
 
@@ -13,11 +13,11 @@ import tempfile
 import time
 from pathlib import Path
 
-from citebench.dataset.schema import BenchmarkEntry, Prediction
+from hallmark.dataset.schema import BenchmarkEntry, Prediction
 
 logger = logging.getLogger(__name__)
 
-# Map bibtex-check status to CiteBench label
+# Map bibtex-check status to HALLMARK label
 STATUS_TO_LABEL: dict[str, str] = {
     "verified": "VALID",
     "not_found": "HALLUCINATED",

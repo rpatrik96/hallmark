@@ -11,7 +11,7 @@ from dataclasses import dataclass
 
 from rapidfuzz import fuzz
 
-from citebench.dataset.schema import (
+from hallmark.dataset.schema import (
     SUBTEST_NAMES,
     BenchmarkEntry,
     GenerationMethod,

@@ -1,10 +1,10 @@
-"""CiteBench CLI: evaluate, contribute, leaderboard.
+"""HALLMARK CLI: evaluate, contribute, leaderboard.
 
 Usage:
-    citebench evaluate --split dev_public --baseline doi_only
-    citebench contribute --file entries.jsonl --contributor "name"
-    citebench leaderboard --split test_public
-    citebench stats --split dev_public
+    hallmark evaluate --split dev_public --baseline doi_only
+    hallmark contribute --file entries.jsonl --contributor "name"
+    hallmark leaderboard --split test_public
+    hallmark stats --split dev_public
 """
 
 from __future__ import annotations
@@ -15,21 +15,21 @@ import logging
 import sys
 from pathlib import Path
 
-from citebench.dataset.loader import get_statistics, load_split
-from citebench.dataset.schema import (
+from hallmark.dataset.loader import get_statistics, load_split
+from hallmark.dataset.schema import (
     BenchmarkEntry,
     Prediction,
     load_entries,
     load_predictions,
 )
-from citebench.evaluation.metrics import evaluate
+from hallmark.evaluation.metrics import evaluate
 
 
 def main(argv: list[str] | None = None) -> int:
     """Main CLI entry point."""
     parser = argparse.ArgumentParser(
-        prog="citebench",
-        description="CiteBench: Citation Hallucination Detection Benchmark",
+        prog="hallmark",
+        description="HALLMARK: Citation Hallucination Detection Benchmark",
     )
     parser.add_argument(
         "-v", "--verbose", action="store_true", help="Enable debug logging"
@@ -174,7 +174,7 @@ def _cmd_evaluate(args: argparse.Namespace) -> int:
 
     # Print results
     print(f"\n{'='*60}")
-    print(f"  CiteBench Evaluation: {result.tool_name}")
+    print(f"  HALLMARK Evaluation: {result.tool_name}")
     print(f"  Split: {result.split_name}")
     print(f"{'='*60}")
     print(f"  Entries:          {result.num_entries}")
@@ -212,8 +212,8 @@ def _cmd_evaluate(args: argparse.Namespace) -> int:
 
 def _cmd_contribute(args: argparse.Namespace) -> int:
     """Run contribute command."""
-    from citebench.contribution.pool_manager import PoolManager
-    from citebench.dataset.loader import DEFAULT_DATA_DIR
+    from hallmark.contribution.pool_manager import PoolManager
+    from hallmark.dataset.loader import DEFAULT_DATA_DIR
 
     data_dir = args.data_dir or DEFAULT_DATA_DIR
     manager = PoolManager(data_dir)
@@ -255,7 +255,7 @@ def _cmd_stats(args: argparse.Namespace) -> int:
     stats = get_statistics(entries)
 
     print(f"\n{'='*50}")
-    print(f"  CiteBench Statistics: {args.split}")
+    print(f"  HALLMARK Statistics: {args.split}")
     print(f"{'='*50}")
     print(f"  Total entries:    {stats['total']}")
     print(f"  Valid:            {stats['valid']}")
@@ -295,7 +295,7 @@ def _cmd_leaderboard(args: argparse.Namespace) -> int:
     results.sort(key=lambda r: r.get("f1_hallucination", 0), reverse=True)
 
     print(f"\n{'='*70}")
-    print(f"  CiteBench Leaderboard: {args.split}")
+    print(f"  HALLMARK Leaderboard: {args.split}")
     print(f"{'='*70}")
     print(f"  {'Rank':<6}{'Tool':<25}{'F1':<8}{'DR':<8}{'FPR':<8}{'TW-F1':<8}")
     print(f"  {'─'*62}")
@@ -316,19 +316,19 @@ def _cmd_leaderboard(args: argparse.Namespace) -> int:
 def _run_baseline(name: str, entries: list[BenchmarkEntry]) -> list[Prediction]:
     """Run a built-in baseline."""
     if name == "doi_only":
-        from citebench.baselines.doi_only import run_doi_only
+        from hallmark.baselines.doi_only import run_doi_only
 
         return run_doi_only(entries)
     elif name == "bibtexupdater":
-        from citebench.baselines.bibtexupdater import run_bibtex_check
+        from hallmark.baselines.bibtexupdater import run_bibtex_check
 
         return run_bibtex_check(entries)
     elif name == "llm_openai":
-        from citebench.baselines.llm_verifier import verify_with_openai
+        from hallmark.baselines.llm_verifier import verify_with_openai
 
         return verify_with_openai(entries)
     elif name == "llm_anthropic":
-        from citebench.baselines.llm_verifier import verify_with_anthropic
+        from hallmark.baselines.llm_verifier import verify_with_anthropic
 
         return verify_with_anthropic(entries)
     else:

@@ -12,7 +12,7 @@ from __future__ import annotations
 import argparse
 import logging
 
-from citebench.contribution.pool_manager import PoolManager
+from hallmark.contribution.pool_manager import PoolManager
 
 
 def main() -> None:

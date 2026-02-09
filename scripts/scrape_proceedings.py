@@ -13,8 +13,8 @@ from __future__ import annotations
 import argparse
 import logging
 
-from citebench.dataset.schema import save_entries
-from citebench.dataset.scraper import ScraperConfig, scrape_proceedings
+from hallmark.dataset.schema import save_entries
+from hallmark.dataset.scraper import ScraperConfig, scrape_proceedings
 
 
 def main() -> None:

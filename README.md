@@ -1,26 +1,26 @@
-# CiteBench
+# HALLMARK
 
-A benchmark for evaluating citation hallucination detection tools.
+**HALL**ucination bench**MARK**: A benchmark for evaluating citation hallucination detection tools.
 
 ## Installation
 
 ```bash
-pip install citebench
+pip install hallmark
 ```
 
 ## Quick Start
 
 ```bash
 # Evaluate a baseline on the dev split
-citebench evaluate --split dev_public --baseline doi_only
+hallmark evaluate --split dev_public --baseline doi_only
 
 # Show dataset statistics
-citebench stats --split dev_public
+hallmark stats --split dev_public
 ```
 
 ## Overview
 
-CiteBench provides:
+HALLMARK provides:
 
 - **Hallucination taxonomy**: 12 types across 3 difficulty tiers
 - **Evaluation framework**: Detection Rate, F1, tier-weighted F1, detect@k
@@ -30,13 +30,13 @@ CiteBench provides:
 
 ## Citation
 
-If you use CiteBench in your research, please cite:
+If you use HALLMARK in your research, please cite:
 
 ```bibtex
-@misc{citebench2026,
-    title={CiteBench: A Benchmark for Citation Hallucination Detection},
+@misc{hallmark2026,
+    title={HALLMARK: A Benchmark for Citation Hallucination Detection},
     author={Reizinger, Patrik},
     year={2026},
-    url={https://github.com/rpatrik96/citebench}
+    url={https://github.com/rpatrik96/hallmark}
 }
 ```

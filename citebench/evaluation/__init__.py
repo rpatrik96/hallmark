@@ -1,1 +1,0 @@
-"""Evaluation framework for CiteBench."""

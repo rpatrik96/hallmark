@@ -1,4 +1,4 @@
-"""Evaluation metrics for CiteBench.
+"""Evaluation metrics for HALLMARK.
 
 Primary: Detection Rate (DR), False Positive Rate (FPR), F1-Hallucination, Tier-weighted F1.
 Secondary: detect@k, temporal robustness, cost efficiency.
@@ -10,7 +10,7 @@ from __future__ import annotations
 from collections import defaultdict
 from dataclasses import dataclass
 
-from citebench.dataset.schema import BenchmarkEntry, EvaluationResult, Prediction
+from hallmark.dataset.schema import BenchmarkEntry, EvaluationResult, Prediction
 
 
 @dataclass

@@ -1,0 +1,101 @@
+{
+  "tool_name": "doi_only",
+  "split_name": "dev_public",
+  "num_entries": 500,
+  "num_hallucinated": 50,
+  "num_valid": 450,
+  "detection_rate": 0.22,
+  "false_positive_rate": 0.0,
+  "f1_hallucination": 0.36065573770491804,
+  "tier_weighted_f1": 0.29629629629629634,
+  "detect_at_k": {},
+  "temporal_robustness": null,
+  "cost_efficiency": 5.2631578947368425,
+  "mean_api_calls": 0.38,
+  "per_tier_metrics": {
+    "0": {
+      "detection_rate": 0.0,
+      "false_positive_rate": 0.0,
+      "f1": 0.0,
+      "precision": 0.0,
+      "count": 450
+    },
+    "1": {
+      "detection_rate": 0.3,
+      "false_positive_rate": 0.0,
+      "f1": 0.4615384615384615,
+      "precision": 1.0,
+      "count": 20
+    },
+    "2": {
+      "detection_rate": 0.2777777777777778,
+      "false_positive_rate": 0.0,
+      "f1": 0.4347826086956522,
+      "precision": 1.0,
+      "count": 18
+    },
+    "3": {
+      "detection_rate": 0.0,
+      "false_positive_rate": 0.0,
+      "f1": 0.0,
+      "precision": 0.0,
+      "count": 12
+    }
+  },
+  "per_type_metrics": {
+    "fabricated_doi": {
+      "detection_rate": 1.0,
+      "false_positive_rate": 0.0,
+      "f1": 1.0,
+      "count": 6
+    },
+    "future_date": {
+      "detection_rate": 0.0,
+      "false_positive_rate": 0.0,
+      "f1": 0.0,
+      "count": 3
+    },
+    "near_miss_title": {
+      "detection_rate": 0.0,
+      "false_positive_rate": 0.0,
+      "f1": 0.0,
+      "count": 12
+    },
+    "nonexistent_venue": {
+      "detection_rate": 0.0,
+      "false_positive_rate": 0.0,
+      "f1": 0.0,
+      "count": 7
+    },
+    "placeholder_authors": {
+      "detection_rate": 0.0,
+      "false_positive_rate": 0.0,
+      "f1": 0.0,
+      "count": 4
+    },
+    "preprint_as_published": {
+      "detection_rate": 0.625,
+      "false_positive_rate": 0.0,
+      "f1": 0.7692307692307693,
+      "count": 8
+    },
+    "swapped_authors": {
+      "detection_rate": 0.0,
+      "false_positive_rate": 0.0,
+      "f1": 0.0,
+      "count": 5
+    },
+    "valid": {
+      "detection_rate": 0.0,
+      "false_positive_rate": 0.0,
+      "f1": 0.0,
+      "count": 450
+    },
+    "wrong_venue": {
+      "detection_rate": 0.0,
+      "false_positive_rate": 0.0,
+      "f1": 0.0,
+      "count": 5
+    }
+  }
+}

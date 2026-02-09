@@ -14,7 +14,7 @@ from datetime import date
 
 import httpx
 
-from citebench.dataset.schema import BenchmarkEntry, GenerationMethod
+from hallmark.dataset.schema import BenchmarkEntry, GenerationMethod
 
 logger = logging.getLogger(__name__)
 
@@ -48,7 +48,7 @@ class ScraperConfig:
     timeout: float = 20.0
     verify_against_crossref: bool = True
     verify_against_s2: bool = True
-    user_agent: str = "CiteBench/0.1.0 (https://github.com/rpatrik96/citebench)"
+    user_agent: str = "HALLMARK/0.1.0 (https://github.com/rpatrik96/hallmark)"
 
 
 def scrape_dblp_venue(

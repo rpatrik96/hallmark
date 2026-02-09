@@ -3,7 +3,7 @@ requires = ["hatchling", "hatch-vcs"]
 build-backend = "hatchling.build"
 
 [project]
-name = "citebench"
+name = "hallmark"
 dynamic = ["version"]
 description = "A benchmark for evaluating citation hallucination detection tools"
 readme = "README.md"
@@ -48,16 +48,16 @@ dev = [
     "ruff>=0.4",
     "mypy>=1.0",
 ]
-all = ["citebench[baselines,scraping,dev]"]
+all = ["hallmark[baselines,scraping,dev]"]
 
 [project.scripts]
-citebench = "citebench.cli:main"
+hallmark = "hallmark.cli:main"
 
 [project.urls]
-Homepage = "https://github.com/rpatrik96/citebench"
-Documentation = "https://github.com/rpatrik96/citebench#readme"
-Repository = "https://github.com/rpatrik96/citebench.git"
-Issues = "https://github.com/rpatrik96/citebench/issues"
+Homepage = "https://github.com/rpatrik96/hallmark"
+Documentation = "https://github.com/rpatrik96/hallmark#readme"
+Repository = "https://github.com/rpatrik96/hallmark.git"
+Issues = "https://github.com/rpatrik96/hallmark/issues"
 
 [tool.hatch.version]
 source = "vcs"
@@ -66,7 +66,7 @@ source = "vcs"
 version_scheme = "no-guess-dev"
 
 [tool.hatch.build.targets.wheel]
-packages = ["citebench"]
+packages = ["hallmark"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

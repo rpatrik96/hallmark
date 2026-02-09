@@ -10,7 +10,7 @@ import json
 import logging
 import time
 
-from citebench.dataset.schema import BenchmarkEntry, Prediction
+from hallmark.dataset.schema import BenchmarkEntry, Prediction
 
 logger = logging.getLogger(__name__)
 

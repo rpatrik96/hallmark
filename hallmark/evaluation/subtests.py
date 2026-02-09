@@ -1,4 +1,4 @@
-"""Per-entry sub-test definitions for CiteBench.
+"""Per-entry sub-test definitions for HALLMARK.
 
 Each BibTeX entry is an atomic test unit with multiple verification criteria
 (inspired by HumanEval's ~7.7 tests per problem). Sub-tests include:

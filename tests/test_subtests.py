@@ -1,7 +1,7 @@
-"""Tests for citebench.evaluation.subtests."""
+"""Tests for hallmark.evaluation.subtests."""
 
 
-from citebench.evaluation.subtests import (
+from hallmark.evaluation.subtests import (
     _extract_last_names,
     _normalize_title,
     _required_fields_for_type,

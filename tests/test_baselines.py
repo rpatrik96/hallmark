@@ -1,12 +1,12 @@
-"""Tests for citebench.baselines (unit tests, no network calls)."""
+"""Tests for hallmark.baselines (unit tests, no network calls)."""
 
 import json
 from unittest.mock import MagicMock, patch
 
-from citebench.baselines.doi_only import check_doi
-from citebench.baselines.ensemble import EnsembleConfig, ensemble_predict
-from citebench.baselines.llm_verifier import _parse_llm_response
-from citebench.dataset.schema import BenchmarkEntry, Prediction
+from hallmark.baselines.doi_only import check_doi
+from hallmark.baselines.ensemble import EnsembleConfig, ensemble_predict
+from hallmark.baselines.llm_verifier import _parse_llm_response
+from hallmark.dataset.schema import BenchmarkEntry, Prediction
 
 # --- Helpers ---
 
@@ -35,7 +35,7 @@ def _pred(key: str, label: str, confidence: float = 0.9):
 
 
 class TestDOIOnly:
-    @patch("citebench.baselines.doi_only.httpx.head")
+    @patch("hallmark.baselines.doi_only.httpx.head")
     def test_doi_resolves(self, mock_head):
         mock_resp = MagicMock()
         mock_resp.status_code = 200
@@ -45,7 +45,7 @@ class TestDOIOnly:
         resolves, detail = check_doi("10.1234/test")
         assert resolves is True
 
-    @patch("citebench.baselines.doi_only.httpx.head")
+    @patch("hallmark.baselines.doi_only.httpx.head")
     def test_doi_not_found(self, mock_head):
         mock_resp = MagicMock()
         mock_resp.status_code = 404

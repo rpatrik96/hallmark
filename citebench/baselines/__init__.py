@@ -1,1 +1,0 @@
-"""Baseline implementations for CiteBench."""

@@ -1,11 +1,11 @@
-"""Dataset loading and filtering for CiteBench benchmark splits."""
+"""Dataset loading and filtering for HALLMARK benchmark splits."""
 
 from __future__ import annotations
 
 import json
 from pathlib import Path
 
-from citebench.dataset.schema import BenchmarkEntry, DifficultyTier, load_entries
+from hallmark.dataset.schema import BenchmarkEntry, DifficultyTier, load_entries
 
 # Default data directory (relative to package root)
 _PACKAGE_DIR = Path(__file__).parent.parent.parent

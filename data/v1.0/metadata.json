@@ -1,5 +1,5 @@
 {
-    "name": "CiteBench",
+    "name": "HALLMARK",
     "version": "1.0",
     "description": "Citation hallucination detection benchmark",
     "created": "2026-02-09",
@@ -10,40 +10,110 @@
             "total": 500,
             "valid": 450,
             "hallucinated": 50,
-            "purpose": "Public development and tuning"
+            "tier_distribution": {
+                "1": 20,
+                "2": 18,
+                "3": 12
+            },
+            "type_distribution": {
+                "future_date": 3,
+                "fabricated_doi": 6,
+                "placeholder_authors": 4,
+                "preprint_as_published": 8,
+                "nonexistent_venue": 7,
+                "near_miss_title": 12,
+                "swapped_authors": 5,
+                "wrong_venue": 5
+            }
         },
         "test_public": {
             "file": "test_public.jsonl",
             "total": 300,
             "valid": 270,
             "hallucinated": 30,
-            "purpose": "Public leaderboard evaluation"
+            "tier_distribution": {
+                "2": 10,
+                "1": 12,
+                "3": 8
+            },
+            "type_distribution": {
+                "preprint_as_published": 6,
+                "wrong_venue": 2,
+                "nonexistent_venue": 7,
+                "fabricated_doi": 1,
+                "near_miss_title": 8,
+                "swapped_authors": 2,
+                "placeholder_authors": 2,
+                "future_date": 2
+            }
         },
         "test_hidden": {
             "file": "test_hidden.jsonl",
             "total": 200,
             "valid": 180,
             "hallucinated": 20,
-            "purpose": "Hidden evaluation (anti-gaming)"
+            "tier_distribution": {
+                "1": 8,
+                "2": 7,
+                "3": 5
+            },
+            "type_distribution": {
+                "fabricated_doi": 3,
+                "future_date": 3,
+                "swapped_authors": 2,
+                "preprint_as_published": 3,
+                "near_miss_title": 5,
+                "wrong_venue": 2,
+                "placeholder_authors": 2
+            }
         }
     },
     "hallucination_tier_distribution": {
-        "tier_1_easy": 0.40,
+        "tier_1_easy": 0.4,
         "tier_2_medium": 0.35,
         "tier_3_hard": 0.25
     },
     "temporal_segments": {
-        "historical": {"start": "2015-01-01", "end": "2023-12-31"},
-        "recent": {"start": "2024-01-01", "end": "2025-12-31"},
-        "future": {"start": "2026-01-01", "end": "2030-12-31"}
+        "historical": {
+            "start": "2015-01-01",
+            "end": "2023-12-31"
+        },
+        "recent": {
+            "start": "2024-01-01",
+            "end": "2025-12-31"
+        },
+        "future": {
+            "start": "2026-01-01",
+            "end": "2030-12-31"
+        }
     },
     "venues": [
-        "NeurIPS", "ICML", "ICLR", "AAAI", "ACL", "CVPR"
+        "NeurIPS",
+        "ICML",
+        "ICLR",
+        "AAAI",
+        "ACL",
+        "CVPR"
     ],
     "hallucination_types": {
-        "tier_1": ["fabricated_doi", "nonexistent_venue", "placeholder_authors", "future_date"],
-        "tier_2": ["chimeric_title", "wrong_venue", "swapped_authors", "preprint_as_published"],
-        "tier_3": ["near_miss_title", "plausible_fabrication", "retracted_paper", "version_confusion"]
+        "tier_1": [
+            "fabricated_doi",
+            "nonexistent_venue",
+            "placeholder_authors",
+            "future_date"
+        ],
+        "tier_2": [
+            "chimeric_title",
+            "wrong_venue",
+            "swapped_authors",
+            "preprint_as_published"
+        ],
+        "tier_3": [
+            "near_miss_title",
+            "plausible_fabrication",
+            "retracted_paper",
+            "version_confusion"
+        ]
     },
     "subtests": [
         "doi_resolves",

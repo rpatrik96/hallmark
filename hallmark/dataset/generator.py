@@ -1,4 +1,4 @@
-"""Generate hallucinated BibTeX entries for CiteBench.
+"""Generate hallucinated BibTeX entries for HALLMARK.
 
 Supports four generation methods:
 1. Systematic perturbation of valid entries
@@ -14,7 +14,7 @@ import random
 import string
 from datetime import date
 
-from citebench.dataset.schema import (
+from hallmark.dataset.schema import (
     BenchmarkEntry,
     DifficultyTier,
     GenerationMethod,

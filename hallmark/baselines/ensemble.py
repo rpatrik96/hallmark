@@ -9,7 +9,7 @@ from __future__ import annotations
 import logging
 from dataclasses import dataclass
 
-from citebench.dataset.schema import BenchmarkEntry, Prediction
+from hallmark.dataset.schema import BenchmarkEntry, Prediction
 
 logger = logging.getLogger(__name__)
 
