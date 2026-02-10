@@ -45,8 +45,8 @@ def main(argv: list[str] | None = None) -> int:
     )
     eval_parser.add_argument(
         "--baseline",
-        choices=["doi_only", "bibtexupdater", "llm_openai", "llm_anthropic"],
-        help="Run a built-in baseline",
+        type=str,
+        help="Run a registered baseline (see 'hallmark list-baselines')",
     )
     eval_parser.add_argument(
         "--predictions",
@@ -95,6 +95,9 @@ def main(argv: list[str] | None = None) -> int:
         help="Directory containing evaluation result JSONs",
     )
 
+    # --- list-baselines ---
+    subparsers.add_parser("list-baselines", help="List available baselines and their status")
+
     args = parser.parse_args(argv)
 
     # Setup logging
@@ -116,6 +119,8 @@ def main(argv: list[str] | None = None) -> int:
         return _cmd_stats(args)
     elif args.command == "leaderboard":
         return _cmd_leaderboard(args)
+    elif args.command == "list-baselines":
+        return _cmd_list_baselines()
 
     return 0
 
@@ -297,26 +302,32 @@ def _cmd_leaderboard(args: argparse.Namespace) -> int:
     return 0
 
 
+def _cmd_list_baselines() -> int:
+    """List all registered baselines and their availability."""
+    from hallmark.baselines.registry import check_available, get_registry
+
+    registry = get_registry()
+    print(f"\n{'=' * 70}")
+    print("  HALLMARK Registered Baselines")
+    print(f"{'=' * 70}")
+    print(f"  {'Name':<22}{'Available':<12}{'Free':<8}{'Description'}")
+    print(f"  {'─' * 66}")
+
+    for name, info in sorted(registry.items()):
+        avail, _msg = check_available(name)
+        avail_str = "yes" if avail else "NO"
+        free_str = "yes" if info.is_free else "no"
+        print(f"  {name:<22}{avail_str:<12}{free_str:<8}{info.description}")
+
+    print(f"{'=' * 70}\n")
+    return 0
+
+
 def _run_baseline(name: str, entries: list[BenchmarkEntry]) -> list[Prediction]:
-    """Run a built-in baseline."""
-    if name == "doi_only":
-        from hallmark.baselines.doi_only import run_doi_only
+    """Run a baseline via the registry."""
+    from hallmark.baselines.registry import run_baseline
 
-        return run_doi_only(entries)
-    elif name == "bibtexupdater":
-        from hallmark.baselines.bibtexupdater import run_bibtex_check
-
-        return run_bibtex_check(entries)
-    elif name == "llm_openai":
-        from hallmark.baselines.llm_verifier import verify_with_openai
-
-        return verify_with_openai(entries)
-    elif name == "llm_anthropic":
-        from hallmark.baselines.llm_verifier import verify_with_anthropic
-
-        return verify_with_anthropic(entries)
-    else:
-        raise ValueError(f"Unknown baseline: {name}")
+    return run_baseline(name, entries)
 
 
 if __name__ == "__main__":

@@ -6,6 +6,7 @@ Handles versioned releases, community contributions, and custom sub-benchmarks.
 from __future__ import annotations
 
 import logging
+from collections.abc import Callable
 from datetime import date
 from pathlib import Path
 
@@ -125,7 +126,7 @@ class PoolManager:
     def create_sub_benchmark(
         self,
         name: str,
-        filter_fn: callable | None = None,  # type: ignore[valid-type]
+        filter_fn: Callable[[BenchmarkEntry], bool] | None = None,
         tier: int | None = None,
         venue: str | None = None,
     ) -> list[BenchmarkEntry]:

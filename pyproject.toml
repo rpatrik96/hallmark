@@ -38,6 +38,10 @@ baselines = [
     "openai>=1.0",
     "anthropic>=0.20",
 ]
+ranking = [
+    "choix>=0.3",
+    "numpy>=1.24",
+]
 scraping = [
     "beautifulsoup4>=4.12",
     "lxml>=4.9",
@@ -48,7 +52,9 @@ dev = [
     "ruff>=0.4",
     "mypy>=1.0",
 ]
-all = ["hallmark[baselines,scraping,dev]"]
+all = ["hallmark[baselines,ranking,scraping,dev]"]
+# NOTE: harcx conflicts with bibtexparser>=2.0 (requires <2.0).
+# Install separately: pip install --no-deps harcx
 
 [project.scripts]
 hallmark = "hallmark.cli:main"
@@ -90,6 +96,10 @@ quote-style = "double"
 python_version = "3.10"
 warn_return_any = true
 warn_unused_configs = true
+
+[[tool.mypy.overrides]]
+module = ["choix"]
+ignore_missing_imports = true
 
 [tool.coverage.run]
 source = ["hallmark"]

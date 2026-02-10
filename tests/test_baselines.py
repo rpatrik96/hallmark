@@ -152,3 +152,156 @@ class TestEnsemble:
         }
         result = ensemble_predict(entries, strat_preds)
         assert len(result) == 2
+
+
+# --- Registry ---
+
+
+class TestRegistry:
+    def test_list_baselines_returns_all(self):
+        from hallmark.baselines.registry import list_baselines
+
+        names = list_baselines()
+        assert "doi_only" in names
+        assert "bibtexupdater" in names
+        assert "harc" in names
+        assert "verify_citations" in names
+        assert "llm_openai" in names
+        assert "llm_anthropic" in names
+        assert "ensemble" in names
+
+    def test_list_baselines_free_only(self):
+        from hallmark.baselines.registry import list_baselines
+
+        free = list_baselines(free_only=True)
+        assert "doi_only" in free
+        assert "ensemble" in free
+        assert "llm_openai" not in free
+        assert "llm_anthropic" not in free
+
+    def test_check_available_doi_only(self):
+        from hallmark.baselines.registry import check_available
+
+        avail, msg = check_available("doi_only")
+        assert avail is True
+        assert msg == "OK"
+
+    def test_check_available_unknown(self):
+        from hallmark.baselines.registry import check_available
+
+        avail, msg = check_available("nonexistent_baseline")
+        assert avail is False
+        assert "Unknown baseline" in msg
+
+    def test_run_baseline_unknown_raises(self):
+        import pytest
+
+        from hallmark.baselines.registry import run_baseline
+
+        with pytest.raises(ValueError, match="Unknown baseline"):
+            run_baseline("nonexistent_baseline", [])
+
+    def test_get_registry_returns_dict(self):
+        from hallmark.baselines.registry import get_registry
+
+        reg = get_registry()
+        assert isinstance(reg, dict)
+        assert "doi_only" in reg
+        info = reg["doi_only"]
+        assert info.is_free is True
+        assert info.requires_api_key is False
+
+    def test_registry_info_fields(self):
+        from hallmark.baselines.registry import get_registry
+
+        reg = get_registry()
+        for name, info in reg.items():
+            assert info.name == name
+            assert isinstance(info.description, str)
+            assert len(info.description) > 0
+            assert isinstance(info.is_free, bool)
+            assert isinstance(info.requires_api_key, bool)
+            assert isinstance(info.pip_packages, list)
+
+
+# --- verify-citations baseline ---
+
+
+class TestVerifyCitationsBaseline:
+    def test_fallback_predictions(self):
+        from hallmark.baselines.verify_citations_baseline import (
+            _fallback_predictions,
+        )
+
+        entries = [_entry("x"), _entry("y")]
+        preds = _fallback_predictions(entries)
+        assert len(preds) == 2
+        assert all(p.label == "VALID" for p in preds)
+        assert all(p.confidence == 0.5 for p in preds)
+
+    def test_strip_ansi_codes(self):
+        from hallmark.baselines.verify_citations_baseline import strip_ansi_codes
+
+        text = "\x1b[32m✓\x1b[0m test_key: Verified"
+        clean = strip_ansi_codes(text)
+        assert "\x1b" not in clean
+        assert "✓" in clean
+
+    def test_parse_terminal_output_verified(self):
+        from hallmark.baselines.verify_citations_baseline import (
+            _parse_terminal_output,
+        )
+
+        entries = [_entry("mykey")]
+        stdout = "✓ mykey: Successfully verified\n"
+        preds = _parse_terminal_output(stdout, entries, 1.0, 1)
+        assert len(preds) == 1
+        assert preds[0].bibtex_key == "mykey"
+        assert preds[0].label == "VALID"
+        assert preds[0].confidence == 0.90
+
+    def test_parse_terminal_output_not_found(self):
+        from hallmark.baselines.verify_citations_baseline import (
+            _parse_terminal_output,
+        )
+
+        entries = [_entry("badkey")]
+        stdout = "✗ badkey: Paper not found\n"
+        preds = _parse_terminal_output(stdout, entries, 1.0, 1)
+        assert len(preds) == 1
+        assert preds[0].label == "HALLUCINATED"
+        assert preds[0].confidence == 0.80
+
+    def test_parse_terminal_output_warning(self):
+        from hallmark.baselines.verify_citations_baseline import (
+            _parse_terminal_output,
+        )
+
+        entries = [_entry("warnkey")]
+        stdout = "⚠ warnkey: HTTP 403 error\n"
+        preds = _parse_terminal_output(stdout, entries, 1.0, 1)
+        assert len(preds) == 1
+        assert preds[0].label == "HALLUCINATED"
+        assert preds[0].confidence == 0.60
+
+    def test_parse_ignores_unknown_keys(self):
+        from hallmark.baselines.verify_citations_baseline import (
+            _parse_terminal_output,
+        )
+
+        entries = [_entry("mykey")]
+        stdout = "✓ otherkey: Verified\n✓ mykey: Also verified\n"
+        preds = _parse_terminal_output(stdout, entries, 1.0, 1)
+        assert len(preds) == 1
+        assert preds[0].bibtex_key == "mykey"
+
+    @patch("hallmark.baselines.verify_citations_baseline.subprocess.run")
+    def test_run_verify_citations_tool_not_found(self, mock_run):
+        from hallmark.baselines.verify_citations_baseline import run_verify_citations
+
+        mock_run.side_effect = FileNotFoundError
+        entries = [_entry("a")]
+        preds = run_verify_citations(entries)
+        assert len(preds) == 1
+        assert preds[0].label == "VALID"
+        assert preds[0].confidence == 0.5
