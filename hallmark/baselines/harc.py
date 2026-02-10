@@ -40,10 +40,14 @@ def run_harc(
         List of Predictions.
     """
     try:
-        from harcx import check_citations, check_web_citations  # type: ignore[import-untyped]
+        from reference_checker import (  # type: ignore[import-untyped]
+            check_citations,
+            check_web_citations,
+        )
     except ImportError:
         raise ImportError(
-            "harcx is required for the HaRC baseline. Install with: pip install harcx"
+            "harcx is required for the HaRC baseline. Install with: pip install harcx\n"
+            "(The importable module is 'reference_checker')"
         ) from None
 
     # Write entries to a temporary .bib file

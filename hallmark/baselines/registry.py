@@ -23,8 +23,10 @@ class BaselineInfo:
     name: str
     description: str
     runner: Callable[..., list[Prediction]]
-    # pip package(s) required (empty = no extra deps)
+    # pip package(s) required — checked via import (empty = no extra deps)
     pip_packages: list[str] = field(default_factory=list)
+    # CLI commands to check on PATH (for subprocess-based baselines)
+    cli_commands: list[str] = field(default_factory=list)
     # Whether an API key or paid service is needed
     requires_api_key: bool = False
     # Whether this baseline is free to run (no API costs)
@@ -57,26 +59,42 @@ def list_baselines(*, free_only: bool = False) -> list[str]:
 def check_available(name: str) -> tuple[bool, str]:
     """Check if a baseline's dependencies are installed.
 
+    For CLI-based baselines, checks that the command exists on PATH.
+    For library-based baselines, checks that the Python module is importable.
+
     Returns:
         (available, message) tuple.
     """
+    import shutil
+
     if name not in _REGISTRY:
         return False, f"Unknown baseline: {name}"
 
     info = _REGISTRY[name]
-    missing = []
+
+    # Check CLI commands on PATH (for subprocess-based baselines)
+    missing_cmds = [cmd for cmd in info.cli_commands if shutil.which(cmd) is None]
+    if missing_cmds:
+        return (
+            False,
+            f"Missing CLI commands: {', '.join(missing_cmds)}. "
+            f"Install the package that provides them.",
+        )
+
+    # Check importable Python packages
+    missing_pkgs = []
     for pkg in info.pip_packages:
-        # Map pip package names to importable module names
         module_name = _PIP_TO_MODULE.get(pkg, pkg.replace("-", "_"))
         try:
             importlib.import_module(module_name)
         except ImportError:
-            missing.append(pkg)
+            missing_pkgs.append(pkg)
 
-    if missing:
+    if missing_pkgs:
         return (
             False,
-            f"Missing packages: {', '.join(missing)}. Install with: pip install {' '.join(missing)}",
+            f"Missing packages: {', '.join(missing_pkgs)}. "
+            f"Install with: pip install {' '.join(missing_pkgs)}",
         )
     return True, "OK"
 
@@ -114,11 +132,8 @@ def run_baseline(
 
 # Mapping from pip package names to importable module names
 _PIP_TO_MODULE: dict[str, str] = {
-    "bibtex-updater": "bibtex_updater",
     "openai": "openai",
     "anthropic": "anthropic",
-    "harcx": "harcx",
-    "verify-citations": "verify_citations",
 }
 
 
@@ -155,7 +170,7 @@ def _register_builtins() -> None:
             name="bibtexupdater",
             description="bibtex-check CLI: CrossRef, DBLP, Semantic Scholar",
             runner=_run_bibtexupdater,
-            pip_packages=["bibtex-updater"],
+            cli_commands=["bibtex-check"],
         )
     )
 
@@ -170,7 +185,7 @@ def _register_builtins() -> None:
             name="harc",
             description="HaRC: Semantic Scholar, DBLP, Google Scholar, Open Library",
             runner=_run_harc,
-            pip_packages=["harcx"],
+            cli_commands=["harcx"],
         )
     )
 
@@ -185,7 +200,7 @@ def _register_builtins() -> None:
             name="verify_citations",
             description="verify-citations: arXiv, ACL, S2, DBLP, Google Scholar, DuckDuckGo",
             runner=_run_verify_citations,
-            pip_packages=["verify-citations"],
+            cli_commands=["verify-citations"],
         )
     )
 
