@@ -36,6 +36,12 @@ Thumbs.db
 # Hidden test data (served via API, not in public repo)
 data/hidden/
 
+# Claude Code / claude-mem
+.claude/
+.omc/
+**/CLAUDE.md
+!CLAUDE.md
+
 # Temporary
 *.tmp
 *.bak
