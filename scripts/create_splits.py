@@ -36,6 +36,11 @@ SPLIT_CONFIG = {
     "test_hidden": {"valid": 180, "hallucinated": 20},
 }
 
+# Rolling split config: single evaluation split matching test_public dimensions
+ROLLING_SPLIT_CONFIG = {
+    "rolling_test": {"valid": 270, "hallucinated": 30},
+}
+
 # Target tier ratios within hallucinated entries
 TIER_RATIOS = {1: 0.40, 2: 0.35, 3: 0.25}
 
@@ -70,8 +75,10 @@ def create_splits(
     valid_entries: list[BenchmarkEntry],
     hallucinated_entries: list[BenchmarkEntry],
     seed: int = 42,
+    split_config: dict[str, dict[str, int]] | None = None,
 ) -> dict[str, list[BenchmarkEntry]]:
     """Create benchmark splits maintaining tier ratios."""
+    split_config = split_config or SPLIT_CONFIG
     rng = random.Random(seed)
 
     # Shuffle
@@ -88,7 +95,7 @@ def create_splits(
     splits: dict[str, list[BenchmarkEntry]] = {}
     valid_offset = 0
 
-    for split_name, config in SPLIT_CONFIG.items():
+    for split_name, config in split_config.items():
         n_valid = config["valid"]
         n_hall = config["hallucinated"]
 
@@ -123,7 +130,12 @@ def create_splits(
     return splits
 
 
-def update_metadata(output_dir: Path, splits: dict[str, list[BenchmarkEntry]]) -> None:
+def update_metadata(
+    output_dir: Path,
+    splits: dict[str, list[BenchmarkEntry]],
+    rolling: bool = False,
+    seed: int | None = None,
+) -> None:
     """Update metadata.json with actual split statistics."""
     metadata_path = output_dir / "metadata.json"
     if metadata_path.exists():
@@ -133,10 +145,10 @@ def update_metadata(output_dir: Path, splits: dict[str, list[BenchmarkEntry]]) -
         metadata = {}
 
     for split_name, entries in splits.items():
-        valid = sum(1 for e in entries if e.label == "VALID")
-        hall = sum(1 for e in entries if e.label == "HALLUCINATED")
-        tier_counts = defaultdict(int)
-        type_counts = defaultdict(int)
+        valid_count = sum(1 for e in entries if e.label == "VALID")
+        hall_count = sum(1 for e in entries if e.label == "HALLUCINATED")
+        tier_counts: dict[str, int] = defaultdict(int)
+        type_counts: dict[str, int] = defaultdict(int)
         for e in entries:
             if e.difficulty_tier:
                 tier_counts[str(e.difficulty_tier)] += 1
@@ -148,10 +160,21 @@ def update_metadata(output_dir: Path, splits: dict[str, list[BenchmarkEntry]]) -
         metadata["splits"][split_name] = {
             "file": f"{split_name}.jsonl",
             "total": len(entries),
-            "valid": valid,
-            "hallucinated": hall,
+            "valid": valid_count,
+            "hallucinated": hall_count,
             "tier_distribution": dict(tier_counts),
             "type_distribution": dict(type_counts),
+        }
+
+    if rolling:
+        from datetime import date as date_cls
+
+        today = date_cls.today().isoformat()
+        metadata["rolling_metadata"] = {
+            "created": today,
+            "scrape_date": today,
+            "seed": seed,
+            "pipeline_version": "1.0.0",
         }
 
     with open(metadata_path, "w") as f:
@@ -166,6 +189,11 @@ def main() -> None:
     parser.add_argument("--output-dir", type=str, default="data/v1.0")
     parser.add_argument("--hidden-dir", type=str, default="data/hidden")
     parser.add_argument("--seed", type=int, default=42)
+    parser.add_argument(
+        "--rolling",
+        action="store_true",
+        help="Create a rolling split instead of standard v1.0 splits",
+    )
     parser.add_argument("-v", "--verbose", action="store_true")
     args = parser.parse_args()
 
@@ -174,12 +202,22 @@ def main() -> None:
         format="%(asctime)s %(levelname)s %(message)s",
     )
 
+    # Determine split config based on mode
+    if args.rolling:
+        from datetime import date
+
+        split_config = ROLLING_SPLIT_CONFIG
+        args.output_dir = f"data/rolling/{date.today().isoformat()}"
+        logger.info("Rolling mode: writing to %s", args.output_dir)
+    else:
+        split_config = SPLIT_CONFIG
+
     valid = load_entries(args.valid_entries)
     hallucinated = load_entries(args.hallucinated_entries)
     logger.info(f"Loaded {len(valid)} valid + {len(hallucinated)} hallucinated entries")
 
-    total_needed_valid = sum(c["valid"] for c in SPLIT_CONFIG.values())
-    total_needed_hall = sum(c["hallucinated"] for c in SPLIT_CONFIG.values())
+    total_needed_valid = sum(c["valid"] for c in split_config.values())
+    total_needed_hall = sum(c["hallucinated"] for c in split_config.values())
     logger.info(f"Need {total_needed_valid} valid + {total_needed_hall} hallucinated")
 
     if len(valid) < total_needed_valid:
@@ -193,34 +231,38 @@ def main() -> None:
             f"need {total_needed_hall}. Splits will be smaller."
         )
 
-    splits = create_splits(valid, hallucinated, args.seed)
+    splits = create_splits(valid, hallucinated, args.seed, split_config=split_config)
 
     output_dir = Path(args.output_dir)
-    hidden_dir = Path(args.hidden_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
-    hidden_dir.mkdir(parents=True, exist_ok=True)
+
+    if not args.rolling:
+        hidden_dir = Path(args.hidden_dir)
+        hidden_dir.mkdir(parents=True, exist_ok=True)
 
     for split_name, entries in splits.items():
-        if split_name == "test_hidden":
-            path = hidden_dir / "test_hidden.jsonl"
+        if split_name == "test_hidden" and not args.rolling:
+            path = Path(args.hidden_dir) / "test_hidden.jsonl"
         else:
             path = output_dir / f"{split_name}.jsonl"
         save_entries(entries, path)
         logger.info(f"Saved {split_name}: {len(entries)} entries -> {path}")
 
-    update_metadata(output_dir, splits)
+    update_metadata(output_dir, splits, rolling=args.rolling, seed=args.seed)
 
     # Print summary
     print("\nSplit Summary:")
     print(f"{'Split':<15} {'Total':<8} {'Valid':<8} {'Hall.':<8} {'T1':<5} {'T2':<5} {'T3':<5}")
     print("-" * 54)
     for split_name, entries in splits.items():
-        valid = sum(1 for e in entries if e.label == "VALID")
-        hall = sum(1 for e in entries if e.label == "HALLUCINATED")
+        n_valid = sum(1 for e in entries if e.label == "VALID")
+        n_hall = sum(1 for e in entries if e.label == "HALLUCINATED")
         t1 = sum(1 for e in entries if e.difficulty_tier == 1)
         t2 = sum(1 for e in entries if e.difficulty_tier == 2)
         t3 = sum(1 for e in entries if e.difficulty_tier == 3)
-        print(f"{split_name:<15} {len(entries):<8} {valid:<8} {hall:<8} {t1:<5} {t2:<5} {t3:<5}")
+        print(
+            f"{split_name:<15} {len(entries):<8} {n_valid:<8} {n_hall:<8} {t1:<5} {t2:<5} {t3:<5}"
+        )
 
 
 if __name__ == "__main__":

@@ -33,6 +33,7 @@ def main() -> None:
     parser.add_argument("--max-per-venue-year", type=int, default=100)
     parser.add_argument("--rate-limit", type=float, default=1.0)
     parser.add_argument("--output", type=str, required=True)
+    parser.add_argument("--min-entries", type=int, default=50, help="Minimum entries required")
     parser.add_argument("-v", "--verbose", action="store_true")
     args = parser.parse_args()
 
@@ -49,6 +50,13 @@ def main() -> None:
     )
 
     entries = scrape_proceedings(config)
+
+    if len(entries) < args.min_entries:
+        logging.error(
+            f"Only scraped {len(entries)} entries, minimum is {args.min_entries}. " "Aborting."
+        )
+        raise SystemExit(1)
+
     save_entries(entries, args.output)
     logging.info(f"Saved {len(entries)} entries to {args.output}")
 

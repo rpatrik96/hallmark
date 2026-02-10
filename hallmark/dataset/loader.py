@@ -12,6 +12,29 @@ _PACKAGE_DIR = Path(__file__).parent.parent.parent
 DEFAULT_DATA_DIR = _PACKAGE_DIR / "data"
 
 
+def _resolve_rolling_path(data_dir: Path, version: str, split: str) -> Path:
+    """Resolve path for a rolling split.
+
+    Supports version="rolling" (latest dated directory) and
+    version="rolling/YYYY-MM-DD" (specific date).
+    """
+    rolling_dir = data_dir / "rolling"
+
+    if version == "rolling":
+        # Find latest dated directory
+        dated_dirs = sorted(
+            (d for d in rolling_dir.iterdir() if d.is_dir()),
+            reverse=True,
+        )
+        if not dated_dirs:
+            raise FileNotFoundError(f"No rolling splits found in {rolling_dir}")
+        return dated_dirs[0] / f"{split}.jsonl"
+
+    # version == "rolling/YYYY-MM-DD"
+    date_str = version.split("/", 1)[1]
+    return rolling_dir / date_str / f"{split}.jsonl"
+
+
 def load_split(
     split: str = "dev_public",
     version: str = "v1.0",
@@ -20,8 +43,9 @@ def load_split(
     """Load a benchmark split.
 
     Args:
-        split: One of "dev_public", "test_public", "test_hidden".
-        version: Dataset version (e.g., "v1.0").
+        split: Split name (e.g., "dev_public", "test_public", "rolling_test").
+        version: Dataset version. Use "v1.0" for frozen splits, "rolling" for
+            the latest rolling split, or "rolling/YYYY-MM-DD" for a specific date.
         data_dir: Override data directory. Defaults to data/ in package root.
 
     Returns:
@@ -32,7 +56,9 @@ def load_split(
 
     data_dir = Path(data_dir)
 
-    if split == "test_hidden":
+    if version.startswith("rolling"):
+        path = _resolve_rolling_path(data_dir, version, split)
+    elif split == "test_hidden":
         path = data_dir / "hidden" / "test_hidden.jsonl"
     else:
         path = data_dir / version / f"{split}.jsonl"
@@ -52,7 +78,22 @@ def load_metadata(
         data_dir = DEFAULT_DATA_DIR
 
     data_dir = Path(data_dir)
-    path = data_dir / version / "metadata.json"
+
+    if version.startswith("rolling"):
+        rolling_dir = data_dir / "rolling"
+        if version == "rolling":
+            dated_dirs = sorted(
+                (d for d in rolling_dir.iterdir() if d.is_dir()),
+                reverse=True,
+            )
+            if not dated_dirs:
+                raise FileNotFoundError(f"No rolling splits found in {rolling_dir}")
+            path = dated_dirs[0] / "metadata.json"
+        else:
+            date_str = version.split("/", 1)[1]
+            path = rolling_dir / date_str / "metadata.json"
+    else:
+        path = data_dir / version / "metadata.json"
 
     if not path.exists():
         raise FileNotFoundError(f"Metadata file not found: {path}")

@@ -23,8 +23,10 @@ class PoolManager:
         self.data_dir = Path(data_dir)
         self.contributions_dir = self.data_dir / "pool" / "contributions"
         self.validated_dir = self.data_dir / "pool" / "validated"
+        self.archived_dir = self.data_dir / "pool" / "archived"
         self.contributions_dir.mkdir(parents=True, exist_ok=True)
         self.validated_dir.mkdir(parents=True, exist_ok=True)
+        self.archived_dir.mkdir(parents=True, exist_ok=True)
 
     def submit_contribution(
         self,
@@ -97,9 +99,11 @@ class PoolManager:
 
         save_entries(valid_entries, pool_file)
 
-        # Remove from contributions
-        path.unlink()
-        logger.info(f"Accepted {len(valid_entries)} entries into pool")
+        # Archive the contribution instead of deleting
+        import shutil
+
+        shutil.move(str(path), str(self.archived_dir / path.name))
+        logger.info(f"Accepted {len(valid_entries)} entries into pool, archived {path.name}")
         return len(valid_entries)
 
     def load_validated_pool(self) -> list[BenchmarkEntry]:
