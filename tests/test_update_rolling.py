@@ -114,6 +114,45 @@ class TestRequestWithRetry:
         assert result is None
         assert mock_client.request.call_count == 3  # initial + 2 retries
 
+    def test_http_status_error_retries(self) -> None:
+        mock_client = MagicMock(spec=httpx.Client)
+        mock_resp_ok = MagicMock(spec=httpx.Response)
+        mock_resp_ok.raise_for_status = MagicMock()
+
+        mock_resp_503 = MagicMock(spec=httpx.Response)
+        mock_resp_503.raise_for_status.side_effect = httpx.HTTPStatusError(
+            "503", request=MagicMock(), response=MagicMock()
+        )
+
+        mock_client.request.side_effect = [mock_resp_503, mock_resp_ok]
+
+        with patch("hallmark.dataset.scraper.time.sleep"):
+            result = _request_with_retry(mock_client, "GET", "https://example.com")
+
+        assert result is mock_resp_ok
+        assert mock_client.request.call_count == 2
+
+    def test_kwargs_forwarded_to_client(self) -> None:
+        mock_client = MagicMock(spec=httpx.Client)
+        mock_resp = MagicMock(spec=httpx.Response)
+        mock_resp.raise_for_status = MagicMock()
+        mock_client.request.return_value = mock_resp
+
+        _request_with_retry(
+            mock_client,
+            "GET",
+            "https://example.com",
+            params={"q": "test"},
+            headers={"User-Agent": "test"},
+        )
+
+        mock_client.request.assert_called_once_with(
+            "GET",
+            "https://example.com",
+            params={"q": "test"},
+            headers={"User-Agent": "test"},
+        )
+
 
 # --- Tests for rolling split creation ---
 
@@ -269,6 +308,80 @@ class TestHealthChecks:
 
         exit_code = run_pipeline(args)
         assert exit_code == 0
+
+    def test_tier_health_check_fails_on_empty_tier(self) -> None:
+        from scripts.update_rolling import run_pipeline
+
+        args = MagicMock()
+        args.dry_run = False
+        args.data_dir = "data"
+        args.venues = ["NeurIPS"]
+        args.years = [2025]
+        args.seed = 42
+        args.min_entries = 1  # low so scraper passes
+        args.run_baselines = False
+        args.verbose = False
+
+        valid = [_make_valid_entry(f"v_{i}") for i in range(10)]
+
+        with (
+            patch("scripts.update_rolling.scrape_proceedings", return_value=valid),
+            patch("scripts.update_rolling.generate_tier1_batch", return_value=[]),
+            patch(
+                "scripts.update_rolling.generate_tier2_batch",
+                return_value=[_make_hallucinated_entry()],
+            ),
+            patch(
+                "scripts.update_rolling.generate_tier3_batch",
+                return_value=[_make_hallucinated_entry()],
+            ),
+        ):
+            exit_code = run_pipeline(args)
+
+        assert exit_code == 1
+
+    def test_successful_pipeline(self) -> None:
+        from scripts.update_rolling import run_pipeline
+
+        valid = [_make_valid_entry(f"v_{i}") for i in range(300)]
+        hall_t1 = [_make_hallucinated_entry(f"t1_{i}") for i in range(12)]
+        hall_t2 = [_make_hallucinated_entry(f"t2_{i}") for i in range(11)]
+        hall_t3 = [_make_hallucinated_entry(f"t3_{i}") for i in range(7)]
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            args = MagicMock()
+            args.dry_run = False
+            args.data_dir = tmpdir
+            args.venues = ["NeurIPS"]
+            args.years = [2025]
+            args.seed = 42
+            args.min_entries = 10
+            args.run_baselines = False
+            args.verbose = False
+
+            with (
+                patch("scripts.update_rolling.scrape_proceedings", return_value=valid),
+                patch("scripts.update_rolling.generate_tier1_batch", return_value=hall_t1),
+                patch("scripts.update_rolling.generate_tier2_batch", return_value=hall_t2),
+                patch("scripts.update_rolling.generate_tier3_batch", return_value=hall_t3),
+            ):
+                exit_code = run_pipeline(args)
+
+            assert exit_code == 0
+            # Verify output files exist
+            rolling_dirs = list(Path(tmpdir).glob("rolling/*/rolling_test.jsonl"))
+            assert len(rolling_dirs) == 1
+            metadata_files = list(Path(tmpdir).glob("rolling/*/metadata.json"))
+            assert len(metadata_files) == 1
+
+    def test_compute_seed_from_date(self) -> None:
+        from scripts.update_rolling import compute_seed
+
+        assert compute_seed(123) == 123  # explicit seed passed through
+        # Default seed is date-derived
+        seed = compute_seed(None)
+        assert isinstance(seed, int)
+        assert seed > 20000000  # YYYYMMDD format
 
 
 # --- Tests for pool_manager archive behavior ---
