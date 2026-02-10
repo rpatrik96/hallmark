@@ -40,7 +40,7 @@ data/hidden/
 .claude/
 .omc/
 **/CLAUDE.md
-!CLAUDE.md
+!/CLAUDE.md
 
 # Temporary
 *.tmp

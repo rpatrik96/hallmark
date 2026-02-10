@@ -300,7 +300,7 @@ hallmark/
 ├── .github/workflows/
 │   ├── tests.yml              # CI: test suite across Python versions
 │   └── baselines.yml          # CI: weekly free baseline evaluation
-├── tests/                     # Test suite (104 tests)
+├── tests/                     # Test suite (125 tests)
 ├── figures/                   # Evaluation figures
 └── examples/                  # Usage examples
 ```
