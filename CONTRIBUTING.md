@@ -64,18 +64,35 @@ Or open a pull request adding your entries to `data/pool/contributions/`.
 - Maintainers verify hallucinated entries are genuinely undetectable at claimed difficulty tier
 - Accepted entries are added to the validated pool and may appear in future benchmark versions
 
+## Contributing Baselines
+
+New baselines are registered via the central registry in `hallmark/baselines/registry.py`. To add a baseline:
+
+1. Create a wrapper module in `hallmark/baselines/` that maps the tool's output to `Prediction` objects
+2. Register it in `registry.py` with a `BaselineInfo` entry (name, description, runner, dependencies)
+3. Add tests in `tests/test_baselines.py`
+4. If the baseline is free (no API key), add it to the CI matrix in `.github/workflows/baselines.yml`
+
+See existing baselines (e.g., `verify_citations_baseline.py`) for reference.
+
 ## Development Setup
 
 ```bash
 git clone https://github.com/rpatrik96/hallmark.git
 cd hallmark
-pip install -e ".[dev]"
+
+# Recommended: use uv
+uv pip install -e ".[dev]"
 
 # Run tests
-pytest
+uv run python -m pytest
 
-# Run linter
-ruff check .
+# Run linter and formatter
+uv run ruff check hallmark/ tests/
+uv run ruff format hallmark/ tests/
+
+# Type checking
+uv run mypy --ignore-missing-imports hallmark/
 ```
 
 ## Reporting Issues

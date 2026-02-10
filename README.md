@@ -3,6 +3,7 @@
 **HALL**ucination bench**MARK**: A benchmark for evaluating citation hallucination detection tools.
 
 [![Tests](https://github.com/rpatrik96/hallmark/actions/workflows/tests.yml/badge.svg)](https://github.com/rpatrik96/hallmark/actions)
+[![Baselines](https://github.com/rpatrik96/hallmark/actions/workflows/baselines.yml/badge.svg)](https://github.com/rpatrik96/hallmark/actions)
 [![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
@@ -22,7 +23,10 @@ HALLMARK draws on best practices from established benchmarks:
 - **1,000 annotated entries**: 900 valid (from DBLP) + 100 hallucinated with ground truth
 - **6 sub-tests per entry**: DOI resolution, title matching, author consistency, venue verification, field completeness, cross-database agreement
 - **Evaluation metrics**: Detection Rate, F1, tier-weighted F1, detect@k
-- **Built-in baselines**: DOI-only, bibtex-updater, LLM-based, ensemble, HaRC, CiteVerifier, hallucinator
+- **Built-in baselines**: DOI-only, bibtex-updater, LLM-based, ensemble, HaRC, CiteVerifier, hallucinator, verify-citations
+- **Baseline registry**: Central discovery, availability checking, and dispatch for all baselines
+- **Plackett-Luce ranking**: ONEBench-inspired ranking that handles incomplete evaluation data
+- **Automated execution**: Orchestrator script and CI workflow for batch baseline evaluation
 - **Temporal analysis**: Contamination detection via pre/post-cutoff comparison
 - **Community contributions**: ONEBench-style ever-expanding sample pool
 
@@ -34,10 +38,16 @@ pip install hallmark
 # With baseline dependencies
 pip install hallmark[baselines]
 
-# Development install
+# With ranking support (Plackett-Luce model)
+pip install hallmark[ranking]
+
+# All optional dependencies
+pip install hallmark[all]
+
+# Development install (recommended: use uv)
 git clone https://github.com/rpatrik96/hallmark.git
 cd hallmark
-pip install -e ".[dev]"
+uv pip install -e ".[dev]"
 ```
 
 ## Quick Start
@@ -56,6 +66,19 @@ hallmark evaluate --split dev_public --predictions my_predictions.jsonl --tool-n
 
 ```bash
 hallmark stats --split dev_public
+```
+
+### Run all baselines at once
+
+```bash
+# Run all free baselines and generate leaderboard
+python scripts/run_all_baselines.py --split dev_public --output-dir results/
+
+# Run specific baselines in parallel
+python scripts/run_all_baselines.py --baselines doi_only,bibtexupdater --parallel
+
+# Run only free (no API key) baselines, skip unavailable
+python scripts/run_all_baselines.py --baselines free --skip-unavailable
 ```
 
 ### View the leaderboard
@@ -162,14 +185,23 @@ HALLMARK also wraps several external citation verification tools as baselines:
 | **HaRC** | [harcx](https://pypi.org/project/harcx/) | Semantic Scholar, DBLP, Google Scholar, Open Library | `pip install harcx` |
 | **CiteVerifier** | [GhostCite](https://github.com/NKU-AOSP-Lab/CiteVerifier) | DBLP (local), Google Scholar, Google Search | Clone repo |
 | **hallucinator** | [hallucinator](https://github.com/gianlucasb/hallucinator) | CrossRef, arXiv, DBLP, Semantic Scholar, ACL Anthology, PubMed, OpenAlex | Clone repo |
+| **verify-citations** | [verify-citations](https://pypi.org/project/verify-citations/) | arXiv, ACL Anthology, Semantic Scholar, DBLP, Google Scholar, DuckDuckGo | `pip install verify-citations` |
 
 ```python
-# Example: run HaRC baseline
-from hallmark.baselines.harc import run_harc
+# Use the baseline registry to discover and run any baseline
+from hallmark.baselines.registry import list_baselines, check_available, run_baseline
 from hallmark.dataset.loader import load_split
 
 entries = load_split("dev_public")
-predictions = run_harc(entries)
+
+# List all registered baselines (or just the free ones)
+print(list_baselines(free_only=True))
+
+# Check if a baseline's dependencies are installed
+available, msg = check_available("harc")
+
+# Run a baseline by name
+predictions = run_baseline("harc", entries)
 ```
 
 See also:
@@ -217,6 +249,27 @@ print(f"F1: {result.f1_hallucination:.3f}")
 print(f"Detection Rate: {result.detection_rate:.3f}")
 ```
 
+## Ranking
+
+HALLMARK includes an ONEBench-inspired ranking system based on the [Plackett-Luce model](https://en.wikipedia.org/wiki/Luce%27s_choice_axiom) that handles incomplete evaluation data (not all tools evaluated on all entries):
+
+```python
+from hallmark.evaluation.ranking import rank_tools_plackett_luce, rank_tools_mean_score
+
+# Rank tools using Plackett-Luce (requires choix: pip install hallmark[ranking])
+pl_ranking = rank_tools_plackett_luce(entry_keys, tool_names, matrix)
+
+# Fallback: simple mean-score ranking (no extra dependencies)
+mean_ranking = rank_tools_mean_score(entry_keys, tool_names, matrix)
+```
+
+## CI/CD
+
+HALLMARK includes two GitHub Actions workflows:
+
+- **`tests.yml`**: Runs the full test suite across Python 3.10-3.13 on every push/PR
+- **`baselines.yml`**: Runs all free baselines (doi_only, bibtexupdater, harc, verify_citations) weekly and on demand, uploading results as artifacts
+
 ## Contributing Entries
 
 HALLMARK uses an ever-expanding pool inspired by ONEBench. To contribute new entries:
@@ -233,16 +286,21 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on entry format, validation r
 hallmark/
 ├── hallmark/                  # Python package
 │   ├── dataset/               # Schema, loader, scraper, generator
-│   ├── evaluation/            # Metrics, subtests, aggregator, temporal
-│   ├── baselines/             # DOI-only, bibtex-updater, LLM, ensemble, HaRC, CiteVerifier, hallucinator
+│   ├── evaluation/            # Metrics, subtests, aggregator, temporal, ranking
+│   ├── baselines/             # Registry + 9 baselines (DOI-only, bibtex-updater, LLM×2, ensemble, HaRC, CiteVerifier, hallucinator, verify-citations)
+│   │   └── registry.py        # Central baseline discovery, availability, dispatch
 │   ├── contribution/          # Pool manager, entry validation
 │   └── cli.py                 # Command-line interface
 ├── data/
 │   ├── v1.0/                  # Benchmark splits (dev_public, test_public)
 │   ├── hidden/                # Hidden test set (not public)
 │   └── raw/                   # Raw scraped/generated entries
-├── scripts/                   # Data pipeline scripts
-├── tests/                     # Test suite (78 tests)
+├── scripts/
+│   └── run_all_baselines.py   # Batch orchestrator for baseline evaluation
+├── .github/workflows/
+│   ├── tests.yml              # CI: test suite across Python versions
+│   └── baselines.yml          # CI: weekly free baseline evaluation
+├── tests/                     # Test suite (104 tests)
 ├── figures/                   # Evaluation figures
 └── examples/                  # Usage examples
 ```
