@@ -110,8 +110,20 @@ def run_verify_citations(
                 timeout=timeout,
             )
             stdout = result.stdout
+            logger.info(
+                "verify-citations exit=%d stdout=%d stderr=%d",
+                result.returncode,
+                len(result.stdout),
+                len(result.stderr),
+            )
+            if result.stderr:
+                logger.warning("verify-citations stderr: %s", result.stderr[:500])
             if result.returncode not in (0, 1):
-                logger.error(f"verify-citations failed (exit {result.returncode}): {result.stderr}")
+                logger.error(
+                    "verify-citations failed (exit %d): %s",
+                    result.returncode,
+                    result.stderr[:500],
+                )
         except FileNotFoundError:
             logger.error("verify-citations not found. Install with: pip install verify-citations")
             return _fallback_predictions(entries)
@@ -170,10 +182,16 @@ def _parse_terminal_output(
 ) -> list[Prediction]:
     """Parse verify-citations terminal output into Predictions.
 
-    The output format looks like:
-        ✓ entry_key: Successfully verified
-        ✗ entry_key: Paper not found
-        ⚠ entry_key: Warning - 403 error
+    The actual output format is::
+
+        [1/5] Verifying:
+          [bibtex_key] Title (Authors, Year)
+          Status: ✓ VERIFIED
+
+        [2/5] Verifying:
+          [bibtex_key] Title (Authors, Year)
+          Status: ✗ ISSUES FOUND
+            ⚠ Title matches but author list mismatch detected
     """
     predictions = []
     per_entry_time = total_elapsed / total_entries if total_entries > 0 else 0.0
@@ -184,53 +202,40 @@ def _parse_terminal_output(
     # Create a mapping of keys for quick lookup
     key_to_entry = {e.bibtex_key: e for e in entries}
 
-    # Parse line by line
+    # Parse blocks: find key lines and their status lines
+    current_key: str | None = None
     for line in clean_output.splitlines():
-        line = line.strip()
-        if not line:
+        stripped = line.strip()
+        if not stripped:
             continue
 
-        # Look for status markers
-        marker = None
-        for m in ["✓", "✗", "⚠", _INFO_MARKER]:
-            if m in line:
-                marker = m
-                break
-
-        if not marker:
+        # Match entry key: "  [bibtex_key] Title..."
+        key_match = re.match(r"^\[([^\]]+)\]\s+", stripped)
+        if key_match and key_match.group(1) in key_to_entry:
+            current_key = key_match.group(1)
             continue
 
-        # Extract entry key (usually after marker, before colon)
-        # Format: "✓ key: message" or "✗ key: message"
-        match = re.match(r"[✓✗⚠\u2139]\s+([^\s:]+)\s*:\s*(.+)", line)
-        if not match:
-            continue
+        # Match status line: "Status: ✓ VERIFIED" or "Status: ✗ ISSUES FOUND"
+        status_match = re.match(r"^Status:\s+([✓✗⚠])\s+(.+)", stripped)
+        if status_match and current_key:
+            marker = status_match.group(1)
+            status_text = status_match.group(2)
 
-        key = match.group(1)
-        message = match.group(2).strip()
+            label = MARKER_TO_LABEL.get(marker, "VALID")
+            confidence = MARKER_TO_CONFIDENCE.get(marker, 0.5)
 
-        # Skip if not in our entries
-        if key not in key_to_entry:
-            continue
-
-        label = MARKER_TO_LABEL.get(marker, "VALID")
-        confidence = MARKER_TO_CONFIDENCE.get(marker, 0.5)
-
-        reason_parts = [f"Status: {marker}"]
-        if message:
-            reason_parts.append(message)
-
-        predictions.append(
-            Prediction(
-                bibtex_key=key,
-                label=label,  # type: ignore[arg-type]
-                confidence=confidence,
-                reason="; ".join(reason_parts),
-                api_sources_queried=API_SOURCES,
-                wall_clock_seconds=per_entry_time,
-                api_calls=len(API_SOURCES),
+            predictions.append(
+                Prediction(
+                    bibtex_key=current_key,
+                    label=label,  # type: ignore[arg-type]
+                    confidence=confidence,
+                    reason=f"verify-citations: {status_text}",
+                    api_sources_queried=API_SOURCES,
+                    wall_clock_seconds=per_entry_time,
+                    api_calls=len(API_SOURCES),
+                )
             )
-        )
+            current_key = None
 
     return predictions
 

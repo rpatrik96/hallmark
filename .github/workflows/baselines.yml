@@ -31,7 +31,7 @@ jobs:
           - baseline: harc
             max_entries: 50      # slow API — stratified sample
           - baseline: verify_citations
-            max_entries: 0       # fast — evaluate all
+            max_entries: 50      # API-dependent — stratified sample
 
     steps:
       - name: Checkout code

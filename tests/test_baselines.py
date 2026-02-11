@@ -303,7 +303,7 @@ class TestVerifyCitationsBaseline:
         )
 
         entries = [_entry("mykey")]
-        stdout = "✓ mykey: Successfully verified\n"
+        stdout = "[1/1] Verifying:\n  [mykey] Some Title (Author, 2024)\n  Status: ✓ VERIFIED\n"
         preds = _parse_terminal_output(stdout, entries, 1.0, 1)
         assert len(preds) == 1
         assert preds[0].bibtex_key == "mykey"
@@ -316,7 +316,7 @@ class TestVerifyCitationsBaseline:
         )
 
         entries = [_entry("badkey")]
-        stdout = "✗ badkey: Paper not found\n"
+        stdout = "[1/1] Verifying:\n  [badkey] Bad Paper (Author, 2024)\n  Status: ✗ ISSUES FOUND\n"
         preds = _parse_terminal_output(stdout, entries, 1.0, 1)
         assert len(preds) == 1
         assert preds[0].label == "HALLUCINATED"
@@ -328,7 +328,7 @@ class TestVerifyCitationsBaseline:
         )
 
         entries = [_entry("warnkey")]
-        stdout = "⚠ warnkey: HTTP 403 error\n"
+        stdout = "[1/1] Verifying:\n  [warnkey] Warn Paper (Author, 2024)\n  Status: ⚠ WARNING\n"
         preds = _parse_terminal_output(stdout, entries, 1.0, 1)
         assert len(preds) == 1
         assert preds[0].label == "HALLUCINATED"
@@ -340,7 +340,10 @@ class TestVerifyCitationsBaseline:
         )
 
         entries = [_entry("mykey")]
-        stdout = "✓ otherkey: Verified\n✓ mykey: Also verified\n"
+        stdout = (
+            "[1/2] Verifying:\n  [otherkey] Other (A, 2024)\n  Status: ✓ VERIFIED\n"
+            "[2/2] Verifying:\n  [mykey] Mine (B, 2024)\n  Status: ✓ VERIFIED\n"
+        )
         preds = _parse_terminal_output(stdout, entries, 1.0, 1)
         assert len(preds) == 1
         assert preds[0].bibtex_key == "mykey"
