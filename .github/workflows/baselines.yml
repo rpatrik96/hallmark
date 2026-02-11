@@ -50,7 +50,7 @@ jobs:
           pip install -e ".[baselines]"
           pipx install bibtex-updater
           pipx install harcx
-          pip install git+https://github.com/vishakhpk/verify_citations.git
+          pipx install git+https://github.com/vishakhpk/verify_citations.git
 
       - name: Run baseline evaluation
         run: |
