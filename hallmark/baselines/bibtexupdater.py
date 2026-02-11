@@ -77,12 +77,22 @@ def run_bibtex_check(
     entries: list[BenchmarkEntry],
     extra_args: list[str] | None = None,
     timeout: float = 600.0,
+    rate_limit: int = 120,
+    academic_only: bool = True,
+    **_kw: object,
 ) -> list[Prediction]:
     """Run bibtex-check on a list of entries and return predictions.
 
     Writes entries to a temp .bib file, runs bibtex-check with --jsonl output,
     and parses the results into Prediction objects.  On timeout, reads any
     partial JSONL output that was written before the process was killed.
+
+    Args:
+        entries: Benchmark entries to verify.
+        extra_args: Additional CLI arguments for bibtex-check.
+        timeout: Timeout in seconds (default: 600).
+        rate_limit: API requests per minute (default: 120, up from CLI default 45).
+        academic_only: Skip web/book/working-paper checks (default: True).
     """
     start_time = time.time()
 
@@ -96,13 +106,17 @@ def run_bibtex_check(
         bib_content = entries_to_bib(entries)
         bib_path.write_text(bib_content)
 
-        # Build command
+        # Build command with performance optimizations
         cmd = [
             "bibtex-check",
             str(bib_path),
             "--jsonl",
             str(jsonl_path),
+            "--rate-limit",
+            str(rate_limit),
         ]
+        if academic_only:
+            cmd.append("--academic-only")
         if extra_args:
             cmd.extend(extra_args)
 
