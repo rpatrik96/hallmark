@@ -110,6 +110,7 @@ def run_harc(
     api_key: str | None = None,
     batch_size: int = 20,
     batch_timeout: float = 600.0,
+    total_timeout: float = 600.0,
     **_kw: object,
 ) -> list[Prediction]:
     """Run HaRC verification on benchmark entries via the harcx CLI.
@@ -125,6 +126,7 @@ def run_harc(
         api_key: Optional Semantic Scholar API key.
         batch_size: Entries per batch (default: 20).
         batch_timeout: Timeout per batch in seconds (default: 600).
+        total_timeout: Total wall-clock limit across all batches (default: 600).
 
     Returns:
         List of Predictions.
@@ -143,18 +145,29 @@ def run_harc(
     total_batches = (len(entries) + batch_size - 1) // batch_size
 
     for i in range(0, len(entries), batch_size):
+        elapsed_so_far = time.time() - start
+        remaining = total_timeout - elapsed_so_far
+        if remaining <= 0:
+            logger.warning(
+                f"HaRC total timeout ({total_timeout}s) reached after "
+                f"{len(all_checked)}/{len(entries)} entries"
+            )
+            break
+
         batch = entries[i : i + batch_size]
         batch_num = i // batch_size + 1
         logger.info(f"HaRC batch {batch_num}/{total_batches}: {len(batch)} entries")
 
+        # Use the lesser of batch_timeout and remaining total time
+        effective_timeout = min(batch_timeout, remaining)
         flagged, checked, timed_out = _run_harcx_batch(
-            harcx_bin, batch, author_threshold, check_urls, api_key, batch_timeout
+            harcx_bin, batch, author_threshold, check_urls, api_key, effective_timeout
         )
 
         if timed_out:
             timed_out_batches += 1
             logger.warning(
-                f"HaRC batch {batch_num}/{total_batches} timed out after {batch_timeout}s"
+                f"HaRC batch {batch_num}/{total_batches} timed out after {effective_timeout}s"
             )
             break  # Stop processing further batches
 

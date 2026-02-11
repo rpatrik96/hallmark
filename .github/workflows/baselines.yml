@@ -18,6 +18,7 @@ jobs:
   baseline:
     name: Evaluate ${{ matrix.baseline }}
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     continue-on-error: true
     strategy:
       fail-fast: false
