@@ -26,12 +26,14 @@ jobs:
         include:
           - baseline: doi_only
             max_entries: 0       # fast — evaluate all
+            precomputed: false
           - baseline: bibtexupdater
-            max_entries: 50      # slow API — stratified sample
+            precomputed: true    # rate-limited — use pre-computed results
           - baseline: harc
-            max_entries: 50      # slow API — stratified sample
+            precomputed: true    # rate-limited — use pre-computed results
           - baseline: verify_citations
             max_entries: 50      # API-dependent — stratified sample
+            precomputed: false
 
     steps:
       - name: Checkout code
@@ -44,7 +46,9 @@ jobs:
         with:
           python-version: '3.12'
 
-      - name: Install dependencies
+      # --- Live evaluation path ---
+      - name: Install dependencies (live)
+        if: matrix.precomputed == false
         run: |
           python -m pip install --upgrade pip
           pip install -e ".[baselines]"
@@ -52,13 +56,32 @@ jobs:
           pipx install harcx
           pipx install git+https://github.com/vishakhpk/verify_citations.git
 
-      - name: Run baseline evaluation
+      - name: Run baseline evaluation (live)
+        if: matrix.precomputed == false
         run: |
           python -m hallmark.cli evaluate \
             --split ${{ inputs.split || 'dev_public' }} \
             --baseline ${{ matrix.baseline }} \
             --max-entries ${{ matrix.max_entries }} \
             --output results/${{ matrix.baseline }}_${{ inputs.split || 'dev_public' }}.json
+
+      # --- Pre-computed validation path ---
+      - name: Install dependencies (precomputed)
+        if: matrix.precomputed == true
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e .
+
+      - name: Validate and copy pre-computed results
+        if: matrix.precomputed == true
+        run: |
+          python -m hallmark.cli validate-results \
+            --results-dir data/v1.0/baseline_results \
+            --metadata data/v1.0/metadata.json \
+            --strict
+          mkdir -p results
+          cp data/v1.0/baseline_results/${{ matrix.baseline }}_${{ inputs.split || 'dev_public' }}.json \
+            results/ 2>/dev/null || echo "No pre-computed result for ${{ matrix.baseline }} on ${{ inputs.split || 'dev_public' }}"
 
       - name: Upload results
         uses: actions/upload-artifact@v4

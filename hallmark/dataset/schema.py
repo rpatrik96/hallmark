@@ -236,6 +236,25 @@ class EvaluationResult:
     def to_json(self) -> str:
         return json.dumps(self.to_dict(), ensure_ascii=False, indent=2)
 
+    @classmethod
+    def from_dict(cls, data: dict) -> EvaluationResult:
+        """Deserialize from dictionary.
+
+        Coerces JSON string keys back to int for per_tier_metrics and detect_at_k.
+        """
+        data = dict(data)  # shallow copy to avoid mutating caller's dict
+        # JSON serializes int keys as strings — coerce them back
+        if "per_tier_metrics" in data and data["per_tier_metrics"] is not None:
+            data["per_tier_metrics"] = {int(k): v for k, v in data["per_tier_metrics"].items()}
+        if "detect_at_k" in data and data["detect_at_k"] is not None:
+            data["detect_at_k"] = {int(k): v for k, v in data["detect_at_k"].items()}
+        return cls(**data)
+
+    @classmethod
+    def from_json(cls, text: str) -> EvaluationResult:
+        """Deserialize from JSON string."""
+        return cls.from_dict(json.loads(text))
+
 
 def load_entries(path: str | Path) -> list[BenchmarkEntry]:
     """Load benchmark entries from a JSONL file."""

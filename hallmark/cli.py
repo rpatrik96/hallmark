@@ -104,6 +104,27 @@ def main(argv: list[str] | None = None) -> int:
     # --- list-baselines ---
     subparsers.add_parser("list-baselines", help="List available baselines and their status")
 
+    # --- validate-results ---
+    val_parser = subparsers.add_parser(
+        "validate-results", help="Validate pre-computed reference results"
+    )
+    val_parser.add_argument(
+        "--results-dir",
+        type=str,
+        default="data/v1.0/baseline_results",
+        help="Directory containing manifest.json and result files",
+    )
+    val_parser.add_argument(
+        "--metadata",
+        type=str,
+        help="Path to dataset metadata.json for cross-validation",
+    )
+    val_parser.add_argument(
+        "--strict",
+        action="store_true",
+        help="Reject results with F1=0.0 (likely failed runs)",
+    )
+
     # --- history-append ---
     hist_parser = subparsers.add_parser(
         "history-append", help="Append current results to history JSONL log"
@@ -142,6 +163,8 @@ def main(argv: list[str] | None = None) -> int:
         return _cmd_list_baselines()
     elif args.command == "history-append":
         return _cmd_history_append(args)
+    elif args.command == "validate-results":
+        return _cmd_validate_results(args)
 
     return 0
 
@@ -398,6 +421,30 @@ def _cmd_history_append(args: argparse.Namespace) -> int:
         count += 1
 
     logging.info(f"Appended {count} results to {history_file}")
+    return 0
+
+
+def _cmd_validate_results(args: argparse.Namespace) -> int:
+    """Validate pre-computed reference results."""
+    from hallmark.evaluation.validate import validate_reference_results
+
+    vr = validate_reference_results(
+        results_dir=args.results_dir,
+        metadata_path=args.metadata,
+        strict=args.strict,
+    )
+
+    if vr.warnings:
+        for w in vr.warnings:
+            logging.warning(w)
+
+    if vr.errors:
+        for e in vr.errors:
+            logging.error(e)
+        print(f"\nValidation FAILED: {len(vr.errors)} error(s)")
+        return 1
+
+    print("\nValidation passed.")
     return 0
 
 

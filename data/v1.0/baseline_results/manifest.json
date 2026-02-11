@@ -1,0 +1,6 @@
+{
+  "version": "1.0",
+  "description": "Pre-computed baseline reference results. Generated locally, validated in CI.",
+  "generated_by": "scripts/generate_reference_results.py",
+  "files": {}
+}

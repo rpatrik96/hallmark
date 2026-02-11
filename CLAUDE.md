@@ -35,15 +35,18 @@ Never leave a commit in a failed state. Never skip or ignore pre-commit hook err
 - `hallmark/` — main package (baselines, dataset, evaluation, contribution)
 - `hallmark/baselines/registry.py` — central baseline registry (discovery, availability, dispatch)
 - `hallmark/evaluation/ranking.py` — ONEBench-inspired Plackett-Luce ranking
-- `scripts/` — orchestrator scripts (run_all_baselines.py, run_evaluation.py)
+- `scripts/` — orchestrator scripts (run_all_baselines.py, run_evaluation.py, generate_reference_results.py)
 - `tests/` — pytest test suite
 - `data/v1.0/` — benchmark data splits
+- `data/v1.0/baseline_results/` — pre-computed reference results for rate-limited baselines
 - `.github/workflows/` — CI (tests.yml, baselines.yml)
 
 ## Key Conventions
 - Optional dependencies (choix, harcx, openai, anthropic) use lazy imports
 - bibtex-updater, harcx, and verify-citations all require bibtexparser 1.x; install in isolation with `pipx install`
-- harc and bibtexupdater baselines time out in CI due to Semantic Scholar API rate-limiting on shared IPs; run locally for real results
-- CI evaluates slow baselines on 50-entry stratified samples (`--max-entries 50`)
+- harc and bibtexupdater baselines time out in CI due to Semantic Scholar API rate-limiting on shared IPs
+- Rate-limited baselines use pre-computed reference results: run locally via `python scripts/generate_reference_results.py --baselines harc,bibtexupdater`, commit to `data/v1.0/baseline_results/`, CI validates checksums instead of re-running
+- Validate reference results: `hallmark validate-results --results-dir data/v1.0/baseline_results/ --strict`
+- CI evaluates live baselines (doi_only, verify_citations) normally; precomputed baselines (harc, bibtexupdater) are validated and copied
 - Baselines use the registry pattern in `hallmark/baselines/registry.py`
 - Pre-commit hooks run mypy with `--ignore-missing-imports` on `hallmark/`
