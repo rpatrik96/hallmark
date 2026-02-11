@@ -83,6 +83,7 @@ def run_verify_citations(
     """
     predictions = []
     start_time = time.time()
+    timed_out = False
 
     with tempfile.TemporaryDirectory() as tmpdir:
         bib_path = Path(tmpdir) / "input.bib"
@@ -100,6 +101,7 @@ def run_verify_citations(
 
         # Run verify-citations
         logger.info(f"Running: {' '.join(cmd)}")
+        stdout = ""
         try:
             result = subprocess.run(
                 cmd,
@@ -107,37 +109,53 @@ def run_verify_citations(
                 text=True,
                 timeout=timeout,
             )
+            stdout = result.stdout
             if result.returncode not in (0, 1):
                 logger.error(f"verify-citations failed (exit {result.returncode}): {result.stderr}")
         except FileNotFoundError:
             logger.error("verify-citations not found. Install with: pip install verify-citations")
             return _fallback_predictions(entries)
-        except subprocess.TimeoutExpired:
-            logger.error(f"verify-citations timed out after {timeout}s")
-            return _fallback_predictions(entries)
+        except subprocess.TimeoutExpired as exc:
+            timed_out = True
+            # Capture any partial output produced before timeout
+            raw = exc.stdout or b""
+            stdout = raw.decode("utf-8", errors="replace") if isinstance(raw, bytes) else raw
 
         elapsed = time.time() - start_time
 
-        # Parse terminal output
-        if result.stdout:
-            predictions = _parse_terminal_output(result.stdout, entries, elapsed, len(entries))
-        else:
+        # Parse terminal output (works for both complete and partial results)
+        if stdout:
+            predictions = _parse_terminal_output(stdout, entries, elapsed, len(entries))
+
+        checked = len(predictions)
+
+        if timed_out:
+            logger.warning(
+                f"verify-citations timed out after {timeout}s: "
+                f"{checked}/{len(entries)} entries completed"
+            )
+
+        if not predictions and not timed_out:
             logger.warning("No stdout from verify-citations")
-            predictions = _fallback_predictions(entries)
 
     # Fill in missing predictions (entries not in output)
     predicted_keys = {p.bibtex_key for p in predictions}
     for entry in entries:
         if entry.bibtex_key not in predicted_keys:
+            reason = (
+                f"verify-citations timed out ({checked}/{len(entries)} completed)"
+                if timed_out
+                else "Entry not in verify-citations output"
+            )
             predictions.append(
                 Prediction(
                     bibtex_key=entry.bibtex_key,
                     label="VALID",
                     confidence=0.5,
-                    reason="Entry not in verify-citations output",
+                    reason=reason,
                     wall_clock_seconds=elapsed / len(entries),
                     api_sources_queried=API_SOURCES,
-                    api_calls=len(API_SOURCES),
+                    api_calls=0 if timed_out else len(API_SOURCES),
                 )
             )
 

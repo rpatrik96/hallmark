@@ -2,6 +2,12 @@
 
 Maps bibtex-check JSONL output to HALLMARK Prediction format.
 bibtex-updater verifies citations against CrossRef, DBLP, Semantic Scholar.
+
+Install: pipx install bibtex-updater  (or uv tool install bibtex-updater)
+
+NOTE: bibtex-updater requires bibtexparser 1.x which conflicts with
+hallmark's bibtexparser>=2.0.  It must be installed in an isolated
+environment (pipx / uv tool) and invoked as a CLI subprocess.
 """
 
 from __future__ import annotations
@@ -75,15 +81,17 @@ def run_bibtex_check(
     """Run bibtex-check on a list of entries and return predictions.
 
     Writes entries to a temp .bib file, runs bibtex-check with --jsonl output,
-    and parses the results into Prediction objects.
+    and parses the results into Prediction objects.  On timeout, reads any
+    partial JSONL output that was written before the process was killed.
     """
-    predictions = []
     start_time = time.time()
 
-    with tempfile.TemporaryDirectory() as tmpdir:
-        bib_path = Path(tmpdir) / "input.bib"
-        jsonl_path = Path(tmpdir) / "results.jsonl"
+    # Use a directory we control to avoid cleanup race on timeout
+    tmpdir = tempfile.mkdtemp()
+    bib_path = Path(tmpdir) / "input.bib"
+    jsonl_path = Path(tmpdir) / "results.jsonl"
 
+    try:
         # Write BibTeX file
         bib_content = entries_to_bib(entries)
         bib_path.write_text(bib_content)
@@ -100,6 +108,7 @@ def run_bibtex_check(
 
         # Run bibtex-check
         logger.info(f"Running: {' '.join(cmd)}")
+        timed_out = False
         try:
             result = subprocess.run(
                 cmd,
@@ -110,31 +119,50 @@ def run_bibtex_check(
             if result.returncode not in (0, 2, 4):
                 logger.error(f"bibtex-check failed (exit {result.returncode}): {result.stderr}")
         except FileNotFoundError:
-            logger.error("bibtex-check not found. Install with: pip install bibtex-updater")
+            logger.error("bibtex-check not found. Install with: pipx install bibtex-updater")
             return _fallback_predictions(entries)
         except subprocess.TimeoutExpired:
-            logger.error(f"bibtex-check timed out after {timeout}s")
-            return _fallback_predictions(entries)
+            timed_out = True
 
         elapsed = time.time() - start_time
 
-        # Parse JSONL output
+        # Parse JSONL output (works for both complete and partial results)
+        predictions: list[Prediction] = []
         if jsonl_path.exists():
             predictions = _parse_jsonl_output(jsonl_path, elapsed, len(entries))
-        else:
+
+        checked = len(predictions)
+
+        if timed_out:
+            logger.warning(
+                f"bibtex-check timed out after {timeout}s: "
+                f"{checked}/{len(entries)} entries completed"
+            )
+
+        if not predictions and not timed_out:
             logger.warning("No JSONL output file produced")
-            predictions = _fallback_predictions(entries)
+
+    finally:
+        # Clean up temp files
+        import shutil
+
+        shutil.rmtree(tmpdir, ignore_errors=True)
 
     # Fill in missing predictions (entries not in output)
     predicted_keys = {p.bibtex_key for p in predictions}
     for entry in entries:
         if entry.bibtex_key not in predicted_keys:
+            reason = (
+                f"bibtex-check timed out ({checked}/{len(entries)} completed)"
+                if timed_out
+                else "Entry not in bibtex-check output"
+            )
             predictions.append(
                 Prediction(
                     bibtex_key=entry.bibtex_key,
                     label="VALID",
                     confidence=0.5,
-                    reason="Entry not in bibtex-check output",
+                    reason=reason,
                     wall_clock_seconds=elapsed / len(entries),
                 )
             )
