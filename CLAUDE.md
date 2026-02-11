@@ -13,7 +13,7 @@ HALLMARK (HALLucination benchMARK) evaluates citation verification tools on dete
 
 ## Commit Rules
 
-**CRITICAL: When a commit fails due to pre-commit hooks (mypy, ruff, etc.), you MUST:**
+**CRITICAL: When a commit fails due to pre-commit hooks (mypy, ruff, etc.), you MUST immediately fix and retry — NEVER stop, report the failure, or ask the user:**
 1. Read and understand every error in the output
 2. Fix ALL errors — not just some of them
 3. Re-run the failing check manually (e.g. `uv run mypy --ignore-missing-imports hallmark/`) to confirm the fix
@@ -21,7 +21,7 @@ HALLMARK (HALLucination benchMARK) evaluates citation verification tools on dete
 5. Only then attempt the commit again
 6. Repeat this cycle until the commit succeeds — do NOT stop or ask the user while errors remain
 
-Never leave a commit in a failed state. Never skip or ignore pre-commit hook errors.
+This is a single atomic workflow. The commit is not done until all hooks pass and git confirms the commit hash. Never leave a commit in a failed state. Never skip or ignore pre-commit hook errors.
 
 ## Pre-commit Hook Pitfalls
 
