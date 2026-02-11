@@ -3,12 +3,19 @@
 HaRC (https://pypi.org/project/harcx/) validates BibTeX citations against
 Semantic Scholar, DBLP, Google Scholar, and Open Library.
 
-Install: pip install harcx
+Install: pipx install harcx  (or uv tool install harcx)
+
+NOTE: harcx requires bibtexparser 1.x which conflicts with hallmark's
+bibtexparser>=2.0.  It must be installed in an isolated environment
+(pipx / uv tool) and invoked as a CLI subprocess.
 """
 
 from __future__ import annotations
 
 import logging
+import re
+import shutil
+import subprocess
 import tempfile
 import time
 from pathlib import Path
@@ -18,37 +25,63 @@ from hallmark.dataset.schema import BenchmarkEntry, Prediction
 logger = logging.getLogger(__name__)
 
 
+def _parse_harcx_output(output: str) -> dict[str, list[str]]:
+    """Parse harcx CLI output into a dict of {bibtex_key: [issues]}.
+
+    The CLI output format for flagged entries is::
+
+        [bibtex_key]
+          Title: ...
+          ...
+          Issue: description
+
+    Returns an empty dict when all entries are verified successfully.
+    """
+    flagged: dict[str, list[str]] = {}
+    current_key: str | None = None
+
+    for line in output.splitlines():
+        # Match entry key lines like "[fake_entry_2024]"
+        key_match = re.match(r"^\[(\S+)\]$", line.strip())
+        if key_match:
+            current_key = key_match.group(1)
+            continue
+
+        # Match issue lines like "  Issue: ..."
+        issue_match = re.match(r"^\s+Issue:\s+(.+)$", line)
+        if issue_match and current_key:
+            flagged.setdefault(current_key, []).append(issue_match.group(1))
+
+    return flagged
+
+
 def run_harc(
     entries: list[BenchmarkEntry],
     author_threshold: float = 0.6,
-    year_tolerance: int = 1,
-    api_key: str | None = None,
     check_urls: bool = False,
+    api_key: str | None = None,
+    **_kw: object,
 ) -> list[Prediction]:
-    """Run HaRC verification on benchmark entries.
+    """Run HaRC verification on benchmark entries via the harcx CLI.
 
-    Requires: pip install harcx
+    Requires: ``harcx`` on PATH (install with ``pipx install harcx``
+    or ``uv tool install harcx``).
 
     Args:
         entries: Benchmark entries to verify.
         author_threshold: Author match threshold (0.0-1.0, default: 0.6).
-        year_tolerance: Year tolerance (default: 1).
-        api_key: Optional Semantic Scholar API key.
         check_urls: Whether to verify URL reachability.
+        api_key: Optional Semantic Scholar API key.
 
     Returns:
         List of Predictions.
     """
-    try:
-        from reference_checker import (  # type: ignore[import-untyped]
-            check_citations,
-            check_web_citations,
-        )
-    except ImportError:
+    harcx_bin = shutil.which("harcx")
+    if harcx_bin is None:
         raise ImportError(
-            "harcx is required for the HaRC baseline. Install with: pip install harcx\n"
-            "(The importable module is 'reference_checker')"
-        ) from None
+            "harcx CLI not found on PATH. "
+            "Install with: pipx install harcx  (or uv tool install harcx)"
+        )
 
     # Write entries to a temporary .bib file
     with tempfile.NamedTemporaryFile(mode="w", suffix=".bib", delete=False) as f:
@@ -56,55 +89,47 @@ def run_harc(
             f.write(entry.to_bibtex() + "\n\n")
         bib_path = f.name
 
+    cmd = [harcx_bin, "-q", "--threshold", str(author_threshold), bib_path]
+    if check_urls:
+        cmd.append("--check-urls")
+    if api_key:
+        cmd.extend(["--api-key", api_key])
+
     start = time.time()
     try:
-        issues = check_citations(
-            bib_path,
-            author_threshold=author_threshold,
-            year_tolerance=year_tolerance,
-            api_key=api_key,
-            verbose=False,
+        result = subprocess.run(
+            cmd,
+            capture_output=True,
+            text=True,
+            timeout=600,
         )
-        url_issues = []
-        if check_urls:
-            url_issues = check_web_citations(bib_path, verbose=False)
     finally:
         Path(bib_path).unlink(missing_ok=True)
 
     total_time = time.time() - start
     per_entry_time = total_time / max(len(entries), 1)
 
-    # Build a set of flagged entry keys from issues
-    flagged_keys: dict[str, list[str]] = {}
-    for issue in issues:
-        key = getattr(issue, "key", None) or getattr(issue, "entry_key", "")
-        msg = getattr(issue, "message", str(issue))
-        if key:
-            flagged_keys.setdefault(key, []).append(msg)
+    # harcx exits 0 = all OK, 1 = issues found (or error)
+    combined_output = result.stdout + result.stderr
+    flagged_keys = _parse_harcx_output(combined_output)
 
-    url_flagged: dict[str, list[str]] = {}
-    for issue in url_issues:
-        key = getattr(issue, "key", None) or getattr(issue, "entry_key", "")
-        msg = getattr(issue, "message", str(issue))
-        if key:
-            url_flagged.setdefault(key, []).append(msg)
+    if result.returncode not in (0, 1):
+        logger.warning("harcx exited with code %d: %s", result.returncode, combined_output[:500])
 
     # Map to predictions
-    predictions = []
+    predictions: list[Prediction] = []
     api_sources = ["semantic_scholar", "dblp", "google_scholar", "open_library"]
 
     for entry in entries:
-        citation_issues = flagged_keys.get(entry.bibtex_key, [])
-        url_problems = url_flagged.get(entry.bibtex_key, [])
-        all_issues = citation_issues + url_problems
+        issues = flagged_keys.get(entry.bibtex_key, [])
 
-        if all_issues:
+        if issues:
             predictions.append(
                 Prediction(
                     bibtex_key=entry.bibtex_key,
                     label="HALLUCINATED",
-                    confidence=min(0.5 + 0.15 * len(all_issues), 0.95),
-                    reason=f"HaRC flagged: {'; '.join(all_issues)}",
+                    confidence=min(0.5 + 0.15 * len(issues), 0.95),
+                    reason=f"HaRC flagged: {'; '.join(issues)}",
                     api_sources_queried=api_sources,
                     wall_clock_seconds=per_entry_time,
                     api_calls=len(api_sources),

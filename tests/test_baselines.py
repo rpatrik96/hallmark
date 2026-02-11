@@ -224,6 +224,56 @@ class TestRegistry:
             assert isinstance(info.pip_packages, list)
 
 
+# --- HaRC output parsing ---
+
+
+class TestHarcOutputParsing:
+    def test_parse_all_ok(self):
+        from hallmark.baselines.harc import _parse_harcx_output
+
+        output = "\nAll entries verified successfully!\n"
+        assert _parse_harcx_output(output) == {}
+
+    def test_parse_single_issue(self):
+        from hallmark.baselines.harc import _parse_harcx_output
+
+        output = (
+            "\n============================================================\n"
+            "Found 1 entries requiring attention:\n"
+            "============================================================\n"
+            "\n"
+            "[fake_entry_2024]\n"
+            "  Title: A Fake Paper\n"
+            "  Bib Authors: john smith\n"
+            "  Year: 2024\n"
+            "  Issue: Not found in Semantic Scholar, DBLP, or Google Scholar\n"
+        )
+        result = _parse_harcx_output(output)
+        assert "fake_entry_2024" in result
+        assert len(result["fake_entry_2024"]) == 1
+        assert "Not found" in result["fake_entry_2024"][0]
+
+    def test_parse_multiple_entries(self):
+        from hallmark.baselines.harc import _parse_harcx_output
+
+        output = (
+            "[entry_a]\n"
+            "  Issue: Authors don't match\n"
+            "\n"
+            "[entry_b]\n"
+            "  Issue: Not found in any database\n"
+        )
+        result = _parse_harcx_output(output)
+        assert len(result) == 2
+        assert "entry_a" in result
+        assert "entry_b" in result
+
+    def test_parse_empty_output(self):
+        from hallmark.baselines.harc import _parse_harcx_output
+
+        assert _parse_harcx_output("") == {}
+
+
 # --- verify-citations baseline ---
 
 
