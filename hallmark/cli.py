@@ -57,6 +57,12 @@ def main(argv: list[str] | None = None) -> int:
     eval_parser.add_argument("--data-dir", type=str, help="Override data directory")
     eval_parser.add_argument("--version", default="v1.0", help="Dataset version")
     eval_parser.add_argument(
+        "--max-entries",
+        type=int,
+        default=0,
+        help="Max entries to evaluate (0 = all). Selects a stratified sample preserving hallucination ratio.",
+    )
+    eval_parser.add_argument(
         "--tool-name", default="unknown", help="Name of the tool being evaluated"
     )
 
@@ -140,6 +146,26 @@ def main(argv: list[str] | None = None) -> int:
     return 0
 
 
+def _stratified_sample(entries: list[BenchmarkEntry], n: int) -> list[BenchmarkEntry]:
+    """Return a stratified sample preserving the hallucination ratio."""
+    import random
+
+    hallucinated = [e for e in entries if e.label == "HALLUCINATED"]
+    valid = [e for e in entries if e.label != "HALLUCINATED"]
+
+    ratio = len(hallucinated) / len(entries) if entries else 0
+    n_hall = max(1, round(n * ratio))
+    n_valid = n - n_hall
+
+    rng = random.Random(42)
+    sampled_hall = rng.sample(hallucinated, min(n_hall, len(hallucinated)))
+    sampled_valid = rng.sample(valid, min(n_valid, len(valid)))
+
+    combined = sampled_hall + sampled_valid
+    rng.shuffle(combined)
+    return combined
+
+
 def _cmd_evaluate(args: argparse.Namespace) -> int:
     """Run evaluation command."""
     try:
@@ -153,6 +179,11 @@ def _cmd_evaluate(args: argparse.Namespace) -> int:
         return 1
 
     logging.info(f"Loaded {len(entries)} entries from {args.split}")
+
+    # Subsample if requested (stratified by label)
+    if args.max_entries and 0 < args.max_entries < len(entries):
+        entries = _stratified_sample(entries, args.max_entries)
+        logging.info(f"Sampled {len(entries)} entries (--max-entries {args.max_entries})")
 
     # Get predictions
     predictions: list[Prediction]

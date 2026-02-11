@@ -23,7 +23,15 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        baseline: [doi_only, bibtexupdater, harc, verify_citations]
+        include:
+          - baseline: doi_only
+            max_entries: 0       # fast — evaluate all
+          - baseline: bibtexupdater
+            max_entries: 50      # slow API — stratified sample
+          - baseline: harc
+            max_entries: 50      # slow API — stratified sample
+          - baseline: verify_citations
+            max_entries: 0       # fast — evaluate all
 
     steps:
       - name: Checkout code
@@ -49,6 +57,7 @@ jobs:
           python -m hallmark.cli evaluate \
             --split ${{ inputs.split || 'dev_public' }} \
             --baseline ${{ matrix.baseline }} \
+            --max-entries ${{ matrix.max_entries }} \
             --output results/${{ matrix.baseline }}_${{ inputs.split || 'dev_public' }}.json
 
       - name: Upload results
