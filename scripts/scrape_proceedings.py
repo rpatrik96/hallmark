@@ -53,7 +53,7 @@ def main() -> None:
 
     if len(entries) < args.min_entries:
         logging.error(
-            f"Only scraped {len(entries)} entries, minimum is {args.min_entries}. " "Aborting."
+            f"Only scraped {len(entries)} entries, minimum is {args.min_entries}. Aborting."
         )
         raise SystemExit(1)
 

@@ -39,7 +39,8 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -e ".[baselines]"
-          pip install bibtex-updater harcx
+          pip install bibtex-updater
+          pip install --no-deps harcx
           pip install git+https://github.com/vishakhpk/verify_citations.git
 
       - name: Run baseline evaluation
