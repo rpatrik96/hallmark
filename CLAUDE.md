@@ -42,6 +42,6 @@ Never leave a commit in a failed state. Never skip or ignore pre-commit hook err
 
 ## Key Conventions
 - Optional dependencies (choix, harcx, openai, anthropic) use lazy imports
-- harcx conflicts with bibtexparser>=2.0; install separately with `--no-deps`
+- bibtex-updater and harcx require bibtexparser 1.x; install in isolation with `pipx install`
 - Baselines use the registry pattern in `hallmark/baselines/registry.py`
 - Pre-commit hooks run mypy with `--ignore-missing-imports` on `hallmark/`
