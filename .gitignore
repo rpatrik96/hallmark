@@ -42,6 +42,11 @@ data/hidden/
 **/CLAUDE.md
 !/CLAUDE.md
 
+# Results (CI artifacts, not tracked — except history log)
+results/*.json
+results/*.csv
+!results/history.jsonl
+
 # Temporary
 *.tmp
 *.bak

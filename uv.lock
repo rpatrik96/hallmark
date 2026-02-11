@@ -62,22 +62,6 @@ wheels = [
 ]
 
 [[package]]
-name = "bibtex-updater"
-version = "0.5.1"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "bibtexparser" },
-    { name = "crossref-commons" },
-    { name = "httpx" },
-    { name = "rapidfuzz" },
-    { name = "requests" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/6b/7e/1c2da4654cc2bf1ba2a9930dba5936d811dee9aca3ade365025cfa4dc448/bibtex_updater-0.5.1.tar.gz", hash = "sha256:c57d2c987ae32307ea5d6f8c2b38af56088f91f1e1cab90f864e65e21890f26b", size = 170084, upload-time = "2026-02-08T13:46:44.331Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/b1/c5/23626ca67c85cc6cf94844d2c564f8bccee0ebaf4cc7a0d8d9be115a4a1c/bibtex_updater-0.5.1-py3-none-any.whl", hash = "sha256:ed4d1cbbf3b9c92a84d2ac6c968eb2f5b20e82694587f1968634669a3207195a", size = 119877, upload-time = "2026-02-08T13:46:42.743Z" },
-]
-
-[[package]]
 name = "bibtexparser"
 version = "2.0.0b9"
 source = { registry = "https://pypi.org/simple" }
@@ -330,19 +314,6 @@ toml = [
 ]
 
 [[package]]
-name = "crossref-commons"
-version = "0.0.7"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "ratelimit" },
-    { name = "requests" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/8a/9d/a69673e371afa0d77edcb0cc8dfb6b05ccd9e1ffe879ca7804cf32e7851c/crossref_commons-0.0.7.tar.gz", hash = "sha256:4b8ae35d48acc4fe62da1662525396477e4f8c76fdb00cd42d5334c68713c4b6", size = 8261, upload-time = "2020-01-13T19:37:29.151Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/aa/83/c4d638f2f34ef722f8e655fa86d39215f36b8607a7927af2f2ebe5434431/crossref_commons-0.0.7-py3-none-any.whl", hash = "sha256:ab4f7a62a7745cf70ef68ffdebbb58091493db324a269f29df915f6f43bdf130", size = 14675, upload-time = "2020-01-13T19:37:27.806Z" },
-]
-
-[[package]]
 name = "distro"
 version = "1.9.0"
 source = { registry = "https://pypi.org/simple" }
@@ -395,7 +366,6 @@ dependencies = [
 all = [
     { name = "anthropic" },
     { name = "beautifulsoup4" },
-    { name = "bibtex-updater" },
     { name = "choix" },
     { name = "lxml" },
     { name = "mypy" },
@@ -408,7 +378,6 @@ all = [
 ]
 baselines = [
     { name = "anthropic" },
-    { name = "bibtex-updater" },
     { name = "openai" },
 ]
 dev = [
@@ -433,8 +402,6 @@ requires-dist = [
     { name = "anthropic", marker = "extra == 'baselines'", specifier = ">=0.20" },
     { name = "beautifulsoup4", marker = "extra == 'all'", specifier = ">=4.12" },
     { name = "beautifulsoup4", marker = "extra == 'scraping'", specifier = ">=4.12" },
-    { name = "bibtex-updater", marker = "extra == 'all'", specifier = ">=0.5.0" },
-    { name = "bibtex-updater", marker = "extra == 'baselines'", specifier = ">=0.5.0" },
     { name = "bibtexparser", specifier = ">=2.0.0b0" },
     { name = "choix", marker = "extra == 'all'", specifier = ">=0.3" },
     { name = "choix", marker = "extra == 'ranking'", specifier = ">=0.3" },
@@ -1315,12 +1282,6 @@ wheels = [
     { url = "https://files.pythonhosted.org/packages/22/20/9d30b4a1ab26aac22fff17d21dec7e9089ccddfe25151d0a8bb57001dc3d/rapidfuzz-3.14.3-pp311-pypy311_pp73-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:1e6eefec45625c634926a9fd46c9e4f31118ac8f3156fff9494422cee45207e6", size = 3101472, upload-time = "2025-11-01T11:54:47.255Z" },
     { url = "https://files.pythonhosted.org/packages/b1/ad/fa2d3e5c29a04ead7eaa731c7cd1f30f9ec3c77b3a578fdf90280797cbcb/rapidfuzz-3.14.3-pp311-pypy311_pp73-win_amd64.whl", hash = "sha256:56fefb4382bb12250f164250240b9dd7772e41c5c8ae976fd598a32292449cc5", size = 1511361, upload-time = "2025-11-01T11:54:49.057Z" },
 ]
-
-[[package]]
-name = "ratelimit"
-version = "2.2.1"
-source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/ab/38/ff60c8fc9e002d50d48822cc5095deb8ebbc5f91a6b8fdd9731c87a147c9/ratelimit-2.2.1.tar.gz", hash = "sha256:af8a9b64b821529aca09ebaf6d8d279100d766f19e90b5059ac6a718ca6dee42", size = 5251, upload-time = "2018-12-17T18:55:49.675Z" }
 
 [[package]]
 name = "requests"

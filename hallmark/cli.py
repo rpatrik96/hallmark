@@ -98,6 +98,19 @@ def main(argv: list[str] | None = None) -> int:
     # --- list-baselines ---
     subparsers.add_parser("list-baselines", help="List available baselines and their status")
 
+    # --- history-append ---
+    hist_parser = subparsers.add_parser(
+        "history-append", help="Append current results to history JSONL log"
+    )
+    hist_parser.add_argument(
+        "--results-dir", type=str, default="results", help="Directory containing result JSONs"
+    )
+    hist_parser.add_argument(
+        "--output",
+        type=str,
+        help="Path to history JSONL file (default: <results-dir>/history.jsonl)",
+    )
+
     args = parser.parse_args(argv)
 
     # Setup logging
@@ -121,6 +134,8 @@ def main(argv: list[str] | None = None) -> int:
         return _cmd_leaderboard(args)
     elif args.command == "list-baselines":
         return _cmd_list_baselines()
+    elif args.command == "history-append":
+        return _cmd_history_append(args)
 
     return 0
 
@@ -274,7 +289,9 @@ def _cmd_leaderboard(args: argparse.Namespace) -> int:
     results = []
     for path in results_dir.glob("*.json"):
         with open(path) as f:
-            results.append(json.load(f))
+            data = json.load(f)
+        if data.get("split_name") == args.split:
+            results.append(data)
 
     if not results:
         print("No evaluation results found.")
@@ -320,6 +337,36 @@ def _cmd_list_baselines() -> int:
         print(f"  {name:<22}{avail_str:<12}{free_str:<8}{info.description}")
 
     print(f"{'=' * 70}\n")
+    return 0
+
+
+def _cmd_history_append(args: argparse.Namespace) -> int:
+    """Append current results to history JSONL log."""
+    import datetime
+
+    results_dir = Path(args.results_dir)
+    history_file = Path(args.output) if args.output else results_dir / "history.jsonl"
+
+    count = 0
+    for path in sorted(results_dir.glob("*.json")):
+        with open(path) as f:
+            data = json.load(f)
+        entry = {
+            "timestamp": datetime.datetime.now(datetime.timezone.utc).isoformat(),
+            "tool_name": data.get("tool_name"),
+            "split_name": data.get("split_name"),
+            "f1_hallucination": data.get("f1_hallucination"),
+            "detection_rate": data.get("detection_rate"),
+            "false_positive_rate": data.get("false_positive_rate"),
+            "tier_weighted_f1": data.get("tier_weighted_f1"),
+            "num_entries": data.get("num_entries"),
+            "cost_efficiency": data.get("cost_efficiency"),
+        }
+        with open(history_file, "a") as out:
+            out.write(json.dumps(entry, ensure_ascii=False) + "\n")
+        count += 1
+
+    logging.info(f"Appended {count} results to {history_file}")
     return 0
 
 

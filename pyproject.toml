@@ -34,7 +34,6 @@ dependencies = [
 
 [project.optional-dependencies]
 baselines = [
-    "bibtex-updater>=0.5.0",
     "openai>=1.0",
     "anthropic>=0.20",
 ]
@@ -53,8 +52,10 @@ dev = [
     "mypy>=1.0",
 ]
 all = ["hallmark[baselines,ranking,scraping,dev]"]
-# NOTE: harcx conflicts with bibtexparser>=2.0 (requires <2.0).
-# Install separately: pip install --no-deps harcx
+# NOTE: bibtex-updater and harcx require bibtexparser 1.x which conflicts
+# with hallmark's bibtexparser>=2.0. Install them in isolation:
+#   pipx install bibtex-updater
+#   pipx install harcx
 
 [project.scripts]
 hallmark = "hallmark.cli:main"
