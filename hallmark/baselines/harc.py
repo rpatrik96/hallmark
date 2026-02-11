@@ -95,19 +95,39 @@ def run_harc(
     if api_key:
         cmd.extend(["--api-key", api_key])
 
+    api_sources = ["semantic_scholar", "dblp", "google_scholar", "open_library"]
+
     start = time.time()
+    timed_out = False
     try:
         result = subprocess.run(
             cmd,
             capture_output=True,
             text=True,
-            timeout=600,
+            timeout=1800,
         )
+    except subprocess.TimeoutExpired:
+        logger.warning("harcx timed out after 1800s on %d entries", len(entries))
+        timed_out = True
     finally:
         Path(bib_path).unlink(missing_ok=True)
 
     total_time = time.time() - start
     per_entry_time = total_time / max(len(entries), 1)
+
+    if timed_out:
+        return [
+            Prediction(
+                bibtex_key=e.bibtex_key,
+                label="VALID",
+                confidence=0.5,
+                reason="HaRC: timed out before completion",
+                api_sources_queried=api_sources,
+                wall_clock_seconds=per_entry_time,
+                api_calls=0,
+            )
+            for e in entries
+        ]
 
     # harcx exits 0 = all OK, 1 = issues found (or error)
     combined_output = result.stdout + result.stderr
@@ -118,7 +138,6 @@ def run_harc(
 
     # Map to predictions
     predictions: list[Prediction] = []
-    api_sources = ["semantic_scholar", "dblp", "google_scholar", "open_library"]
 
     for entry in entries:
         issues = flagged_keys.get(entry.bibtex_key, [])
