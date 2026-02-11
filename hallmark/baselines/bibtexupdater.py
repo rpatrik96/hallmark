@@ -70,7 +70,7 @@ def entries_to_bib(entries: list[BenchmarkEntry]) -> str:
 def run_bibtex_check(
     entries: list[BenchmarkEntry],
     extra_args: list[str] | None = None,
-    timeout: float = 300.0,
+    timeout: float = 600.0,
 ) -> list[Prediction]:
     """Run bibtex-check on a list of entries and return predictions.
 
