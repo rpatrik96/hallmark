@@ -104,10 +104,10 @@ def run_harc(
             cmd,
             capture_output=True,
             text=True,
-            timeout=1800,
+            timeout=600,
         )
     except subprocess.TimeoutExpired:
-        logger.warning("harcx timed out after 1800s on %d entries", len(entries))
+        logger.warning("harcx timed out after 600s on %d entries", len(entries))
         timed_out = True
     finally:
         Path(bib_path).unlink(missing_ok=True)
