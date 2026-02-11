@@ -42,6 +42,8 @@ Never leave a commit in a failed state. Never skip or ignore pre-commit hook err
 
 ## Key Conventions
 - Optional dependencies (choix, harcx, openai, anthropic) use lazy imports
-- bibtex-updater and harcx require bibtexparser 1.x; install in isolation with `pipx install`
+- bibtex-updater, harcx, and verify-citations all require bibtexparser 1.x; install in isolation with `pipx install`
+- harc and bibtexupdater baselines time out in CI due to Semantic Scholar API rate-limiting on shared IPs; run locally for real results
+- CI evaluates slow baselines on 50-entry stratified samples (`--max-entries 50`)
 - Baselines use the registry pattern in `hallmark/baselines/registry.py`
 - Pre-commit hooks run mypy with `--ignore-missing-imports` on `hallmark/`
