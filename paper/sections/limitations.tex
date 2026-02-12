@@ -2,10 +2,12 @@
 \label{sec:limitations}
 
 At 1,182 entries (282 hallucinated, with at least 10 instances per type per public split), the dataset provides reasonable statistical power per type but remains small relative to the full diversity of possible citation hallucinations.
+With 10 instances per type per split, per-type metrics have wide confidence intervals (e.g., a type-level detection rate of 90\% has a 95\% Clopper-Pearson interval of [0.55, 1.00]); we report per-type breakdowns for diagnostic insight rather than definitive type-level claims.
 The hallucination prevalence differs across splits (22.7\% in dev, 32.5\% in test) due to scaling hallucinated entries independently per split; prevalence-sensitive metrics should be interpreted with this caveat.
 The benchmark covers only English-language BibTeX references.
 Most hallucinated entries are synthetically generated rather than harvested from publications, and may not fully capture real LLM error distributions.
 Baseline performance depends on bibliographic API availability and coverage; results may shift as APIs evolve.
+We did not evaluate commercial plagiarism detection tools (Turnitin, iThenticate), which focus on textual similarity rather than citation metadata verification.
 Valid entries are drawn from 2018--2025 ML venues and may not generalize to other fields or time periods.
 The community contribution system is designed to address these coverage limitations over time.
 All synthetic entries are generated with a single fixed seed; we did not conduct seed-sensitivity analysis, though the deterministic generation ensures exact reproducibility.

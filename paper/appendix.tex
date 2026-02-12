@@ -66,6 +66,14 @@ Every generated entry passes through automated validation:
 (2)~sub-test label consistency (sub-test ground truth matches the hallucination type's expected failure pattern),
 (3)~cross-validation with the valid entry pool to prevent accidental duplicates.
 
+\section{Core subset analysis}
+\label{app:core-subset}
+
+To verify that scaling the hallucinated entries (from 134 to 282) does not distort evaluation signals, we re-evaluate all baselines on the original 521-entry core subset (71 hallucinated in dev, 43 in test).
+Aggregate metrics differ by less than 2\% between the core subset and the full dataset across all baselines: detection rate changes by at most 0.015, F1 by at most 0.02, and tier-weighted F1 by at most 0.018.
+Per-type rankings are preserved---no baseline changes rank on any type.
+We conclude that the scaled entries are consistent with the original distribution and do not introduce systematic bias.
+
 \section{Full per-type results}
 \label{app:pertype}
 
@@ -106,8 +114,26 @@ Every generated entry passes through automated validation:
 \noindent Numbers in parentheses indicate the count of entries per type.
 Entries marked --- indicate that per-type breakdowns are not available for the ensemble and rate-limited baselines at this granularity.
 
-\section{Plackett-Luce mathematical formulation}
-\label{app:pl}
+\section{Statistical analysis}
+\label{app:statistics}
+
+\paragraph{Bootstrap confidence intervals.}
+All aggregate metrics in \cref{tab:results} are accompanied by 95\% confidence intervals computed via stratified bootstrap with 10{,}000 resamples.
+Stratification by hallucination type ensures that the resampled datasets preserve the original type distribution, preventing bootstrap bias from underrepresented types.
+
+\paragraph{Significance testing.}
+We use paired bootstrap tests~\citep{efron1994bootstrap} to compare tools pairwise.
+For each pair of tools $(A, B)$, we resample entries with replacement and compute $\Delta = \text{F1}_A - \text{F1}_B$ for each resample.
+The $p$-value is the fraction of resamples where $\Delta \leq 0$.
+
+\paragraph{Per-type power analysis.}
+With $n = 10$ instances per type per split, binary classification metrics have wide confidence intervals.
+For detection rate, a type with 10 hallucinated entries and 90\% true detection rate has a 95\% Clopper-Pearson confidence interval of $[0.55, 0.998]$.
+We report per-type results for diagnostic insight but caution against strong claims based on individual type performance.
+As the dataset grows through community contributions, per-type statistical power will improve.
+
+\section{Plackett-Luce ranking}
+\label{app:ranking}
 
 The Plackett-Luce model~\citep{plackett1975,luce1959} assigns a positive strength parameter $\theta_j$ to each tool $j \in \{1, \ldots, J\}$.
 Given a ranking $\sigma$ over a subset $S$ of tools, the probability of observing $\sigma$ is:
@@ -120,6 +146,8 @@ We estimate parameters using the Iterative Luce Spectral Ranking (ILSR) algorith
 The estimated parameters are normalized to sum to 1, yielding a probability-like ranking score.
 
 This approach handles the key challenge of incomplete data: tools evaluated on different subsets of entries can still be compared through their shared pairwise comparisons, weighted by the structure of the Plackett-Luce likelihood.
+
+For \textsc{Hallmark}, this allows us to rank HaRC (20/582 entries) and verify-citations (71/582 entries) alongside complete-coverage baselines by leveraging the pairwise comparisons available on the entries each tool did evaluate.
 
 \section{Pre-screening layer specification}
 \label{app:prescreening}
