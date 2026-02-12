@@ -111,9 +111,9 @@ class TestTypeBalance:
 
         for ht in HallucinationType:
             count = type_counts.get(ht.value, 0)
-            assert (
-                count >= MIN_PER_TYPE
-            ), f"{split_name}: {ht.value} has {count} entries, need >= {MIN_PER_TYPE}"
+            assert count >= MIN_PER_TYPE, (
+                f"{split_name}: {ht.value} has {count} entries, need >= {MIN_PER_TYPE}"
+            )
 
     def test_all_13_types_present_dev(self, dev_entries: list[BenchmarkEntry]) -> None:
         types = {e.hallucination_type for e in dev_entries if e.label == "HALLUCINATED"}
@@ -160,9 +160,9 @@ class TestNearMissTitleQuality:
                 generic_count += 1
 
         # Allow at most 10% generic (some may come from synonym fallback)
-        assert (
-            generic_count <= n_trials * 0.1
-        ), f"{generic_count}/{n_trials} near-miss titles contain generic words"
+        assert generic_count <= n_trials * 0.1, (
+            f"{generic_count}/{n_trials} near-miss titles contain generic words"
+        )
 
     def test_title_differs_from_original(self) -> None:
         source = self._make_source()
@@ -184,9 +184,9 @@ class TestNearMissTitleQuality:
         added = set(modified_words) - set(original_words)
         removed = set(original_words) - set(modified_words)
         total_diff = len(added) + len(removed)
-        assert (
-            total_diff <= 4
-        ), f"Too many differences ({total_diff}): added={added}, removed={removed}"
+        assert total_diff <= 4, (
+            f"Too many differences ({total_diff}): added={added}, removed={removed}"
+        )
 
 
 # ── Generator quality: version_confusion ────────────────────────────────────
@@ -252,9 +252,9 @@ class TestSurfaceDiversity:
         ]
         unique_titles = set(titles)
         # At least 80% unique
-        assert (
-            len(unique_titles) >= len(titles) * 0.8
-        ), f"{split_name}: only {len(unique_titles)}/{len(titles)} unique chimeric titles"
+        assert len(unique_titles) >= len(titles) * 0.8, (
+            f"{split_name}: only {len(unique_titles)}/{len(titles)} unique chimeric titles"
+        )
 
     @pytest.mark.parametrize("split_name", ["dev", "test"])
     def test_retracted_doi_diversity(
@@ -270,9 +270,9 @@ class TestSurfaceDiversity:
         ]
         unique_dois = set(dois)
         # At least 50% unique (some reuse is OK within a split)
-        assert (
-            len(unique_dois) >= len(dois) * 0.5
-        ), f"{split_name}: only {len(unique_dois)}/{len(dois)} unique retracted DOIs"
+        assert len(unique_dois) >= len(dois) * 0.5, (
+            f"{split_name}: only {len(unique_dois)}/{len(dois)} unique retracted DOIs"
+        )
 
 
 # ── Schema validation ──────────────────────────────────────────────────────
@@ -310,9 +310,9 @@ class TestSchemaValidation:
         entries = dev_entries if split_name == "dev" else test_entries
         for e in entries:
             if e.label == "HALLUCINATED":
-                assert (
-                    e.hallucination_type is not None
-                ), f"{e.bibtex_key}: missing hallucination_type"
+                assert e.hallucination_type is not None, (
+                    f"{e.bibtex_key}: missing hallucination_type"
+                )
                 assert e.difficulty_tier is not None, f"{e.bibtex_key}: missing difficulty_tier"
 
     @pytest.mark.parametrize("split_name", ["dev", "test"])
@@ -325,6 +325,6 @@ class TestSchemaValidation:
         entries = dev_entries if split_name == "dev" else test_entries
         for e in entries:
             if e.label == "HALLUCINATED":
-                assert (
-                    len(e.subtests) == 6
-                ), f"{e.bibtex_key}: has {len(e.subtests)} subtests, expected 6"
+                assert len(e.subtests) == 6, (
+                    f"{e.bibtex_key}: has {len(e.subtests)} subtests, expected 6"
+                )
