@@ -7,54 +7,54 @@
     "splits": {
         "dev_public": {
             "file": "dev_public.jsonl",
-            "total": 521,
+            "total": 582,
             "valid": 450,
-            "hallucinated": 71,
+            "hallucinated": 132,
             "tier_distribution": {
-                "1": 20,
-                "2": 28,
-                "3": 23
+                "1": 40,
+                "2": 50,
+                "3": 42
             },
             "type_distribution": {
-                "chimeric_title": 5,
-                "fabricated_doi": 6,
-                "future_date": 3,
-                "hybrid_fabrication": 5,
+                "chimeric_title": 10,
+                "fabricated_doi": 10,
+                "future_date": 10,
+                "hybrid_fabrication": 10,
                 "near_miss_title": 12,
-                "nonexistent_venue": 7,
-                "placeholder_authors": 4,
-                "plausible_fabrication": 5,
-                "preprint_as_published": 8,
-                "retracted_paper": 3,
-                "swapped_authors": 5,
-                "version_confusion": 3,
-                "wrong_venue": 5
+                "nonexistent_venue": 10,
+                "placeholder_authors": 10,
+                "plausible_fabrication": 10,
+                "preprint_as_published": 10,
+                "retracted_paper": 10,
+                "swapped_authors": 10,
+                "version_confusion": 10,
+                "wrong_venue": 10
             }
         },
         "test_public": {
             "file": "test_public.jsonl",
-            "total": 313,
+            "total": 400,
             "valid": 270,
-            "hallucinated": 43,
+            "hallucinated": 130,
             "tier_distribution": {
-                "1": 12,
-                "2": 16,
-                "3": 15
+                "1": 40,
+                "2": 50,
+                "3": 40
             },
             "type_distribution": {
-                "chimeric_title": 3,
-                "fabricated_doi": 1,
-                "future_date": 2,
-                "hybrid_fabrication": 3,
-                "near_miss_title": 8,
-                "nonexistent_venue": 7,
-                "placeholder_authors": 2,
-                "plausible_fabrication": 3,
-                "preprint_as_published": 6,
-                "retracted_paper": 2,
-                "swapped_authors": 2,
-                "version_confusion": 2,
-                "wrong_venue": 2
+                "chimeric_title": 10,
+                "fabricated_doi": 10,
+                "future_date": 10,
+                "hybrid_fabrication": 10,
+                "near_miss_title": 10,
+                "nonexistent_venue": 10,
+                "placeholder_authors": 10,
+                "plausible_fabrication": 10,
+                "preprint_as_published": 10,
+                "retracted_paper": 10,
+                "swapped_authors": 10,
+                "version_confusion": 10,
+                "wrong_venue": 10
             }
         },
         "test_hidden": {

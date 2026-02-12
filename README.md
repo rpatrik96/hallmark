@@ -123,11 +123,11 @@ hallmark leaderboard --results-dir results/
 
 | Split | Valid | Hallucinated | Total | Purpose |
 |-------|-------|-------------|-------|---------|
-| `dev_public` | 450 | 71 | 521 | Development and tuning |
-| `test_public` | 270 | 43 | 313 | Public leaderboard |
+| `dev_public` | 450 | 132 | 582 | Development and tuning |
+| `test_public` | 270 | 130 | 400 | Public leaderboard |
 | `test_hidden` | 180 | 20 | 200 | Anti-gaming evaluation |
 
-Tier distribution per split: ~28% Tier 1, ~39% Tier 2, ~33% Tier 3 (hallucinated entries).
+Tier distribution per split: ~30% Tier 1, ~38% Tier 2, ~32% Tier 3 (hallucinated entries).
 
 ### Data Format
 
@@ -170,7 +170,7 @@ Each entry is a JSON object in JSONL format:
 | **ECE** | Expected Calibration Error — measures confidence calibration quality |
 | **detect@k** | Fraction detected using k verification strategies (analogous to pass@k) |
 
-## Baseline Results (dev_public, 521 entries)
+## Baseline Results (dev_public, 582 entries)
 
 | Baseline | Detection Rate | F1 | Tier-weighted F1 | FPR | ECE |
 |----------|:---:|:---:|:---:|:---:|:---:|
@@ -180,7 +180,7 @@ Each entry is a JSON object in JSONL format:
 | DOI-only | 0.197 | 0.165 | 0.182 | 0.189 | 0.346 |
 | verify-citations* | 0.042 | 0.071 | 0.062 | 0.024 | 0.317 |
 
-*\*Partial evaluation due to API rate limiting (HaRC: 20/521, verify-citations: 71/521 entries completed).*
+*\*Partial evaluation due to API rate limiting (HaRC: 20/582, verify-citations: 71/582 entries completed).*
 
 ### External Tool Baselines
 
