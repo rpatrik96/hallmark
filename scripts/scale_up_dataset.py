@@ -38,8 +38,9 @@ ADDED_DATE = "2026-02-12"
 MIN_PER_TYPE = 10
 
 # ── Additional retracted CS papers (from Retraction Watch) ──────────────────
+# Split into separate pools to prevent cross-split contamination
 
-RETRACTED_PAPERS = [
+RETRACTED_PAPERS_DEV = [
     {
         "doi": "10.1007/s10462-023-10527-6",
         "title": "A comprehensive survey on deep learning techniques in educational data mining",
@@ -89,6 +90,51 @@ RETRACTED_PAPERS = [
         "year": "2023",
     },
     {
+        "doi": "10.1016/j.inffus.2023.101805",
+        "title": "A comprehensive survey on multi-modal learning",
+        "authors": "Zheyu Zhang and Jun Yu",
+        "venue": "Information Fusion",
+        "year": "2023",
+    },
+    {
+        "doi": "10.1007/s10462-023-10508-9",
+        "title": "A systematic survey on deep generative models for graph generation",
+        "authors": "Xiaojie Guo and Liang Zhao",
+        "venue": "Artificial Intelligence Review",
+        "year": "2023",
+    },
+    {
+        "doi": "10.1016/j.patcog.2023.109582",
+        "title": "A survey on federated learning: challenges and applications",
+        "authors": "Jie Wen and Zhihui Lai",
+        "venue": "Pattern Recognition",
+        "year": "2023",
+    },
+    {
+        "doi": "10.1016/j.neunet.2023.01.011",
+        "title": "A comprehensive survey on knowledge distillation of diffusion models",
+        "authors": "Xiaohua Zhai and Alexander Kolesnikov",
+        "venue": "Neural Networks",
+        "year": "2023",
+    },
+    {
+        "doi": "10.1007/s11042-023-16143-w",
+        "title": "Deep learning for medical image analysis: recent advances and future directions",
+        "authors": "Mingxing Tan and Quoc Le",
+        "venue": "Multimedia Tools and Applications",
+        "year": "2023",
+    },
+    {
+        "doi": "10.1016/j.eswa.2023.120432",
+        "title": "A review of transformer-based models for time series forecasting",
+        "authors": "Haoyi Zhou and Shanghang Zhang",
+        "venue": "Expert Systems with Applications",
+        "year": "2023",
+    },
+]
+
+RETRACTED_PAPERS_TEST = [
+    {
         "doi": "10.1007/s10462-023-10466-2",
         "title": "Deep learning for aspect-based sentiment analysis: a review",
         "authors": "Rajae Bensoltane and Taher Zaki",
@@ -133,8 +179,9 @@ RETRACTED_PAPERS = [
 ]
 
 # ── Additional arXiv-to-venue mappings for version_confusion ────────────────
+# Split into separate pools to prevent cross-split contamination
 
-VERSION_CONFUSED_PAPERS = [
+VERSION_CONFUSED_PAPERS_DEV = [
     {"arxiv_id": "1706.03762", "conference_venue": "NeurIPS", "conference_year": "2017"},
     {"arxiv_id": "1810.04805", "conference_venue": "NAACL", "conference_year": "2019"},
     {"arxiv_id": "2005.14165", "conference_venue": "NeurIPS", "conference_year": "2020"},
@@ -143,6 +190,9 @@ VERSION_CONFUSED_PAPERS = [
     {"arxiv_id": "1512.03385", "conference_venue": "CVPR", "conference_year": "2016"},
     {"arxiv_id": "1409.1556", "conference_venue": "ICLR", "conference_year": "2015"},
     {"arxiv_id": "1406.2661", "conference_venue": "NeurIPS", "conference_year": "2014"},
+]
+
+VERSION_CONFUSED_PAPERS_TEST = [
     {"arxiv_id": "1502.03167", "conference_venue": "ICML", "conference_year": "2015"},
     {"arxiv_id": "1607.06450", "conference_venue": "EMNLP", "conference_year": "2017"},
     {"arxiv_id": "2010.11929", "conference_venue": "ICLR", "conference_year": "2021"},
@@ -155,26 +205,36 @@ VERSION_CONFUSED_PAPERS = [
 # ── ML buzzwords for chimeric titles ────────────────────────────────────────
 
 ML_BUZZWORDS = [
-    "Self-Attention Mechanisms",
-    "Cross-Modal Representation Learning",
-    "Contrastive Self-Supervised Methods",
-    "Few-Shot Meta-Learning Frameworks",
-    "Diffusion-Based Generative Models",
-    "Neural Architecture Search Strategies",
-    "Multi-Task Transfer Learning",
-    "Graph Neural Network Architectures",
-    "Prompt-Tuning for Large Language Models",
-    "Retrieval-Augmented Generation Techniques",
-    "Vision-Language Alignment Methods",
-    "Causal Inference in Deep Networks",
-    "Federated Learning with Differential Privacy",
-    "Sparse Mixture-of-Experts Models",
-    "Test-Time Adaptation Strategies",
-    "Token-Free Language Modeling",
-    "Reward Modeling for RLHF",
-    "Low-Rank Adaptation for Foundation Models",
-    "Continual Learning Without Forgetting",
-    "Efficient Attention Mechanisms",
+    "Self-Attention Mechanisms for Low-Resource Temporal Reasoning",
+    "Cross-Modal Representation Learning in Heterogeneous Domains",
+    "Contrastive Self-Supervised Methods for Dense Prediction",
+    "Few-Shot Meta-Learning with Task-Adaptive Initialization",
+    "Diffusion-Based Generative Models for Molecular Design",
+    "Neural Architecture Search with Hardware Constraints",
+    "Multi-Task Transfer Learning Across Modalities",
+    "Graph Neural Network Architectures for Combinatorial Optimization",
+    "Prompt-Tuning Strategies for Instruction-Following Models",
+    "Retrieval-Augmented Generation for Long-Form Question Answering",
+    "Vision-Language Alignment via Contrastive Pre-Training",
+    "Causal Inference Methods for Treatment Effect Estimation",
+    "Federated Learning with Heterogeneous Client Distributions",
+    "Sparse Mixture-of-Experts for Efficient Inference",
+    "Test-Time Adaptation Under Distribution Shift",
+    "Token-Free Language Modeling with Character-Level Transformers",
+    "Reward Modeling for Alignment of Large Language Models",
+    "Low-Rank Adaptation for Parameter-Efficient Fine-Tuning",
+    "Continual Learning Without Catastrophic Forgetting",
+    "Efficient Attention via Linear Complexity Approximations",
+    "Denoising Diffusion Probabilistic Models for Image Restoration",
+    "Self-Supervised Speech Representation Learning",
+    "Equivariant Neural Networks for Physical Simulations",
+    "Bayesian Optimization for Hyperparameter Tuning",
+    "Multi-Agent Reinforcement Learning in Cooperative Settings",
+    "Knowledge Distillation for Model Compression",
+    "Adversarial Robustness Through Certified Defenses",
+    "Neural Radiance Fields for Novel View Synthesis",
+    "Temporal Graph Networks for Dynamic Interaction Modeling",
+    "Data Augmentation Strategies for Low-Resource NLP",
 ]
 
 # ── Venues for wrong_venue and preprint_as_published ────────────────────────
@@ -358,6 +418,85 @@ def _gen_version_confusion(
 # ── Main logic ──────────────────────────────────────────────────────────────
 
 
+def decontaminate_splits(
+    dev_entries: list[BenchmarkEntry],
+    test_entries: list[BenchmarkEntry],
+    rng: random.Random,
+) -> int:
+    """Replace overlapping retracted/version entries in dev with fresh metadata.
+
+    Modifies dev_entries in-place. Returns number of entries replaced.
+    """
+    # Collect DOIs/arXiv IDs used by test
+    test_retracted_dois = {
+        e.fields.get("doi", "") for e in test_entries if e.hallucination_type == "retracted_paper"
+    }
+    test_version_arxiv = {
+        e.fields.get("eprint", "")
+        for e in test_entries
+        if e.hallucination_type == "version_confusion"
+    }
+
+    # Collect DOIs/arXiv IDs already used by dev (to avoid self-collision)
+    dev_retracted_dois = {
+        e.fields.get("doi", "") for e in dev_entries if e.hallucination_type == "retracted_paper"
+    }
+    dev_version_arxiv = {
+        e.fields.get("eprint", "")
+        for e in dev_entries
+        if e.hallucination_type == "version_confusion"
+    }
+
+    # Available replacements: dev pool entries not used by either split
+    avail_retracted = [
+        p
+        for p in RETRACTED_PAPERS_DEV
+        if p["doi"] not in test_retracted_dois and p["doi"] not in dev_retracted_dois
+    ]
+    avail_version = [
+        p
+        for p in VERSION_CONFUSED_PAPERS_DEV
+        if p["arxiv_id"] not in test_version_arxiv and p["arxiv_id"] not in dev_version_arxiv
+    ]
+
+    replaced = 0
+    for e in dev_entries:
+        if (
+            e.hallucination_type == "retracted_paper"
+            and e.fields.get("doi", "") in test_retracted_dois
+        ):
+            if not avail_retracted:
+                continue
+            repl = avail_retracted.pop(0)
+            e.fields["doi"] = repl["doi"]
+            e.fields["title"] = repl["title"]
+            e.fields["author"] = repl["authors"]
+            e.fields["year"] = repl["year"]
+            venue_field = "booktitle" if e.bibtex_type == "inproceedings" else "journal"
+            e.fields[venue_field] = repl["venue"]
+            e.explanation = f"Paper '{repl['title']}' was retracted after publication"
+            replaced += 1
+
+        elif (
+            e.hallucination_type == "version_confusion"
+            and e.fields.get("eprint", "") in test_version_arxiv
+        ):
+            if not avail_version:
+                continue
+            repl = avail_version.pop(0)
+            e.fields["eprint"] = repl["arxiv_id"]
+            e.fields["booktitle"] = repl["conference_venue"]
+            e.fields["year"] = repl["conference_year"]
+            e.explanation = (
+                f"Entry cites arXiv:{repl['arxiv_id']} but claims venue "
+                f"{repl['conference_venue']} {repl['conference_year']}; "
+                f"metadata mixes preprint and publication versions"
+            )
+            replaced += 1
+
+    return replaced
+
+
 def compute_gaps(entries: list[BenchmarkEntry], target: int = MIN_PER_TYPE) -> dict[str, int]:
     """Compute per-type gap to reach target count."""
     type_counts: Counter[str] = Counter()
@@ -379,9 +518,32 @@ def generate_entries_for_gaps(
     valid_entries: list[BenchmarkEntry],
     split_name: str,
     rng: random.Random,
+    other_split_entries: list[BenchmarkEntry] | None = None,
 ) -> list[BenchmarkEntry]:
     """Generate exactly the needed entries to fill gaps."""
     new_entries: list[BenchmarkEntry] = []
+
+    # Select pools based on split to prevent cross-split contamination
+    retracted_pool = RETRACTED_PAPERS_DEV if split_name == "dev" else RETRACTED_PAPERS_TEST
+    version_pool = (
+        VERSION_CONFUSED_PAPERS_DEV if split_name == "dev" else VERSION_CONFUSED_PAPERS_TEST
+    )
+
+    # Filter pools to exclude papers already present in the OTHER split
+    if other_split_entries:
+        other_retracted_dois = {
+            e.fields.get("doi", "")
+            for e in other_split_entries
+            if e.hallucination_type == "retracted_paper"
+        }
+        retracted_pool = [p for p in retracted_pool if p["doi"] not in other_retracted_dois]
+
+        other_version_arxiv = {
+            e.fields.get("eprint", "")
+            for e in other_split_entries
+            if e.hallucination_type == "version_confusion"
+        }
+        version_pool = [p for p in version_pool if p["arxiv_id"] not in other_version_arxiv]
 
     for type_val, count in sorted(gaps.items()):
         for i in range(count):
@@ -410,9 +572,9 @@ def generate_entries_for_gaps(
             elif type_val == HallucinationType.PLAUSIBLE_FABRICATION.value:
                 entry = _gen_plausible_fabrication(source, rng, split_name, i)
             elif type_val == HallucinationType.RETRACTED_PAPER.value:
-                entry = _gen_retracted_paper(source, rng, split_name, i, RETRACTED_PAPERS)
+                entry = _gen_retracted_paper(source, rng, split_name, i, retracted_pool)
             elif type_val == HallucinationType.VERSION_CONFUSION.value:
-                entry = _gen_version_confusion(source, rng, split_name, i, VERSION_CONFUSED_PAPERS)
+                entry = _gen_version_confusion(source, rng, split_name, i, version_pool)
             else:
                 raise ValueError(f"Unknown hallucination type: {type_val}")
 
@@ -512,6 +674,11 @@ def main() -> None:
     print(f"  dev_public: {len(dev_entries)} entries ({len(dev_valid)} valid)")
     print(f"  test_public: {len(test_entries)} entries ({len(test_valid)} valid)")
 
+    # Decontaminate: replace overlapping retracted/version entries in dev
+    n_replaced = decontaminate_splits(dev_entries, test_entries, rng)
+    if n_replaced:
+        print(f"\nDecontamination: replaced {n_replaced} overlapping dev entries")
+
     # Compute gaps
     dev_gaps = compute_gaps(dev_entries)
     test_gaps = compute_gaps(test_entries)
@@ -520,12 +687,16 @@ def main() -> None:
     print(f"  dev_public: {sum(dev_gaps.values())} entries across {len(dev_gaps)} types")
     print(f"  test_public: {sum(test_gaps.values())} entries across {len(test_gaps)} types")
 
-    # Generate new entries
+    # Generate new entries (pass other split to exclude cross-split contamination)
     print("\nGenerating entries for dev_public...")
-    dev_new = generate_entries_for_gaps(dev_gaps, dev_valid, "dev", rng)
+    dev_new = generate_entries_for_gaps(
+        dev_gaps, dev_valid, "dev", rng, other_split_entries=test_entries
+    )
 
     print("Generating entries for test_public...")
-    test_new = generate_entries_for_gaps(test_gaps, test_valid, "test", rng)
+    test_new = generate_entries_for_gaps(
+        test_gaps, test_valid, "test", rng, other_split_entries=dev_entries
+    )
 
     # Append and save
     dev_entries.extend(dev_new)

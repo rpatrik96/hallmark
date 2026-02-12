@@ -7,7 +7,7 @@
 We define 13 citation hallucination types organized into three difficulty tiers based on the verification effort required (\cref{tab:taxonomy}).
 \textbf{Tier~1 (Easy)} hallucinations are detectable by a single API lookup---a fabricated DOI that does not resolve, a nonexistent venue name, placeholder author names, or a publication date in the future.
 \textbf{Tier~2 (Medium)} hallucinations require cross-referencing multiple metadata fields: a chimeric title pairs real authors with a fabricated title; a wrong venue assigns a real paper to the wrong conference; author mismatch attaches the wrong author list to a real title; preprint-as-published fabricates a venue acceptance for an arXiv-only paper; and hybrid fabrication pairs a valid, resolving DOI with fabricated metadata (the DOI resolves, but the authors and title do not match the resolved record).
-\textbf{Tier~3 (Hard)} hallucinations require deep verification or semantic reasoning: near-miss titles differ by one or two words from a real paper; plausible fabrications are entirely invented but realistic; retracted papers cite work that was later withdrawn; and version confusion cites claims from a superseded preprint version.
+\textbf{Tier~3 (Hard)} hallucinations require deep verification or semantic reasoning: near-miss titles differ by one or two words from a real paper; plausible fabrications are entirely invented but realistic; retracted papers cite work that was later withdrawn (notably, all metadata sub-tests pass for retracted entries since the paper existed before withdrawal); and version confusion cites claims from a superseded preprint version.
 
 This taxonomy emerged from manual analysis of hallucinated citations found in the NeurIPS 2025 incident and related audits~\citep{ghostcite2026,hallucitation2026}, supplemented by adversarial brainstorming of failure modes that existing tools might miss.
 
@@ -64,6 +64,15 @@ Each hallucinated entry was manually verified to confirm that (a)~it is indeed h
 \paragraph{Quality control.}
 Every entry undergoes automated validation checking field completeness, BibTeX well-formedness, and sub-test label consistency.
 Contributed entries pass through a validation pipeline that enforces the schema constraints programmatically before inclusion.
+
+\paragraph{Scaling for statistical power.}
+To ensure per-type statistical validity, we scaled the hallucinated portion so that every type has at least 10 instances per public split.
+New entries were generated deterministically (seed-controlled) using the same perturbation generators as the original entries.
+We report results on both the full dataset and the original core subset in \cref{app:core-subset} to verify that scaling does not change the evaluation signal.
+
+\paragraph{Type distribution.}
+We use a uniform distribution across hallucination types to maximize per-type statistical power, recognizing that real-world type prevalence likely differs.
+Per-type metrics (\cref{sec:per_type}) enable prevalence-adjusted evaluation when empirical type frequencies become available.
 
 \begin{table}[t]
 \caption{Dataset statistics by split. Tier distribution refers to hallucinated entries only.}

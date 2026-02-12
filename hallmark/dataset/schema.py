@@ -283,6 +283,12 @@ def load_entries(path: str | Path) -> list[BenchmarkEntry]:
 
 def save_entries(entries: list[BenchmarkEntry], path: str | Path) -> None:
     """Save benchmark entries to a JSONL file."""
+    from collections import Counter
+
+    keys = [e.bibtex_key for e in entries]
+    duplicates = [k for k, count in Counter(keys).items() if count > 1]
+    if duplicates:
+        raise ValueError(f"Duplicate bibtex_keys found: {duplicates[:10]}")
     with open(path, "w") as f:
         for entry in entries:
             f.write(entry.to_json() + "\n")
