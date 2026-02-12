@@ -24,8 +24,10 @@ from hallmark.dataset.schema import BenchmarkEntry, Prediction
 
 logger = logging.getLogger(__name__)
 
-# Map bibtex-check status to HALLMARK label
+# Map bibtex-check status to HALLMARK label.
+# Statuses come from bibtex-updater's FactCheckStatus enum.
 STATUS_TO_LABEL: dict[str, str] = {
+    # Core academic verification
     "verified": "VALID",
     "not_found": "HALLUCINATED",
     "title_mismatch": "HALLUCINATED",
@@ -35,14 +37,25 @@ STATUS_TO_LABEL: dict[str, str] = {
     "partial_match": "HALLUCINATED",
     "hallucinated": "HALLUCINATED",
     "api_error": "VALID",  # Conservative: don't flag on errors
+    # Pre-API validation (bibtex-check runs these before querying APIs)
+    "future_date": "HALLUCINATED",  # Year > current year
+    "invalid_year": "HALLUCINATED",  # Non-numeric or < 1800
+    "doi_not_found": "HALLUCINATED",  # DOI returns HTTP 404
+    # Preprint detection
+    "preprint_only": "HALLUCINATED",  # Paper only exists as preprint, not at claimed venue
+    "published_version_exists": "VALID",  # Informational: published version found
+    # Web reference verification
     "url_verified": "VALID",
     "url_accessible": "VALID",
     "url_not_found": "HALLUCINATED",
     "url_content_mismatch": "HALLUCINATED",
+    # Book verification
     "book_verified": "VALID",
     "book_not_found": "HALLUCINATED",
+    # Working paper verification
     "working_paper_verified": "VALID",
     "working_paper_not_found": "HALLUCINATED",
+    # General
     "skipped": "VALID",  # Conservative
 }
 
@@ -57,6 +70,11 @@ STATUS_TO_CONFIDENCE: dict[str, float] = {
     "partial_match": 0.70,
     "hallucinated": 0.90,
     "api_error": 0.30,
+    "future_date": 0.95,
+    "invalid_year": 0.70,
+    "doi_not_found": 0.85,
+    "preprint_only": 0.80,
+    "published_version_exists": 0.60,
     "url_verified": 0.90,
     "url_accessible": 0.70,
     "url_not_found": 0.75,
@@ -124,6 +142,12 @@ def run_bibtex_check(
         ]
         if academic_only:
             cmd.append("--academic-only")
+        # Pass S2 API key if available (bibtex-check supports --s2-api-key)
+        import os
+
+        s2_key = os.environ.get("S2_API_KEY")
+        if s2_key:
+            cmd.extend(["--s2-api-key", s2_key])
         if extra_args:
             cmd.extend(extra_args)
 

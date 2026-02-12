@@ -5,48 +5,48 @@
   "num_hallucinated": 50,
   "num_valid": 450,
   "detection_rate": 0.42,
-  "false_positive_rate": 0.1,
-  "f1_hallucination": 0.3620689655172414,
-  "tier_weighted_f1": 0.4519774011299435,
+  "false_positive_rate": 0.017777777777777778,
+  "f1_hallucination": 0.5316455696202531,
+  "tier_weighted_f1": 0.5294117647058824,
   "detect_at_k": {},
   "temporal_robustness": null,
-  "cost_efficiency": 0.13888784759067416,
-  "mean_api_calls": 3.568,
+  "cost_efficiency": 0.09429692108252688,
+  "mean_api_calls": 3.136,
   "per_tier_metrics": {
     "0": {
       "detection_rate": 0.0,
-      "false_positive_rate": 0.1,
+      "false_positive_rate": 0.017777777777777778,
       "f1": 0.0,
       "precision": 0.0,
       "count": 450
     },
     "1": {
-      "detection_rate": 0.45,
+      "detection_rate": 0.6,
       "false_positive_rate": 0.0,
-      "f1": 0.6206896551724138,
+      "f1": 0.7499999999999999,
       "precision": 1.0,
       "count": 20
     },
     "2": {
-      "detection_rate": 0.2777777777777778,
+      "detection_rate": 0.16666666666666666,
       "false_positive_rate": 0.0,
-      "f1": 0.4347826086956522,
+      "f1": 0.2857142857142857,
       "precision": 1.0,
       "count": 18
     },
     "3": {
-      "detection_rate": 0.5833333333333334,
+      "detection_rate": 0.5,
       "false_positive_rate": 0.0,
-      "f1": 0.7368421052631579,
+      "f1": 0.6666666666666666,
       "precision": 1.0,
       "count": 12
     }
   },
   "per_type_metrics": {
     "fabricated_doi": {
-      "detection_rate": 0.3333333333333333,
+      "detection_rate": 1.0,
       "false_positive_rate": 0.0,
-      "f1": 0.5,
+      "f1": 1.0,
       "count": 6
     },
     "future_date": {
@@ -56,9 +56,9 @@
       "count": 3
     },
     "near_miss_title": {
-      "detection_rate": 0.5833333333333334,
+      "detection_rate": 0.5,
       "false_positive_rate": 0.0,
-      "f1": 0.7368421052631579,
+      "f1": 0.6666666666666666,
       "count": 12
     },
     "nonexistent_venue": {
@@ -68,26 +68,26 @@
       "count": 7
     },
     "placeholder_authors": {
-      "detection_rate": 1.0,
+      "detection_rate": 0.75,
       "false_positive_rate": 0.0,
-      "f1": 1.0,
+      "f1": 0.8571428571428571,
       "count": 4
     },
     "preprint_as_published": {
-      "detection_rate": 0.125,
+      "detection_rate": 0.0,
       "false_positive_rate": 0.0,
-      "f1": 0.2222222222222222,
+      "f1": 0.0,
       "count": 8
     },
     "swapped_authors": {
-      "detection_rate": 0.8,
+      "detection_rate": 0.6,
       "false_positive_rate": 0.0,
-      "f1": 0.888888888888889,
+      "f1": 0.7499999999999999,
       "count": 5
     },
     "valid": {
       "detection_rate": 0.0,
-      "false_positive_rate": 0.1,
+      "false_positive_rate": 0.017777777777777778,
       "f1": 0.0,
       "count": 450
     },

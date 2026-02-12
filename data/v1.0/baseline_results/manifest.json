@@ -1,21 +1,13 @@
 {
   "version": "1.0",
-  "description": "Pre-computed baseline reference results. Generated locally, validated in CI.",
-  "generated_by": "scripts/generate_reference_results.py",
   "files": {
     "bibtexupdater_dev_public.json": {
-      "sha256": "864ce2db921e397c1d6749c3675238de95413e7caadded90d9f124e2d409fb17",
-      "baseline": "bibtexupdater",
-      "split": "dev_public",
-      "num_entries": 500,
-      "f1_hallucination": 0.3943661971830986
+      "sha256": "191f4285fc938d916d0fb676b725391b2cd4dc85959093e00bf36111ef518a24",
+      "f1_hallucination": 0.872727
     },
     "harc_dev_public.json": {
-      "sha256": "4c96bb5db7d4d5959f7eac68799ee1c746a3e70a5c46cc581e16051dcbad4e64",
-      "baseline": "harc",
-      "split": "dev_public",
-      "num_entries": 500,
-      "f1_hallucination": 0.3620689655172414
+      "sha256": "8ca4cd613222de879deeef322d6c72b64531d6509fa3ad3183ad946c0b4c6a4b",
+      "f1_hallucination": 0.531646
     }
   }
 }
