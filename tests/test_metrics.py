@@ -361,6 +361,92 @@ class TestSubtestAccuracyTable:
         assert result["title_exists"]["accuracy"] == 0.5
 
 
+class TestUncertainPredictions:
+    """Tests for UNCERTAIN label handling across all metrics."""
+
+    def test_uncertain_prediction_creates_valid_object(self):
+        pred = _pred("k1", "UNCERTAIN", confidence=0.5)
+        assert pred.label == "UNCERTAIN"
+
+    def test_uncertain_serialization_roundtrip(self):
+        pred = _pred("k1", "UNCERTAIN", confidence=0.5)
+        json_str = pred.to_json()
+        restored = Prediction.from_json(json_str)
+        assert restored.label == "UNCERTAIN"
+
+    def test_confusion_matrix_treats_uncertain_as_valid(self):
+        entries = [
+            _entry("v1", "VALID"),
+            _entry("h1", "HALLUCINATED"),
+        ]
+        preds = {
+            "v1": _pred("v1", "UNCERTAIN", confidence=0.5),
+            "h1": _pred("h1", "UNCERTAIN", confidence=0.5),
+        }
+        cm = build_confusion_matrix(entries, preds)
+        # UNCERTAIN on valid entry -> treated as VALID -> TN
+        assert cm.tn == 1
+        # UNCERTAIN on hallucinated entry -> treated as VALID -> FN (missed)
+        assert cm.fn == 1
+        assert cm.tp == 0
+        assert cm.fp == 0
+
+    def test_tier_weighted_f1_treats_uncertain_as_valid(self):
+        entries = [
+            _entry("h1", "HALLUCINATED", tier=3),
+        ]
+        preds_uncertain = {"h1": _pred("h1", "UNCERTAIN", confidence=0.5)}
+        preds_valid = {"h1": _pred("h1", "VALID", confidence=0.5)}
+        # UNCERTAIN and VALID should yield identical tier-weighted F1
+        assert tier_weighted_f1(entries, preds_uncertain) == tier_weighted_f1(entries, preds_valid)
+
+    def test_detect_at_k_ignores_uncertain(self):
+        entries = [_entry("h1", "HALLUCINATED")]
+        strategy = {"h1": _pred("h1", "UNCERTAIN", confidence=0.5)}
+        result = detect_at_k(entries, [strategy])
+        assert result[1] == 0.0  # UNCERTAIN is not a detection
+
+    def test_evaluate_counts_uncertain(self):
+        entries = [
+            _entry("v1", "VALID"),
+            _entry("h1", "HALLUCINATED", tier=1),
+        ]
+        preds = [
+            _pred("v1", "UNCERTAIN", confidence=0.5),
+            _pred("h1", "UNCERTAIN", confidence=0.5),
+        ]
+        result = evaluate(entries, preds, tool_name="test", split_name="dev")
+        assert result.num_uncertain == 2
+        # Both treated as VALID -> DR=0, FPR=0
+        assert result.detection_rate == 0.0
+        assert result.false_positive_rate == 0.0
+
+    def test_evaluate_mixed_uncertain_and_hallucinated(self):
+        entries = [
+            _entry("v1", "VALID"),
+            _entry("h1", "HALLUCINATED", tier=1),
+            _entry("h2", "HALLUCINATED", tier=2),
+        ]
+        preds = [
+            _pred("v1", "VALID"),
+            _pred("h1", "HALLUCINATED"),  # correct detection
+            _pred("h2", "UNCERTAIN", confidence=0.5),  # treated as VALID = missed
+        ]
+        result = evaluate(entries, preds, tool_name="test", split_name="dev")
+        assert result.num_uncertain == 1
+        assert result.detection_rate == 0.5  # 1 of 2 hallucinated detected
+        assert result.false_positive_rate == 0.0
+
+    def test_ece_treats_uncertain_as_valid(self):
+        from hallmark.evaluation.metrics import expected_calibration_error
+
+        entries = [_entry("v1", "VALID")]
+        preds = {"v1": _pred("v1", "UNCERTAIN", confidence=0.5)}
+        ece = expected_calibration_error(entries, preds)
+        assert ece >= 0.0
+        assert ece <= 1.0
+
+
 class TestEvaluate:
     def test_full_evaluation(self):
         entries = [

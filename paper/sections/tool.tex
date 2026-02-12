@@ -41,3 +41,11 @@ The tool supports three deployment scenarios relevant to venue adoption:
 \end{itemize}
 
 The tool is pip-installable (\texttt{pip install bibtex-updater}), requires no GPU or LLM API keys, and is released under the MIT license.
+
+\subsection{Deployment recommendations}
+\label{sec:deployment_rec}
+
+For venue-scale deployment, we recommend a two-stage workflow: (1)~run \texttt{bibtex-updater} at default settings to flag suspicious citations, then (2)~manual review of high-confidence flags (confidence $\geq 0.7$, estimated precision 0.95 on the dev set).
+Entries with confidence between 0.5 and 0.7 can be batch-reviewed or deferred to area chairs.
+At NeurIPS scale (approximately 10,000 submissions, approximately 50 references each), this requires approximately 15 hours of compute time and flags approximately 2.7\% of valid citations as false positives---manageable with batch review.
+Configurable confidence thresholds let organizers trade off recall against review burden.

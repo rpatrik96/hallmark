@@ -65,6 +65,11 @@ def main(argv: list[str] | None = None) -> int:
     eval_parser.add_argument(
         "--tool-name", default="unknown", help="Name of the tool being evaluated"
     )
+    eval_parser.add_argument(
+        "--detailed",
+        action="store_true",
+        help="Show detailed per-type metrics and subtest accuracy",
+    )
 
     # --- contribute ---
     contrib_parser = subparsers.add_parser(
@@ -238,11 +243,15 @@ def _cmd_evaluate(args: argparse.Namespace) -> int:
     print(f"  Entries:          {result.num_entries}")
     print(f"  Hallucinated:     {result.num_hallucinated}")
     print(f"  Valid:            {result.num_valid}")
+    if result.num_uncertain > 0:
+        print(f"  Uncertain:        {result.num_uncertain}")
     print(f"{'─' * 60}")
     print(f"  Detection Rate:   {result.detection_rate:.3f}")
     print(f"  False Pos. Rate:  {result.false_positive_rate:.3f}")
     print(f"  F1 (Halluc.):     {result.f1_hallucination:.3f}")
     print(f"  Tier-weighted F1: {result.tier_weighted_f1:.3f}")
+    if result.ece is not None:
+        print(f"  ECE:              {result.ece:.3f}")
     if result.cost_efficiency:
         print(f"  Entries/sec:      {result.cost_efficiency:.1f}")
     if result.mean_api_calls:
@@ -258,6 +267,30 @@ def _cmd_evaluate(args: argparse.Namespace) -> int:
                 f"    Tier {tier}: DR={metrics['detection_rate']:.3f} "
                 f"F1={metrics['f1']:.3f} (n={metrics['count']:.0f})"
             )
+
+    # Detailed output if requested
+    if args.detailed:
+        print(f"{'─' * 60}")
+        if result.per_type_metrics:
+            print("  Per-type detection rates:")
+            for h_type, metrics in sorted(result.per_type_metrics.items()):
+                count = int(metrics["count"])
+                dr = metrics["detection_rate"]
+                print(f"    {h_type:<30} {count:>3} entries  DR={dr:.3f}")
+
+        # Compute and display subtest accuracy
+        from hallmark.evaluation.metrics import subtest_accuracy_table
+
+        pred_map = {p.bibtex_key: p for p in predictions}
+        subtest_acc = subtest_accuracy_table(entries, pred_map)
+        if subtest_acc:
+            print(f"{'─' * 60}")
+            print("  Subtest accuracy:")
+            for subtest_name, metrics in sorted(subtest_acc.items()):
+                acc = metrics["accuracy"]
+                count = int(metrics["count"])
+                print(f"    {subtest_name:<25} {acc:.3f} ({count} entries)")
+
     print(f"{'=' * 60}\n")
 
     # Save results

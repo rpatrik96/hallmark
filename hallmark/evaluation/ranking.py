@@ -10,6 +10,39 @@ The implementation provides:
 - Simple mean-score ranking for comparison
 - Matrix serialization for reproducibility
 
+Handling Incomplete Evaluations:
+--------------------------------
+
+When tools have partial coverage (e.g., due to API rate limits, failures, or selective
+evaluation), the Plackett-Luce model enables fair ranking by:
+
+1. **Pairwise Comparisons**: For each benchmark entry, compare tools that both have
+   predictions for that entry. Tools are not penalized for missing entries.
+
+2. **Correctness Scoring**: Each prediction receives a score:
+   - 1.0 if label matches ground truth, 0.0 otherwise
+   - For hallucinated entries: score weighted by confidence (rewards confident correct
+     predictions, penalizes overconfident incorrect ones)
+   - UNCERTAIN predictions treated as VALID (conservative, per evaluation protocol)
+
+3. **ILSR Ranking**: Iterative Luce Spectral Ranking aggregates pairwise comparisons
+   into global tool rankings, accounting for varying coverage and difficulty.
+
+4. **Fallback**: If choix is unavailable or pairwise data is insufficient, falls back
+   to mean-score ranking on covered entries.
+
+Usage:
+------
+    # Single-tool evaluation (standard metrics)
+    result = evaluate(entries, predictions, tool_name="my_tool")
+
+    # Multi-tool ranking with partial coverage
+    tool_predictions = {
+        "tool_a": predictions_a,  # May cover different subsets
+        "tool_b": predictions_b,
+    }
+    rankings = rank_tools(entries, tool_predictions, method="plackett_luce")
+
 References:
     ONEBench: https://github.com/bethgelab/onebench
     Plackett-Luce model: Luce (1959), Plackett (1975)

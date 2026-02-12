@@ -188,7 +188,7 @@ class Prediction:
     """
 
     bibtex_key: str
-    label: Literal["VALID", "HALLUCINATED"]
+    label: Literal["VALID", "HALLUCINATED", "UNCERTAIN"]
     confidence: float  # [0, 1]
     reason: str = ""  # free-text explanation
     subtest_results: dict[str, bool | None] = field(default_factory=dict)
@@ -237,6 +237,7 @@ class EvaluationResult:
     cost_efficiency: float | None = None  # entries per second
     mean_api_calls: float | None = None
     ece: float | None = None  # Expected Calibration Error
+    num_uncertain: int = 0  # Count of UNCERTAIN predictions
 
     # Per-tier breakdown
     per_tier_metrics: dict[int, dict[str, float]] = field(default_factory=dict)
@@ -283,6 +284,12 @@ def load_entries(path: str | Path) -> list[BenchmarkEntry]:
 
 def save_entries(entries: list[BenchmarkEntry], path: str | Path) -> None:
     """Save benchmark entries to a JSONL file."""
+    from collections import Counter
+
+    keys = [e.bibtex_key for e in entries]
+    duplicates = [k for k, count in Counter(keys).items() if count > 1]
+    if duplicates:
+        raise ValueError(f"Duplicate bibtex_keys found: {duplicates[:10]}")
     with open(path, "w") as f:
         for entry in entries:
             f.write(entry.to_json() + "\n")

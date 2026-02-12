@@ -3,9 +3,10 @@
 
 \paragraph{Pre-screening effect.}
 \label{sec:prescreening}
-\textsc{Hallmark} includes an optional pre-screening layer---DOI format validation, year-range bounds checking, and author-name heuristics---that runs before external tools.
-Pre-screening does not improve \texttt{bibtex-updater}'s already-high detection rate but reduces API calls by filtering obvious Tier~1 cases.
-For weaker baselines, pre-screening provides meaningful lift: DOI-only gains coverage on \texttt{future\_date} and \texttt{placeholder\_authors}.
+\textsc{Hallmark} includes an optional pre-screening layer---DOI format validation, year-range bounds checking, and author-name heuristics---that runs before invoking external tools.
+This is benchmark infrastructure available to \emph{all} baselines, not a tool-specific feature.
+For \texttt{bibtex-updater}, pre-screening is redundant---the tool already performs these checks internally---but for simpler baselines it provides meaningful lift: DOI-only gains coverage on \texttt{future\_date} and \texttt{placeholder\_authors}.
+We report results both with and without pre-screening to maintain transparency about which detections come from the tool versus benchmark infrastructure.
 
 \paragraph{Calibration.}
 \label{sec:calibration}

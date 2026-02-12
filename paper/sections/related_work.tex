@@ -7,6 +7,7 @@ The scale became apparent through systematic audits: \citet{ghostcite2026} devel
 \citet{hallucitation2026} focused on ACL/NAACL/EMNLP and found a rapid increase in 2025, with over 100 affected main-conference papers.
 \citet{mysterious2026} observed a sharp rise from zero cases in 2021 to consistent problems across HPC venues by 2025.
 Commercial tools like GPTZero's hallucination detector~\citep{gptzero2025} and academic projects like HaRC~\citep{harc2024} and verify-citations~\citep{verifycitations2025} address detection, but each targets different hallucination types and uses different evaluation protocols, making comparison impossible without a shared benchmark.
+Commercial plagiarism detection services (e.g., Turnitin, iThenticate) focus on textual similarity rather than citation metadata verification and were therefore excluded from our evaluation.
 Critically, none of these tools are designed for venue-scale deployment: they lack CI/CD integration, batch processing, and the throughput needed to screen hundreds of submissions.
 \texttt{bibtex-updater}~\citep{bibtexupdater} addresses this gap with a multi-source verification pipeline designed for integration into publication workflows (\cref{sec:tool}).
 

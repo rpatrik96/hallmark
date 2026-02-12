@@ -72,6 +72,9 @@ source = "vcs"
 [tool.hatch.version.raw-options]
 version_scheme = "no-guess-dev"
 
+[tool.hatch.build.targets.sdist]
+exclude = ["paper/"]
+
 [tool.hatch.build.targets.wheel]
 packages = ["hallmark"]
 

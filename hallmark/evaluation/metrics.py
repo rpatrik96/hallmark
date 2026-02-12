@@ -1,8 +1,39 @@
 """Evaluation metrics for HALLMARK.
 
-Primary: Detection Rate (DR), False Positive Rate (FPR), F1-Hallucination, Tier-weighted F1.
-Secondary: detect@k, temporal robustness, cost efficiency.
+Primary: Detection Rate (DR), False Positive Rate (FPR), F1-Hallucination, Tier-weighted F1, ECE.
+Secondary: detect@k, temporal robustness, cost efficiency, per-type metrics, subtest accuracy.
 Inspired by HumanEval (multi-criteria, pass@k) and ONEBench (sample-level atomic eval).
+
+Evaluation Protocol:
+--------------------
+
+1. **Prediction Labels**:
+   - Tools must return VALID or HALLUCINATED predictions
+   - UNCERTAIN is accepted as a valid label (treated as VALID conservatively)
+   - Missing predictions are treated as VALID (conservative default)
+
+2. **Pre-screening**:
+   - Baseline wrappers may include pre-screening (lightweight local checks before external APIs)
+   - Pre-screening results are included in the tool's predictions and reported transparently
+   - The `reason` field indicates pre-screening with `[Pre-screening override]` prefix
+
+3. **Handling Incomplete Evaluations**:
+   - Tools may evaluate only a subset of benchmark entries (e.g., due to API limits)
+   - For single-tool evaluation: metrics computed only on covered entries
+   - For multi-tool ranking: use Plackett-Luce model (see hallmark.evaluation.ranking)
+     to fairly rank tools with heterogeneous coverage
+
+4. **Metrics Computation**:
+   - UNCERTAIN predictions treated as VALID for all metrics
+   - Tier-weighted F1: harder hallucinations (Tier 3) weighted 3x vs Tier 1
+   - ECE (Expected Calibration Error): measures confidence calibration
+   - Per-type metrics: detection rate by hallucination type
+   - Subtest accuracy: accuracy on individual verification checks (DOI, title, authors, etc.)
+
+5. **Cost Tracking**:
+   - wall_clock_seconds: total time per prediction
+   - api_calls: number of external API calls made
+   - cost_efficiency: entries evaluated per second
 """
 
 from __future__ import annotations
@@ -52,7 +83,11 @@ def build_confusion_matrix(
     entries: list[BenchmarkEntry],
     predictions: dict[str, Prediction],
 ) -> ConfusionMatrix:
-    """Build confusion matrix from entries and predictions."""
+    """Build confusion matrix from entries and predictions.
+
+    UNCERTAIN predictions are treated as VALID (conservative default).
+    Missing predictions are also treated as VALID.
+    """
     cm = ConfusionMatrix()
     for entry in entries:
         pred = predictions.get(entry.bibtex_key)
@@ -64,13 +99,16 @@ def build_confusion_matrix(
                 cm.tn += 1
             continue
 
+        # Treat UNCERTAIN as VALID (conservative)
+        pred_label = "VALID" if pred.label == "UNCERTAIN" else pred.label
+
         if entry.label == "HALLUCINATED":
-            if pred.label == "HALLUCINATED":
+            if pred_label == "HALLUCINATED":
                 cm.tp += 1
             else:
                 cm.fn += 1
         else:
-            if pred.label == "HALLUCINATED":
+            if pred_label == "HALLUCINATED":
                 cm.fp += 1
             else:
                 cm.tn += 1
@@ -85,6 +123,7 @@ def tier_weighted_f1(
     """Compute F1 weighted by difficulty tier (Tier 3 worth 3x Tier 1).
 
     Each hallucinated entry contributes to F1 proportionally to its tier weight.
+    UNCERTAIN predictions are treated as VALID (conservative).
     """
     if tier_weights is None:
         tier_weights = {1: 1.0, 2: 2.0, 3: 3.0}
@@ -99,14 +138,17 @@ def tier_weighted_f1(
         tier = entry.difficulty_tier or 1
         w = tier_weights.get(tier, 1.0)
 
+        # Treat UNCERTAIN as VALID
+        pred_label = pred.label if pred and pred.label != "UNCERTAIN" else "VALID"
+
         if entry.label == "HALLUCINATED":
             total_weight += w
-            if pred is not None and pred.label == "HALLUCINATED":
+            if pred is not None and pred_label == "HALLUCINATED":
                 weighted_tp += w
             else:
                 weighted_fn += w
         else:
-            if pred is not None and pred.label == "HALLUCINATED":
+            if pred is not None and pred_label == "HALLUCINATED":
                 weighted_fp += w
 
     precision = (
@@ -127,6 +169,8 @@ def detect_at_k(
 
     Analogous to HumanEval's pass@k. A hallucination is "detected" if ANY of the
     first k strategies flags it.
+
+    UNCERTAIN predictions are treated as VALID (conservative, not counted as detections).
 
     Args:
         entries: Benchmark entries.
@@ -151,6 +195,7 @@ def detect_at_k(
         for entry in hallucinated:
             for strategy_preds in predictions_per_strategy[:ki]:
                 pred = strategy_preds.get(entry.bibtex_key)
+                # UNCERTAIN treated as VALID (not a detection)
                 if pred is not None and pred.label == "HALLUCINATED":
                     detected += 1
                     break
@@ -233,6 +278,8 @@ def expected_calibration_error(
     For HALLUCINATED predictions, confidence means P(hallucinated).
     For VALID predictions, confidence means P(valid), so we use 1-confidence for
     the "correctness" probability when the prediction is VALID.
+
+    UNCERTAIN predictions are treated as VALID with the reported confidence.
     """
     if not predictions:
         return 0.0
@@ -243,7 +290,10 @@ def expected_calibration_error(
         pred = predictions.get(entry.bibtex_key)
         if pred is None:
             continue
-        is_correct = pred.label == entry.label
+
+        # Treat UNCERTAIN as VALID
+        pred_label = "VALID" if pred.label == "UNCERTAIN" else pred.label
+        is_correct = pred_label == entry.label
         pairs.append((pred.confidence, is_correct))
 
     if not pairs:
@@ -377,12 +427,23 @@ def evaluate(
 ) -> EvaluationResult:
     """Run full evaluation and return aggregated results.
 
+    Evaluation Protocol:
+    - UNCERTAIN predictions are treated as VALID (conservative default) for all metrics
+    - Missing predictions are treated as VALID
+    - Pre-screening results (if any) are included in the tool's predictions
+    - Incomplete evaluations (partial coverage) can be aggregated using Plackett-Luce
+      ranking (see hallmark.evaluation.ranking module)
+
     Args:
         entries: Benchmark entries (ground truth).
         predictions: Tool's predictions.
         tool_name: Name of the tool being evaluated.
         split_name: Name of the benchmark split.
         predictions_per_strategy: Optional list of prediction dicts for detect@k.
+
+    Returns:
+        EvaluationResult with primary metrics (DR, FPR, F1, TW-F1, ECE),
+        per-tier and per-type breakdowns, and count of UNCERTAIN predictions.
     """
     pred_map = {p.bibtex_key: p for p in predictions}
 
@@ -399,6 +460,7 @@ def evaluate(
 
     num_hallucinated = sum(1 for e in entries if e.label == "HALLUCINATED")
     num_valid = sum(1 for e in entries if e.label == "VALID")
+    num_uncertain = sum(1 for p in predictions if p.label == "UNCERTAIN")
 
     return EvaluationResult(
         tool_name=tool_name,
@@ -414,6 +476,7 @@ def evaluate(
         cost_efficiency=cost.get("entries_per_second"),
         mean_api_calls=cost.get("mean_api_calls"),
         ece=ece_score,
+        num_uncertain=num_uncertain,
         per_tier_metrics=tier_metrics,
         per_type_metrics=type_metrics,
     )
