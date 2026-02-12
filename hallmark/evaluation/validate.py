@@ -129,7 +129,7 @@ def validate_reference_results(
 
         # Strict: reject F1=0.0 as likely failed run
         if strict and result.f1_hallucination == 0.0:
-            errors.append(f"{filename}: F1=0.0 (likely failed run; " f"use --no-strict to allow)")
+            errors.append(f"{filename}: F1=0.0 (likely failed run; use --no-strict to allow)")
 
     passed = len(errors) == 0
     return ValidationResult(passed=passed, errors=errors, warnings=warnings)
