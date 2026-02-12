@@ -112,7 +112,7 @@ def generate_instances_for_split(
         fake_title = rng.choice(ML_BUZZWORDS)
         entry = generate_chimeric_title(source, fake_title, rng)
         entry.added_to_benchmark = ADDED_DATE
-        entry.bibtex_key = f"chimeric_{split_name}_{i+1}"
+        entry.bibtex_key = f"chimeric_{split_name}_{i + 1}"
         new_entries.append(entry)
 
     # Generate plausible_fabrication instances
@@ -121,7 +121,7 @@ def generate_instances_for_split(
         source = rng.choice(valid_entries)
         entry = generate_plausible_fabrication(source, rng)
         entry.added_to_benchmark = ADDED_DATE
-        entry.bibtex_key = f"plausible_{split_name}_{i+1}"
+        entry.bibtex_key = f"plausible_{split_name}_{i + 1}"
         new_entries.append(entry)
 
     # Generate retracted_paper instances
@@ -139,7 +139,7 @@ def generate_instances_for_split(
             rng,
         )
         entry.added_to_benchmark = ADDED_DATE
-        entry.bibtex_key = f"retracted_{split_name}_{i+1}"
+        entry.bibtex_key = f"retracted_{split_name}_{i + 1}"
         new_entries.append(entry)
 
     # Generate version_confusion instances
@@ -155,7 +155,7 @@ def generate_instances_for_split(
             rng,
         )
         entry.added_to_benchmark = ADDED_DATE
-        entry.bibtex_key = f"version_{split_name}_{i+1}"
+        entry.bibtex_key = f"version_{split_name}_{i + 1}"
         new_entries.append(entry)
 
     # Generate hybrid_fabrication instances
@@ -164,7 +164,7 @@ def generate_instances_for_split(
         source = rng.choice(valid_entries)
         entry = generate_hybrid_fabrication(source, rng)
         entry.added_to_benchmark = ADDED_DATE
-        entry.bibtex_key = f"hybrid_{split_name}_{i+1}"
+        entry.bibtex_key = f"hybrid_{split_name}_{i + 1}"
         new_entries.append(entry)
 
     return new_entries
