@@ -39,6 +39,7 @@ Evaluation Protocol:
 from __future__ import annotations
 
 from collections import defaultdict
+from collections.abc import Callable
 from dataclasses import dataclass
 
 from hallmark.dataset.schema import BenchmarkEntry, EvaluationResult, Prediction
@@ -418,12 +419,316 @@ def subtest_accuracy_table(
     return result
 
 
+def stratified_bootstrap_ci(
+    entries: list[BenchmarkEntry],
+    predictions: list[Prediction],
+    metric_fn: Callable[[list[BenchmarkEntry], list[Prediction]], float],
+    n_bootstrap: int = 10_000,
+    confidence: float = 0.95,
+    seed: int = 42,
+) -> tuple[float, float]:
+    """Compute stratified bootstrap CI preserving hallucination type distribution.
+
+    Stratification ensures each bootstrap resample maintains the original
+    proportion of each hallucination type, preventing bias from underrepresented types.
+
+    Args:
+        entries: Benchmark entries (ground truth).
+        predictions: Tool's predictions.
+        metric_fn: Function that takes (entries, predictions) and returns a scalar metric.
+        n_bootstrap: Number of bootstrap resamples.
+        confidence: Confidence level (default 0.95 for 95% CI).
+        seed: Random seed for reproducibility.
+
+    Returns:
+        Tuple (lower, upper) percentile-based confidence interval.
+    """
+    try:
+        import numpy as np
+    except ImportError as e:
+        raise ImportError("numpy is required for bootstrap CIs: pip install numpy") from e
+
+    rng = np.random.RandomState(seed)
+
+    # Group entries and predictions by hallucination type
+    type_groups: dict[str, tuple[list[BenchmarkEntry], list[Prediction]]] = defaultdict(
+        lambda: ([], [])
+    )
+    pred_map = {p.bibtex_key: p for p in predictions}
+
+    for entry in entries:
+        h_type = entry.hallucination_type or "valid"
+        pred = pred_map.get(entry.bibtex_key)
+        if pred is not None:
+            type_groups[h_type][0].append(entry)
+            type_groups[h_type][1].append(pred)
+
+    # Bootstrap resampling
+    bootstrap_metrics = []
+    for _ in range(n_bootstrap):
+        resampled_entries = []
+        resampled_predictions = []
+
+        # Resample within each type group
+        for entries_in_type, preds_in_type in type_groups.values():
+            n = len(entries_in_type)
+            if n == 0:
+                continue
+            indices = rng.choice(n, size=n, replace=True)
+            resampled_entries.extend([entries_in_type[i] for i in indices])
+            resampled_predictions.extend([preds_in_type[i] for i in indices])
+
+        # Compute metric on resampled data
+        if resampled_entries:
+            metric_value = metric_fn(resampled_entries, resampled_predictions)
+            bootstrap_metrics.append(metric_value)
+
+    if not bootstrap_metrics:
+        return (0.0, 0.0)
+
+    # Compute percentile CI
+    alpha = 1 - confidence
+    lower_percentile = 100 * alpha / 2
+    upper_percentile = 100 * (1 - alpha / 2)
+    lower = float(np.percentile(bootstrap_metrics, lower_percentile))
+    upper = float(np.percentile(bootstrap_metrics, upper_percentile))
+
+    return (lower, upper)
+
+
+def paired_bootstrap_test(
+    entries: list[BenchmarkEntry],
+    predictions_a: list[Prediction],
+    predictions_b: list[Prediction],
+    metric_fn: Callable[[list[BenchmarkEntry], list[Prediction]], float],
+    n_bootstrap: int = 10_000,
+    seed: int = 42,
+) -> tuple[float, float, float]:
+    """Paired bootstrap significance test.
+
+    Returns (observed_diff, p_value, effect_size_cohens_h).
+    H0: metric_A <= metric_B. p-value = fraction of resamples where delta <= 0.
+
+    Args:
+        entries: Benchmark entries (ground truth).
+        predictions_a: Predictions from tool A.
+        predictions_b: Predictions from tool B.
+        metric_fn: Function that takes (entries, predictions) and returns a scalar metric.
+        n_bootstrap: Number of bootstrap resamples.
+        seed: Random seed for reproducibility.
+
+    Returns:
+        Tuple (observed_diff, p_value, effect_size_cohens_h).
+        - observed_diff: metric_A - metric_B on original data
+        - p_value: P(delta <= 0 | H0) under bootstrap distribution
+        - effect_size_cohens_h: Cohen's h effect size (2 * (arcsin(sqrt(p_a)) - arcsin(sqrt(p_b))))
+    """
+    try:
+        import numpy as np
+    except ImportError as e:
+        raise ImportError("numpy is required for bootstrap tests: pip install numpy") from e
+
+    rng = np.random.RandomState(seed)
+
+    # Compute observed difference
+    metric_a = metric_fn(entries, predictions_a)
+    metric_b = metric_fn(entries, predictions_b)
+    observed_diff = metric_a - metric_b
+
+    # Build prediction maps
+    pred_map_a = {p.bibtex_key: p for p in predictions_a}
+    pred_map_b = {p.bibtex_key: p for p in predictions_b}
+
+    # Bootstrap resampling (paired - same indices for both)
+    bootstrap_diffs = []
+    n = len(entries)
+
+    for _ in range(n_bootstrap):
+        indices = rng.choice(n, size=n, replace=True)
+        resampled_entries = [entries[i] for i in indices]
+
+        # Resample predictions using same indices (filter out None)
+        resampled_preds_a = [
+            p for i in indices if (p := pred_map_a.get(entries[i].bibtex_key)) is not None
+        ]
+        resampled_preds_b = [
+            p for i in indices if (p := pred_map_b.get(entries[i].bibtex_key)) is not None
+        ]
+
+        if resampled_preds_a and resampled_preds_b:
+            metric_a_boot = metric_fn(resampled_entries, resampled_preds_a)
+            metric_b_boot = metric_fn(resampled_entries, resampled_preds_b)
+            bootstrap_diffs.append(metric_a_boot - metric_b_boot)
+
+    # p-value: fraction of bootstrap samples where delta <= 0
+    p_value = float(np.mean([d <= 0 for d in bootstrap_diffs])) if bootstrap_diffs else 1.0
+
+    # Cohen's h effect size
+    cohens_h = 2 * (np.arcsin(np.sqrt(metric_a)) - np.arcsin(np.sqrt(metric_b)))
+
+    return (observed_diff, p_value, float(cohens_h))
+
+
+def tier_weight_sensitivity(
+    entries: list[BenchmarkEntry],
+    predictions: list[Prediction],
+    weight_schemes: dict[str, dict[int, float]] | None = None,
+) -> dict[str, float]:
+    """Compute tier-weighted F1 under different weighting schemes.
+
+    Default schemes: uniform {1,1,1}, linear {1,2,3}, quadratic {1,4,9},
+    log {1,1.6,2.1}, inverse_difficulty (based on mean DR across entries).
+    Returns dict mapping scheme name to TW-F1 value.
+
+    Args:
+        entries: Benchmark entries (ground truth).
+        predictions: Tool's predictions.
+        weight_schemes: Optional custom weight schemes. If None, uses default schemes.
+
+    Returns:
+        Dict mapping scheme name to tier-weighted F1 value.
+    """
+    try:
+        import numpy as np
+    except ImportError as e:
+        raise ImportError("numpy is required for tier weight sensitivity: pip install numpy") from e
+
+    pred_map = {p.bibtex_key: p for p in predictions}
+
+    if weight_schemes is None:
+        weight_schemes = {
+            "uniform": {1: 1.0, 2: 1.0, 3: 1.0},
+            "linear": {1: 1.0, 2: 2.0, 3: 3.0},
+            "quadratic": {1: 1.0, 2: 4.0, 3: 9.0},
+            "log": {1: 1.0, 2: 1.585, 3: 2.0},  # log2(2), log2(3), log2(4)
+        }
+
+        # Compute inverse difficulty weights based on mean DR per tier
+        tier_dr: dict[int, list[float]] = defaultdict(list)
+        for entry in entries:
+            if entry.label != "HALLUCINATED":
+                continue
+            tier = entry.difficulty_tier or 1
+            pred = pred_map.get(entry.bibtex_key)
+            if pred is not None:
+                is_detected = pred.label == "HALLUCINATED"
+                tier_dr[tier].append(float(is_detected))
+
+        inverse_difficulty = {}
+        for tier in [1, 2, 3]:
+            tier_data = tier_dr.get(tier, [])
+            if tier_data:
+                mean_dr = np.mean(tier_data)
+                # Weight inversely proportional to detection rate (harder = higher weight)
+                inverse_difficulty[tier] = 1.0 / (mean_dr + 0.01)  # +0.01 to avoid div by zero
+            else:
+                inverse_difficulty[tier] = 1.0
+
+        # Normalize so Tier 1 = 1.0
+        base_weight = inverse_difficulty.get(1, 1.0)
+        inverse_difficulty = {k: v / base_weight for k, v in inverse_difficulty.items()}
+        weight_schemes["inverse_difficulty"] = inverse_difficulty
+
+    results = {}
+    for scheme_name, weights in weight_schemes.items():
+        tw_f1 = tier_weighted_f1(entries, pred_map, tier_weights=weights)
+        results[scheme_name] = tw_f1
+
+    return results
+
+
+def equivalence_test(
+    entries_a: list[BenchmarkEntry],
+    entries_b: list[BenchmarkEntry],
+    predictions: list[Prediction],
+    epsilon: float = 0.02,
+    n_permutations: int = 10_000,
+    seed: int = 42,
+) -> tuple[bool, float, float]:
+    """Permutation-based equivalence test for dataset scaling validation.
+
+    Tests whether metrics on entries_a vs entries_b differ by more than epsilon.
+    Returns (is_equivalent, observed_diff, p_value).
+
+    Args:
+        entries_a: First set of benchmark entries.
+        entries_b: Second set of benchmark entries.
+        predictions: Predictions covering both entry sets.
+        epsilon: Equivalence margin (default 0.02 = 2 percentage points).
+        n_permutations: Number of permutation resamples.
+        seed: Random seed for reproducibility.
+
+    Returns:
+        Tuple (is_equivalent, observed_diff, p_value).
+        - is_equivalent: True if |observed_diff| <= epsilon and p > 0.05
+        - observed_diff: metric_A - metric_B on original split
+        - p_value: fraction of permutations with |diff| >= |observed_diff|
+    """
+    try:
+        import numpy as np
+    except ImportError as e:
+        raise ImportError("numpy is required for equivalence tests: pip install numpy") from e
+
+    rng = np.random.RandomState(seed)
+
+    # Build prediction map
+    pred_map = {p.bibtex_key: p for p in predictions}
+
+    # Filter predictions for each entry set
+    preds_a = [pred_map[e.bibtex_key] for e in entries_a if e.bibtex_key in pred_map]
+    preds_b = [pred_map[e.bibtex_key] for e in entries_b if e.bibtex_key in pred_map]
+
+    # Compute observed difference (using F1 as default metric)
+    cm_a = build_confusion_matrix(entries_a, pred_map)
+    cm_b = build_confusion_matrix(entries_b, pred_map)
+    observed_diff = cm_a.f1 - cm_b.f1
+
+    # Permutation test
+    combined_entries = entries_a + entries_b
+    combined_preds = preds_a + preds_b
+    n_a = len(entries_a)
+
+    permuted_diffs = []
+    for _ in range(n_permutations):
+        # Permute combined data
+        perm_indices = rng.permutation(len(combined_entries))
+        perm_entries = [combined_entries[i] for i in perm_indices]
+        perm_preds = [combined_preds[i] for i in perm_indices if i < len(combined_preds)]
+
+        # Split permuted data
+        perm_entries_a = perm_entries[:n_a]
+        perm_entries_b = perm_entries[n_a:]
+        perm_preds_a = perm_preds[:n_a]
+        perm_preds_b = perm_preds[n_a:]
+
+        # Compute metric on permuted split
+        perm_pred_map_a = {p.bibtex_key: p for p in perm_preds_a}
+        perm_pred_map_b = {p.bibtex_key: p for p in perm_preds_b}
+
+        if perm_entries_a and perm_entries_b:
+            cm_perm_a = build_confusion_matrix(perm_entries_a, perm_pred_map_a)
+            cm_perm_b = build_confusion_matrix(perm_entries_b, perm_pred_map_b)
+            permuted_diffs.append(cm_perm_a.f1 - cm_perm_b.f1)
+
+    # p-value: fraction of permutations with |diff| >= |observed_diff|
+    if permuted_diffs:
+        p_value = float(np.mean([abs(d) >= abs(observed_diff) for d in permuted_diffs]))
+    else:
+        p_value = 1.0
+
+    # Equivalence: |observed_diff| <= epsilon and p > 0.05
+    is_equivalent = abs(observed_diff) <= epsilon and p_value > 0.05
+
+    return (is_equivalent, observed_diff, p_value)
+
+
 def evaluate(
     entries: list[BenchmarkEntry],
     predictions: list[Prediction],
     tool_name: str = "unknown",
     split_name: str = "unknown",
     predictions_per_strategy: list[dict[str, Prediction]] | None = None,
+    compute_ci: bool = False,
 ) -> EvaluationResult:
     """Run full evaluation and return aggregated results.
 
@@ -440,10 +745,12 @@ def evaluate(
         tool_name: Name of the tool being evaluated.
         split_name: Name of the benchmark split.
         predictions_per_strategy: Optional list of prediction dicts for detect@k.
+        compute_ci: If True, compute bootstrap confidence intervals (requires numpy).
 
     Returns:
         EvaluationResult with primary metrics (DR, FPR, F1, TW-F1, ECE),
-        per-tier and per-type breakdowns, and count of UNCERTAIN predictions.
+        per-tier and per-type breakdowns, count of UNCERTAIN predictions,
+        and optionally bootstrap CIs for primary metrics.
     """
     pred_map = {p.bibtex_key: p for p in predictions}
 
@@ -462,6 +769,53 @@ def evaluate(
     num_valid = sum(1 for e in entries if e.label == "VALID")
     num_uncertain = sum(1 for p in predictions if p.label == "UNCERTAIN")
 
+    # Compute bootstrap CIs if requested
+    detection_rate_ci = None
+    f1_hallucination_ci = None
+    tier_weighted_f1_ci = None
+    fpr_ci = None
+    ece_ci = None
+
+    if compute_ci:
+        # Detection Rate CI
+        def dr_metric(ents: list[BenchmarkEntry], preds: list[Prediction]) -> float:
+            cm_boot = build_confusion_matrix(ents, {p.bibtex_key: p for p in preds})
+            return cm_boot.detection_rate
+
+        detection_rate_ci = stratified_bootstrap_ci(
+            entries, predictions, dr_metric, n_bootstrap=10_000
+        )
+
+        # F1-Hallucination CI
+        def f1_metric(ents: list[BenchmarkEntry], preds: list[Prediction]) -> float:
+            cm_boot = build_confusion_matrix(ents, {p.bibtex_key: p for p in preds})
+            return cm_boot.f1
+
+        f1_hallucination_ci = stratified_bootstrap_ci(
+            entries, predictions, f1_metric, n_bootstrap=10_000
+        )
+
+        # Tier-weighted F1 CI
+        def tw_f1_metric(ents: list[BenchmarkEntry], preds: list[Prediction]) -> float:
+            return tier_weighted_f1(ents, {p.bibtex_key: p for p in preds})
+
+        tier_weighted_f1_ci = stratified_bootstrap_ci(
+            entries, predictions, tw_f1_metric, n_bootstrap=10_000
+        )
+
+        # FPR CI
+        def fpr_metric(ents: list[BenchmarkEntry], preds: list[Prediction]) -> float:
+            cm_boot = build_confusion_matrix(ents, {p.bibtex_key: p for p in preds})
+            return cm_boot.false_positive_rate
+
+        fpr_ci = stratified_bootstrap_ci(entries, predictions, fpr_metric, n_bootstrap=10_000)
+
+        # ECE CI
+        def ece_metric(ents: list[BenchmarkEntry], preds: list[Prediction]) -> float:
+            return expected_calibration_error(ents, {p.bibtex_key: p for p in preds})
+
+        ece_ci = stratified_bootstrap_ci(entries, predictions, ece_metric, n_bootstrap=10_000)
+
     return EvaluationResult(
         tool_name=tool_name,
         split_name=split_name,
@@ -479,4 +833,9 @@ def evaluate(
         num_uncertain=num_uncertain,
         per_tier_metrics=tier_metrics,
         per_type_metrics=type_metrics,
+        detection_rate_ci=detection_rate_ci,
+        f1_hallucination_ci=f1_hallucination_ci,
+        tier_weighted_f1_ci=tier_weighted_f1_ci,
+        fpr_ci=fpr_ci,
+        ece_ci=ece_ci,
     )

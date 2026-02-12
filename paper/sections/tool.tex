@@ -47,5 +47,5 @@ The tool is pip-installable (\texttt{pip install bibtex-updater}), requires no G
 
 For venue-scale deployment, we recommend a two-stage workflow: (1)~run \texttt{bibtex-updater} at default settings to flag suspicious citations, then (2)~manual review of high-confidence flags (confidence $\geq 0.7$, estimated precision 0.95 on the dev set).
 Entries with confidence between 0.5 and 0.7 can be batch-reviewed or deferred to area chairs.
-At NeurIPS scale (approximately 10,000 submissions, approximately 50 references each), this requires approximately 15 hours of compute time and flags approximately 2.7\% of valid citations as false positives---manageable with batch review.
+At NeurIPS scale (approximately 10,000 submissions, approximately 50 references each), this requires approximately 45 hours single-threaded or under 6 hours with 8 concurrent workers and flags approximately 2.7\% of valid citations as false positives---manageable with batch review.
 Configurable confidence thresholds let organizers trade off recall against review burden.

@@ -1,11 +1,14 @@
 \section{Limitations}
 \label{sec:limitations}
 
-At 1,182 entries (282 hallucinated, with at least 10 instances per type per public split), the dataset provides reasonable statistical power per type but remains small relative to the full diversity of possible citation hallucinations.
-With 10 instances per type per split, per-type metrics have wide confidence intervals (e.g., a type-level detection rate of 90\% has a 95\% Clopper-Pearson interval of [0.55, 1.00]); we report per-type breakdowns for diagnostic insight rather than definitive type-level claims.
-The hallucination prevalence differs across splits (22.7\% in dev, 32.5\% in test) due to scaling hallucinated entries independently per split; prevalence-sensitive metrics should be interpreted with this caveat.
+At 1,700 entries (800 hallucinated, with at least 30 instances per type per public split), the dataset provides improved statistical power per type but remains small relative to the full diversity of possible citation hallucinations.
+With 30 instances per type per split, per-type metrics have narrower confidence intervals than the original 10-instance design (e.g., a type-level detection rate of 90\% has a 95\% Clopper-Pearson interval of [0.74, 0.98] rather than [0.55, 1.00]); we report per-type breakdowns with increased statistical confidence.
+The hallucination prevalence differs across splits (46.4\% in dev, 59.1\% in test) due to scaling hallucinated entries independently per split; prevalence-sensitive metrics should be interpreted with this caveat.
 The benchmark covers only English-language BibTeX references.
 Most hallucinated entries are synthetically generated rather than harvested from publications, and may not fully capture real LLM error distributions.
+We did not validate our synthetic hallucinations against actual LLM outputs or the specific errors found in the NeurIPS 2025 incident papers.
+While our taxonomy is derived from published audits, the distribution and characteristics of synthetic perturbations may differ from real LLM hallucination patterns.
+Future work should incorporate real-world hallucinated citations as a validation set.
 Baseline performance depends on bibliographic API availability and coverage; results may shift as APIs evolve.
 We did not evaluate commercial plagiarism detection tools (Turnitin, iThenticate), which focus on textual similarity rather than citation metadata verification.
 Valid entries are drawn from 2018--2025 ML venues and may not generalize to other fields or time periods.

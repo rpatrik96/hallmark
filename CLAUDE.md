@@ -49,8 +49,8 @@ This is a single atomic workflow. The commit is not done until all hooks pass an
 - `hallmark/baselines/registry.py` — central baseline registry (discovery, availability, dispatch)
 - `hallmark/evaluation/ranking.py` — ONEBench-inspired Plackett-Luce ranking
 - `scripts/` — orchestrator scripts (run_all_baselines.py, run_evaluation.py, generate_reference_results.py, generate_new_instances.py)
-- `tests/` — pytest test suite (199 tests)
-- `data/v1.0/` — benchmark data splits (dev: 582 entries, test: 400 entries)
+- `tests/` — pytest test suite (244 tests)
+- `data/v1.0/` — benchmark data splits (dev: 840 entries, test: 660 entries)
 - `data/v1.0/baseline_results/` — pre-computed reference results for rate-limited baselines
 - `.github/workflows/` — CI (tests.yml, baselines.yml)
 

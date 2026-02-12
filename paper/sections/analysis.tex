@@ -10,16 +10,16 @@ We report results both with and without pre-screening to maintain transparency a
 
 \paragraph{Calibration.}
 \label{sec:calibration}
-\texttt{bibtex-updater} achieves the lowest ECE (0.042), meaning its confidence tracks actual accuracy---a critical property for venue deployment, where reviewers need to trust flagged entries without manual verification.
-HaRC (0.361), DOI-only (0.346), and verify-citations (0.317) are poorly calibrated, reporting similar confidence on correct and incorrect predictions alike.
+DOI-only achieves the lowest ECE (0.111), with \texttt{bibtex-updater} at 0.452, meaning confidence calibration varies across tools---a critical property for venue deployment, where reviewers need to trust flagged entries without manual verification.
+HaRC (0.361), Ensemble (0.289), and verify-citations (0.317) show intermediate calibration, reporting varying confidence on correct and incorrect predictions.
 Poor calibration limits practical utility: a tool reporting 80\% confidence regardless of correctness provides no actionable signal to a program committee.
 
 \paragraph{Cost--accuracy tradeoff.}
 \label{sec:cost}
 \cref{fig:cost} plots detection rate against cost.
-\texttt{bibtex-updater} queries 2.8 APIs per entry at 3.1 entries/second---strong cost efficiency for its 95.8\% detection rate.
-At this throughput, a venue receiving 3,000 submissions with 50 references each can verify all citations in under 14 hours with a single worker, or under 2 hours with the default 8 concurrent workers.
-DOI-only is cheapest (1 API call) but achieves only 19.7\%.
+\texttt{bibtex-updater} queries 2.8 APIs per entry at 3.1 entries/second---strong cost efficiency for its 95.4\% detection rate.
+At this throughput, a venue receiving 3,000 submissions with 50 references each can verify all citations in approximately 13.5 hours with a single worker, or under 2 hours with 8 concurrent workers.
+DOI-only is cheapest (1 API call) but achieves only 22.3\%.
 HaRC and verify-citations are bottlenecked by rate limiting, making them impractical for venue-scale use.
 
 \begin{figure}[t]
@@ -31,7 +31,7 @@ HaRC and verify-citations are bottlenecked by rate limiting, making them impract
 
 \paragraph{Failure modes and improvement targets.}
 \label{sec:failure}
-\texttt{bibtex-updater} misses \texttt{preprint\_as\_published} (75\% DR) and \texttt{wrong\_venue} (80\% DR)---both venue-level hallucinations.
+\texttt{bibtex-updater} shows reduced performance on \texttt{preprint\_as\_published} and \texttt{wrong\_venue}---both venue-level hallucinations.
 Current APIs do not reliably distinguish ``published at venue~X'' from ``available on arXiv,'' nor expose structured venue-to-paper mappings.
 These gaps are not unique to our tool---no evaluated baseline detects these types reliably---but they represent concrete improvement targets.
 \textsc{Hallmark}'s per-type analysis makes these gaps visible and measurable, guiding both tool development and advocacy for richer bibliographic APIs.

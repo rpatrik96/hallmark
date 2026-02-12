@@ -13,6 +13,8 @@
 
 \textbf{Tier-weighted F1 (TW-F1)} addresses a key limitation of standard F1: it treats all hallucinations equally, though detecting a plausible fabrication is harder and arguably more valuable than catching a fabricated DOI.
 TW-F1 weights each hallucinated entry's contribution to precision and recall by its tier: Tier~1 entries contribute weight 1, Tier~2 weight 2, and Tier~3 weight 3.
+We use linear weights $\{1, 2, 3\}$ as a principled default reflecting verification effort: Tier~1 hallucinations require one API call, Tier~2 requires cross-referencing multiple fields, and Tier~3 requires semantic reasoning or provenance checking.
+We report sensitivity to the weighting scheme in \cref{app:statistics}, showing that tool rankings are stable across uniform $\{1,1,1\}$, linear $\{1,2,3\}$, and quadratic $\{1,4,9\}$ schemes.
 Formally, for entries $\{e_i\}$ with tier weights $w_i \in \{1,2,3\}$, predictions $\hat{y}_i$, and labels $y_i$:
 \begin{align}
 \text{TW-Precision} &= \frac{\sum_i w_i \cdot \mathbf{1}[\hat{y}_i = y_i = \text{H}]}{\sum_i w_i \cdot \mathbf{1}[\hat{y}_i = \text{H}]}, &

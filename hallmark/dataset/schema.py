@@ -239,6 +239,13 @@ class EvaluationResult:
     ece: float | None = None  # Expected Calibration Error
     num_uncertain: int = 0  # Count of UNCERTAIN predictions
 
+    # Confidence intervals (95% by default, via stratified bootstrap)
+    detection_rate_ci: tuple[float, float] | None = None
+    f1_hallucination_ci: tuple[float, float] | None = None
+    tier_weighted_f1_ci: tuple[float, float] | None = None
+    fpr_ci: tuple[float, float] | None = None
+    ece_ci: tuple[float, float] | None = None
+
     # Per-tier breakdown
     per_tier_metrics: dict[int, dict[str, float]] = field(default_factory=dict)
 

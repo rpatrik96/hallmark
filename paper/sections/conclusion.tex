@@ -2,8 +2,8 @@
 \label{sec:conclusion}
 
 Citation hallucination is a growing threat to scientific integrity.
-We contribute \textsc{Hallmark}, the first standardized benchmark for citation verification tools: 13 hallucination types across 3 difficulty tiers, 1,182 annotated entries with 6 sub-tests each, tier-weighted metrics (rewarding detection of hard hallucinations), calibration assessment via ECE (measuring confidence accuracy), and principled ranking under incomplete data via Plackett-Luce.
-To demonstrate the benchmark's practical utility, we also contribute \texttt{bibtex-updater}, a reference implementation of a citation verification tool designed for venue-scale deployment---integration into CI/CD pipelines, pre-commit hooks, and batch workflows---achieving 0.96 detection rate with well-calibrated confidence scores (ECE = 0.04).
+We contribute \textsc{Hallmark}, the first standardized benchmark for citation verification tools: 13 hallucination types across 3 difficulty tiers, 1,700 annotated entries with 6 sub-tests each, tier-weighted metrics (rewarding detection of hard hallucinations), calibration assessment via ECE (measuring confidence accuracy), and principled ranking under incomplete data via Plackett-Luce.
+To demonstrate the benchmark's practical utility, we also contribute \texttt{bibtex-updater}, a reference implementation of a citation verification tool designed for venue-scale deployment---integration into CI/CD pipelines, pre-commit hooks, and batch workflows---achieving 0.95 detection rate (95\% CI: [0.94, 0.97]) with 0.96 F1.
 
 Our evaluation reveals systematic blind spots shared across all tools---particularly on venue-level hallucinations where bibliographic APIs lack structured data---and wide variation in confidence calibration.
 These findings provide concrete, measurable targets for both tool developers and database maintainers.
