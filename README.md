@@ -168,13 +168,15 @@ Each entry is a JSON object in JSONL format:
 | **Tier-weighted F1** | F1 weighted by difficulty (Tier 3 = 3x weight) |
 | **detect@k** | Fraction detected using k verification strategies (analogous to pass@k) |
 
-## Baseline Results (dev_public)
+## Baseline Results (dev_public, 500 entries)
 
 | Baseline | Detection Rate | F1 | Tier-weighted F1 | FPR |
 |----------|:---:|:---:|:---:|:---:|
-| DOI-only | 0.220 | 0.361 | 0.296 | 0.000 |
-| bibtex-updater | 0.940 | 0.969 | 0.983 | 0.000 |
-| Ensemble | 1.000 | 1.000 | 1.000 | 0.000 |
+| HaRC | 0.420 | 0.362 | 0.452 | 0.100 |
+| bibtex-updater | 0.280 | 0.394 | 0.500 | 0.016 |
+| verify-citations | 0.260 | 0.228 | 0.127 | 0.024 |
+| DOI-only | 0.240 | 0.163 | 0.175 | 0.189 |
+| Ensemble (doi+btx) | 0.040 | 0.069 | 0.078 | 0.013 |
 
 ### External Tool Baselines
 
