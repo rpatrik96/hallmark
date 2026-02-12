@@ -30,14 +30,27 @@ This is a single atomic workflow. The commit is not done until all hooks pass an
 - **Type narrowing**: List comprehensions filtering `None` don't narrow types for mypy. Use the walrus operator: `[s for ... if (s := val) is not None]`
 - **`callable` vs `Callable`**: Lowercase `callable` is not a valid type annotation. Use `Callable[[ArgType], ReturnType]` from `collections.abc`.
 - **Import + annotation edits**: When adding an import and updating the annotation that uses it, edit the annotation first — otherwise ruff may auto-remove the "unused" import before you get to update the annotation.
+- **CI vs pre-commit scope**: Pre-commit hooks only check staged files; CI runs `ruff format --check .` on the entire repo. Always run `uv run ruff format .` before pushing to catch files not covered by the hook.
+
+## Hallucination Taxonomy (13 types)
+- **Tier 1 (Easy, 4 types):** fabricated_doi, nonexistent_venue, placeholder_authors, future_date
+- **Tier 2 (Medium, 5 types):** chimeric_title, wrong_venue, author_mismatch (enum value: `"swapped_authors"`), preprint_as_published, hybrid_fabrication
+- **Tier 3 (Hard, 4 types):** near_miss_title, plausible_fabrication, retracted_paper, version_confusion
+- `AUTHOR_MISMATCH` enum member keeps value `"swapped_authors"` for backward compatibility with data files
+- `hybrid_fabrication`: real DOI + fabricated metadata — DOI resolves but authors/title don't match the DOI target
+
+## Evaluation Metrics
+- **Primary:** Detection Rate, FPR, F1-Hallucination, Tier-weighted F1, ECE
+- **Diagnostic:** detect@k, source_stratified_metrics(), subtest_accuracy_table()
+- ECE is computed in `evaluate()` and stored in `EvaluationResult.ece`
 
 ## Project Structure
 - `hallmark/` — main package (baselines, dataset, evaluation, contribution)
 - `hallmark/baselines/registry.py` — central baseline registry (discovery, availability, dispatch)
 - `hallmark/evaluation/ranking.py` — ONEBench-inspired Plackett-Luce ranking
-- `scripts/` — orchestrator scripts (run_all_baselines.py, run_evaluation.py, generate_reference_results.py)
-- `tests/` — pytest test suite
-- `data/v1.0/` — benchmark data splits
+- `scripts/` — orchestrator scripts (run_all_baselines.py, run_evaluation.py, generate_reference_results.py, generate_new_instances.py)
+- `tests/` — pytest test suite (199 tests)
+- `data/v1.0/` — benchmark data splits (dev: 521 entries, test: 313 entries)
 - `data/v1.0/baseline_results/` — pre-computed reference results for rate-limited baselines
 - `.github/workflows/` — CI (tests.yml, baselines.yml)
 
