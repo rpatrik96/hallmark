@@ -19,6 +19,7 @@ import tempfile
 import time
 from pathlib import Path
 
+from hallmark.baselines.common import entries_to_bib, fallback_predictions
 from hallmark.baselines.prescreening import merge_with_predictions, prescreen_entries
 from hallmark.dataset.schema import BenchmarkEntry, Prediction
 
@@ -85,11 +86,6 @@ STATUS_TO_CONFIDENCE: dict[str, float] = {
     "working_paper_not_found": 0.70,
     "skipped": 0.50,
 }
-
-
-def entries_to_bib(entries: list[BenchmarkEntry]) -> str:
-    """Convert benchmark entries to a BibTeX string."""
-    return "\n\n".join(e.to_bibtex() for e in entries)
 
 
 def run_bibtex_check(
@@ -165,7 +161,7 @@ def run_bibtex_check(
                 logger.error(f"bibtex-check failed (exit {result.returncode}): {result.stderr}")
         except FileNotFoundError:
             logger.error("bibtex-check not found. Install with: pipx install bibtex-updater")
-            return _fallback_predictions(entries)
+            return fallback_predictions(entries, reason="Fallback: bibtex-check unavailable")
         except subprocess.TimeoutExpired:
             timed_out = True
 
@@ -266,16 +262,3 @@ def _parse_jsonl_output(
             )
 
     return predictions
-
-
-def _fallback_predictions(entries: list[BenchmarkEntry]) -> list[Prediction]:
-    """Generate conservative fallback predictions when bibtex-check fails."""
-    return [
-        Prediction(
-            bibtex_key=e.bibtex_key,
-            label="VALID",
-            confidence=0.5,
-            reason="Fallback: bibtex-check unavailable",
-        )
-        for e in entries
-    ]

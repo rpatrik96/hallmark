@@ -11,6 +11,7 @@ from collections.abc import Callable
 from dataclasses import dataclass, field
 from typing import Any
 
+from hallmark.baselines.common import fallback_predictions
 from hallmark.dataset.schema import BenchmarkEntry, Prediction
 
 logger = logging.getLogger(__name__)
@@ -254,15 +255,7 @@ def _register_builtins() -> None:
 
         if not strategy_preds:
             logger.error("Ensemble: no component baselines available")
-            return [
-                Prediction(
-                    bibtex_key=e.bibtex_key,
-                    label="VALID",
-                    confidence=0.5,
-                    reason="Ensemble: no components",
-                )
-                for e in entries
-            ]
+            return fallback_predictions(entries, reason="Ensemble: no components")
 
         return ensemble_predict(entries, strategy_preds, **kw)
 

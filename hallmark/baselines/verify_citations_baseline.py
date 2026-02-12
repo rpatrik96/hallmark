@@ -26,6 +26,7 @@ import tempfile
 import time
 from pathlib import Path
 
+from hallmark.baselines.common import entries_to_bib, fallback_predictions
 from hallmark.dataset.schema import BenchmarkEntry, Prediction
 
 logger = logging.getLogger(__name__)
@@ -60,11 +61,6 @@ API_SOURCES = [
     "google_scholar",
     "duckduckgo",
 ]
-
-
-def entries_to_bib(entries: list[BenchmarkEntry]) -> str:
-    """Convert benchmark entries to a BibTeX string."""
-    return "\n\n".join(e.to_bibtex() for e in entries)
 
 
 def strip_ansi_codes(text: str) -> str:
@@ -126,7 +122,12 @@ def run_verify_citations(
                 )
         except FileNotFoundError:
             logger.error("verify-citations not found. Install with: pip install verify-citations")
-            return _fallback_predictions(entries)
+            return fallback_predictions(
+                entries,
+                reason="Fallback: verify-citations unavailable",
+                api_sources=API_SOURCES,
+                api_calls=0,
+            )
         except subprocess.TimeoutExpired as exc:
             timed_out = True
             # Capture any partial output produced before timeout
@@ -238,18 +239,3 @@ def _parse_terminal_output(
             current_key = None
 
     return predictions
-
-
-def _fallback_predictions(entries: list[BenchmarkEntry]) -> list[Prediction]:
-    """Generate conservative fallback predictions when verify-citations fails."""
-    return [
-        Prediction(
-            bibtex_key=e.bibtex_key,
-            label="VALID",
-            confidence=0.5,
-            reason="Fallback: verify-citations unavailable",
-            api_sources_queried=API_SOURCES,
-            api_calls=0,
-        )
-        for e in entries
-    ]

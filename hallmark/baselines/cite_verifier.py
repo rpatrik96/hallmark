@@ -16,6 +16,7 @@ import tempfile
 import time
 from pathlib import Path
 
+from hallmark.baselines.common import fallback_predictions
 from hallmark.dataset.schema import BenchmarkEntry, Prediction
 
 logger = logging.getLogger(__name__)
@@ -110,7 +111,9 @@ def run_cite_verifier(
         )
         if result.returncode != 0:
             logger.error(f"CiteVerifier failed: {result.stderr}")
-            return _fallback_predictions(entries)
+            return fallback_predictions(
+                entries, reason="CiteVerifier: verification failed, defaulting to VALID"
+            )
 
         total_time = time.time() - start
 
@@ -120,10 +123,14 @@ def run_cite_verifier(
 
     except subprocess.TimeoutExpired:
         logger.error("CiteVerifier timed out")
-        return _fallback_predictions(entries)
+        return fallback_predictions(
+            entries, reason="CiteVerifier: verification failed, defaulting to VALID"
+        )
     except (json.JSONDecodeError, FileNotFoundError) as e:
         logger.error(f"CiteVerifier output error: {e}")
-        return _fallback_predictions(entries)
+        return fallback_predictions(
+            entries, reason="CiteVerifier: verification failed, defaulting to VALID"
+        )
     finally:
         Path(input_path).unlink(missing_ok=True)
         Path(output_path).unlink(missing_ok=True)
@@ -175,16 +182,3 @@ def run_cite_verifier(
         )
 
     return predictions
-
-
-def _fallback_predictions(entries: list[BenchmarkEntry]) -> list[Prediction]:
-    """Return conservative fallback predictions when CiteVerifier fails."""
-    return [
-        Prediction(
-            bibtex_key=entry.bibtex_key,
-            label="VALID",
-            confidence=0.5,
-            reason="CiteVerifier: verification failed, defaulting to VALID",
-        )
-        for entry in entries
-    ]

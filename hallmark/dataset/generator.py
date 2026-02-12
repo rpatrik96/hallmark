@@ -15,6 +15,7 @@ import string
 from datetime import date
 
 from hallmark.dataset.schema import (
+    VALID_SUBTESTS,
     BenchmarkEntry,
     DifficultyTier,
     GenerationMethod,
@@ -227,29 +228,91 @@ def generate_near_miss_title(
     title = new_entry.fields.get("title", "")
     words = title.split()
 
-    if len(words) >= 3:
-        idx = rng.randint(0, len(words) - 1)
-        replacements = {
-            "need": "want",
-            "all": "everything",
-            "learning": "training",
-            "deep": "hierarchical",
-            "neural": "cognitive",
-            "network": "architecture",
-            "model": "framework",
-            "attention": "focus",
-            "optimal": "efficient",
-            "robust": "resilient",
-            "generative": "creative",
-        }
-        word_lower = words[idx].lower().rstrip(".,;:!?")
-        if word_lower in replacements:
-            words[idx] = replacements[word_lower]
-        else:
-            # Replace with a random synonym-ish word
-            words[idx] = rng.choice(["Improved", "Enhanced", "Novel", "Adaptive", "Scalable"])
+    # Expanded replacement dictionary with subtle academic synonyms
+    replacements = {
+        "learning": "training",
+        "training": "learning",
+        "network": "networks",
+        "networks": "network",
+        "model": "models",
+        "models": "model",
+        "method": "approach",
+        "approach": "method",
+        "framework": "system",
+        "system": "framework",
+        "analysis": "study",
+        "study": "analysis",
+        "detection": "recognition",
+        "recognition": "detection",
+        "generation": "synthesis",
+        "synthesis": "generation",
+        "estimation": "prediction",
+        "prediction": "estimation",
+        "classification": "categorization",
+        "optimization": "optimisation",
+        "optimisation": "optimization",
+        "representation": "embedding",
+        "embedding": "representation",
+        "transformer": "transformers",
+        "transformers": "transformer",
+        "via": "through",
+        "through": "via",
+        "using": "with",
+        "with": "using",
+        "for": "towards",
+        "towards": "for",
+        "an": "a",
+    }
 
-    new_title = " ".join(words)
+    new_title = title
+    if len(words) >= 3:
+        # Choose a mutation strategy randomly
+        strategy = rng.choice(["swap", "plural", "synonym", "article"])
+
+        if strategy == "swap" and len(words) >= 5:
+            # Strategy A: Swap two adjacent words
+            idx = rng.randint(0, len(words) - 2)
+            words[idx], words[idx + 1] = words[idx + 1], words[idx]
+            new_title = " ".join(words)
+        elif strategy == "plural" and len(words) >= 3:
+            # Strategy B: Flip plural/singular
+            idx = rng.randint(0, len(words) - 1)
+            word = words[idx].rstrip(".,;:!?")
+            if word.endswith("s") and len(word) > 2:
+                words[idx] = word[:-1]
+            elif not word.endswith("s"):
+                words[idx] = word + "s"
+            new_title = " ".join(words)
+        elif strategy == "article":
+            # Strategy D: Insert or remove article
+            articles = ["a", "an", "the"]
+            # Find a word that could have an article before it
+            for idx in range(len(words)):
+                word_lower = words[idx].lower()
+                if idx > 0 and words[idx - 1].lower() in articles:
+                    # Remove article
+                    words.pop(idx - 1)
+                    new_title = " ".join(words)
+                    break
+                elif idx < len(words) - 1 and word_lower not in articles:
+                    # Insert article
+                    article = rng.choice(["a", "the"])
+                    words.insert(idx, article)
+                    new_title = " ".join(words)
+                    break
+            else:
+                # Fallback to synonym if article strategy didn't apply
+                strategy = "synonym"
+
+        if strategy == "synonym" or new_title == title:
+            # Strategy C: Synonym substitution (also fallback)
+            for idx in range(len(words)):
+                word_lower = words[idx].lower().rstrip(".,;:!?")
+                if word_lower in replacements:
+                    words[idx] = replacements[word_lower]
+                    new_title = " ".join(words)
+                    break
+
     new_entry.fields["title"] = new_title
     new_entry.fields.pop("doi", None)
     new_entry.label = "HALLUCINATED"
@@ -410,14 +473,7 @@ def generate_retracted_paper(
     new_entry.difficulty_tier = DifficultyTier.HARD.value
     new_entry.generation_method = GenerationMethod.REAL_WORLD.value
     new_entry.explanation = f"Paper '{retracted_title}' was retracted after publication"
-    new_entry.subtests = {
-        "doi_resolves": True,
-        "title_exists": True,
-        "authors_match": True,
-        "venue_real": True,
-        "fields_complete": True,
-        "cross_db_agreement": True,
-    }
+    new_entry.subtests = dict(VALID_SUBTESTS)  # copy to avoid mutation
     new_entry.bibtex_key = f"retracted_{new_entry.bibtex_key}"
     return new_entry
 
@@ -432,17 +488,17 @@ def generate_version_confusion(
     """Tier 3: Mix arXiv preprint metadata with conference publication metadata."""
     new_entry = _clone_entry(entry)
 
-    # Keep the title from the original entry
-    # Set eprint field to arxiv_id (arXiv metadata)
+    # Keep the original title and authors (they represent the real paper)
+    # Set eprint field to the given arxiv_id (arXiv metadata)
     new_entry.fields["eprint"] = arxiv_id
     new_entry.fields["archiveprefix"] = "arXiv"
 
-    # But claim it was published at a conference (venue metadata)
+    # But claim it was published at a conference (venue metadata that doesn't match)
     new_entry.fields["booktitle"] = conference_venue
     new_entry.fields["year"] = conference_year
     new_entry.bibtex_type = "inproceedings"
 
-    # Remove DOI since this creates version confusion
+    # Remove DOI since version confusion creates ambiguity
     new_entry.fields.pop("doi", None)
 
     new_entry.label = "HALLUCINATED"
@@ -450,7 +506,8 @@ def generate_version_confusion(
     new_entry.difficulty_tier = DifficultyTier.HARD.value
     new_entry.generation_method = GenerationMethod.PERTURBATION.value
     new_entry.explanation = (
-        f"arXiv preprint {arxiv_id} cited with conference venue {conference_venue}"
+        f"Entry cites arXiv:{arxiv_id} but claims venue {conference_venue} {conference_year}; "
+        f"metadata mixes preprint and publication versions"
     )
     new_entry.subtests = {
         "doi_resolves": False,

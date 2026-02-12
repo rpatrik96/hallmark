@@ -21,6 +21,7 @@ import tempfile
 import time
 from pathlib import Path
 
+from hallmark.baselines.common import fallback_predictions
 from hallmark.dataset.schema import BenchmarkEntry, Prediction
 
 logger = logging.getLogger(__name__)
@@ -147,17 +148,68 @@ def run_hallucinator(
 
         if result.returncode != 0:
             logger.error(f"hallucinator failed: {result.stderr[:500]}")
-            return _fallback_predictions(entries)
+            return fallback_predictions(
+                entries, reason="hallucinator: verification failed, defaulting to VALID"
+            )
 
         # Parse output
         return _parse_output(entries, result.stdout, output_path, total_time)
 
     except subprocess.TimeoutExpired:
         logger.error("hallucinator timed out")
-        return _fallback_predictions(entries)
+        return fallback_predictions(
+            entries, reason="hallucinator: verification failed, defaulting to VALID"
+        )
     finally:
         Path(pdf_path).unlink(missing_ok=True)
         Path(output_path).unlink(missing_ok=True)
+
+
+def _parse_stdout_results(stdout: str) -> tuple[set[str], set[str], set[str]]:
+    """Extract not_found, mismatch, and retracted title sets from stdout."""
+    not_found_titles: set[str] = set()
+    mismatch_titles: set[str] = set()
+    retracted_titles: set[str] = set()
+
+    current_title = ""
+    for line in stdout.split("\n"):
+        line_stripped = line.strip()
+        if "NOT FOUND" in line_stripped.upper() or "not found" in line_stripped:
+            if current_title:
+                not_found_titles.add(current_title.lower())
+        elif "MISMATCH" in line_stripped.upper() or "mismatch" in line_stripped:
+            if current_title:
+                mismatch_titles.add(current_title.lower())
+        elif "RETRACTED" in line_stripped.upper() and current_title:
+            retracted_titles.add(current_title.lower())
+
+        if line_stripped and not line_stripped.startswith(("=", "-", " ", "✓", "✗", "?")):
+            current_title = line_stripped
+
+    return not_found_titles, mismatch_titles, retracted_titles
+
+
+def _parse_output_file(output_path: str) -> set[str]:
+    """Extract not_found titles from output file."""
+    not_found: set[str] = set()
+    path = Path(output_path)
+    if path.exists():
+        try:
+            content = path.read_text()
+            for line in content.split("\n"):
+                lower = line.lower()
+                if "not found" in lower:
+                    parts = line.split(":")
+                    if len(parts) > 1:
+                        not_found.add(parts[0].strip().lower())
+        except OSError:
+            pass
+    return not_found
+
+
+def _title_matches(entry_title: str, title_set: set[str]) -> bool:
+    """Check if entry title matches any title in the set."""
+    return any(entry_title in t or t in entry_title for t in title_set if t)
 
 
 def _parse_output(
@@ -169,102 +221,40 @@ def _parse_output(
     """Parse hallucinator output and match to entries by title."""
     per_entry_time = total_time / max(len(entries), 1)
 
-    # Parse stdout for verification results
-    # hallucinator reports: Verified / Author Mismatch / Not Found / Retracted
-    not_found_titles: set[str] = set()
-    mismatch_titles: set[str] = set()
-    retracted_titles: set[str] = set()
+    not_found, mismatch, retracted = _parse_stdout_results(stdout)
+    not_found |= _parse_output_file(output_path)
 
-    lines = stdout.split("\n")
-    current_title = ""
-    for line in lines:
-        line_stripped = line.strip()
-        # Look for title patterns in output
-        if "NOT FOUND" in line_stripped.upper() or "not found" in line_stripped:
-            if current_title:
-                not_found_titles.add(current_title.lower())
-        elif "MISMATCH" in line_stripped.upper() or "mismatch" in line_stripped:
-            if current_title:
-                mismatch_titles.add(current_title.lower())
-        elif "RETRACTED" in line_stripped.upper() and current_title:
-            retracted_titles.add(current_title.lower())
-
-        # Track current reference being processed
-        if line_stripped and not line_stripped.startswith(("=", "-", " ", "✓", "✗", "?")):
-            current_title = line_stripped
-
-    # Also try reading output file
-    output_file = Path(output_path)
-    if output_file.exists():
-        try:
-            content = output_file.read_text()
-            for line in content.split("\n"):
-                lower = line.lower()
-                if "not found" in lower:
-                    # Extract title if possible
-                    parts = line.split(":")
-                    if len(parts) > 1:
-                        not_found_titles.add(parts[0].strip().lower())
-        except OSError:
-            pass
-
-    # Match entries by title similarity
     predictions = []
     for entry in entries:
         entry_title = entry.fields.get("title", "").lower().strip()
 
-        is_not_found = any(entry_title in t or t in entry_title for t in not_found_titles if t)
-        is_mismatch = any(entry_title in t or t in entry_title for t in mismatch_titles if t)
-        is_retracted = any(entry_title in t or t in entry_title for t in retracted_titles if t)
+        is_not_found = _title_matches(entry_title, not_found)
+        is_mismatch = _title_matches(entry_title, mismatch)
+        is_retracted = _title_matches(entry_title, retracted)
 
         if is_not_found or is_retracted:
-            predictions.append(
-                Prediction(
-                    bibtex_key=entry.bibtex_key,
-                    label="HALLUCINATED",
-                    confidence=0.80 if is_not_found else 0.90,
-                    reason=f"hallucinator: {'not found' if is_not_found else 'retracted'}",
-                    api_sources_queried=API_SOURCES,
-                    wall_clock_seconds=per_entry_time,
-                    api_calls=len(API_SOURCES),
-                )
-            )
+            label = "HALLUCINATED"
+            confidence = 0.80 if is_not_found else 0.90
+            reason = f"hallucinator: {'not found' if is_not_found else 'retracted'}"
         elif is_mismatch:
-            predictions.append(
-                Prediction(
-                    bibtex_key=entry.bibtex_key,
-                    label="HALLUCINATED",
-                    confidence=0.65,
-                    reason="hallucinator: author mismatch",
-                    api_sources_queried=API_SOURCES,
-                    wall_clock_seconds=per_entry_time,
-                    api_calls=len(API_SOURCES),
-                )
-            )
+            label = "HALLUCINATED"
+            confidence = 0.65
+            reason = "hallucinator: author mismatch"
         else:
-            predictions.append(
-                Prediction(
-                    bibtex_key=entry.bibtex_key,
-                    label="VALID",
-                    confidence=0.80,
-                    reason="hallucinator: verified or no issues found",
-                    api_sources_queried=API_SOURCES,
-                    wall_clock_seconds=per_entry_time,
-                    api_calls=len(API_SOURCES),
-                )
+            label = "VALID"
+            confidence = 0.80
+            reason = "hallucinator: verified or no issues found"
+
+        predictions.append(
+            Prediction(
+                bibtex_key=entry.bibtex_key,
+                label=label,  # type: ignore[arg-type]
+                confidence=confidence,
+                reason=reason,
+                api_sources_queried=API_SOURCES,
+                wall_clock_seconds=per_entry_time,
+                api_calls=len(API_SOURCES),
             )
+        )
 
     return predictions
-
-
-def _fallback_predictions(entries: list[BenchmarkEntry]) -> list[Prediction]:
-    """Return conservative fallback predictions when hallucinator fails."""
-    return [
-        Prediction(
-            bibtex_key=entry.bibtex_key,
-            label="VALID",
-            confidence=0.5,
-            reason="hallucinator: verification failed, defaulting to VALID",
-        )
-        for entry in entries
-    ]

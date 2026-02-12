@@ -79,6 +79,17 @@ SUBTEST_NAMES = [
 ]
 
 
+# Default sub-test values for verified entries (all checks pass)
+VALID_SUBTESTS: dict[str, bool] = {
+    "doi_resolves": True,
+    "title_exists": True,
+    "authors_match": True,
+    "venue_real": True,
+    "fields_complete": True,
+    "cross_db_agreement": True,
+}
+
+
 @dataclass
 class BenchmarkEntry:
     """A single benchmark entry (valid or hallucinated BibTeX reference).

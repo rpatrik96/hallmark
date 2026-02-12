@@ -10,6 +10,7 @@ import json
 import logging
 import time
 
+from hallmark.baselines.common import fallback_predictions
 from hallmark.dataset.schema import BenchmarkEntry, Prediction
 
 logger = logging.getLogger(__name__)
@@ -48,7 +49,7 @@ def verify_with_openai(
         import openai
     except ImportError:
         logger.error("openai package not installed. Install with: pip install openai")
-        return _fallback(entries)
+        return fallback_predictions(entries, reason="LLM baseline unavailable")
 
     client = openai.OpenAI(api_key=api_key) if api_key else openai.OpenAI()
     predictions = []
@@ -94,7 +95,7 @@ def verify_with_anthropic(
         import anthropic
     except ImportError:
         logger.error("anthropic package not installed. Install with: pip install anthropic")
-        return _fallback(entries)
+        return fallback_predictions(entries, reason="LLM baseline unavailable")
 
     client = anthropic.Anthropic(api_key=api_key) if api_key else anthropic.Anthropic()
     predictions = []
@@ -162,15 +163,3 @@ def _parse_llm_response(content: str, bibtex_key: str) -> Prediction:
             confidence=0.5,
             reason=f"Parse error: {content[:100]}",
         )
-
-
-def _fallback(entries: list[BenchmarkEntry]) -> list[Prediction]:
-    return [
-        Prediction(
-            bibtex_key=e.bibtex_key,
-            label="VALID",
-            confidence=0.5,
-            reason="LLM baseline unavailable",
-        )
-        for e in entries
-    ]

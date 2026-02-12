@@ -279,12 +279,10 @@ class TestHarcOutputParsing:
 
 class TestVerifyCitationsBaseline:
     def test_fallback_predictions(self):
-        from hallmark.baselines.verify_citations_baseline import (
-            _fallback_predictions,
-        )
+        from hallmark.baselines.common import fallback_predictions
 
         entries = [_entry("x"), _entry("y")]
-        preds = _fallback_predictions(entries)
+        preds = fallback_predictions(entries)
         assert len(preds) == 2
         assert all(p.label == "VALID" for p in preds)
         assert all(p.confidence == 0.5 for p in preds)

@@ -14,7 +14,7 @@ from datetime import date
 
 import httpx
 
-from hallmark.dataset.schema import BenchmarkEntry, GenerationMethod
+from hallmark.dataset.schema import VALID_SUBTESTS, BenchmarkEntry, GenerationMethod
 
 logger = logging.getLogger(__name__)
 
@@ -175,14 +175,7 @@ def dblp_hit_to_entry(
         source_conference=venue_name,
         publication_date=f"{year}-01-01" if year else "",
         added_to_benchmark=today,
-        subtests={
-            "doi_resolves": bool(doi),
-            "title_exists": True,
-            "authors_match": True,
-            "venue_real": True,
-            "fields_complete": True,
-            "cross_db_agreement": True,
-        },
+        subtests={**VALID_SUBTESTS, "doi_resolves": bool(doi)},
     )
 
 
