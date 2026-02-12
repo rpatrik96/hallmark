@@ -201,7 +201,7 @@ def generate_swapped_authors(
     new_entry = _clone_entry(entry)
     new_entry.fields["author"] = donor_entry.fields.get("author", "Unknown Author")
     new_entry.label = "HALLUCINATED"
-    new_entry.hallucination_type = HallucinationType.SWAPPED_AUTHORS.value
+    new_entry.hallucination_type = HallucinationType.AUTHOR_MISMATCH.value
     new_entry.difficulty_tier = DifficultyTier.MEDIUM.value
     new_entry.generation_method = GenerationMethod.PERTURBATION.value
     new_entry.explanation = f"Authors swapped from '{donor_entry.bibtex_key}'"
@@ -300,6 +300,232 @@ def generate_preprint_as_published(
     return new_entry
 
 
+def generate_plausible_fabrication(
+    entry: BenchmarkEntry, rng: random.Random | None = None
+) -> BenchmarkEntry:
+    """Tier 3: Fabricate a realistic but non-existent paper at a real prestigious venue."""
+    rng = rng or random.Random()
+    new_entry = _clone_entry(entry)
+
+    # ML buzzwords for plausible-sounding titles
+    buzzwords = [
+        "Attention",
+        "Transformer",
+        "Self-Supervised",
+        "Contrastive",
+        "Meta-Learning",
+        "Few-Shot",
+        "Multi-Modal",
+        "Reinforcement",
+        "Diffusion",
+        "Retrieval-Augmented",
+        "Neural",
+        "Deep",
+        "Efficient",
+        "Scalable",
+        "Adaptive",
+    ]
+    tasks = [
+        "Classification",
+        "Generation",
+        "Reasoning",
+        "Understanding",
+        "Translation",
+        "Segmentation",
+        "Detection",
+        "Retrieval",
+        "Synthesis",
+        "Alignment",
+    ]
+
+    # Generate plausible title combining buzzwords
+    title_template = rng.choice(
+        [
+            f"{rng.choice(buzzwords)} {rng.choice(buzzwords)} for {rng.choice(tasks)}",
+            f"{rng.choice(buzzwords)}-Based {rng.choice(tasks)}",
+            f"Learning {rng.choice(tasks)} via {rng.choice(buzzwords)} Methods",
+            f"{rng.choice(buzzwords)} Approaches to {rng.choice(tasks)}",
+        ]
+    )
+    new_entry.fields["title"] = title_template
+
+    # Fabricated but realistic author names
+    author_sets = [
+        "Wei Zhang and Sarah Chen and Marcus Johnson",
+        "Yuki Tanaka and Elena Rodriguez and James Kim",
+        "Sofia Andersson and Ravi Patel and Maria Santos",
+        "Alex Wu and Emma Thompson and David Lee",
+        "Nina Kowalski and Omar Hassan and Lisa Wang",
+    ]
+    new_entry.fields["author"] = rng.choice(author_sets)
+
+    # Keep a real prestigious venue
+    real_venues = ["NeurIPS", "ICML", "ICLR", "AAAI", "ACL", "CVPR"]
+    venue_field = "booktitle" if new_entry.bibtex_type == "inproceedings" else "journal"
+    new_entry.fields[venue_field] = rng.choice(real_venues)
+
+    # Remove DOI (fabricated paper won't have one)
+    new_entry.fields.pop("doi", None)
+
+    new_entry.label = "HALLUCINATED"
+    new_entry.hallucination_type = HallucinationType.PLAUSIBLE_FABRICATION.value
+    new_entry.difficulty_tier = DifficultyTier.HARD.value
+    new_entry.generation_method = GenerationMethod.ADVERSARIAL.value
+    new_entry.explanation = "Completely fabricated paper with plausible metadata at real venue"
+    new_entry.subtests = {
+        "doi_resolves": False,
+        "title_exists": False,
+        "authors_match": False,
+        "venue_real": True,
+        "fields_complete": True,
+        "cross_db_agreement": False,
+    }
+    new_entry.bibtex_key = f"plausible_{new_entry.bibtex_key}"
+    return new_entry
+
+
+def generate_retracted_paper(
+    entry: BenchmarkEntry,
+    retracted_doi: str,
+    retracted_title: str,
+    retracted_authors: str,
+    retracted_venue: str,
+    retracted_year: str,
+    rng: random.Random | None = None,
+) -> BenchmarkEntry:
+    """Tier 3: Create entry citing a real but retracted paper."""
+    new_entry = _clone_entry(entry)
+
+    # Replace all fields with the retracted paper's metadata
+    new_entry.fields["doi"] = retracted_doi
+    new_entry.fields["title"] = retracted_title
+    new_entry.fields["author"] = retracted_authors
+    new_entry.fields["year"] = retracted_year
+
+    venue_field = "booktitle" if new_entry.bibtex_type == "inproceedings" else "journal"
+    new_entry.fields[venue_field] = retracted_venue
+
+    new_entry.label = "HALLUCINATED"
+    new_entry.hallucination_type = HallucinationType.RETRACTED_PAPER.value
+    new_entry.difficulty_tier = DifficultyTier.HARD.value
+    new_entry.generation_method = GenerationMethod.REAL_WORLD.value
+    new_entry.explanation = f"Paper '{retracted_title}' was retracted after publication"
+    new_entry.subtests = {
+        "doi_resolves": True,
+        "title_exists": True,
+        "authors_match": True,
+        "venue_real": True,
+        "fields_complete": True,
+        "cross_db_agreement": True,
+    }
+    new_entry.bibtex_key = f"retracted_{new_entry.bibtex_key}"
+    return new_entry
+
+
+def generate_version_confusion(
+    entry: BenchmarkEntry,
+    arxiv_id: str,
+    conference_venue: str,
+    conference_year: str,
+    rng: random.Random | None = None,
+) -> BenchmarkEntry:
+    """Tier 3: Mix arXiv preprint metadata with conference publication metadata."""
+    new_entry = _clone_entry(entry)
+
+    # Keep the title from the original entry
+    # Set eprint field to arxiv_id (arXiv metadata)
+    new_entry.fields["eprint"] = arxiv_id
+    new_entry.fields["archiveprefix"] = "arXiv"
+
+    # But claim it was published at a conference (venue metadata)
+    new_entry.fields["booktitle"] = conference_venue
+    new_entry.fields["year"] = conference_year
+    new_entry.bibtex_type = "inproceedings"
+
+    # Remove DOI since this creates version confusion
+    new_entry.fields.pop("doi", None)
+
+    new_entry.label = "HALLUCINATED"
+    new_entry.hallucination_type = HallucinationType.VERSION_CONFUSION.value
+    new_entry.difficulty_tier = DifficultyTier.HARD.value
+    new_entry.generation_method = GenerationMethod.PERTURBATION.value
+    new_entry.explanation = (
+        f"arXiv preprint {arxiv_id} cited with conference venue {conference_venue}"
+    )
+    new_entry.subtests = {
+        "doi_resolves": False,
+        "title_exists": True,
+        "authors_match": True,
+        "venue_real": True,
+        "fields_complete": True,
+        "cross_db_agreement": False,
+    }
+    new_entry.bibtex_key = f"version_{new_entry.bibtex_key}"
+    return new_entry
+
+
+def generate_hybrid_fabrication(
+    entry: BenchmarkEntry, rng: random.Random | None = None
+) -> BenchmarkEntry:
+    """Tier 2: Keep real DOI but fabricate authors and slightly modify title."""
+    rng = rng or random.Random()
+    new_entry = _clone_entry(entry)
+
+    # Keep the DOI from the original entry (it will still resolve)
+    # Replace authors with fabricated names
+    fake_author_sets = [
+        "Michael Zhang and Jennifer Liu and Robert Chen",
+        "Anna Petrov and Carlos Martinez and Yuki Nakamura",
+        "Thomas Anderson and Sophia Kumar and Daniel Park",
+        "Isabella Rossi and Ahmed Ali and Emma Williams",
+        "Lucas Brown and Maria Garcia and Kevin Nguyen",
+    ]
+    new_entry.fields["author"] = rng.choice(fake_author_sets)
+
+    # Slightly modify the title (swap 2-3 words)
+    title = new_entry.fields.get("title", "")
+    words = title.split()
+    if len(words) >= 4:
+        # Swap 2-3 words with synonyms or related terms
+        num_swaps = min(rng.randint(2, 3), len(words))
+        swap_words = {
+            "learning": "training",
+            "neural": "deep",
+            "network": "model",
+            "efficient": "optimized",
+            "robust": "stable",
+            "novel": "new",
+            "approach": "method",
+            "framework": "system",
+            "attention": "focus",
+            "transformer": "architecture",
+        }
+        for _ in range(num_swaps):
+            idx = rng.randint(0, len(words) - 1)
+            word_lower = words[idx].lower().rstrip(".,;:!?")
+            if word_lower in swap_words:
+                words[idx] = swap_words[word_lower]
+            elif rng.random() < 0.5:
+                words[idx] = rng.choice(["Enhanced", "Improved", "Advanced", "Novel", "Efficient"])
+        new_entry.fields["title"] = " ".join(words)
+
+    new_entry.label = "HALLUCINATED"
+    new_entry.hallucination_type = HallucinationType.HYBRID_FABRICATION.value
+    new_entry.difficulty_tier = DifficultyTier.MEDIUM.value
+    new_entry.generation_method = GenerationMethod.ADVERSARIAL.value
+    new_entry.explanation = "Real DOI with fabricated authors and modified title"
+    new_entry.subtests = {
+        "doi_resolves": True,
+        "title_exists": False,
+        "authors_match": False,
+        "venue_real": True,
+        "fields_complete": True,
+        "cross_db_agreement": False,
+    }
+    new_entry.bibtex_key = f"hybrid_{new_entry.bibtex_key}"
+    return new_entry
+
+
 # --- Batch generation ---
 
 
@@ -347,9 +573,31 @@ def generate_tier2_batch(
         "UAI",
     ]
 
+    # ML buzzwords for chimeric_title
+    ml_buzzwords = [
+        "Attention",
+        "Transformer",
+        "Self-Supervised",
+        "Contrastive",
+        "Few-Shot",
+        "Multi-Modal",
+        "Reinforcement",
+        "Diffusion",
+        "Neural Architecture Search",
+        "Meta-Learning",
+    ]
+
     for _i in range(count):
         source = rng.choice(valid_entries)
-        method = rng.choice(["wrong_venue", "swapped_authors", "preprint_as_published"])
+        method = rng.choice(
+            [
+                "wrong_venue",
+                "swapped_authors",
+                "preprint_as_published",
+                "chimeric_title",
+                "hybrid_fabrication",
+            ]
+        )
 
         if method == "wrong_venue":
             wrong_v = rng.choice(venues)
@@ -362,6 +610,12 @@ def generate_tier2_batch(
         elif method == "preprint_as_published":
             fake_v = rng.choice(venues)
             results.append(generate_preprint_as_published(source, fake_v, rng))
+        elif method == "chimeric_title":
+            # Generate a fake title using ML buzzwords
+            fake_title = f"{rng.choice(ml_buzzwords)} for {rng.choice(['Classification', 'Generation', 'Reasoning'])}"
+            results.append(generate_chimeric_title(source, fake_title, rng))
+        elif method == "hybrid_fabrication":
+            results.append(generate_hybrid_fabrication(source, rng))
 
     return results
 
@@ -371,12 +625,35 @@ def generate_tier3_batch(
     count: int,
     seed: int = 42,
 ) -> list[BenchmarkEntry]:
-    """Generate a batch of Tier 3 hallucinated entries (near-miss titles)."""
+    """Generate a batch of Tier 3 hallucinated entries."""
     rng = random.Random(seed)
     results = []
+
+    # Conference venues and years for version_confusion
+    conferences = [
+        ("NeurIPS", "2023"),
+        ("ICML", "2023"),
+        ("ICLR", "2024"),
+        ("AAAI", "2024"),
+        ("CVPR", "2023"),
+    ]
+
     for _i in range(count):
         source = rng.choice(valid_entries)
-        results.append(generate_near_miss_title(source, rng))
+        # Randomly choose between near_miss_title, plausible_fabrication, and version_confusion
+        # Skip retracted_paper since it needs external data
+        method = rng.choice(["near_miss_title", "plausible_fabrication", "version_confusion"])
+
+        if method == "near_miss_title":
+            results.append(generate_near_miss_title(source, rng))
+        elif method == "plausible_fabrication":
+            results.append(generate_plausible_fabrication(source, rng))
+        elif method == "version_confusion":
+            # Generate a plausible arXiv ID
+            arxiv_id = f"{rng.randint(2001, 2312)}.{rng.randint(10000, 99999)}"
+            conf_venue, conf_year = rng.choice(conferences)
+            results.append(generate_version_confusion(source, arxiv_id, conf_venue, conf_year, rng))
+
     return results
 
 

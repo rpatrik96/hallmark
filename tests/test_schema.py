@@ -225,6 +225,13 @@ class TestEnums:
         assert HallucinationType.FABRICATED_DOI.value == "fabricated_doi"
         assert HallucinationType.NEAR_MISS_TITLE.value == "near_miss_title"
 
+    def test_hybrid_fabrication_type(self):
+        assert HallucinationType.HYBRID_FABRICATION.value == "hybrid_fabrication"
+
+    def test_author_mismatch_backward_compat(self):
+        # Backward compatibility: AUTHOR_MISMATCH enum uses "swapped_authors" value
+        assert HallucinationType.AUTHOR_MISMATCH.value == "swapped_authors"
+
     def test_difficulty_tiers(self):
         assert DifficultyTier.EASY.value == 1
         assert DifficultyTier.MEDIUM.value == 2
@@ -233,3 +240,41 @@ class TestEnums:
     def test_generation_methods(self):
         assert GenerationMethod.SCRAPED.value == "scraped"
         assert GenerationMethod.LLM_GENERATED.value == "llm_generated"
+
+    def test_hallucination_tier_map_hybrid_fabrication(self):
+        from hallmark.dataset.schema import HALLUCINATION_TIER_MAP
+
+        assert HALLUCINATION_TIER_MAP[HallucinationType.HYBRID_FABRICATION] == DifficultyTier.MEDIUM
+
+
+class TestEvaluationResult:
+    def test_ece_field_defaults_to_none(self):
+        from hallmark.dataset.schema import EvaluationResult
+
+        result = EvaluationResult(
+            tool_name="test",
+            split_name="dev",
+            num_entries=10,
+            num_hallucinated=5,
+            num_valid=5,
+            detection_rate=0.8,
+            false_positive_rate=0.1,
+            f1_hallucination=0.85,
+            tier_weighted_f1=0.9,
+        )
+        assert result.ece is None
+
+
+class TestBackwardCompatibility:
+    def test_swapped_authors_value_still_works(self):
+        # Ensure old entries with hallucination_type="swapped_authors" still work
+        entry = BenchmarkEntry(
+            bibtex_key="test",
+            bibtex_type="article",
+            fields={"title": "Test", "author": "A", "year": "2024"},
+            label="HALLUCINATED",
+            hallucination_type="swapped_authors",
+            difficulty_tier=2,
+        )
+        assert entry.hallucination_type == "swapped_authors"
+        assert entry.label == "HALLUCINATED"

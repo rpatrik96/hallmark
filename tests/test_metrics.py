@@ -223,6 +223,144 @@ class TestCostEfficiency:
         assert result["entries_per_second"] == 0.0
 
 
+class TestExpectedCalibrationError:
+    def test_perfect_calibration(self):
+        from hallmark.evaluation.metrics import expected_calibration_error
+
+        entries = [
+            _entry("v1", "VALID"),
+            _entry("v2", "VALID"),
+            _entry("h1", "HALLUCINATED"),
+            _entry("h2", "HALLUCINATED"),
+        ]
+        preds = {
+            "v1": _pred("v1", "VALID", confidence=0.9),
+            "v2": _pred("v2", "VALID", confidence=0.9),
+            "h1": _pred("h1", "HALLUCINATED", confidence=0.9),
+            "h2": _pred("h2", "HALLUCINATED", confidence=0.9),
+        }
+        ece = expected_calibration_error(entries, preds)
+        assert ece >= 0.0
+        assert ece <= 1.0
+        # Perfect predictions with consistent confidence should have low ECE
+        assert ece < 0.2
+
+    def test_bad_calibration(self):
+        from hallmark.evaluation.metrics import expected_calibration_error
+
+        entries = [
+            _entry("v1", "VALID"),
+            _entry("v2", "VALID"),
+            _entry("h1", "HALLUCINATED"),
+            _entry("h2", "HALLUCINATED"),
+        ]
+        # High confidence but all predictions are wrong
+        preds = {
+            "v1": _pred("v1", "HALLUCINATED", confidence=0.95),
+            "v2": _pred("v2", "HALLUCINATED", confidence=0.95),
+            "h1": _pred("h1", "VALID", confidence=0.95),
+            "h2": _pred("h2", "VALID", confidence=0.95),
+        }
+        ece = expected_calibration_error(entries, preds)
+        # Bad calibration should give high ECE
+        assert ece > 0.5
+
+    def test_empty_predictions(self):
+        from hallmark.evaluation.metrics import expected_calibration_error
+
+        entries = [_entry("v1", "VALID")]
+        ece = expected_calibration_error(entries, {})
+        assert ece == 0.0
+
+
+class TestSourceStratifiedMetrics:
+    def test_stratify_by_api_sources(self):
+        from hallmark.evaluation.metrics import source_stratified_metrics
+
+        entries = [
+            _entry("v1", "VALID"),
+            _entry("h1", "HALLUCINATED"),
+            _entry("h2", "HALLUCINATED"),
+            _entry("h3", "HALLUCINATED"),
+        ]
+        preds = {
+            "v1": Prediction(
+                bibtex_key="v1",
+                label="VALID",
+                confidence=0.9,
+                api_sources_queried=["crossref"],
+            ),
+            "h1": Prediction(
+                bibtex_key="h1",
+                label="HALLUCINATED",
+                confidence=0.8,
+                api_sources_queried=["crossref"],
+            ),
+            "h2": Prediction(
+                bibtex_key="h2",
+                label="HALLUCINATED",
+                confidence=0.9,
+                api_sources_queried=["dblp", "semantic_scholar"],
+            ),
+            "h3": Prediction(
+                bibtex_key="h3",
+                label="VALID",
+                confidence=0.7,
+                api_sources_queried=["dblp", "semantic_scholar"],
+            ),
+        }
+        result = source_stratified_metrics(entries, preds)
+        assert "crossref" in result
+        assert "dblp,semantic_scholar" in result
+        assert result["crossref"]["detection_rate"] == 1.0
+        assert result["dblp,semantic_scholar"]["detection_rate"] == 0.5
+
+
+class TestSubtestAccuracyTable:
+    def test_subtest_accuracy(self):
+        from hallmark.evaluation.metrics import subtest_accuracy_table
+
+        entries = [
+            BenchmarkEntry(
+                bibtex_key="e1",
+                bibtex_type="article",
+                fields={"title": "A", "author": "B", "year": "2024"},
+                label="VALID",
+                subtests={"doi_resolves": True, "title_exists": True},
+            ),
+            BenchmarkEntry(
+                bibtex_key="e2",
+                bibtex_type="article",
+                fields={"title": "C", "author": "D", "year": "2024"},
+                label="HALLUCINATED",
+                hallucination_type="fabricated_doi",
+                difficulty_tier=1,
+                subtests={"doi_resolves": False, "title_exists": False},
+            ),
+        ]
+        preds = {
+            "e1": Prediction(
+                bibtex_key="e1",
+                label="VALID",
+                confidence=0.9,
+                subtest_results={"doi_resolves": True, "title_exists": True},
+            ),
+            "e2": Prediction(
+                bibtex_key="e2",
+                label="HALLUCINATED",
+                confidence=0.8,
+                subtest_results={"doi_resolves": False, "title_exists": True},
+            ),
+        }
+        result = subtest_accuracy_table(entries, preds)
+        assert "doi_resolves" in result
+        assert "title_exists" in result
+        # doi_resolves: both correct (2/2)
+        assert result["doi_resolves"]["accuracy"] == 1.0
+        # title_exists: e1 correct, e2 wrong (1/2)
+        assert result["title_exists"]["accuracy"] == 0.5
+
+
 class TestEvaluate:
     def test_full_evaluation(self):
         entries = [

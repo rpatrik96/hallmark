@@ -21,8 +21,9 @@ class HallucinationType(str, Enum):
     # Tier 2: Medium (requires cross-referencing metadata)
     CHIMERIC_TITLE = "chimeric_title"
     WRONG_VENUE = "wrong_venue"
-    SWAPPED_AUTHORS = "swapped_authors"
+    AUTHOR_MISMATCH = "swapped_authors"  # Covers swapped and fabricated author names
     PREPRINT_AS_PUBLISHED = "preprint_as_published"
+    HYBRID_FABRICATION = "hybrid_fabrication"
 
     # Tier 3: Hard (requires deep verification / semantic reasoning)
     NEAR_MISS_TITLE = "near_miss_title"
@@ -57,8 +58,9 @@ HALLUCINATION_TIER_MAP: dict[HallucinationType, DifficultyTier] = {
     HallucinationType.FUTURE_DATE: DifficultyTier.EASY,
     HallucinationType.CHIMERIC_TITLE: DifficultyTier.MEDIUM,
     HallucinationType.WRONG_VENUE: DifficultyTier.MEDIUM,
-    HallucinationType.SWAPPED_AUTHORS: DifficultyTier.MEDIUM,
+    HallucinationType.AUTHOR_MISMATCH: DifficultyTier.MEDIUM,
     HallucinationType.PREPRINT_AS_PUBLISHED: DifficultyTier.MEDIUM,
+    HallucinationType.HYBRID_FABRICATION: DifficultyTier.MEDIUM,
     HallucinationType.NEAR_MISS_TITLE: DifficultyTier.HARD,
     HallucinationType.PLAUSIBLE_FABRICATION: DifficultyTier.HARD,
     HallucinationType.RETRACTED_PAPER: DifficultyTier.HARD,
@@ -223,6 +225,7 @@ class EvaluationResult:
     temporal_robustness: float | None = None
     cost_efficiency: float | None = None  # entries per second
     mean_api_calls: float | None = None
+    ece: float | None = None  # Expected Calibration Error
 
     # Per-tier breakdown
     per_tier_metrics: dict[int, dict[str, float]] = field(default_factory=dict)

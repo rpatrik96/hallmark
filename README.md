@@ -19,10 +19,10 @@ HALLMARK draws on best practices from established benchmarks:
 
 ## Features
 
-- **Hallucination taxonomy**: 12 types across 3 difficulty tiers (Easy / Medium / Hard)
-- **1,000 annotated entries**: 900 valid (from DBLP) + 100 hallucinated with ground truth
+- **Hallucination taxonomy**: 13 types across 3 difficulty tiers (Easy / Medium / Hard)
+- **1,000+ annotated entries**: 720 valid (from DBLP) + 114 hallucinated with ground truth
 - **6 sub-tests per entry**: DOI resolution, title matching, author consistency, venue verification, field completeness, cross-database agreement
-- **Evaluation metrics**: Detection Rate, F1, tier-weighted F1, detect@k
+- **Evaluation metrics**: Detection Rate, F1, tier-weighted F1, detect@k, ECE
 - **Built-in baselines**: DOI-only, bibtex-updater, LLM-based, ensemble, HaRC, CiteVerifier, hallucinator, verify-citations
 - **Baseline registry**: Central discovery, availability checking, and dispatch for all baselines
 - **Plackett-Luce ranking**: ONEBench-inspired ranking that handles incomplete evaluation data
@@ -104,8 +104,9 @@ hallmark leaderboard --results-dir results/
 |------|-------------|---------|
 | `chimeric_title` | Real author + fabricated title | Real authors, plausible but non-existent paper |
 | `wrong_venue` | Real paper, wrong venue/year | Correct title but at ICML not NeurIPS |
-| `swapped_authors` | Author list from different paper | Correct title, wrong author list |
+| `author_mismatch` | Author list swapped or fabricated | Correct title, wrong author list |
 | `preprint_as_published` | arXiv paper cited as venue paper | Correct paper, fabricated venue acceptance |
+| `hybrid_fabrication` | Real DOI + fabricated metadata | Valid DOI resolves but authors/title don't match |
 
 ### Tier 3: Hard (requires deep verification)
 
@@ -122,11 +123,11 @@ hallmark leaderboard --results-dir results/
 
 | Split | Valid | Hallucinated | Total | Purpose |
 |-------|-------|-------------|-------|---------|
-| `dev_public` | 450 | 50 | 500 | Development and tuning |
-| `test_public` | 270 | 30 | 300 | Public leaderboard |
+| `dev_public` | 450 | 71 | 521 | Development and tuning |
+| `test_public` | 270 | 43 | 313 | Public leaderboard |
 | `test_hidden` | 180 | 20 | 200 | Anti-gaming evaluation |
 
-Tier distribution per split: ~40% Tier 1, ~35% Tier 2, ~25% Tier 3.
+Tier distribution per split: ~28% Tier 1, ~39% Tier 2, ~33% Tier 3 (hallucinated entries).
 
 ### Data Format
 
@@ -166,9 +167,10 @@ Each entry is a JSON object in JSONL format:
 | **False Positive Rate (FPR)** | Valid entries incorrectly flagged |
 | **F1-Hallucination** | Harmonic mean of precision and recall on HALLUCINATED class |
 | **Tier-weighted F1** | F1 weighted by difficulty (Tier 3 = 3x weight) |
+| **ECE** | Expected Calibration Error — measures confidence calibration quality |
 | **detect@k** | Fraction detected using k verification strategies (analogous to pass@k) |
 
-## Baseline Results (dev_public, 500 entries)
+## Baseline Results (dev_public, 521 entries)
 
 | Baseline | Detection Rate | F1 | Tier-weighted F1 | FPR |
 |----------|:---:|:---:|:---:|:---:|
@@ -302,7 +304,7 @@ hallmark/
 ├── .github/workflows/
 │   ├── tests.yml              # CI: test suite across Python versions
 │   └── baselines.yml          # CI: weekly free baseline evaluation
-├── tests/                     # Test suite (125 tests)
+├── tests/                     # Test suite (199 tests)
 ├── figures/                   # Evaluation figures
 └── examples/                  # Usage examples
 ```

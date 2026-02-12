@@ -3,6 +3,11 @@
 Lightweight, local (no-API or minimal-API) checks that run BEFORE calling external
 tools like bibtex-check or harcx. Catches obvious hallucinations that external tools
 may miss.
+
+Note: ``hybrid_fabrication`` entries have a valid DOI that resolves, but the metadata
+(authors/title) doesn't match the DOI target. Detecting these requires cross-referencing
+resolved metadata, which is the job of external tools — pre-screening alone will
+return VALID for the DOI check on these entries.
 """
 
 from __future__ import annotations

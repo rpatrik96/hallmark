@@ -220,6 +220,154 @@ def cost_efficiency(predictions: list[Prediction]) -> dict[str, float]:
     }
 
 
+def expected_calibration_error(
+    entries: list[BenchmarkEntry],
+    predictions: dict[str, Prediction],
+    n_bins: int = 10,
+) -> float:
+    """Compute Expected Calibration Error (ECE).
+
+    Bins predictions by confidence, computes |accuracy - mean_confidence| per bin,
+    returns weighted average by bin size.
+
+    For HALLUCINATED predictions, confidence means P(hallucinated).
+    For VALID predictions, confidence means P(valid), so we use 1-confidence for
+    the "correctness" probability when the prediction is VALID.
+    """
+    if not predictions:
+        return 0.0
+
+    # Collect (confidence, correctness) pairs
+    pairs: list[tuple[float, bool]] = []
+    for entry in entries:
+        pred = predictions.get(entry.bibtex_key)
+        if pred is None:
+            continue
+        is_correct = pred.label == entry.label
+        pairs.append((pred.confidence, is_correct))
+
+    if not pairs:
+        return 0.0
+
+    # Create bins
+    bins: list[list[tuple[float, bool]]] = [[] for _ in range(n_bins)]
+    for conf, correct in pairs:
+        bin_idx = min(int(conf * n_bins), n_bins - 1)
+        bins[bin_idx].append((conf, correct))
+
+    # Compute ECE
+    ece = 0.0
+    total = len(pairs)
+    for bin_data in bins:
+        if not bin_data:
+            continue
+        bin_size = len(bin_data)
+        avg_conf = sum(conf for conf, _ in bin_data) / bin_size
+        accuracy = sum(1 for _, correct in bin_data if correct) / bin_size
+        ece += (bin_size / total) * abs(accuracy - avg_conf)
+
+    return ece
+
+
+def source_stratified_metrics(
+    entries: list[BenchmarkEntry],
+    predictions: dict[str, Prediction],
+) -> dict[str, dict[str, float]]:
+    """Compute detection metrics stratified by API sources queried.
+
+    Groups predictions by their api_sources_queried field and computes
+    per-source detection rate and false positive rate.
+
+    Returns dict mapping source combination string to metrics dict.
+    """
+    # Group predictions by source combination
+    source_groups: dict[str, list[str]] = defaultdict(list)
+    for key, pred in predictions.items():
+        source_key = (
+            ",".join(sorted(pred.api_sources_queried)) if pred.api_sources_queried else "none"
+        )
+        source_groups[source_key].append(key)
+
+    result = {}
+    for source_key, keys in sorted(source_groups.items()):
+        # Filter entries that have predictions in this group
+        group_entries = [e for e in entries if e.bibtex_key in keys]
+        if not group_entries:
+            continue
+
+        group_preds = {k: predictions[k] for k in keys}
+        cm = build_confusion_matrix(group_entries, group_preds)
+        result[source_key] = {
+            "detection_rate": cm.detection_rate,
+            "false_positive_rate": cm.false_positive_rate,
+            "f1": cm.f1,
+            "count": len(group_entries),
+        }
+
+    return result
+
+
+def subtest_accuracy_table(
+    entries: list[BenchmarkEntry],
+    predictions: dict[str, Prediction],
+) -> dict[str, dict[str, float]]:
+    """Compute per-subtest accuracy across all entries.
+
+    For each subtest name, computes accuracy (fraction of entries where
+    the prediction's subtest result matches the ground truth subtest).
+
+    Returns dict mapping subtest name to {accuracy, count, true_positives, false_positives}.
+    """
+    from hallmark.dataset.schema import SUBTEST_NAMES
+
+    result = {}
+    for subtest_name in SUBTEST_NAMES:
+        matches = 0
+        total = 0
+        tp = 0
+        fp = 0
+        tn = 0
+        fn = 0
+
+        for entry in entries:
+            if subtest_name not in entry.subtests:
+                continue
+            pred = predictions.get(entry.bibtex_key)
+            if pred is None or subtest_name not in pred.subtest_results:
+                continue
+
+            gt_value = entry.subtests[subtest_name]
+            pred_value = pred.subtest_results[subtest_name]
+
+            if pred_value is None:
+                continue
+
+            total += 1
+            if pred_value == gt_value:
+                matches += 1
+
+            if gt_value and pred_value:
+                tp += 1
+            elif not gt_value and pred_value:
+                fp += 1
+            elif not gt_value and not pred_value:
+                tn += 1
+            elif gt_value and not pred_value:
+                fn += 1
+
+        if total > 0:
+            result[subtest_name] = {
+                "accuracy": matches / total,
+                "count": total,
+                "true_positives": tp,
+                "false_positives": fp,
+                "true_negatives": tn,
+                "false_negatives": fn,
+            }
+
+    return result
+
+
 def evaluate(
     entries: list[BenchmarkEntry],
     predictions: list[Prediction],
@@ -243,6 +391,7 @@ def evaluate(
     tier_metrics = per_tier_metrics(entries, pred_map)
     type_metrics = per_type_metrics(entries, pred_map)
     cost = cost_efficiency(predictions)
+    ece_score = expected_calibration_error(entries, pred_map)
 
     dat_k: dict[int, float] = {}
     if predictions_per_strategy:
@@ -264,6 +413,7 @@ def evaluate(
         detect_at_k=dat_k,
         cost_efficiency=cost.get("entries_per_second"),
         mean_api_calls=cost.get("mean_api_calls"),
+        ece=ece_score,
         per_tier_metrics=tier_metrics,
         per_type_metrics=type_metrics,
     )
