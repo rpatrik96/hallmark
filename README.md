@@ -172,13 +172,15 @@ Each entry is a JSON object in JSONL format:
 
 ## Baseline Results (dev_public, 521 entries)
 
-| Baseline | Detection Rate | F1 | Tier-weighted F1 | FPR |
-|----------|:---:|:---:|:---:|:---:|
-| bibtex-updater | 0.960 | 0.873 | 0.917 | 0.027 |
-| Ensemble (doi+btx) | 0.500 | 0.610 | 0.544 | 0.016 |
-| HaRC | 0.420 | 0.532 | 0.529 | 0.018 |
-| verify-citations | 0.300 | 0.240 | 0.302 | 0.133 |
-| DOI-only | 0.240 | 0.163 | 0.175 | 0.189 |
+| Baseline | Detection Rate | F1 | Tier-weighted F1 | FPR | ECE |
+|----------|:---:|:---:|:---:|:---:|:---:|
+| bibtex-updater | 0.958 | 0.901 | 0.939 | 0.027 | 0.042 |
+| Ensemble (doi+btx) | 0.437 | 0.569 | 0.495 | 0.016 | 0.070 |
+| HaRC* | 0.155 | 0.268 | 0.188 | 0.000 | 0.361 |
+| DOI-only | 0.197 | 0.165 | 0.182 | 0.189 | 0.346 |
+| verify-citations* | 0.042 | 0.071 | 0.062 | 0.024 | 0.317 |
+
+*\*Partial evaluation due to API rate limiting (HaRC: 20/521, verify-citations: 71/521 entries completed).*
 
 ### External Tool Baselines
 

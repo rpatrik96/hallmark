@@ -1,17 +1,18 @@
 {
   "tool_name": "bibtexupdater",
   "split_name": "dev_public",
-  "num_entries": 500,
-  "num_hallucinated": 50,
+  "num_entries": 521,
+  "num_hallucinated": 71,
   "num_valid": 450,
-  "detection_rate": 0.96,
+  "detection_rate": 0.9577464788732394,
   "false_positive_rate": 0.02666666666666667,
-  "f1_hallucination": 0.8727272727272728,
-  "tier_weighted_f1": 0.9166666666666666,
+  "f1_hallucination": 0.9006622516556291,
+  "tier_weighted_f1": 0.9391891891891893,
   "detect_at_k": {},
   "temporal_robustness": null,
-  "cost_efficiency": 0.5471097919512902,
-  "mean_api_calls": 2.81,
+  "cost_efficiency": 3.0784968231023186,
+  "mean_api_calls": 2.834932821497121,
+  "ece": 0.04165867438878455,
   "per_tier_metrics": {
     "0": {
       "detection_rate": 0.0,
@@ -28,21 +29,27 @@
       "count": 20
     },
     "2": {
-      "detection_rate": 0.8888888888888888,
+      "detection_rate": 0.8928571428571429,
       "false_positive_rate": 0.0,
-      "f1": 0.9411764705882353,
+      "f1": 0.9433962264150945,
       "precision": 1.0,
-      "count": 18
+      "count": 28
     },
     "3": {
       "detection_rate": 1.0,
       "false_positive_rate": 0.0,
       "f1": 1.0,
       "precision": 1.0,
-      "count": 12
+      "count": 23
     }
   },
   "per_type_metrics": {
+    "chimeric_title": {
+      "detection_rate": 1.0,
+      "false_positive_rate": 0.0,
+      "f1": 1.0,
+      "count": 5
+    },
     "fabricated_doi": {
       "detection_rate": 1.0,
       "false_positive_rate": 0.0,
@@ -54,6 +61,12 @@
       "false_positive_rate": 0.0,
       "f1": 1.0,
       "count": 3
+    },
+    "hybrid_fabrication": {
+      "detection_rate": 1.0,
+      "false_positive_rate": 0.0,
+      "f1": 1.0,
+      "count": 5
     },
     "near_miss_title": {
       "detection_rate": 1.0,
@@ -73,11 +86,23 @@
       "f1": 1.0,
       "count": 4
     },
+    "plausible_fabrication": {
+      "detection_rate": 1.0,
+      "false_positive_rate": 0.0,
+      "f1": 1.0,
+      "count": 5
+    },
     "preprint_as_published": {
       "detection_rate": 0.75,
       "false_positive_rate": 0.0,
       "f1": 0.8571428571428571,
       "count": 8
+    },
+    "retracted_paper": {
+      "detection_rate": 1.0,
+      "false_positive_rate": 0.0,
+      "f1": 1.0,
+      "count": 3
     },
     "swapped_authors": {
       "detection_rate": 1.0,
@@ -91,10 +116,16 @@
       "f1": 0.0,
       "count": 450
     },
-    "wrong_venue": {
+    "version_confusion": {
       "detection_rate": 1.0,
       "false_positive_rate": 0.0,
       "f1": 1.0,
+      "count": 3
+    },
+    "wrong_venue": {
+      "detection_rate": 0.8,
+      "false_positive_rate": 0.0,
+      "f1": 0.888888888888889,
       "count": 5
     }
   }
