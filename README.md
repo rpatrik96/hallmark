@@ -172,10 +172,10 @@ Each entry is a JSON object in JSONL format:
 
 | Baseline | Detection Rate | F1 | Tier-weighted F1 | FPR |
 |----------|:---:|:---:|:---:|:---:|
-| bibtex-updater | 0.960 | 0.873 | 0.890 | 0.027 |
-| Ensemble (doi+btx) | 0.500 | 0.610 | 0.588 | 0.016 |
-| HaRC | 0.420 | 0.532 | 0.558 | 0.018 |
-| verify-citations | 0.300 | 0.240 | 0.140 | 0.133 |
+| bibtex-updater | 0.960 | 0.873 | 0.917 | 0.027 |
+| Ensemble (doi+btx) | 0.500 | 0.610 | 0.544 | 0.016 |
+| HaRC | 0.420 | 0.532 | 0.529 | 0.018 |
+| verify-citations | 0.300 | 0.240 | 0.302 | 0.133 |
 | DOI-only | 0.240 | 0.163 | 0.175 | 0.189 |
 
 ### External Tool Baselines
