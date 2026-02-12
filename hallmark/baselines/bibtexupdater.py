@@ -19,6 +19,7 @@ import tempfile
 import time
 from pathlib import Path
 
+from hallmark.baselines.prescreening import merge_with_predictions, prescreen_entries
 from hallmark.dataset.schema import BenchmarkEntry, Prediction
 
 logger = logging.getLogger(__name__)
@@ -29,8 +30,8 @@ STATUS_TO_LABEL: dict[str, str] = {
     "not_found": "HALLUCINATED",
     "title_mismatch": "HALLUCINATED",
     "author_mismatch": "HALLUCINATED",
-    "year_mismatch": "VALID",  # Minor mismatch, not hallucination
-    "venue_mismatch": "VALID",  # Minor mismatch
+    "year_mismatch": "HALLUCINATED",  # Year differs from database record
+    "venue_mismatch": "HALLUCINATED",  # Venue differs from database record
     "partial_match": "HALLUCINATED",
     "hallucinated": "HALLUCINATED",
     "api_error": "VALID",  # Conservative: don't flag on errors
@@ -51,8 +52,8 @@ STATUS_TO_CONFIDENCE: dict[str, float] = {
     "not_found": 0.80,
     "title_mismatch": 0.85,
     "author_mismatch": 0.75,
-    "year_mismatch": 0.60,
-    "venue_mismatch": 0.60,
+    "year_mismatch": 0.75,
+    "venue_mismatch": 0.80,
     "partial_match": 0.70,
     "hallucinated": 0.90,
     "api_error": 0.30,
@@ -87,6 +88,9 @@ def run_bibtex_check(
     and parses the results into Prediction objects.  On timeout, reads any
     partial JSONL output that was written before the process was killed.
 
+    Pre-screening (DOI check, year bounds, author heuristics) runs before
+    bibtex-check to catch obvious hallucinations early, then results are merged.
+
     Args:
         entries: Benchmark entries to verify.
         extra_args: Additional CLI arguments for bibtex-check.
@@ -95,6 +99,9 @@ def run_bibtex_check(
         academic_only: Skip web/book/working-paper checks (default: True).
     """
     start_time = time.time()
+
+    # Run pre-screening before bibtex-check to catch obvious hallucinations
+    prescreen_results = prescreen_entries(entries)
 
     # Use a directory we control to avoid cleanup race on timeout
     tmpdir = tempfile.mkdtemp()
@@ -180,6 +187,9 @@ def run_bibtex_check(
                     wall_clock_seconds=elapsed / len(entries),
                 )
             )
+
+    # Merge pre-screening results with tool predictions
+    predictions = merge_with_predictions(entries, predictions, prescreen_results)
 
     return predictions
 

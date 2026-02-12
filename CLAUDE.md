@@ -41,6 +41,23 @@ This is a single atomic workflow. The commit is not done until all hooks pass an
 - `data/v1.0/baseline_results/` — pre-computed reference results for rate-limited baselines
 - `.github/workflows/` — CI (tests.yml, baselines.yml)
 
+## Baseline Wrapper Architecture
+
+Baseline wrappers have two distinct layers — keep them clearly separated:
+
+### Tool-level fixes (belong upstream in the external tool)
+Changes that fix genuine bugs or missing features in the external tool's wrapper mapping.
+Any user of the tool would benefit from these.
+- **bibtexupdater**: `year_mismatch`/`venue_mismatch` → HALLUCINATED (was incorrectly suppressed)
+- **harc**: false positive filtering for transient API errors, confidence recalibration
+- Upstream improvement plan: `~/Documents/GitHub/bibtexupdater/.claude/plans/hallmark-improvements.md`
+
+### Pre-screening layer (benchmark-side addition)
+`hallmark/baselines/prescreening.py` adds lightweight local checks (DOI resolution, year bounds, author heuristics) that run before external tools. This is a HALLMARK wrapper addition, not an improvement to the external tools themselves.
+- Pre-screening results should be reported transparently (reason strings include `[Pre-screening override]`)
+- When reporting results in the paper, clearly attribute which detections come from the tool vs. pre-screening
+- The DOI check and year validation are candidates for upstreaming to bibtex-updater (see plan)
+
 ## Key Conventions
 - Optional dependencies (choix, harcx, openai, anthropic) use lazy imports
 - bibtex-updater, harcx, and verify-citations all require bibtexparser 1.x; install in isolation with `pipx install`

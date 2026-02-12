@@ -26,6 +26,27 @@ logger = logging.getLogger(__name__)
 
 API_SOURCES = ["semantic_scholar", "dblp", "google_scholar", "open_library"]
 
+# Known false-positive patterns in harcx output
+FALSE_POSITIVE_PATTERNS = [
+    "could not verify",
+    "could not find",
+    "api error",
+    "timeout",
+    "rate limit",
+]
+
+
+def _is_likely_false_positive(issues: list[str]) -> bool:
+    """Check if issues are likely false positives.
+
+    Single-issue flags that match common transient errors or API failures
+    are considered likely false positives.
+    """
+    if len(issues) > 1:
+        return False  # Multiple issues = likely real
+    issue_lower = issues[0].lower()
+    return any(pattern in issue_lower for pattern in FALSE_POSITIVE_PATTERNS)
+
 
 def _parse_harcx_output(output: str) -> dict[str, list[str]]:
     """Parse harcx CLI output into a dict of {bibtex_key: [issues]}.
@@ -131,6 +152,11 @@ def run_harc(
     Returns:
         List of Predictions.
     """
+    # Run pre-screening before harcx to catch obvious hallucinations
+    from hallmark.baselines.prescreening import prescreen_entries
+
+    prescreen_results = prescreen_entries(entries)
+
     harcx_bin = shutil.which("harcx")
     if harcx_bin is None:
         raise ImportError(
@@ -191,17 +217,36 @@ def run_harc(
         if entry.bibtex_key in all_checked:
             issues = all_flagged.get(entry.bibtex_key, [])
             if issues:
-                predictions.append(
-                    Prediction(
-                        bibtex_key=entry.bibtex_key,
-                        label="HALLUCINATED",
-                        confidence=min(0.5 + 0.15 * len(issues), 0.95),
-                        reason=f"HaRC flagged: {'; '.join(issues)}",
-                        api_sources_queried=API_SOURCES,
-                        wall_clock_seconds=per_entry_time,
-                        api_calls=len(API_SOURCES),
+                # Check for false positive patterns
+                if _is_likely_false_positive(issues):
+                    # Single transient/API error → downgrade to VALID with lower confidence
+                    predictions.append(
+                        Prediction(
+                            bibtex_key=entry.bibtex_key,
+                            label="VALID",
+                            confidence=0.60,
+                            reason=f"HaRC: flagged but likely false positive: {'; '.join(issues)}",
+                            api_sources_queried=API_SOURCES,
+                            wall_clock_seconds=per_entry_time,
+                            api_calls=len(API_SOURCES),
+                        )
                     )
-                )
+                else:
+                    # Real issue(s): calibrate confidence based on issue count
+                    # 1 issue → 0.55, 2 issues → 0.80, 3+ issues → 0.95
+                    confidence = min(0.4 + 0.2 * len(issues), 0.95) if len(issues) >= 2 else 0.55
+
+                    predictions.append(
+                        Prediction(
+                            bibtex_key=entry.bibtex_key,
+                            label="HALLUCINATED",
+                            confidence=confidence,
+                            reason=f"HaRC flagged: {'; '.join(issues)}",
+                            api_sources_queried=API_SOURCES,
+                            wall_clock_seconds=per_entry_time,
+                            api_calls=len(API_SOURCES),
+                        )
+                    )
             else:
                 predictions.append(
                     Prediction(
@@ -226,5 +271,10 @@ def run_harc(
                     api_calls=0,
                 )
             )
+
+    # Merge pre-screening results with tool predictions
+    from hallmark.baselines.prescreening import merge_with_predictions
+
+    predictions = merge_with_predictions(entries, predictions, prescreen_results)
 
     return predictions
