@@ -1,0 +1,117 @@
+\section{The \textsc{Hallmark} benchmark}
+\label{sec:benchmark}
+
+\subsection{Hallucination taxonomy}
+\label{sec:taxonomy}
+
+We define 13 citation hallucination types organized into three difficulty tiers based on the verification effort required (\cref{tab:taxonomy}).
+\textbf{Tier~1 (Easy)} hallucinations are detectable by a single API lookup---a fabricated DOI that does not resolve, a nonexistent venue name, placeholder author names, or a publication date in the future.
+\textbf{Tier~2 (Medium)} hallucinations require cross-referencing multiple metadata fields: a chimeric title pairs real authors with a fabricated title; a wrong venue assigns a real paper to the wrong conference; author mismatch attaches the wrong author list to a real title; preprint-as-published fabricates a venue acceptance for an arXiv-only paper; and hybrid fabrication pairs a valid, resolving DOI with fabricated metadata (the DOI resolves, but the authors and title do not match the resolved record).
+\textbf{Tier~3 (Hard)} hallucinations require deep verification or semantic reasoning: near-miss titles differ by one or two words from a real paper; plausible fabrications are entirely invented but realistic; retracted papers cite work that was later withdrawn; and version confusion cites claims from a superseded preprint version.
+
+This taxonomy emerged from manual analysis of hallucinated citations found in the NeurIPS 2025 incident and related audits~\citep{ghostcite2026,hallucitation2026}, supplemented by adversarial brainstorming of failure modes that existing tools might miss.
+
+\begin{table}[t]
+\caption{The \textsc{Hallmark} hallucination taxonomy: 13 types across 3 difficulty tiers. Each type has a canonical example and expected sub-test failure pattern. Sub-tests: \textbf{D}OI resolves, \textbf{T}itle exists, \textbf{A}uthors match, \textbf{V}enue real, \textbf{F}ields complete, \textbf{X} cross-DB agreement.}
+\label{tab:taxonomy}
+\centering
+\small
+\setlength{\tabcolsep}{3pt}
+\begin{tabular}{clp{4.2cm}cccccc}
+\toprule
+\textbf{Tier} & \textbf{Type} & \textbf{Description} & \textbf{D} & \textbf{T} & \textbf{A} & \textbf{V} & \textbf{F} & \textbf{X} \\
+\midrule
+\multirow{4}{*}{\rotatebox{90}{\textcolor{tier1}{\textbf{Easy}}}}
+& \texttt{fabricated\_doi} & DOI does not resolve & \ding{55} & ? & ? & ? & ? & \ding{55} \\
+& \texttt{nonexistent\_venue} & Invented conference/journal & ? & ? & ? & \ding{55} & ? & \ding{55} \\
+& \texttt{placeholder\_authors} & Generic/fake author names & ? & ? & \ding{55} & ? & ? & \ding{55} \\
+& \texttt{future\_date} & Year in the future & ? & ? & ? & ? & \ding{55} & \ding{55} \\
+\midrule
+\multirow{5}{*}{\rotatebox{90}{\textcolor{tier2}{\textbf{Medium}}}}
+& \texttt{chimeric\_title} & Real authors + fake title & \ding{51} & \ding{55} & \ding{51} & ? & \ding{51} & \ding{55} \\
+& \texttt{wrong\_venue} & Correct paper, wrong venue & \ding{51} & \ding{51} & \ding{51} & \ding{55} & \ding{51} & \ding{55} \\
+& \texttt{author\_mismatch} & Correct title, wrong authors & \ding{51} & \ding{51} & \ding{55} & \ding{51} & \ding{51} & \ding{55} \\
+& \texttt{preprint\_as\_published} & arXiv cited as venue paper & \ding{51} & \ding{51} & \ding{51} & \ding{55} & \ding{51} & \ding{55} \\
+& \texttt{hybrid\_fabrication} & Real DOI + fake metadata & \ding{51} & \ding{55} & \ding{55} & ? & \ding{51} & \ding{55} \\
+\midrule
+\multirow{4}{*}{\rotatebox{90}{\textcolor{tier3}{\textbf{Hard}}}}
+& \texttt{near\_miss\_title} & Title off by 1--2 words & \ding{51} & \ding{55} & \ding{51} & \ding{51} & \ding{51} & \ding{55} \\
+& \texttt{plausible\_fabrication} & Entirely fabricated, realistic & \ding{55} & \ding{55} & \ding{55} & ? & ? & \ding{55} \\
+& \texttt{retracted\_paper} & Citing retracted work & \ding{51} & \ding{51} & \ding{51} & \ding{51} & \ding{51} & \ding{55} \\
+& \texttt{version\_confusion} & Wrong version claims & \ding{51} & \ding{51} & \ding{51} & \ding{51} & \ding{51} & \ding{55} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Dataset construction}
+\label{sec:dataset}
+
+The dataset contains two classes of entries: \emph{valid} references scraped from DBLP and \emph{hallucinated} references generated through controlled perturbation.
+
+\paragraph{Valid entries.}
+We scraped BibTeX records from DBLP~\citep{dblp} for papers published at major ML venues (NeurIPS, ICML, ICLR, AAAI, ACL, EMNLP, CVPR, ECCV) between 2018 and 2025.
+Each entry was verified by confirming DOI resolution, title existence in at least two databases, and author-venue consistency.
+We retained 720 valid entries across the dev and test splits.
+
+\paragraph{Hallucinated entries.}
+We generated hallucinated entries using four methods:
+(1)~\emph{Systematic perturbation}: modifying specific fields of valid entries to produce targeted hallucination types (e.g., replacing a DOI with a non-resolving one for \texttt{fabricated\_doi}, swapping author lists between papers for \texttt{author\_mismatch}).
+(2)~\emph{LLM generation}: prompting language models to generate plausible but fictional references for types requiring coherent fabrication (\texttt{plausible\_fabrication}, \texttt{chimeric\_title}).
+(3)~\emph{Adversarial crafting}: manually constructing entries designed to evade specific detection strategies.
+(4)~\emph{Real-world collection}: harvesting actual hallucinated citations from published papers identified in audits.
+Each hallucinated entry was manually verified to confirm that (a)~it is indeed hallucinated and (b)~it matches its assigned type.
+
+\paragraph{Quality control.}
+Every entry undergoes automated validation checking field completeness, BibTeX well-formedness, and sub-test label consistency.
+Contributed entries pass through a validation pipeline that enforces the schema constraints programmatically before inclusion.
+
+\begin{table}[t]
+\caption{Dataset statistics by split. Tier distribution refers to hallucinated entries only.}
+\label{tab:stats}
+\centering
+\small
+\begin{tabular}{lrrrrrrr}
+\toprule
+\textbf{Split} & \textbf{Valid} & \textbf{Halluc.} & \textbf{Total} & \textbf{Tier 1} & \textbf{Tier 2} & \textbf{Tier 3} & \textbf{Types} \\
+\midrule
+\texttt{dev\_public}   & 450 & 132 & 582 & 40 & 50 & 42 & 13 \\
+\texttt{test\_public}  & 270 & 130 & 400 & 40 & 50 & 40 & 13 \\
+\texttt{test\_hidden}  & 180 &  20 & 200 &  8 &  7 &  5 & 13 \\
+\midrule
+\textbf{Total}         & 900 & 282 & 1,182 & 88 & 107 & 87 & 13 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Sub-test design}
+\label{sec:subtests}
+
+Inspired by HumanEval's functional correctness tests~\citep{humaneval}, each \textsc{Hallmark} entry includes six binary sub-tests that decompose citation validity into independently verifiable dimensions:
+\begin{enumerate}
+    \item \textbf{DOI resolves}: The DOI field, if present, resolves to a valid record.
+    \item \textbf{Title exists}: The title appears in at least one bibliographic database (DBLP, Semantic Scholar, CrossRef).
+    \item \textbf{Authors match}: The author list is consistent with the paper identified by DOI or title.
+    \item \textbf{Venue real}: The venue (journal or conference) exists and is correctly attributed.
+    \item \textbf{Fields complete}: All expected metadata fields are present and well-formed.
+    \item \textbf{Cross-DB agreement}: Metadata is consistent across multiple bibliographic databases.
+\end{enumerate}
+
+Sub-tests serve three purposes.
+First, they provide \emph{diagnostic power}: a tool that passes the DOI check but fails the author match reveals a specific verification gap.
+Second, they enable \emph{type-specific evaluation}: each hallucination type has a characteristic sub-test failure signature (\cref{tab:taxonomy}), and sub-test accuracy reveals whether a tool detects hallucinations for the right reasons.
+Third, they support \emph{partial credit}: tools that identify some inconsistencies but miss others receive differentiated scores rather than a flat binary outcome.
+
+\subsection{Temporal segmentation}
+\label{sec:temporal}
+
+Following LiveCodeBench~\citep{livecodebench2024}, \textsc{Hallmark} assigns entries to three temporal segments based on publication date: \emph{pre-2023}, \emph{2023--2024}, and \emph{2025+}.
+This enables contamination detection---if a tool's performance drops sharply on post-cutoff entries relative to older ones, it may be relying on memorized data rather than genuine verification.
+Temporal segmentation also supports longitudinal analysis as new entries are added over time.
+
+\subsection{Community contribution system}
+\label{sec:contribution}
+
+Inspired by ONEBench's ever-expanding evaluation pool~\citep{onebench2024}, \textsc{Hallmark} accepts community-contributed entries through a structured submission process.
+Contributors provide BibTeX entries with ground-truth labels and sub-test annotations via a command-line interface (\texttt{hallmark contribute}).
+Submissions undergo automated schema validation and manual review before inclusion.
+This design ensures the benchmark grows over time without invalidating existing results, since each entry is an independent atomic test unit.

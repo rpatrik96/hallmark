@@ -1,0 +1,44 @@
+\section{Introduction}
+\label{sec:introduction}
+
+Citation hallucination---the generation of plausible but fabricated bibliographic references by language models---has emerged as a concrete threat to scientific publishing.
+In late 2025, the NeurIPS program committee identified 53 accepted papers containing fabricated citations that had passed peer review~\citep{neurips2025incident}.
+Independent audits confirmed the scale of the problem: \citet{ghostcite2026} analyzed 2.2 million citations across 56,000 papers and flagged 604 papers with likely hallucinated references; \citet{hallucitation2026} found approximately 300 affected papers in ACL, NAACL, and EMNLP proceedings alone; and \citet{mysterious2026} documented a sharp rise from zero detected cases in 2021 to consistent problems across HPC venues by 2025.
+These findings reveal that citation hallucination is not anecdotal but systematic, and that neither authors nor reviewers reliably catch fabricated references.
+
+Several citation verification tools have been developed in response, ranging from DOI resolution checkers to multi-database cross-referencing systems.
+However, two gaps remain.
+First, \emph{no standardized benchmark exists to compare these tools}: each is evaluated on ad-hoc datasets under different conditions, making it impossible to assess relative strengths, failure modes, or coverage gaps.
+Second, \emph{no existing tool is designed for venue-scale deployment}: current tools are built for individual researchers, not for program committees processing hundreds of submissions under time constraints.
+
+We address both gaps with five contributions:
+\begin{enumerate}
+    \item \textbf{A hallucination taxonomy} of 13 types organized into three difficulty tiers (Easy, Medium, Hard), capturing the full spectrum from obviously fake DOIs to subtly plausible fabrications (\cref{sec:taxonomy}).
+    \item \textbf{A benchmark dataset} of 1,182 BibTeX entries (982 public: 582 dev + 400 test) with six binary sub-tests per entry, enabling multi-criteria evaluation inspired by HumanEval~\citep{humaneval} (\cref{sec:dataset}).
+    \item \textbf{An evaluation protocol} with tier-weighted F1 that rewards detecting hard hallucinations, expected calibration error (ECE) for confidence assessment, and Plackett-Luce ranking~\citep{luce1959,plackett1975} for comparing tools with incomplete coverage (\cref{sec:evaluation}).
+    \item \textbf{A practical verification tool} (\texttt{bibtex-updater}): an open-source, pip-installable citation checker with a multi-source verification pipeline, designed for integration into venue CI/CD workflows, pre-commit hooks, and batch submission processing (\cref{sec:tool}).
+    \item \textbf{Open infrastructure}: a pip-installable Python package with a baseline registry, CI-integrated evaluation pipeline, and a community contribution system inspired by ONEBench~\citep{onebench2024} (\cref{sec:experiments}).
+\end{enumerate}
+
+\begin{table}[t]
+\caption{Comparison of \textsc{Hallmark} with related citation analysis efforts. \textsc{Hallmark} is the first \emph{benchmark} for citation verification tool evaluation, whereas prior work focuses on auditing or detection.}
+\label{tab:comparison}
+\centering
+\small
+\begin{tabular}{lccccc}
+\toprule
+& \textbf{Entries} & \textbf{Types} & \textbf{Sub-tests} & \textbf{Tool eval.} & \textbf{Open} \\
+\midrule
+GhostCite~\citep{ghostcite2026} & 56K papers & --- & \ding{55} & \ding{55} & \ding{55} \\
+HalluCitation~\citep{hallucitation2026} & 300 papers & 3 & \ding{55} & \ding{55} & \ding{51} \\
+Mysterious Citations~\citep{mysterious2026} & HPC venues & --- & \ding{55} & \ding{55} & \ding{55} \\
+\midrule
+\textsc{Hallmark} (ours) & 1,182 & 13 & 6 & \ding{51} & \ding{51} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Our evaluation shows that \texttt{bibtex-updater} achieves 0.96 detection rate and 0.90 F1 overall, with the lowest calibration error (ECE = 0.04) among all tools.
+Its performance drops on medium-tier types requiring venue-level metadata verification---a gap shared by all evaluated tools.
+No single tool covers all 13 hallucination types, and calibration varies widely (ECE from 0.04 to 0.36).
+These results demonstrate the value of a structured benchmark for identifying actionable improvement targets, and the feasibility of venue-scale automated verification with current tools.

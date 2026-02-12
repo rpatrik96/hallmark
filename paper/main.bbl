@@ -1,0 +1,149 @@
+\begin{thebibliography}{23}
+\providecommand{\natexlab}[1]{#1}
+\providecommand{\url}[1]{\texttt{#1}}
+\expandafter\ifx\csname urlstyle\endcsname\relax
+  \providecommand{\doi}[1]{doi: #1}\else
+  \providecommand{\doi}{doi: \begingroup \urlstyle{rm}\Url}\fi
+
+\bibitem[Agrawal et~al.(2024)Agrawal, Mackey, and Kalai]{agrawal2024}
+Ayush Agrawal, Lester Mackey, and Adam~Tauman Kalai.
+\newblock Do language models know when they hallucinate? probing for
+  hallucination detection.
+\newblock \emph{arXiv preprint arXiv:2402.13950}, 2024.
+
+\bibitem[Alkaissi and McFarlane(2023)]{alkaissi2023}
+Hussam Alkaissi and Samy~I. McFarlane.
+\newblock Artificial hallucinations in {ChatGPT}: Implications in scientific
+  writing.
+\newblock \emph{Cureus}, 15\penalty0 (2), 2023.
+
+\bibitem[Ansari and Li(2026)]{hallucitation2026}
+Mohammad~Arvan Ansari and Sha Li.
+\newblock {HalluCitation}: Do language models hallucinate in scientific
+  citation? a study on the prevalence and patterns in nlp research.
+\newblock \emph{arXiv preprint arXiv:2601.18724}, 2026.
+
+\bibitem[Chen et~al.(2026)Chen, Xie, Wu, Yang, Li, Guo, and
+  Xiao]{ghostcite2026}
+Jiaxin Chen, Jiawei Xie, Zhuoer Wu, Jiacheng Yang, Jingxuan Li, Yufei Guo, and
+  Tong Xiao.
+\newblock {GhostCite}: Unmasking the haunting of hallucinated citations in
+  academic writing.
+\newblock \emph{arXiv preprint arXiv:2602.06718}, 2026.
+
+\bibitem[Chen et~al.(2021)Chen, Tworek, Jun, Yuan, Pinto, Kaplan, Edwards,
+  Burda, Joseph, Brockman, et~al.]{humaneval}
+Mark Chen, Jerry Tworek, Heewoo Jun, Qiming Yuan, Henrique Ponde de~Oliveira
+  Pinto, Jared Kaplan, Harri Edwards, Yuri Burda, Nicholas Joseph, Greg
+  Brockman, et~al.
+\newblock Evaluating large language models trained on code.
+\newblock \emph{arXiv preprint arXiv:2107.03374}, 2021.
+
+\bibitem[{DBLP Team}(2024)]{dblp}
+{DBLP Team}.
+\newblock {DBLP}: Computer science bibliography, 2024.
+\newblock URL \url{https://dblp.org}.
+
+\bibitem[Gebru et~al.(2021)Gebru, Morgenstern, Vecchione, Vaughan, Wallach,
+  Daum{\'e}~III, and Crawford]{gebru2021datasheets}
+Timnit Gebru, Jamie Morgenstern, Brenda Vecchione, Jennifer~Wortman Vaughan,
+  Hanna Wallach, Hal Daum{\'e}~III, and Kate Crawford.
+\newblock Datasheets for datasets.
+\newblock \emph{Communications of the ACM}, 64\penalty0 (12):\penalty0 86--92,
+  2021.
+
+\bibitem[{GPTZero}(2025)]{gptzero2025}
+{GPTZero}.
+\newblock {GPTZero} hallucination detector, 2025.
+\newblock URL \url{https://gptzero.me/hallucination-detector}.
+
+\bibitem[{HaRC Contributors}(2024)]{harc2024}
+{HaRC Contributors}.
+\newblock {HaRC}: Hallucinated reference checker, 2024.
+\newblock URL \url{https://pypi.org/project/harcx/}.
+
+\bibitem[Hu et~al.(2024)Hu, Gao, Fan, Zhou, Jiang, Li, Song, Liu, Zhang, and
+  Yu]{refchecker2024}
+Xiangkun Hu, Dongyu Gao, Qipeng Fan, Kang Zhou, Hang Jiang, Irene Li, Jiarong
+  Song, Zhengying Liu, Michael~R. Zhang, and Tong Yu.
+\newblock {RefChecker}: Reference-based fine-grained hallucination checker and
+  benchmark for large language models.
+\newblock In \emph{Proceedings of NAACL}, 2024.
+
+\bibitem[Jain et~al.(2024)Jain, Han, Gu, Li, Yan, Zhang, Wang, Solar-Lezama,
+  Sen, and Stoica]{livecodebench2024}
+Naman Jain, King Han, Alex Gu, Wen-ting Li, Fanjia Yan, Tianjun Zhang, Sida
+  Wang, Armando Solar-Lezama, Koushik Sen, and Ion Stoica.
+\newblock {LiveCodeBench}: Holistic and contamination-free evaluation of large
+  language models for code.
+\newblock \emph{arXiv preprint arXiv:2403.07974}, 2024.
+
+\bibitem[Jimenez et~al.(2024)Jimenez, Yang, Wettig, Yao, Pei, Press, and
+  Narasimhan]{swebench}
+Carlos~E. Jimenez, John Yang, Alexander Wettig, Shunyu Yao, Kexin Pei, Ofir
+  Press, and Karthik Narasimhan.
+\newblock {SWE}-bench: Can language models resolve real-world {GitHub} issues?
+\newblock In \emph{Proceedings of ICLR}, 2024.
+
+\bibitem[Li et~al.(2023)Li, Cheng, Zhao, Nie, and Wen]{hallueval2023}
+Junyi Li, Xiaoxue Cheng, Wayne~Xin Zhao, Jian-Yun Nie, and Ji-Rong Wen.
+\newblock {HaluEval}: A large-scale hallucination evaluation benchmark for
+  large language models.
+\newblock \emph{arXiv preprint arXiv:2305.11747}, 2023.
+
+\bibitem[Luce(1959)]{luce1959}
+R.~Duncan Luce.
+\newblock \emph{Individual Choice Behavior: A Theoretical Analysis}.
+\newblock John Wiley \& Sons, 1959.
+
+\bibitem[Maystre and Grossglauser(2015)]{maystre2015}
+Lucas Maystre and Matthias Grossglauser.
+\newblock Fast and accurate inference of {Plackett-Luce} models.
+\newblock In \emph{Advances in Neural Information Processing Systems}, 2015.
+
+\bibitem[Naeini et~al.(2015)Naeini, Cooper, and Hauskrecht]{naeini2015}
+Mahdi~Pakdaman Naeini, Gregory~F. Cooper, and Milos Hauskrecht.
+\newblock Obtaining well calibrated probabilities using {Bayesian} binning into
+  quantiles.
+\newblock In \emph{Proceedings of AAAI}, 2015.
+
+\bibitem[{NeurIPS Program Committee}(2025)]{neurips2025incident}
+{NeurIPS Program Committee}.
+\newblock {NeurIPS} 2025 fabricated citations incident, 2025.
+\newblock 53 accepted papers found to contain fabricated citations.
+
+\bibitem[Plackett(1975)]{plackett1975}
+Robin~L. Plackett.
+\newblock The analysis of permutations.
+\newblock \emph{Journal of the Royal Statistical Society: Series C (Applied
+  Statistics)}, 24\penalty0 (2):\penalty0 193--202, 1975.
+
+\bibitem[Ravichander et~al.(2024)Ravichander, Deng, Hartmann,
+  et~al.]{halogen2024}
+Abhilasha Ravichander, Shrusti Deng, Sarah Hartmann, et~al.
+\newblock {HALoGEN}: Fantastic {LLM} hallucinations and where to find them.
+\newblock \emph{arXiv preprint arXiv:2412.XXXXX}, 2024.
+
+\bibitem[Reizinger(2025)]{bibtexupdater}
+Patrik Reizinger.
+\newblock bibtex-updater: Automated {BibTeX} verification and updating, 2025.
+\newblock URL \url{https://github.com/rpatrik96/bibtexupdater}.
+
+\bibitem[Ruan et~al.(2024)Ruan, Maddox, Tong, Zhang, and Bethge]{onebench2024}
+Yangjun Ruan, Wesley~J. Maddox, Sherry Tong, Jieyu Zhang, and Matthias Bethge.
+\newblock {ONEBench}: A foundation model testing paradigm for open-ended
+  capabilities.
+\newblock \emph{arXiv preprint arXiv:2412.07689}, 2024.
+
+\bibitem[{verify-citations Contributors}(2025)]{verifycitations2025}
+{verify-citations Contributors}.
+\newblock verify-citations: Automated citation verification tool, 2025.
+\newblock URL \url{https://pypi.org/project/verify-citations/}.
+
+\bibitem[Wei et~al.(2026)Wei, Zhou, and Wang]{mysterious2026}
+Jiacheng Wei, Kuan Zhou, and Lei Wang.
+\newblock The mysterious citations: Hallucinated citations in {HPC} conference
+  papers.
+\newblock \emph{arXiv preprint}, 2026.
+
+\end{thebibliography}

@@ -1,0 +1,17 @@
+\section{Broader impact}
+\label{sec:broader_impact}
+
+\paragraph{Positive impact.}
+\textsc{Hallmark} directly supports scientific integrity by enabling systematic evaluation and improvement of citation verification tools.
+\texttt{bibtex-updater} complements the benchmark by providing a tool that venues can deploy immediately: a program committee can integrate it into their submission pipeline within minutes, flagging potentially fabricated references before they reach reviewers.
+As LLM-assisted writing becomes standard practice, reliable citation checking is essential infrastructure for maintaining trust in the scientific literature.
+
+\paragraph{Dual-use considerations.}
+A taxonomy of hallucination types could theoretically help adversaries craft harder-to-detect fabricated citations.
+We believe this risk is outweighed by the defensive value: understanding hallucination types is prerequisite to detecting them.
+The taxonomy is derived from publicly documented incidents and published audits, not from novel attack research.
+
+\paragraph{Accessibility.}
+Both \textsc{Hallmark} and \texttt{bibtex-updater} are open-source (MIT license), pip-installable, and require no GPU or paid API access.
+The DOI-only baseline runs without any external dependencies.
+This ensures researchers at institutions with limited resources can both use and contribute to the benchmark, and venues of any size can adopt automated citation verification.

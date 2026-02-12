@@ -1,0 +1,13 @@
+\section{Conclusion}
+\label{sec:conclusion}
+
+Citation hallucination is a growing threat to scientific integrity.
+We contribute two complementary resources to address it.
+\textsc{Hallmark} provides the first standardized benchmark for citation verification tools: 13 hallucination types across 3 difficulty tiers, 1,182 annotated entries with 6 sub-tests each, tier-weighted metrics, calibration assessment, and principled ranking under incomplete data.
+\texttt{bibtex-updater} provides a practical verification tool that venues can deploy today---integrated into CI/CD pipelines, pre-commit hooks, and batch workflows---achieving 0.96 detection rate with well-calibrated confidence scores.
+
+Our evaluation reveals systematic blind spots shared across all tools---particularly on venue-level hallucinations where bibliographic APIs lack structured data---and wide variation in confidence calibration.
+These findings provide concrete, measurable targets for both tool developers and database maintainers.
+
+Both resources are designed to grow: \textsc{Hallmark}'s community contribution system, temporal segmentation, and atomic evaluation design ensure that new entries and tools can be incorporated without invalidating prior results.
+We release the full benchmark, evaluation infrastructure, and \texttt{bibtex-updater} as open-source software to support continued progress on this critical problem.

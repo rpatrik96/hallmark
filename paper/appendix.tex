@@ -1,0 +1,222 @@
+\section{Full taxonomy details}
+\label{app:taxonomy}
+
+\cref{tab:taxonomy_full} provides the complete taxonomy with BibTeX examples for each hallucination type.
+
+\begin{table}[h]
+\caption{Full taxonomy with example BibTeX snippets illustrating each hallucination type. Red text indicates the hallucinated field.}
+\label{tab:taxonomy_full}
+\centering
+\small
+\begin{tabular}{clp{8cm}}
+\toprule
+\textbf{Tier} & \textbf{Type} & \textbf{Example (hallucinated field in red)} \\
+\midrule
+\multirow{4}{*}{1}
+& \texttt{fabricated\_doi} & \texttt{doi = \{\textcolor{red}{10.9999/fake.2024.001}\}} \\
+& \texttt{nonexistent\_venue} & \texttt{booktitle = \{\textcolor{red}{Intl.\ Conf.\ on Advanced AI Systems}\}} \\
+& \texttt{placeholder\_authors} & \texttt{author = \{\textcolor{red}{John Doe and Jane Smith}\}} \\
+& \texttt{future\_date} & \texttt{year = \{\textcolor{red}{2030}\}} \\
+\midrule
+\multirow{5}{*}{2}
+& \texttt{chimeric\_title} & Real authors, \texttt{title = \{\textcolor{red}{A Novel Approach...}\}} (nonexistent) \\
+& \texttt{wrong\_venue} & Real paper, \texttt{booktitle = \{\textcolor{red}{ICML}\}} (actually NeurIPS) \\
+& \texttt{author\_mismatch} & Real title, \texttt{author = \{\textcolor{red}{Wrong Author List}\}} \\
+& \texttt{preprint\_as\_published} & arXiv paper, \texttt{booktitle = \{\textcolor{red}{NeurIPS}\}} (never published) \\
+& \texttt{hybrid\_fabrication} & Valid DOI resolves, but \texttt{title = \{\textcolor{red}{...}\}} doesn't match \\
+\midrule
+\multirow{4}{*}{3}
+& \texttt{near\_miss\_title} & \texttt{title = \{Attention Is All You \textcolor{red}{Want}\}} (vs.\ ``Need'') \\
+& \texttt{plausible\_fabrication} & Entirely fabricated, all fields realistic but nonexistent \\
+& \texttt{retracted\_paper} & Paper exists but was \textcolor{red}{retracted} after publication \\
+& \texttt{version\_confusion} & Claims from \textcolor{red}{v1} that were corrected in v2 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{Dataset construction details}
+\label{app:dataset}
+
+\paragraph{DBLP scraping.}
+Valid entries were scraped from the DBLP API (\texttt{dblp.org/search/publ/api}) using venue-specific queries for NeurIPS, ICML, ICLR, AAAI, ACL, EMNLP, CVPR, and ECCV.
+We retrieved BibTeX records, verified DOI resolution via CrossRef, and confirmed title existence in Semantic Scholar.
+Entries failing any verification step were excluded.
+
+\paragraph{Perturbation pipeline.}
+Systematic perturbations follow deterministic rules per hallucination type:
+\begin{itemize}
+    \item \texttt{fabricated\_doi}: Replace DOI with \texttt{10.XXXX/fake.YYYY.NNN} where XXXX is a non-existent prefix.
+    \item \texttt{nonexistent\_venue}: Replace venue with an LLM-generated plausible but nonexistent conference name.
+    \item \texttt{placeholder\_authors}: Replace author list with common placeholder names.
+    \item \texttt{future\_date}: Set year to current year + 5.
+    \item \texttt{chimeric\_title}: Keep authors from paper A, replace title with LLM-generated plausible title.
+    \item \texttt{wrong\_venue}: Keep all fields but swap venue with a different real venue.
+    \item \texttt{author\_mismatch}: Keep title and venue, replace authors with those from a different paper.
+    \item \texttt{preprint\_as\_published}: Take an arXiv-only paper and add a fabricated venue field.
+    \item \texttt{hybrid\_fabrication}: Keep a valid DOI but replace title and authors with fabricated metadata.
+    \item \texttt{near\_miss\_title}: Modify 1--2 words in the title (synonym substitution or deletion).
+    \item \texttt{plausible\_fabrication}: LLM-generate a complete, realistic but nonexistent entry.
+    \item \texttt{retracted\_paper}: Use entries from the Retraction Watch database.
+    \item \texttt{version\_confusion}: Cite specific claims from superseded arXiv versions.
+\end{itemize}
+
+\paragraph{Quality control.}
+Every generated entry passes through automated validation:
+(1)~BibTeX well-formedness check (all required fields present, valid syntax),
+(2)~sub-test label consistency (sub-test ground truth matches the hallucination type's expected failure pattern),
+(3)~cross-validation with the valid entry pool to prevent accidental duplicates.
+
+\section{Full per-type results}
+\label{app:pertype}
+
+\cref{tab:pertype_full} reports detection rate, F1, and count for every hallucination type and baseline.
+
+\begin{table}[h]
+\caption{Per-type detection rate on \texttt{dev\_public} for all baselines.}
+\label{tab:pertype_full}
+\centering
+\small
+\setlength{\tabcolsep}{3pt}
+\begin{tabular}{llccccc}
+\toprule
+\textbf{Tier} & \textbf{Type} & \textbf{btx-upd} & \textbf{Ensemble} & \textbf{HaRC$^*$} & \textbf{DOI} & \textbf{v-cit$^*$} \\
+\midrule
+\multirow{4}{*}{1}
+& \texttt{fabricated\_doi} (6)        & 1.000 & --- & --- & 1.000 & --- \\
+& \texttt{nonexistent\_venue} (7)     & 1.000 & --- & --- & 0.000 & --- \\
+& \texttt{placeholder\_authors} (4)   & 1.000 & --- & --- & 0.000 & --- \\
+& \texttt{future\_date} (3)           & 1.000 & --- & --- & 0.000 & --- \\
+\midrule
+\multirow{5}{*}{2}
+& \texttt{chimeric\_title} (5)        & 1.000 & --- & --- & 0.000 & --- \\
+& \texttt{wrong\_venue} (5)           & 0.800 & --- & --- & 0.000 & --- \\
+& \texttt{author\_mismatch} (5)       & 1.000 & --- & --- & 0.000 & --- \\
+& \texttt{preprint\_as\_pub.} (8)     & 0.750 & --- & --- & 0.000 & --- \\
+& \texttt{hybrid\_fabrication} (5)    & 1.000 & --- & --- & 0.000 & --- \\
+\midrule
+\multirow{4}{*}{3}
+& \texttt{near\_miss\_title} (12)     & 1.000 & --- & --- & 0.000 & --- \\
+& \texttt{plausible\_fabrication} (5) & 1.000 & --- & --- & 1.000 & --- \\
+& \texttt{retracted\_paper} (3)       & 1.000 & --- & --- & 0.000 & --- \\
+& \texttt{version\_confusion} (3)     & 1.000 & --- & --- & 0.000 & --- \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\noindent Numbers in parentheses indicate the count of entries per type.
+Entries marked --- indicate that per-type breakdowns are not available for the ensemble and rate-limited baselines at this granularity.
+
+\section{Plackett-Luce mathematical formulation}
+\label{app:pl}
+
+The Plackett-Luce model~\citep{plackett1975,luce1959} assigns a positive strength parameter $\theta_j$ to each tool $j \in \{1, \ldots, J\}$.
+Given a ranking $\sigma$ over a subset $S$ of tools, the probability of observing $\sigma$ is:
+\begin{equation}
+P(\sigma \mid \boldsymbol{\theta}) = \prod_{k=1}^{|S|} \frac{\theta_{\sigma(k)}}{\sum_{l=k}^{|S|} \theta_{\sigma(l)}}.
+\end{equation}
+
+In \textsc{Hallmark}, we derive pairwise comparisons from the results matrix: for each entry where two tools both have predictions, the tool with the higher correctness score ``wins.''
+We estimate parameters using the Iterative Luce Spectral Ranking (ILSR) algorithm~\citep{maystre2015} with $L_2$ regularization ($\alpha = 0.01$) via the \texttt{choix} library.
+The estimated parameters are normalized to sum to 1, yielding a probability-like ranking score.
+
+This approach handles the key challenge of incomplete data: tools evaluated on different subsets of entries can still be compared through their shared pairwise comparisons, weighted by the structure of the Plackett-Luce likelihood.
+
+\section{Pre-screening layer specification}
+\label{app:prescreening}
+
+The pre-screening layer implements three checks that run before external tool invocation:
+
+\begin{enumerate}
+    \item \textbf{DOI format validation}: Checks that DOI strings match the expected format (\texttt{10.XXXX/...}) and that the DOI prefix corresponds to a known registrant.
+    \item \textbf{Year bounds checking}: Flags entries with publication years in the future or before 1900.
+    \item \textbf{Author name heuristics}: Detects common placeholder patterns (``John Doe,'' ``A.\ Author,'' single-word author names, repeated names).
+\end{enumerate}
+
+Pre-screening results are tagged with \texttt{[Pre-screening override]} in the reason string to maintain transparency about which detections come from the pre-screening layer vs.\ the external tool.
+
+\section{Baseline implementation details}
+\label{app:baselines}
+
+All baselines are implemented as Python wrappers conforming to the \textsc{Hallmark} baseline interface.
+Each wrapper:
+(1)~converts \textsc{Hallmark} \texttt{BenchmarkEntry} objects to the tool's expected input format,
+(2)~invokes the tool,
+(3)~maps the tool's output to a \textsc{Hallmark} \texttt{Prediction} with label, confidence, and reason.
+
+\paragraph{Timeout handling.}
+Each baseline is subject to a per-entry timeout (default: 60 seconds).
+Entries that timeout are assigned a default prediction of \texttt{VALID} with confidence 0.5, following the conservative assumption that unverifiable entries should not be flagged.
+
+\paragraph{Rate limiting.}
+HaRC and verify-citations are subject to Semantic Scholar and Google Scholar rate limits.
+For reproducibility, we provide pre-computed reference results in \texttt{data/v1.0/baseline\_results/}, generated by running the tools locally without rate-limit constraints.
+CI validates these reference results by checksum rather than re-running the tools.
+
+\section{Temporal analysis}
+\label{app:temporal}
+
+We assign entries to three temporal segments: pre-2023 (papers published before January 2023), 2023--2024, and 2025+.
+For bibtex-updater, detection rates are consistent across segments ($\pm$2\%), suggesting no contamination effect.
+DOI-only shows a slight improvement on newer entries, likely because recent papers more consistently include DOIs.
+
+\section{Infrastructure documentation}
+\label{app:infrastructure}
+
+\textsc{Hallmark} is distributed as a pip-installable Python package with the following components:
+
+\begin{itemize}
+    \item \textbf{CLI}: \texttt{hallmark evaluate}, \texttt{hallmark stats}, \texttt{hallmark leaderboard}, \texttt{hallmark contribute}
+    \item \textbf{Python API}: \texttt{hallmark.dataset.loader.load\_split()}, \texttt{hallmark.evaluation.metrics.evaluate()}, \texttt{hallmark.evaluation.ranking.rank\_tools()}
+    \item \textbf{Baseline registry}: \texttt{hallmark.baselines.registry.\{list\_baselines, check\_available, run\_baseline\}}
+    \item \textbf{CI workflows}: \texttt{tests.yml} (test suite across Python 3.10--3.13), \texttt{baselines.yml} (weekly baseline evaluation)
+\end{itemize}
+
+\paragraph{Installation.}
+\begin{verbatim}
+pip install hallmark                    # Core
+pip install hallmark[baselines]         # With baseline dependencies
+pip install hallmark[ranking]           # With Plackett-Luce support
+pip install hallmark[all]               # Everything
+\end{verbatim}
+
+\section{Datasheet for \textsc{Hallmark}}
+\label{app:datasheet}
+
+Following \citet{gebru2021datasheets}, we provide a datasheet for the \textsc{Hallmark} dataset.
+
+\paragraph{Motivation.}
+\textsc{Hallmark} was created to provide a standardized benchmark for evaluating citation hallucination detection tools, motivated by the NeurIPS 2025 incident and subsequent audits.
+
+\paragraph{Composition.}
+The dataset contains 1,182 BibTeX entries: 900 valid entries scraped from DBLP and 282 hallucinated entries generated through perturbation, LLM generation, adversarial crafting, and real-world collection.
+Each entry includes 6 binary sub-test labels.
+
+\paragraph{Collection process.}
+Valid entries were scraped from the DBLP API and verified against CrossRef and Semantic Scholar.
+Hallucinated entries were generated using the methods described in \cref{sec:dataset} and \cref{app:dataset}.
+
+\paragraph{Preprocessing.}
+BibTeX records were normalized to a consistent field ordering.
+Unicode characters were preserved.
+Entries were split into dev/test/hidden sets with stratified sampling across hallucination types and tiers.
+
+\paragraph{Uses.}
+\textsc{Hallmark} is intended for evaluating and comparing citation verification tools.
+It should not be used to train hallucination generators or to generate convincing fake citations.
+
+\paragraph{Distribution.}
+The dataset is distributed under the MIT license via GitHub and PyPI.
+The hidden test set is not publicly distributed.
+
+\paragraph{Maintenance.}
+The benchmark is maintained by the authors and accepts community contributions through the structured submission process described in \cref{sec:contribution}.
+
+\section{Additional figures}
+\label{app:figures}
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.7\linewidth]{figures/overall_comparison.pdf}
+\caption{Overall comparison of baseline performance across primary metrics.}
+\label{fig:overall}
+\end{figure}

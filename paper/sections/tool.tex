@@ -1,0 +1,43 @@
+\section{bibtex-updater: a practical verification tool}
+\label{sec:tool}
+
+Beyond the benchmark itself, we contribute \texttt{bibtex-updater}, an open-source citation verification tool designed for deployment by venues, reviewers, and authors---not to optimize benchmark scores, but to provide reliable, automated checking that integrates into existing publication workflows.
+
+\subsection{Design goals}
+\label{sec:tool_design}
+
+The tool's design is driven by three practical requirements:
+\begin{enumerate}
+    \item \textbf{Zero human effort.} Verification must be fully automated---no manual review, no prompt engineering, no LLM inference costs. This rules out approaches requiring human-in-the-loop validation or expensive API calls to language models.
+    \item \textbf{Workflow integration.} The tool must slot into existing pipelines: CI/CD (GitHub Actions), pre-commit hooks, Overleaf builds, and one-off command-line checks. A tool that requires a separate platform or manual invocation will not be adopted.
+    \item \textbf{Graceful degradation.} When APIs are unavailable or rate-limited, the tool should return partial results rather than fail silently. Venues processing hundreds of submissions cannot tolerate flaky infrastructure.
+\end{enumerate}
+
+\subsection{Verification pipeline}
+\label{sec:pipeline}
+
+\texttt{bibtex-updater} implements a multi-stage pipeline that processes each BibTeX entry through increasingly expensive checks:
+
+\paragraph{Pre-API validation (zero cost).}
+Before any network calls, the tool checks for syntactic red flags: DOIs that fail to resolve (HEAD request to \texttt{doi.org}), future publication years, implausible dates ($< 1800$), and malformed fields. These cheap checks catch Tier~1 hallucinations without API overhead.
+
+\paragraph{Multi-source lookup.}
+The tool queries Crossref, DBLP, and Semantic Scholar using title and first-author search. Each source returns candidate records that are scored using a weighted combination of fuzzy title matching (70\%, token-sort ratio) and author Jaccard similarity (30\%). The best-scoring candidate across all sources is selected for field-by-field comparison.
+
+\paragraph{Post-match analysis.}
+Once a candidate is identified, the tool compares DOI, title, authors, year, and venue against the input entry. Venue comparison uses alias-aware matching for 17 major ML/AI venues (e.g., NeurIPS/NIPS, ICML, ICLR, CVPR), so that common name variations do not trigger false positives. A dedicated preprint detection stage queries Semantic Scholar to identify entries that claim venue publication when only an arXiv preprint exists.
+
+\paragraph{Status assignment.}
+Each entry receives one of eight status codes: \emph{verified}, \emph{not\_found}, \emph{hallucinated} (match score $< 0.50$), or specific mismatch types (\emph{title\_mismatch}, \emph{author\_mismatch}, \emph{year\_mismatch}, \emph{venue\_mismatch}, \emph{partial\_match}). The HALLMARK wrapper maps these to binary labels and confidence scores for benchmark evaluation.
+
+\subsection{Deployment modes}
+\label{sec:deployment}
+
+The tool supports three deployment scenarios relevant to venue adoption:
+\begin{itemize}
+    \item \textbf{CI/CD integration}: A \texttt{-{}-strict} flag exits with a nonzero code when hallucinated entries are detected, enabling integration into GitHub Actions workflows that gate paper submission on passing reference checks.
+    \item \textbf{Pre-commit hook}: Authors can add \texttt{bibtex-check} as a pre-commit hook that validates \texttt{.bib} files on every commit, catching fabricated references before they enter the manuscript.
+    \item \textbf{Batch processing}: For venue-scale deployment, the tool processes multiple files with concurrent workers (default: 8), on-disk caching, and per-service rate limiting, enabling validation of hundreds of submissions without API throttling.
+\end{itemize}
+
+The tool is pip-installable (\texttt{pip install bibtex-updater}), requires no GPU or LLM API keys, and is released under the MIT license.
