@@ -175,6 +175,23 @@ def _register_builtins() -> None:
         )
     )
 
+    # --- bibtex-updater (no pre-screening) ---
+    def _run_bibtexupdater_no_prescreening(
+        entries: list[BenchmarkEntry], **kw: Any
+    ) -> list[Prediction]:
+        from hallmark.baselines.bibtexupdater import run_bibtex_check
+
+        return run_bibtex_check(entries, skip_prescreening=True, **kw)
+
+    register(
+        BaselineInfo(
+            name="bibtexupdater_no_prescreening",
+            description="bibtex-check CLI without pre-screening layer (ablation baseline)",
+            runner=_run_bibtexupdater_no_prescreening,
+            cli_commands=["bibtex-check"],
+        )
+    )
+
     # --- HaRC ---
     def _run_harc(entries: list[BenchmarkEntry], **kw: Any) -> list[Prediction]:
         from hallmark.baselines.harc import run_harc

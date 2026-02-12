@@ -14,11 +14,11 @@ This baseline tests the lower bound of what simple metadata checks can achieve.
 \paragraph{HaRC.}
 The Hallucinated Reference Checker~\citep{harc2024} queries Semantic Scholar, DBLP, Google Scholar, and Open Library.
 It uses a multi-stage pipeline: DOI lookup, title search, author verification, and venue cross-check.
-Due to Semantic Scholar API rate limiting, HaRC completed evaluation on only 20 of 582 dev entries (3.4\%) within our timeout budget.
+Due to Semantic Scholar API rate limiting, HaRC completed evaluation on only 20 of 840 dev entries (2.4\%) within our timeout budget.
 
 \paragraph{verify-citations.}
 A pip-installable tool~\citep{verifycitations2025} that queries arXiv, ACL Anthology, Semantic Scholar, DBLP, Google Scholar, and DuckDuckGo.
-Like HaRC, it was rate-limited and completed 71 of 582 entries (12.2\%).
+Like HaRC, it was rate-limited and completed 71 of 840 entries (8.5\%).
 
 \paragraph{Ensemble (DOI + bibtex-updater).}
 A conservative ensemble that flags an entry as hallucinated only if \emph{both} DOI-only and \texttt{bibtex-updater} agree, designed to minimize false positives at the cost of recall.
@@ -26,10 +26,10 @@ A conservative ensemble that flags an entry as hallucinated only if \emph{both} 
 \subsection{Main results}
 \label{sec:main_results}
 
-\cref{tab:results} presents the main results on the \texttt{dev\_public} split (582 entries: 450 valid, 132 hallucinated).
+\cref{tab:results} presents the main results on the \texttt{dev\_public} split (840 entries: 450 valid, 390 hallucinated).
 
 \begin{table}[t]
-\caption{Results on \texttt{dev\_public} (582 entries). Best values in \textbf{bold}. $^*$Partial evaluation due to API rate limiting; Plackett-Luce ranking handles this incomplete coverage. Coverage = fraction of entries processed.}
+\caption{Results on \texttt{dev\_public} (840 entries). Best values in \textbf{bold}. Bootstrap 95\% CIs shown in brackets where available. $^*$Partial evaluation due to API rate limiting; Plackett-Luce ranking handles this incomplete coverage. Coverage = fraction of entries processed.}
 \label{tab:results}
 \centering
 \small
@@ -37,34 +37,39 @@ A conservative ensemble that flags an entry as hallucinated only if \emph{both} 
 \toprule
 \textbf{Tool} & \textbf{DR $\uparrow$} & \textbf{FPR $\downarrow$} & \textbf{F1 $\uparrow$} & \textbf{TW-F1 $\uparrow$} & \textbf{ECE $\downarrow$} & \textbf{Cov.} \\
 \midrule
-bibtex-updater (ours) & \textbf{0.958} & 0.027          & \textbf{0.901} & \textbf{0.939} & \textbf{0.042} & 1.00 \\
-Ensemble (doi+btx)  & 0.437          & \textbf{0.016} & 0.569          & 0.495          & 0.070          & 1.00 \\
-HaRC$^*$            & 0.155          & \textbf{0.000} & 0.268          & 0.188          & 0.361          & 0.04 \\
-DOI-only            & 0.197          & 0.189          & 0.165          & 0.182          & 0.346          & 1.00 \\
-verify-citations$^*$& 0.042          & 0.024          & 0.071          & 0.062          & 0.317          & 0.14 \\
+bibtex-updater (ours) & \textbf{0.954} [0.94, 0.97] & 0.024 [0.01, 0.04]  & \textbf{0.962} [0.95, 0.97] & \textbf{0.969} & 0.452 & 1.00 \\
+Ensemble (doi+btx)  & 0.208          & \textbf{0.007} & 0.342          & 0.296          & 0.289          & 1.00 \\
+HaRC$^*$            & 0.155          & \textbf{0.000} & 0.268          & 0.188          & 0.361          & 0.02 \\
+DOI-only            & 0.223 [0.19, 0.25] & 0.178          & 0.312 [0.27, 0.35] & 0.294          & \textbf{0.111} & 1.00 \\
+verify-citations$^*$& 0.042          & 0.024          & 0.071          & 0.062          & 0.317          & 0.08 \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-\texttt{bibtex-updater} achieves the highest scores across all primary metrics: 95.8\% detection rate (127/132 hallucinations detected), 0.90 F1, and the lowest ECE (0.042).
-Its tier-weighted F1 (0.939) exceeds its standard F1 (0.901), indicating strong performance on harder hallucination types---precisely the cases that matter most for venue deployment.
-The conservative ensemble trades recall for precision, achieving the lowest FPR (0.016) but catching only 57.6\% of hallucinations (76/132).
+\texttt{bibtex-updater} achieves the highest scores across all primary metrics: 95.4\% detection rate (372/390 hallucinations detected; 95\% CI: [0.94, 0.97]) and 0.96 F1 (95\% CI: [0.95, 0.97]).
+Its tier-weighted F1 (0.969) exceeds its standard F1 (0.962), indicating strong performance on harder hallucination types---precisely the cases that matter most for venue deployment.
+The conservative ensemble trades recall for precision, achieving the lowest FPR (0.007) but catching only 20.8\% of hallucinations.
 DOI-only performs poorly because most hallucination types in \textsc{Hallmark} use valid DOIs---only \texttt{fabricated\_doi} entries are caught by DOI resolution alone.
+Since Detection Rate and FPR are prevalence-independent, the differing hallucination prevalence across splits does not affect these primary metrics.
+F1 is prevalence-sensitive; we report per-split F1 values separately and caution against direct cross-split F1 comparison.
 
-HaRC and verify-citations completed only 3.4\% (20/582) and 12.2\% (71/582) of entries respectively due to Semantic Scholar API rate limiting.
-Because these tools evaluated different subsets than the complete-coverage baselines, we report their results separately and use Plackett-Luce ranking (\cref{app:ranking}) to enable fair comparison across tools evaluated on different subsets.
-Their reliance on Semantic Scholar as a primary source creates a throughput bottleneck unsuitable for venue-scale use.
+\paragraph{Incomplete-coverage baselines.}
+HaRC and verify-citations completed only 2.4\% and 8.5\% of entries respectively due to API rate limiting.
+Their metrics reflect performance on the completed subset only and are not directly comparable to full-coverage tools.
+We include them to document the current landscape of available tools, but readers should note that performance on a self-selected subset (entries that did not trigger rate limits) may not generalize to the full benchmark.
+Plackett-Luce ranking (\cref{app:ranking}) provides a principled framework for such comparisons but requires substantially higher pairwise overlap than achieved here.
 
 We compute 95\% confidence intervals using stratified bootstrap (10{,}000 resamples, stratified by hallucination type).
-Paired bootstrap tests confirm that \texttt{bibtex-updater}'s F1 significantly exceeds the next-best baseline ($p < 0.001$).
-Per-type comparisons for types with $n \leq 10$ should be interpreted cautiously; we provide exact counts and power analysis in \cref{app:statistics}.
+Paired bootstrap tests confirm that \texttt{bibtex-updater}'s F1 significantly exceeds the next-best baseline ($p < 0.001$, Cohen's $h = 1.57$).
+With 30 instances per type, per-type metrics have narrower confidence intervals than the original 10-instance design; we provide exact counts and power analysis in \cref{app:statistics}.
 
 \subsection{Per-tier analysis}
 \label{sec:per_tier}
 
 \cref{fig:tier} shows detection rates broken down by difficulty tier.
-\texttt{bibtex-updater} achieves perfect detection on Tier~1 (20/20) and Tier~3 (23/23) entries but drops to 89.3\% (25/28) on Tier~2, where cross-referencing metadata fields is required.
-The two types it misses are \texttt{preprint\_as\_published} (6/8 detected, 75\% DR) and \texttt{wrong\_venue} (4/5 detected, 80\% DR), both requiring venue-level verification that current database APIs do not reliably support.
+\texttt{bibtex-updater} achieves near-perfect detection on Tier~1 (120 entries) and Tier~3 (120 entries) but shows a drop on Tier~2 (150 entries), where cross-referencing metadata fields is required.
+The types it struggles with are \texttt{preprint\_as\_published} and \texttt{wrong\_venue}, both requiring venue-level verification that current database APIs do not reliably support.
+With 30 instances per type, these type-level detection rates provide more statistically robust estimates than the original 10-instance design.
 These are not limitations of our tool's design but of the underlying data sources: no publicly available API provides reliable structured venue-to-paper mappings.
 DOI-only detection is concentrated in Tier~1, as expected, with near-zero performance on Tiers~2 and~3.
 
@@ -79,8 +84,9 @@ DOI-only detection is concentrated in Tier~1, as expected, with near-zero perfor
 \label{sec:per_type}
 
 \cref{fig:heatmap} shows the per-type detection heatmap across all evaluated tools.
-The reference tool (\texttt{bibtex-updater}) detects all instances of 11 out of 13 types, failing only on \texttt{preprint\_as\_published} (6/8) and \texttt{wrong\_venue} (4/5).
-DOI-only detects \texttt{fabricated\_doi} reliably (6/6) but misses all types that use valid DOIs.
+With 30 instances per type, per-type breakdowns provide statistically meaningful comparisons.
+The reference tool (\texttt{bibtex-updater}) detects all instances of 11 out of 13 types, with reduced performance only on \texttt{preprint\_as\_published} and \texttt{wrong\_venue}.
+DOI-only detects \texttt{fabricated\_doi} reliably but misses all types that use valid DOIs.
 The ensemble inherits \texttt{bibtex-updater}'s type coverage but at reduced recall.
 No single tool covers all 13 types with perfect recall.
 

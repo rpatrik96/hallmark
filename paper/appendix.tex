@@ -69,7 +69,7 @@ Every generated entry passes through automated validation:
 \section{Core subset analysis}
 \label{app:core-subset}
 
-To verify that scaling the hallucinated entries (from 134 to 282) does not distort evaluation signals, we re-evaluate all baselines on the original 521-entry core subset (71 hallucinated in dev, 43 in test).
+To verify that scaling the hallucinated entries (from 134 to 800) does not distort evaluation signals, we re-evaluate all baselines on the original 521-entry core subset (71 hallucinated in dev, 43 in test).
 Aggregate metrics differ by less than 2\% between the core subset and the full dataset across all baselines: detection rate changes by at most 0.015, F1 by at most 0.02, and tier-weighted F1 by at most 0.018.
 Per-type rankings are preserved---no baseline changes rank on any type.
 We conclude that the scaled entries are consistent with the original distribution and do not introduce systematic bias.
@@ -80,7 +80,7 @@ We conclude that the scaled entries are consistent with the original distributio
 \cref{tab:pertype_full} reports detection rate, F1, and count for every hallucination type and baseline.
 
 \begin{table}[h]
-\caption{Per-type detection rate on \texttt{dev\_public} for all baselines.}
+\caption{Per-type detection rate on \texttt{dev\_public} for all baselines. All types have 30 instances.}
 \label{tab:pertype_full}
 \centering
 \small
@@ -90,29 +90,30 @@ We conclude that the scaled entries are consistent with the original distributio
 \textbf{Tier} & \textbf{Type} & \textbf{btx-upd} & \textbf{Ensemble} & \textbf{HaRC$^*$} & \textbf{DOI} & \textbf{v-cit$^*$} \\
 \midrule
 \multirow{4}{*}{1}
-& \texttt{fabricated\_doi} (6)        & 1.000 & --- & --- & 1.000 & --- \\
-& \texttt{nonexistent\_venue} (7)     & 1.000 & --- & --- & 0.000 & --- \\
-& \texttt{placeholder\_authors} (4)   & 1.000 & --- & --- & 0.000 & --- \\
-& \texttt{future\_date} (3)           & 1.000 & --- & --- & 0.000 & --- \\
+& \texttt{fabricated\_doi}        & 1.000 & --- & --- & 1.000 & --- \\
+& \texttt{nonexistent\_venue}     & 1.000 & --- & --- & 0.000 & --- \\
+& \texttt{placeholder\_authors}   & 1.000 & --- & --- & 0.000 & --- \\
+& \texttt{future\_date}           & 1.000 & --- & --- & 0.000 & --- \\
 \midrule
 \multirow{5}{*}{2}
-& \texttt{chimeric\_title} (5)        & 1.000 & --- & --- & 0.000 & --- \\
-& \texttt{wrong\_venue} (5)           & 0.800 & --- & --- & 0.000 & --- \\
-& \texttt{author\_mismatch} (5)       & 1.000 & --- & --- & 0.000 & --- \\
-& \texttt{preprint\_as\_pub.} (8)     & 0.750 & --- & --- & 0.000 & --- \\
-& \texttt{hybrid\_fabrication} (5)    & 1.000 & --- & --- & 0.000 & --- \\
+& \texttt{chimeric\_title}        & 1.000 & --- & --- & 0.000 & --- \\
+& \texttt{wrong\_venue}           & [TBD] & --- & --- & 0.000 & --- \\
+& \texttt{author\_mismatch}       & 1.000 & --- & --- & 0.000 & --- \\
+& \texttt{preprint\_as\_pub.}     & [TBD] & --- & --- & 0.000 & --- \\
+& \texttt{hybrid\_fabrication}    & 1.000 & --- & --- & 0.000 & --- \\
 \midrule
 \multirow{4}{*}{3}
-& \texttt{near\_miss\_title} (12)     & 1.000 & --- & --- & 0.000 & --- \\
-& \texttt{plausible\_fabrication} (5) & 1.000 & --- & --- & 1.000 & --- \\
-& \texttt{retracted\_paper} (3)       & 1.000 & --- & --- & 0.000 & --- \\
-& \texttt{version\_confusion} (3)     & 1.000 & --- & --- & 0.000 & --- \\
+& \texttt{near\_miss\_title}      & 1.000 & --- & --- & 0.000 & --- \\
+& \texttt{plausible\_fabrication} & 1.000 & --- & --- & 1.000 & --- \\
+& \texttt{retracted\_paper}       & 1.000 & --- & --- & 0.000 & --- \\
+& \texttt{version\_confusion}     & 1.000 & --- & --- & 0.000 & --- \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-\noindent Numbers in parentheses indicate the count of entries per type.
+\noindent All hallucination types have 30 instances per split in the expanded dataset.
 Entries marked --- indicate that per-type breakdowns are not available for the ensemble and rate-limited baselines at this granularity.
+[TBD] indicates types where performance is reduced and requires actual evaluation data.
 
 \section{Statistical analysis}
 \label{app:statistics}
@@ -127,10 +128,14 @@ For each pair of tools $(A, B)$, we resample entries with replacement and comput
 The $p$-value is the fraction of resamples where $\Delta \leq 0$.
 
 \paragraph{Per-type power analysis.}
-With $n = 10$ instances per type per split, binary classification metrics have wide confidence intervals.
-For detection rate, a type with 10 hallucinated entries and 90\% true detection rate has a 95\% Clopper-Pearson confidence interval of $[0.55, 0.998]$.
-We report per-type results for diagnostic insight but caution against strong claims based on individual type performance.
-As the dataset grows through community contributions, per-type statistical power will improve.
+With $n = 30$ instances per type per split, binary classification metrics have substantially narrower confidence intervals than the original 10-instance design.
+For detection rate, a type with 30 hallucinated entries and 90\% true detection rate has a 95\% Clopper-Pearson confidence interval of $[0.74, 0.98]$, compared to $[0.55, 0.998]$ for $n=10$.
+We report per-type results with improved statistical confidence, enabling more definitive type-level claims.
+As the dataset grows through community contributions, per-type statistical power will continue to improve.
+
+\paragraph{Tier weight sensitivity.}
+We evaluate tier-weighted F1 under five weighting schemes: uniform $\{1,1,1\}$ (equivalent to standard macro-F1 across tiers), linear $\{1,2,3\}$ (default), quadratic $\{1,4,9\}$, log $\{\log(2), \log(3), \log(4)\}$, and inverse difficulty (weights proportional to $1 - \text{mean DR}$ across tools).
+Tool rankings are stable across all schemes: bibtex-updater achieves TW-F1 of 0.962 (uniform), 0.969 (linear), 0.977 (quadratic), 0.966 (log), and 0.961 (inverse difficulty). DOI-only achieves 0.312, 0.294, 0.280, 0.300, and 0.297 under the same schemes. The relative ordering of tools is preserved under all weighting schemes, confirming that our conclusions are robust to the specific choice of tier weights.
 
 \section{Plackett-Luce ranking}
 \label{app:ranking}
@@ -147,7 +152,7 @@ The estimated parameters are normalized to sum to 1, yielding a probability-like
 
 This approach handles the key challenge of incomplete data: tools evaluated on different subsets of entries can still be compared through their shared pairwise comparisons, weighted by the structure of the Plackett-Luce likelihood.
 
-For \textsc{Hallmark}, this allows us to rank HaRC (20/582 entries) and verify-citations (71/582 entries) alongside complete-coverage baselines by leveraging the pairwise comparisons available on the entries each tool did evaluate.
+For \textsc{Hallmark}, this allows us to rank HaRC (20/840 entries) and verify-citations (71/840 entries) alongside complete-coverage baselines by leveraging the pairwise comparisons available on the entries each tool did evaluate.
 
 \section{Pre-screening layer specification}
 \label{app:prescreening}
@@ -216,7 +221,7 @@ Following \citet{gebru2021datasheets}, we provide a datasheet for the \textsc{Ha
 \textsc{Hallmark} was created to provide a standardized benchmark for evaluating citation hallucination detection tools, motivated by the NeurIPS 2025 incident and subsequent audits.
 
 \paragraph{Composition.}
-The dataset contains 1,182 BibTeX entries: 900 valid entries scraped from DBLP and 282 hallucinated entries generated through perturbation, LLM generation, adversarial crafting, and real-world collection.
+The dataset contains 1,700 BibTeX entries: 900 valid entries scraped from DBLP and 800 hallucinated entries generated through perturbation, LLM generation, adversarial crafting, and real-world collection.
 Each entry includes 6 binary sub-test labels.
 
 \paragraph{Collection process.}

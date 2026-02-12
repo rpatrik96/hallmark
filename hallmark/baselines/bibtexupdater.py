@@ -94,6 +94,7 @@ def run_bibtex_check(
     timeout: float = 600.0,
     rate_limit: int = 120,
     academic_only: bool = True,
+    skip_prescreening: bool = False,
     **_kw: object,
 ) -> list[Prediction]:
     """Run bibtex-check on a list of entries and return predictions.
@@ -111,11 +112,12 @@ def run_bibtex_check(
         timeout: Timeout in seconds (default: 600).
         rate_limit: API requests per minute (default: 120, up from CLI default 45).
         academic_only: Skip web/book/working-paper checks (default: True).
+        skip_prescreening: Skip pre-screening checks (default: False).
     """
     start_time = time.time()
 
     # Run pre-screening before bibtex-check to catch obvious hallucinations
-    prescreen_results = prescreen_entries(entries)
+    prescreen_results = prescreen_entries(entries) if not skip_prescreening else {}
 
     # Use a directory we control to avoid cleanup race on timeout
     tmpdir = tempfile.mkdtemp()
@@ -208,8 +210,9 @@ def run_bibtex_check(
                 )
             )
 
-    # Merge pre-screening results with tool predictions
-    predictions = merge_with_predictions(entries, predictions, prescreen_results)
+    # Merge pre-screening results with tool predictions (unless skipped)
+    if not skip_prescreening:
+        predictions = merge_with_predictions(entries, predictions, prescreen_results)
 
     return predictions
 

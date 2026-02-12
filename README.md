@@ -20,7 +20,7 @@ HALLMARK draws on best practices from established benchmarks:
 ## Features
 
 - **Hallucination taxonomy**: 13 types across 3 difficulty tiers (Easy / Medium / Hard)
-- **1,000+ annotated entries**: 720 valid (from DBLP) + 114 hallucinated with ground truth
+- **1,700 annotated entries**: 900 valid (from DBLP) + 800 hallucinated with ground truth
 - **6 sub-tests per entry**: DOI resolution, title matching, author consistency, venue verification, field completeness, cross-database agreement
 - **Evaluation metrics**: Detection Rate, F1, tier-weighted F1, detect@k, ECE
 - **Built-in baselines**: DOI-only, bibtex-updater, LLM-based, ensemble, HaRC, CiteVerifier, hallucinator, verify-citations
@@ -123,11 +123,11 @@ hallmark leaderboard --results-dir results/
 
 | Split | Valid | Hallucinated | Total | Purpose |
 |-------|-------|-------------|-------|---------|
-| `dev_public` | 450 | 132 | 582 | Development and tuning |
-| `test_public` | 270 | 130 | 400 | Public leaderboard |
+| `dev_public` | 450 | 390 | 840 | Development and tuning |
+| `test_public` | 270 | 390 | 660 | Public leaderboard |
 | `test_hidden` | 180 | 20 | 200 | Anti-gaming evaluation |
 
-Tier distribution per split: ~30% Tier 1, ~38% Tier 2, ~32% Tier 3 (hallucinated entries).
+Tier distribution per split: ~30.8% Tier 1, ~38.5% Tier 2, ~30.8% Tier 3 (hallucinated entries).
 
 ### Data Format
 
@@ -170,17 +170,17 @@ Each entry is a JSON object in JSONL format:
 | **ECE** | Expected Calibration Error — measures confidence calibration quality |
 | **detect@k** | Fraction detected using k verification strategies (analogous to pass@k) |
 
-## Baseline Results (dev_public, 582 entries)
+## Baseline Results (dev_public, 840 entries)
 
 | Baseline | Detection Rate | F1 | Tier-weighted F1 | FPR | ECE |
 |----------|:---:|:---:|:---:|:---:|:---:|
-| bibtex-updater | 0.958 | 0.901 | 0.939 | 0.027 | 0.042 |
-| Ensemble (doi+btx) | 0.437 | 0.569 | 0.495 | 0.016 | 0.070 |
+| bibtex-updater | 0.954 | 0.962 | 0.969 | 0.024 | 0.452 |
+| Ensemble (doi+btx) | 0.208 | 0.342 | 0.296 | 0.007 | 0.289 |
 | HaRC* | 0.155 | 0.268 | 0.188 | 0.000 | 0.361 |
-| DOI-only | 0.197 | 0.165 | 0.182 | 0.189 | 0.346 |
+| DOI-only | 0.223 | 0.312 | 0.294 | 0.178 | 0.111 |
 | verify-citations* | 0.042 | 0.071 | 0.062 | 0.024 | 0.317 |
 
-*\*Partial evaluation due to API rate limiting (HaRC: 20/582, verify-citations: 71/582 entries completed).*
+*\*Partial evaluation due to API rate limiting (HaRC: 20/840, verify-citations: 71/840 entries completed).*
 
 ### External Tool Baselines
 
@@ -306,7 +306,7 @@ hallmark/
 ├── .github/workflows/
 │   ├── tests.yml              # CI: test suite across Python versions
 │   └── baselines.yml          # CI: weekly free baseline evaluation
-├── tests/                     # Test suite (199 tests)
+├── tests/                     # Test suite (244 tests)
 ├── figures/                   # Evaluation figures
 └── examples/                  # Usage examples
 ```
