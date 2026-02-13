@@ -111,7 +111,8 @@ We conclude that the scaled entries are consistent with the original distributio
 \end{tabular}
 \end{table}
 
-\noindent All hallucination types have $\geq$30 instances per public split in the expanded dataset (LLM-generated entries skew toward \texttt{swapped\_authors}, yielding $>$90 instances for that type).
+\noindent All hallucination types have $\geq$30 instances per public split in the expanded dataset.
+LLM-generated entries concentrate on \texttt{plausible\_fabrication} (40\%) and \texttt{fabricated\_doi} (33\%), reflecting that GPT-5.1 predominantly produces citations that cannot be verified in any database rather than entries with partially correct metadata.
 Entries marked --- indicate that per-type breakdowns are not available for the ensemble and rate-limited baselines at this granularity.
 
 \section{Statistical analysis}
@@ -223,7 +224,7 @@ Following \citet{gebru2021datasheets}, we provide a datasheet for the \textsc{Ha
 \textsc{Hallmark} was created to provide a standardized benchmark for evaluating citation hallucination detection tools, motivated by the NeurIPS 2025 incident and subsequent audits.
 
 \paragraph{Composition.}
-The dataset contains 2,229 BibTeX entries: 918 valid entries scraped from DBLP and 1,311 hallucinated entries generated through perturbation (675), LLM generation (222), adversarial crafting (180), real-world collection (174), and scraped negatives (60).
+The dataset contains 2,229 BibTeX entries: 918 valid entries scraped from DBLP and 1,311 hallucinated entries generated through perturbation (735), LLM generation (222), adversarial crafting (180), and real-world collection (174).
 Each entry includes 6 binary sub-test labels.
 
 \paragraph{Collection process.}
