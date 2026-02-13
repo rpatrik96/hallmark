@@ -4,15 +4,16 @@
 \subsection{Hallucination taxonomy}
 \label{sec:taxonomy}
 
-We define 13 citation hallucination types organized into three difficulty tiers based on the verification effort required (\cref{tab:taxonomy}).
+We define 14 citation hallucination types organized into three difficulty tiers based on the verification effort required (\cref{tab:taxonomy}).
 \textbf{Tier~1 (Easy)} hallucinations are detectable by a single API lookup---a fabricated DOI that does not resolve, a nonexistent venue name, placeholder author names, or a publication date in the future.
-\textbf{Tier~2 (Medium)} hallucinations require cross-referencing multiple metadata fields: a chimeric title pairs real authors with a fabricated title; a wrong venue assigns a real paper to the wrong conference; author mismatch attaches the wrong author list to a real title; preprint-as-published fabricates a venue acceptance for an arXiv-only paper; and hybrid fabrication pairs a valid, resolving DOI with fabricated metadata (the DOI resolves, but the authors and title do not match the resolved record).
-\textbf{Tier~3 (Hard)} hallucinations require deep verification or semantic reasoning: near-miss titles differ by one or two words from a real paper; plausible fabrications are entirely invented but realistic; retracted papers cite work that was later withdrawn (notably, all metadata sub-tests pass for retracted entries since the paper existed before withdrawal); and version confusion cites claims from a superseded preprint version.
+\textbf{Tier~2 (Medium)} hallucinations require cross-referencing multiple metadata fields: a chimeric title pairs real authors with a fabricated title; a wrong venue assigns a real paper to the wrong conference; author mismatch attaches the wrong author list to a real title; preprint-as-published fabricates a venue acceptance for an arXiv-only paper; hybrid fabrication pairs a valid, resolving DOI with fabricated metadata; merged citation combines metadata from two or more real papers into one entry; and partial author list cites a real paper with only a subset of its authors.
+\textbf{Tier~3 (Hard)} hallucinations require deep verification or semantic reasoning: near-miss titles differ by one or two words from a real paper; plausible fabrications are entirely invented but realistic; and version confusion cites claims from a superseded preprint version.
 
 This taxonomy emerged from manual analysis of hallucinated citations found in the NeurIPS 2025 incident and related audits~\citep{ghostcite2026,hallucitation2026}, supplemented by adversarial brainstorming of failure modes that existing tools might miss.
+Of 86 real-world hallucinated citations in \textsc{Hallmark}, 79\% map to existing taxonomy types (\cref{app:real-world-mapping}), with uncovered types (\texttt{merged\_citation}, \texttt{partial\_author\_list}, \texttt{version\_confusion}) representing patterns identified through systematic analysis rather than observed incidents.
 
 \begin{table}[t]
-\caption{The \textsc{Hallmark} hallucination taxonomy: 13 types across 3 difficulty tiers. Each type has a canonical example and expected sub-test failure pattern. Sub-tests: \textbf{D}OI resolves, \textbf{T}itle exists, \textbf{A}uthors match, \textbf{V}enue real, \textbf{F}ields complete, \textbf{X} cross-DB agreement.}
+\caption{The \textsc{Hallmark} hallucination taxonomy: 14 types across 3 difficulty tiers. Each type has a characteristic sub-test failure pattern. Sub-tests: \textbf{D}OI resolves, \textbf{T}itle exists, \textbf{A}uthors match, \textbf{V}enue real, \textbf{F}ields complete, \textbf{X} cross-DB agreement.}
 \label{tab:taxonomy}
 \centering
 \small
@@ -27,17 +28,18 @@ This taxonomy emerged from manual analysis of hallucinated citations found in th
 & \texttt{placeholder\_authors} & Generic/fake author names & ? & ? & \ding{55} & ? & ? & \ding{55} \\
 & \texttt{future\_date} & Year in the future & ? & ? & ? & ? & \ding{55} & \ding{55} \\
 \midrule
-\multirow{5}{*}{\rotatebox{90}{\textcolor{tier2}{\textbf{Medium}}}}
+\multirow{7}{*}{\rotatebox{90}{\textcolor{tier2}{\textbf{Medium}}}}
 & \texttt{chimeric\_title} & Real authors + fake title & \ding{51} & \ding{55} & \ding{51} & ? & \ding{51} & \ding{55} \\
 & \texttt{wrong\_venue} & Correct paper, wrong venue & \ding{51} & \ding{51} & \ding{51} & \ding{55} & \ding{51} & \ding{55} \\
 & \texttt{author\_mismatch} & Correct title, wrong authors & \ding{51} & \ding{51} & \ding{55} & \ding{51} & \ding{51} & \ding{55} \\
 & \texttt{preprint\_as\_published} & arXiv cited as venue paper & \ding{51} & \ding{51} & \ding{51} & \ding{55} & \ding{51} & \ding{55} \\
 & \texttt{hybrid\_fabrication} & Real DOI + fake metadata & \ding{51} & \ding{55} & \ding{55} & ? & \ding{51} & \ding{55} \\
+& \texttt{merged\_citation} & Metadata from 2+ papers & ? & \ding{51} & \ding{55} & \ding{51} & \ding{51} & \ding{55} \\
+& \texttt{partial\_author\_list} & Subset of real authors & \ding{51} & \ding{51} & \ding{55} & \ding{51} & \ding{51} & \ding{55} \\
 \midrule
-\multirow{4}{*}{\rotatebox{90}{\textcolor{tier3}{\textbf{Hard}}}}
+\multirow{3}{*}{\rotatebox{90}{\textcolor{tier3}{\textbf{Hard}}}}
 & \texttt{near\_miss\_title} & Title off by 1--2 words & \ding{51} & \ding{55} & \ding{51} & \ding{51} & \ding{51} & \ding{55} \\
 & \texttt{plausible\_fabrication} & Entirely fabricated, realistic & \ding{55} & \ding{55} & \ding{55} & ? & ? & \ding{55} \\
-& \texttt{retracted\_paper} & Citing retracted work & \ding{51} & \ding{51} & \ding{51} & \ding{51} & \ding{51} & \ding{55} \\
 & \texttt{version\_confusion} & Wrong version claims & \ding{51} & \ding{51} & \ding{51} & \ding{51} & \ding{51} & \ding{55} \\
 \bottomrule
 \end{tabular}
@@ -46,8 +48,8 @@ This taxonomy emerged from manual analysis of hallucinated citations found in th
 \paragraph{Verification decision tree.}
 The tier structure reflects a natural verification workflow.
 \textbf{Tier~1} hallucinations are caught by single-field lookups: Does the DOI resolve? Does the venue exist? Are the author names plausible?
-\textbf{Tier~2} requires cross-referencing: the DOI resolves, but do the authors listed actually match the resolved record? Is the claimed venue consistent with the retrieved paper?
-\textbf{Tier~3} demands semantic reasoning or provenance checking: the title \emph{almost} matches a real paper, or the paper was retracted after publication, or the cited claim appears only in a superseded preprint version.
+\textbf{Tier~2} requires cross-referencing: the DOI resolves, but do the authors listed actually match the resolved record? Is the claimed venue consistent with the retrieved paper? Are the listed authors a complete match or only a partial subset?
+\textbf{Tier~3} demands semantic reasoning or provenance checking: the title \emph{almost} matches a real paper, or the cited claim appears only in a superseded preprint version.
 This hierarchy directly informs tool design---a tool that only performs DOI lookups will catch Tier~1 but miss Tier~2 and~3 entirely.
 
 \subsection{Dataset construction}
@@ -58,7 +60,7 @@ The dataset contains two classes of entries: \emph{valid} references scraped fro
 \paragraph{Valid entries.}
 We scraped BibTeX records from DBLP~\citep{dblp} for papers published at major ML venues (NeurIPS, ICML, ICLR, AAAI, ACL, EMNLP, CVPR, ECCV) between 2018 and 2025.
 Each entry was verified by confirming DOI resolution, title existence in at least two databases, and author-venue consistency.
-We retained 720 valid entries across the dev and test splits.
+We retained 918 valid entries across all splits.
 
 \paragraph{Hallucinated entries.}
 We generated hallucinated entries using four methods:
@@ -67,17 +69,17 @@ We generated hallucinated entries using four methods:
 (3)~\emph{Adversarial crafting}: manually constructing entries designed to evade specific detection strategies.
 (4)~\emph{Real-world collection}: harvesting actual hallucinated citations from published papers identified in audits.
 Each hallucinated entry was manually verified to confirm that (a)~it is indeed hallucinated and (b)~it matches its assigned type.
-At 2,229 entries, \textsc{Hallmark} is comparable in scale to specialized evaluation suites such as SWE-bench~\citep{swebench} (2,294 instances) and HumanEval~\citep{humaneval} (164 problems).
-The design prioritizes \emph{coverage}---ensuring all 13 types have sufficient instances for per-type analysis---over volume.
+With $\geq 30$ instances per type per public split, per-type metrics achieve 95\% Clopper-Pearson confidence interval width $\leq 0.24$ for type-level detection rates.
+The design prioritizes \emph{coverage}---ensuring all 14 types have sufficient instances for per-type analysis---over volume.
 
 \paragraph{Quality control.}
 Every entry undergoes automated validation checking field completeness, BibTeX well-formedness, and sub-test label consistency.
+Sub-test labels are verified for logical consistency with entry metadata (e.g., \texttt{doi\_resolves} matches DOI field presence); automated verification achieves $>$98\% agreement across all splits.
 Contributed entries pass through a validation pipeline that enforces the schema constraints programmatically before inclusion.
 
 \paragraph{Scaling for statistical power.}
 To ensure per-type statistical validity, we scaled the hallucinated portion so that every type has at least 30 instances per public split.
 New entries were generated deterministically (seed-controlled) using the same perturbation generators as the original entries.
-We report results on both the full dataset and the original core subset in \cref{app:core-subset} to verify that scaling does not change the evaluation signal.
 
 \paragraph{Type distribution.}
 We use a uniform distribution across hallucination types to maximize per-type statistical power, recognizing that real-world type prevalence likely differs.
@@ -85,7 +87,7 @@ Per-type metrics (\cref{sec:per_type}) enable prevalence-adjusted evaluation whe
 Practitioners with access to empirical prevalence data can reweight per-type performance by observed frequencies to compute domain-specific aggregate metrics.
 
 \begin{table}[t]
-\caption{Dataset statistics by split. Tier distribution refers to hallucinated entries only. All splits cover all 13 hallucination types with $n \geq 15$ per type.}
+\caption{Dataset statistics by split. Tier distribution refers to hallucinated entries only. All splits cover all 14 hallucination types with $n \geq 15$ per type.}
 \label{tab:stats}
 \centering
 \small
@@ -93,11 +95,11 @@ Practitioners with access to empirical prevalence data can reweight per-type per
 \toprule
 \textbf{Split} & \textbf{Valid} & \textbf{Halluc.} & \textbf{Total} & \textbf{Tier 1} & \textbf{Tier 2} & \textbf{Tier 3} & \textbf{Types} \\
 \midrule
-\texttt{dev\_public}   & 450 & 531 & 981 & 164 & 183 & 184 & 13 \\
-\texttt{test\_public}  & 270 & 498 & 768 & 148 & 170 & 180 & 13 \\
-\texttt{test\_hidden}  & 198 & 282 & 480 & 83 & 89 & 110 & 13 \\
+\texttt{dev\_public}   & 450 & 556 & 1,006 & 164 & 253 & 139 & 14 \\
+\texttt{test\_public}  & 270 & 440 & 710 & 124 & 222 & 94 & 14 \\
+\texttt{test\_hidden}  & 198 & 271 & 469 & 83 & 125 & 63 & 14 \\
 \midrule
-\textbf{Total}         & 918 & 1,311 & 2,229 & 395 & 442 & 474 & 13 \\
+\textbf{Total}         & 918 & 1,267 & 2,185 & 371 & 600 & 296 & 14 \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -124,13 +126,5 @@ Third, they support \emph{partial credit}: tools that identify some inconsistenc
 \label{sec:temporal}
 
 Following LiveCodeBench~\citep{livecodebench2024}, \textsc{Hallmark} assigns entries to three temporal segments based on publication date: \emph{pre-2023}, \emph{2023--2024}, and \emph{2025+}.
-This enables contamination detection---if a tool's performance drops sharply on post-cutoff entries relative to older ones, it may be relying on memorized data rather than genuine verification.
+This enables robustness analysis across data periods: tools relying on static databases may degrade on newer entries where API coverage is incomplete, while live-API tools maintain consistent performance.
 Temporal segmentation also supports longitudinal analysis as new entries are added over time.
-
-\subsection{Community contribution system}
-\label{sec:contribution}
-
-Inspired by ONEBench's ever-expanding evaluation pool~\citep{onebench2024}, \textsc{Hallmark} accepts community-contributed entries through a structured submission process.
-Contributors provide BibTeX entries with ground-truth labels and sub-test annotations via a command-line interface (\texttt{hallmark contribute}).
-Submissions undergo automated schema validation and manual review before inclusion.
-This design ensures the benchmark grows over time without invalidating existing results, since each entry is an independent atomic test unit.

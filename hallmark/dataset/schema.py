@@ -24,11 +24,12 @@ class HallucinationType(str, Enum):
     AUTHOR_MISMATCH = "swapped_authors"  # Covers swapped and fabricated author names
     PREPRINT_AS_PUBLISHED = "preprint_as_published"
     HYBRID_FABRICATION = "hybrid_fabrication"
+    MERGED_CITATION = "merged_citation"
+    PARTIAL_AUTHOR_LIST = "partial_author_list"
 
     # Tier 3: Hard (requires deep verification / semantic reasoning)
     NEAR_MISS_TITLE = "near_miss_title"
     PLAUSIBLE_FABRICATION = "plausible_fabrication"
-    RETRACTED_PAPER = "retracted_paper"
     VERSION_CONFUSION = "version_confusion"
 
 
@@ -61,9 +62,10 @@ HALLUCINATION_TIER_MAP: dict[HallucinationType, DifficultyTier] = {
     HallucinationType.AUTHOR_MISMATCH: DifficultyTier.MEDIUM,
     HallucinationType.PREPRINT_AS_PUBLISHED: DifficultyTier.MEDIUM,
     HallucinationType.HYBRID_FABRICATION: DifficultyTier.MEDIUM,
+    HallucinationType.MERGED_CITATION: DifficultyTier.MEDIUM,
+    HallucinationType.PARTIAL_AUTHOR_LIST: DifficultyTier.MEDIUM,
     HallucinationType.NEAR_MISS_TITLE: DifficultyTier.HARD,
     HallucinationType.PLAUSIBLE_FABRICATION: DifficultyTier.HARD,
-    HallucinationType.RETRACTED_PAPER: DifficultyTier.HARD,
     HallucinationType.VERSION_CONFUSION: DifficultyTier.HARD,
 }
 

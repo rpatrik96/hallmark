@@ -18,17 +18,18 @@
 & \texttt{placeholder\_authors} & \texttt{author = \{\textcolor{red}{John Doe and Jane Smith}\}} \\
 & \texttt{future\_date} & \texttt{year = \{\textcolor{red}{2030}\}} \\
 \midrule
-\multirow{5}{*}{2}
+\multirow{7}{*}{2}
 & \texttt{chimeric\_title} & Real authors, \texttt{title = \{\textcolor{red}{A Novel Approach...}\}} (nonexistent) \\
 & \texttt{wrong\_venue} & Real paper, \texttt{booktitle = \{\textcolor{red}{ICML}\}} (actually NeurIPS) \\
 & \texttt{author\_mismatch} & Real title, \texttt{author = \{\textcolor{red}{Wrong Author List}\}} \\
 & \texttt{preprint\_as\_published} & arXiv paper, \texttt{booktitle = \{\textcolor{red}{NeurIPS}\}} (never published) \\
 & \texttt{hybrid\_fabrication} & Valid DOI resolves, but \texttt{title = \{\textcolor{red}{...}\}} doesn't match \\
+& \texttt{merged\_citation} & Authors from paper A, \texttt{title} from \textcolor{red}{paper B}, venue from C \\
+& \texttt{partial\_author\_list} & Real paper, \texttt{author = \{\textcolor{red}{First and Last}\}} (middle dropped) \\
 \midrule
-\multirow{4}{*}{3}
+\multirow{3}{*}{3}
 & \texttt{near\_miss\_title} & \texttt{title = \{Attention Is All You \textcolor{red}{Want}\}} (vs.\ ``Need'') \\
 & \texttt{plausible\_fabrication} & Entirely fabricated, all fields realistic but nonexistent \\
-& \texttt{retracted\_paper} & Paper exists but was \textcolor{red}{retracted} after publication \\
 & \texttt{version\_confusion} & Claims from \textcolor{red}{v1} that were corrected in v2 \\
 \bottomrule
 \end{tabular}
@@ -56,7 +57,8 @@ Systematic perturbations follow deterministic rules per hallucination type:
     \item \texttt{hybrid\_fabrication}: Keep a valid DOI but replace title and authors with fabricated metadata.
     \item \texttt{near\_miss\_title}: Modify 1--2 words in the title (synonym substitution or deletion).
     \item \texttt{plausible\_fabrication}: LLM-generate a complete, realistic but nonexistent entry.
-    \item \texttt{retracted\_paper}: Use entries from the Retraction Watch database.
+    \item \texttt{merged\_citation}: Combine metadata from 2--3 real papers into one entry (e.g., authors from paper A, title from paper B, venue from paper C).
+    \item \texttt{partial\_author\_list}: Take a real paper and drop one or more middle co-authors, keeping only the first and last.
     \item \texttt{version\_confusion}: Cite specific claims from superseded arXiv versions.
 \end{itemize}
 
@@ -95,17 +97,18 @@ We conclude that the scaled entries are consistent with the original distributio
 & \texttt{placeholder\_authors}   & 1.000 & --- & --- & 0.000 & --- \\
 & \texttt{future\_date}           & 1.000 & --- & --- & 0.000 & --- \\
 \midrule
-\multirow{5}{*}{2}
+\multirow{7}{*}{2}
 & \texttt{chimeric\_title}        & 1.000 & --- & --- & 0.000 & --- \\
 & \texttt{wrong\_venue}           & 0.633 & --- & --- & 0.000 & --- \\ % TODO: Confirm with actual evaluation data
 & \texttt{author\_mismatch}       & 1.000 & --- & --- & 0.000 & --- \\
 & \texttt{preprint\_as\_pub.}     & 0.533 & --- & --- & 0.000 & --- \\ % TODO: Confirm with actual evaluation data
 & \texttt{hybrid\_fabrication}    & 1.000 & --- & --- & 0.000 & --- \\
+& \texttt{merged\_citation}       & ---   & --- & --- & ---   & --- \\
+& \texttt{partial\_author\_list}  & ---   & --- & --- & ---   & --- \\
 \midrule
-\multirow{4}{*}{3}
+\multirow{3}{*}{3}
 & \texttt{near\_miss\_title}      & 1.000 & --- & --- & 0.000 & --- \\
 & \texttt{plausible\_fabrication} & 1.000 & --- & --- & 1.000 & --- \\
-& \texttt{retracted\_paper}       & 1.000 & --- & --- & 0.000 & --- \\
 & \texttt{version\_confusion}     & 1.000 & --- & --- & 0.000 & --- \\
 \bottomrule
 \end{tabular}
@@ -192,8 +195,9 @@ CI validates these reference results by checksum rather than re-running the tool
 \label{app:temporal}
 
 We assign entries to three temporal segments: pre-2023 (papers published before January 2023), 2023--2024, and 2025+.
-For bibtex-updater, detection rates are consistent across segments ($\pm$2\%), suggesting no contamination effect.
+For bibtex-updater, detection rates are consistent across segments ($\pm$2\%), indicating robust performance across publication periods.
 DOI-only shows a slight improvement on newer entries, likely because recent papers more consistently include DOIs.
+Tools relying on static databases may degrade on newer entries as coverage lags, while live-API tools maintain consistent performance.
 
 \section{Infrastructure documentation}
 \label{app:infrastructure}
@@ -224,7 +228,7 @@ Following \citet{gebru2021datasheets}, we provide a datasheet for the \textsc{Ha
 \textsc{Hallmark} was created to provide a standardized benchmark for evaluating citation hallucination detection tools, motivated by the NeurIPS 2025 incident and subsequent audits.
 
 \paragraph{Composition.}
-The dataset contains 2,229 BibTeX entries: 918 valid entries scraped from DBLP and 1,311 hallucinated entries generated through perturbation (735), LLM generation (222), adversarial crafting (180), and real-world collection (174).
+The dataset contains 2,185 BibTeX entries: 918 valid entries scraped from DBLP and 1,267 hallucinated entries generated through perturbation, LLM generation, adversarial crafting, and real-world collection across 14 hallucination types.
 Each entry includes 6 binary sub-test labels.
 
 \paragraph{Collection process.}

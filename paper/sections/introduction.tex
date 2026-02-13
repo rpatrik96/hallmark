@@ -7,24 +7,18 @@ Independent audits confirmed the scale of the problem: \citet{ghostcite2026} ana
 These findings reveal that citation hallucination is not anecdotal but systematic, and that neither authors nor reviewers reliably catch fabricated references.
 
 Several citation verification tools have been developed in response, ranging from DOI resolution checkers to multi-database cross-referencing systems.
-However, two gaps remain.
-First, \emph{no standardized benchmark exists to compare these tools}: each is evaluated on ad-hoc datasets under different conditions, making it impossible to assess relative strengths, failure modes, or coverage gaps.
-Second, \emph{no existing tool is designed for venue-scale deployment}: current tools are built for individual researchers, not for program committees processing hundreds of submissions under time constraints.
+However, \emph{no standardized benchmark exists to compare these tools}: each is evaluated on ad-hoc datasets under different conditions, making it impossible to assess relative strengths, failure modes, or coverage gaps.
 
-We address both gaps with four core benchmark contributions, plus a reference implementation to validate the benchmark's utility:
+We address this gap with four contributions:
 \begin{enumerate}
-    \item \textbf{A hallucination taxonomy} of 13 types organized into three difficulty tiers (Easy, Medium, Hard), capturing the full spectrum from obviously fake DOIs to subtly plausible fabrications (\cref{sec:taxonomy}).
-    \item \textbf{A benchmark dataset} of 2,229 BibTeX entries (1,311 hallucinated, 918 valid; 1,749 public split: 981 dev + 768 test) with six binary sub-tests per entry, enabling multi-criteria evaluation inspired by HumanEval~\citep{humaneval} (\cref{sec:dataset}).
-    \item \textbf{An evaluation protocol} with tier-weighted F1 (giving extra credit for detecting harder hallucinations) and expected calibration error or ECE (measuring whether confidence scores track actual accuracy). Following ONEBench~\citep{onebench2024}, we adopt Plackett-Luce ranking~\citep{luce1959,plackett1975} for comparing tools with incomplete coverage (\cref{sec:evaluation}).
+    \item \textbf{A hallucination taxonomy} of 14 types organized into three difficulty tiers (Easy, Medium, Hard), capturing the full spectrum from obviously fake DOIs to subtly plausible fabrications (\cref{sec:taxonomy}).
+    \item \textbf{A benchmark dataset} of 2,185 BibTeX entries with six binary sub-tests per entry, enabling multi-criteria evaluation inspired by HumanEval~\citep{humaneval} (\cref{sec:dataset}).
+    \item \textbf{An evaluation protocol} with tier-weighted F1 (rewarding detection of harder hallucinations), expected calibration error (measuring confidence accuracy), and Plackett-Luce ranking~\citep{luce1959,plackett1975} for comparing tools with incomplete coverage (\cref{sec:evaluation}).
     \item \textbf{Open infrastructure}: a pip-installable Python package with a baseline registry, CI-integrated evaluation pipeline, and a community contribution system inspired by ONEBench~\citep{onebench2024} (\cref{sec:experiments}).
 \end{enumerate}
 
-To validate the benchmark's utility, we also contribute \texttt{bibtex-updater}: a reference implementation of a citation verification tool designed for venue-scale deployment---integration into CI/CD workflows, pre-commit hooks, and batch submission processing---rather than benchmark optimization (\cref{sec:tool}).
-While bibtex-updater was developed by the same authors as the benchmark, it serves to demonstrate that \textsc{Hallmark} supports practical tool evaluation and reveals actionable gaps.
-We acknowledge this potential source of benchmark design bias and mitigate it by: (1) evaluating multiple independent baselines alongside bibtex-updater, (2) designing the taxonomy from publicly documented incidents rather than bibtex-updater's failure modes, (3) open-sourcing all data and code to enable community scrutiny, and (4) reporting bibtex-updater performance with and without the benchmark's pre-screening layer to isolate the tool's contribution from shared infrastructure.
-
 \begin{table}[t]
-\caption{Comparison of \textsc{Hallmark} with related citation analysis efforts. \textsc{Hallmark} is the first \emph{benchmark} for citation verification tool evaluation, whereas prior work focuses on auditing or detection.}
+\caption{Comparison of \textsc{Hallmark} with related citation analysis efforts. Prior work focuses on auditing published papers; \textsc{Hallmark} is the first \emph{evaluation benchmark} for citation verification tools.}
 \label{tab:comparison}
 \centering
 \small
@@ -32,16 +26,17 @@ We acknowledge this potential source of benchmark design bias and mitigate it by
 \toprule
 & \textbf{Entries} & \textbf{Types} & \textbf{Sub-tests} & \textbf{Tool eval.} & \textbf{Open} \\
 \midrule
+\multicolumn{6}{l}{\emph{Citation audits}} \\
 GhostCite~\citep{ghostcite2026} & 56K papers & --- & \ding{55} & \ding{55} & \ding{55} \\
 HalluCitation~\citep{hallucitation2026} & 300 papers & 3 & \ding{55} & \ding{55} & \ding{51} \\
 Mysterious Citations~\citep{mysterious2026} & HPC venues & --- & \ding{55} & \ding{55} & \ding{55} \\
 \midrule
-\textsc{Hallmark} (ours) & 2,229 & 13 & 6 & \ding{51} & \ding{51} \\
+\multicolumn{6}{l}{\emph{Citation verification benchmarks}} \\
+\textsc{Hallmark} (ours) & 2,185 & 14 & 6 & \ding{51} & \ding{51} \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-Our evaluation shows that \texttt{bibtex-updater} achieves 0.95 detection rate (95\% CI: [0.94, 0.97]) and 0.96 F1 overall, with the best confidence calibration among all evaluated tools (ECE = 0.45).
-Its performance drops on medium-tier types requiring venue-level metadata verification---a gap shared by all evaluated tools.
-No single tool covers all 13 hallucination types, and calibration varies widely (ECE from 0.11 to 0.45).
-These results demonstrate the value of a structured benchmark for identifying actionable improvement targets, and the feasibility of venue-scale automated verification with current tools.
+We evaluate five tools on \textsc{Hallmark}, including bibtex-updater, HaRC, verify-citations, a DOI-only baseline, and a conservative ensemble.
+The evaluation reveals that no single tool covers all 14 hallucination types, calibration varies widely (ECE from 0.11 to 0.45), and all tools share blind spots on venue-level hallucinations requiring metadata cross-referencing.
+These results demonstrate the value of a structured benchmark for identifying actionable improvement targets.

@@ -435,11 +435,6 @@ def generate_targeted_type(
         ],
     }
 
-    # RETRACTED_PAPER needs real retracted DOIs, skip for now
-    if hall_type == HallucinationType.RETRACTED_PAPER:
-        logger.info(f"Skipping {hall_type.value} (requires manual curation of retracted papers)")
-        return []
-
     prompts = prompts_by_type.get(hall_type, [])
     if not prompts:
         logger.warning(f"No prompts defined for {hall_type.value}")

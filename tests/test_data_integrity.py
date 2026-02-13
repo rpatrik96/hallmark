@@ -57,23 +57,6 @@ class TestKeyUniqueness:
 
 
 class TestCrossSplitContamination:
-    def test_no_retracted_doi_overlap(
-        self, dev_entries: list[BenchmarkEntry], test_entries: list[BenchmarkEntry]
-    ) -> None:
-        """Retracted paper DOIs must be disjoint across splits."""
-        dev_dois = {
-            e.fields.get("doi", "")
-            for e in dev_entries
-            if e.hallucination_type == "retracted_paper"
-        }
-        test_dois = {
-            e.fields.get("doi", "")
-            for e in test_entries
-            if e.hallucination_type == "retracted_paper"
-        }
-        overlap = dev_dois & test_dois
-        assert not overlap, f"Retracted DOIs in both splits: {overlap}"
-
     def test_no_version_arxiv_overlap(
         self, dev_entries: list[BenchmarkEntry], test_entries: list[BenchmarkEntry]
     ) -> None:
@@ -115,12 +98,12 @@ class TestTypeBalance:
                 f"{split_name}: {ht.value} has {count} entries, need >= {MIN_PER_TYPE}"
             )
 
-    def test_all_13_types_present_dev(self, dev_entries: list[BenchmarkEntry]) -> None:
+    def test_all_types_present_dev(self, dev_entries: list[BenchmarkEntry]) -> None:
         types = {e.hallucination_type for e in dev_entries if e.label == "HALLUCINATED"}
         expected = {ht.value for ht in HallucinationType}
         assert types == expected, f"Missing types in dev: {expected - types}"
 
-    def test_all_13_types_present_test(self, test_entries: list[BenchmarkEntry]) -> None:
+    def test_all_types_present_test(self, test_entries: list[BenchmarkEntry]) -> None:
         types = {e.hallucination_type for e in test_entries if e.label == "HALLUCINATED"}
         expected = {ht.value for ht in HallucinationType}
         assert types == expected, f"Missing types in test: {expected - types}"
@@ -257,21 +240,26 @@ class TestSurfaceDiversity:
         )
 
     @pytest.mark.parametrize("split_name", ["dev", "test"])
-    def test_retracted_doi_diversity(
+    def test_no_all_true_subtests_hallucinated(
         self,
         split_name: str,
         dev_entries: list[BenchmarkEntry],
         test_entries: list[BenchmarkEntry],
     ) -> None:
-        """Retracted paper entries should use diverse DOIs within a split."""
+        """Hallucinated entries must not have all subtests True (except version_confusion)."""
         entries = dev_entries if split_name == "dev" else test_entries
-        dois = [
-            e.fields.get("doi", "") for e in entries if e.hallucination_type == "retracted_paper"
-        ]
-        unique_dois = set(dois)
-        # At least 50% unique (some reuse is OK within a split)
-        assert len(unique_dois) >= len(dois) * 0.5, (
-            f"{split_name}: only {len(unique_dois)}/{len(dois)} unique retracted DOIs"
+        violators = []
+        for e in entries:
+            if (
+                e.label == "HALLUCINATED"
+                and e.subtests
+                and all(v is True for v in e.subtests.values())
+                and e.hallucination_type != "version_confusion"
+            ):
+                violators.append(e.bibtex_key)
+        assert not violators, (
+            f"{split_name}: {len(violators)} hallucinated entries have all subtests=True: "
+            f"{violators[:5]}"
         )
 
 

@@ -15,7 +15,6 @@ import string
 from datetime import date
 
 from hallmark.dataset.schema import (
-    VALID_SUBTESTS,
     BenchmarkEntry,
     DifficultyTier,
     GenerationMethod,
@@ -29,7 +28,20 @@ def generate_fabricated_doi(
     """Tier 1: Replace DOI with a non-resolving fabricated DOI."""
     rng = rng or random.Random()
     new_entry = _clone_entry(entry)
-    fake_prefix = rng.choice(["10.9999", "10.8888", "10.7777"])
+    fake_prefix = rng.choice(
+        [
+            "10.9999",
+            "10.8888",
+            "10.7777",
+            "10.6666",
+            "10.5432",
+            "10.1234",
+            "10.4321",
+            "10.3141",
+            "10.2718",
+            "10.1618",
+        ]
+    )
     fake_suffix = "".join(rng.choices(string.ascii_lowercase + string.digits, k=8))
     new_entry.fields["doi"] = f"{fake_prefix}/fake.{fake_suffix}"
     new_entry.label = "HALLUCINATED"
@@ -62,6 +74,50 @@ def generate_nonexistent_venue(
         "Transactions on Neural Computing Paradigms",
         "Symposium on Frontier Artificial Intelligence Research",
         "Annual Conference on Machine Learning Innovations",
+        "IEEE International Conference on Cognitive Computing",
+        "Pacific Rim Symposium on Neural Information Systems",
+        "European Workshop on Probabilistic Machine Learning",
+        "ACM Conference on Automated Reasoning and Learning",
+        "International Journal of Adaptive Computation",
+        "Workshop on Scalable Representation Learning",
+        "Conference on Foundations of Intelligent Systems",
+        "Journal of Theoretical and Applied AI Research",
+        "International Symposium on Data-Driven Discovery",
+        "Transactions on Autonomous Learning Systems",
+        "Workshop on Trustworthy AI and Robustness",
+        "Conference on Multimodal Learning and Perception",
+        "Annual Symposium on Efficient Deep Learning",
+        "Journal of Neural Architecture and Optimization",
+        "International Conference on Generative Modeling",
+        "Workshop on Causal Inference in Machine Learning",
+        "Conference on Language Models and Understanding",
+        "Symposium on Geometric Deep Learning Methods",
+        "Pacific Conference on Knowledge Representation",
+        "Journal of Reinforcement Learning and Control",
+        "International Workshop on Federated AI Systems",
+        "Conference on Bio-Inspired Computing and AI",
+        "Transactions on Computer Vision Applications",
+        "Annual Workshop on AI Safety and Alignment",
+        "Symposium on Graph Neural Network Research",
+        "International Conference on Continual Learning",
+        "Journal of Explainable Artificial Intelligence",
+        "Workshop on Low-Resource Language Processing",
+        "Conference on Bayesian Deep Learning Methods",
+        "International Symposium on AI for Science",
+        "Transactions on Self-Supervised Representation Learning",
+        "Workshop on Embodied Intelligence and Robotics",
+        "Conference on Privacy-Preserving Machine Learning",
+        "Journal of Time Series Analysis and Forecasting",
+        "Symposium on Neuro-Symbolic AI Integration",
+        "International Conference on Quantum Machine Learning",
+        "Workshop on Foundation Models and Adaptation",
+        "Conference on Algorithmic Fairness in AI",
+        "Annual Conference on Spatial Intelligence",
+        "Journal of Statistical Machine Learning Theory",
+        "Workshop on Scientific Machine Learning",
+        "Symposium on Decision-Making Under Uncertainty",
+        "International Conference on Intelligent Automation",
+        "Conference on Emergent Communication in AI",
     ]
     fake_venue = rng.choice(fake_venues)
     venue_field = "booktitle" if "booktitle" in new_entry.fields else "journal"
@@ -95,6 +151,31 @@ def generate_placeholder_authors(
         "Test Author and Another Author",
         "A. Researcher and B. Scientist",
         "First Last and Second Person",
+        "Wei Zhang and Priya Patel and James Brown",
+        "Maria Santos and Hiroshi Tanaka",
+        "Ahmed Hassan and Sarah O'Brien and Raj Gupta",
+        "K. Mueller and L. Johansson",
+        "Anonymous Author and Co-Author",
+        "Yusuf Ali and Elena Popova and David Lee",
+        "R. Kumar and S. Nakamura and T. Fischer",
+        "Placeholder Name and Filler Author",
+        "Jing Liu and Carlos Ramirez",
+        "Olga Ivanova and Pierre Dubois and Min-Soo Kim",
+        "Author One and Author Two and Author Three",
+        "M. Chen and A. Kowalski and B. Okafor",
+        "Fatima Al-Rashid and Kenji Yamamoto",
+        "Unknown Contributor and Associate Researcher",
+        "Dmitri Volkov and Aisha Mbeki and Luca Rossi",
+        "J. Andersen and C. Morales",
+        "Sample Researcher and Example Coauthor",
+        "Ravi Sharma and Mei-Ling Wu and Thomas Schmidt",
+        "P. Novak and H. Sato and F. Osei",
+        "Generic Author and Placeholder Coauthor",
+        "Soo-Jin Park and Rafael Costa",
+        "N. Petersen and Y. Taniguchi and A. Mensah",
+        "Ling Chen and Amara Diallo and Viktor Horvat",
+        "Researcher Alpha and Researcher Beta",
+        "Q. Wang and D. Fernandez and E. Kimura",
     ]
     new_entry.fields["author"] = rng.choice(fake_author_sets)
     new_entry.label = "HALLUCINATED"
@@ -722,34 +803,115 @@ def generate_plausible_fabrication(
     return new_entry
 
 
-def generate_retracted_paper(
-    entry: BenchmarkEntry,
-    retracted_doi: str,
-    retracted_title: str,
-    retracted_authors: str,
-    retracted_venue: str,
-    retracted_year: str,
+def generate_merged_citation(
+    entry_a: BenchmarkEntry,
+    entry_b: BenchmarkEntry,
+    entry_c: BenchmarkEntry | None = None,
     rng: random.Random | None = None,
 ) -> BenchmarkEntry:
-    """Tier 3: Create entry citing a real but retracted paper."""
-    new_entry = _clone_entry(entry)
+    """Tier 2: Merge metadata from 2-3 real papers into one BibTeX entry.
 
-    # Replace all fields with the retracted paper's metadata
-    new_entry.fields["doi"] = retracted_doi
-    new_entry.fields["title"] = retracted_title
-    new_entry.fields["author"] = retracted_authors
-    new_entry.fields["year"] = retracted_year
+    Takes authors from entry_a, title from entry_b, venue from entry_c (or entry_a).
+    The resulting entry looks plausible but no single real paper matches all fields.
+    """
+    rng = rng or random.Random()
+    new_entry = _clone_entry(entry_b)  # start from entry_b (title source)
 
+    # Authors from entry_a
+    new_entry.fields["author"] = entry_a.fields.get("author", "")
+
+    # Title from entry_b (already cloned)
+
+    # Venue from entry_c if provided, else entry_a
+    venue_source = entry_c if entry_c is not None else entry_a
     venue_field = "booktitle" if new_entry.bibtex_type == "inproceedings" else "journal"
-    new_entry.fields[venue_field] = retracted_venue
+    for vf in ("booktitle", "journal"):
+        if vf in venue_source.fields:
+            new_entry.fields[venue_field] = venue_source.fields[vf]
+            break
+
+    # Year from venue source
+    if "year" in venue_source.fields:
+        new_entry.fields["year"] = venue_source.fields["year"]
+
+    # Use entry_b's DOI if available (title matches but authors won't)
+    if entry_b.doi:
+        new_entry.fields["doi"] = entry_b.doi
+    else:
+        new_entry.fields.pop("doi", None)
 
     new_entry.label = "HALLUCINATED"
-    new_entry.hallucination_type = HallucinationType.RETRACTED_PAPER.value
-    new_entry.difficulty_tier = DifficultyTier.HARD.value
-    new_entry.generation_method = GenerationMethod.REAL_WORLD.value
-    new_entry.explanation = f"Paper '{retracted_title}' was retracted after publication"
-    new_entry.subtests = dict(VALID_SUBTESTS)  # copy to avoid mutation
-    new_entry.bibtex_key = f"retracted_{new_entry.bibtex_key}"
+    new_entry.hallucination_type = HallucinationType.MERGED_CITATION.value
+    new_entry.difficulty_tier = DifficultyTier.MEDIUM.value
+    new_entry.generation_method = GenerationMethod.PERTURBATION.value
+    new_entry.explanation = (
+        "Metadata merged from multiple real papers: "
+        f"authors from '{entry_a.bibtex_key}', title from '{entry_b.bibtex_key}'"
+    )
+    new_entry.subtests = {
+        "doi_resolves": entry_b.doi is not None,
+        "title_exists": True,
+        "authors_match": False,
+        "venue_real": True,
+        "fields_complete": True,
+        "cross_db_agreement": False,
+    }
+    new_entry.bibtex_key = f"merged_{entry_b.bibtex_key}"
+    return new_entry
+
+
+def generate_partial_author_list(
+    entry: BenchmarkEntry,
+    rng: random.Random | None = None,
+) -> BenchmarkEntry:
+    """Tier 2: Cite a real paper with a subset of its authors.
+
+    Keeps first and last author, drops middle co-authors. Common in LLM outputs
+    when the model remembers only prominent authors.
+    """
+    rng = rng or random.Random()
+    new_entry = _clone_entry(entry)
+
+    authors_str = entry.fields.get("author", "")
+    # BibTeX uses " and " as separator
+    authors = [a.strip() for a in authors_str.split(" and ") if a.strip()]
+
+    if len(authors) >= 3:
+        # Keep first + last, drop random middle authors
+        first = authors[0]
+        last = authors[-1]
+        middle = authors[1:-1]
+        # Keep at most 1 middle author (randomly selected) for some variation
+        kept_middle = [rng.choice(middle)] if middle and rng.random() < 0.3 else []
+        new_authors = [first, *kept_middle, last]
+        new_entry.fields["author"] = " and ".join(new_authors)
+    elif len(authors) == 2:
+        # Drop one author randomly
+        new_entry.fields["author"] = authors[rng.randint(0, 1)]
+    else:
+        # Single author — can't reduce further, swap initial format instead
+        # e.g., "John Smith" -> "J. Smith"
+        parts = authors[0].split()
+        if len(parts) >= 2 and len(parts[0]) > 1:
+            new_entry.fields["author"] = f"{parts[0][0]}. {' '.join(parts[1:])}"
+
+    new_entry.label = "HALLUCINATED"
+    new_entry.hallucination_type = HallucinationType.PARTIAL_AUTHOR_LIST.value
+    new_entry.difficulty_tier = DifficultyTier.MEDIUM.value
+    new_entry.generation_method = GenerationMethod.PERTURBATION.value
+    new_entry.explanation = (
+        f"Partial author list: {len(authors)} authors reduced to "
+        f"{len(new_entry.fields.get('author', '').split(' and '))}"
+    )
+    new_entry.subtests = {
+        "doi_resolves": entry.doi is not None,
+        "title_exists": True,
+        "authors_match": False,  # partial list doesn't fully match
+        "venue_real": True,
+        "fields_complete": True,
+        "cross_db_agreement": False,
+    }
+    new_entry.bibtex_key = f"partial_authors_{new_entry.bibtex_key}"
     return new_entry
 
 
@@ -811,6 +973,16 @@ def generate_hybrid_fabrication(
         "Thomas Anderson and Sophia Kumar and Daniel Park",
         "Isabella Rossi and Ahmed Ali and Emma Williams",
         "Lucas Brown and Maria Garcia and Kevin Nguyen",
+        "Olga Sokolova and James Wright and Mei Lin",
+        "Henrik Larsson and Fatima Benali and Takeshi Ito",
+        "Priya Chatterjee and Marco Bianchi and Soo-Yeon Choi",
+        "David Okonkwo and Laura Fischer and Wei-Ting Hsu",
+        "Amir Rezaei and Rachel Thompson and Kenji Morita",
+        "Elena Vasquez and Patrick Murphy and Zhi-Yong Xu",
+        "Nadia Kowalczyk and Samuel Adjei and Yuki Watanabe",
+        "Oscar Herrera and Anya Krishnan and Felix Bauer",
+        "Christine Dufour and Jamal Henderson and Hana Suzuki",
+        "Dmitri Orlov and Amelia Santos and Jun-Ho Kwon",
     ]
     new_entry.fields["author"] = rng.choice(fake_author_sets)
 
@@ -928,6 +1100,8 @@ def generate_tier2_batch(
                 "preprint_as_published",
                 "chimeric_title",
                 "hybrid_fabrication",
+                "merged_citation",
+                "partial_author_list",
             ]
         )
 
@@ -943,11 +1117,18 @@ def generate_tier2_batch(
             fake_v = rng.choice(venues)
             results.append(generate_preprint_as_published(source, fake_v, rng))
         elif method == "chimeric_title":
-            # Generate a fake title using ML buzzwords
             fake_title = f"{rng.choice(ml_buzzwords)} for {rng.choice(['Classification', 'Generation', 'Reasoning'])}"
             results.append(generate_chimeric_title(source, fake_title, rng))
         elif method == "hybrid_fabrication":
             results.append(generate_hybrid_fabrication(source, rng))
+        elif method == "merged_citation":
+            donor_b = rng.choice(valid_entries)
+            while donor_b.bibtex_key == source.bibtex_key and len(valid_entries) > 1:
+                donor_b = rng.choice(valid_entries)
+            donor_c = rng.choice(valid_entries) if rng.random() < 0.5 else None
+            results.append(generate_merged_citation(source, donor_b, donor_c, rng))
+        elif method == "partial_author_list":
+            results.append(generate_partial_author_list(source, rng))
 
     return results
 
@@ -973,7 +1154,6 @@ def generate_tier3_batch(
     for _i in range(count):
         source = rng.choice(valid_entries)
         # Randomly choose between near_miss_title, plausible_fabrication, and version_confusion
-        # Skip retracted_paper since it needs external data
         method = rng.choice(["near_miss_title", "plausible_fabrication", "version_confusion"])
 
         if method == "near_miss_title":

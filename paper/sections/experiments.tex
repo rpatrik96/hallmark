@@ -4,7 +4,7 @@
 \subsection{Evaluated tools}
 \label{sec:baselines}
 
-We evaluate \texttt{bibtex-updater} (described in \cref{sec:tool}) alongside four baselines of varying sophistication:
+We evaluate five citation verification tools of varying sophistication on the \texttt{dev\_public} split:
 
 \paragraph{DOI-only.}
 A minimal baseline that checks whether each entry's DOI field resolves via the CrossRef API.
@@ -20,13 +20,18 @@ Due to Semantic Scholar API rate limiting, HaRC completed evaluation on only 20 
 A pip-installable tool~\citep{verifycitations2025} that queries arXiv, ACL Anthology, Semantic Scholar, DBLP, Google Scholar, and DuckDuckGo.
 Like HaRC, it was rate-limited and completed 71 of 840 entries (8.5\%).
 
+\paragraph{bibtex-updater.}
+A multi-database cross-referencing tool~\citep{bibtexupdater2026} that queries CrossRef, DBLP, and Semantic Scholar.
+It performs DOI verification, title fuzzy matching, author comparison, and venue consistency checks.
+See \cref{app:tool} for implementation details.
+
 \paragraph{Ensemble (DOI + bibtex-updater).}
-A conservative ensemble that flags an entry as hallucinated only if \emph{both} DOI-only and \texttt{bibtex-updater} agree, designed to minimize false positives at the cost of recall.
+A conservative ensemble that flags an entry as hallucinated only if \emph{both} DOI-only and bibtex-updater agree, designed to minimize false positives at the cost of recall.
 
 \subsection{Main results}
 \label{sec:main_results}
 
-\cref{tab:results} presents the main results on the \texttt{dev\_public} split (840 entries: 450 valid, 390 hallucinated).
+\cref{tab:results} presents the main results on the \texttt{dev\_public} split.
 
 \begin{table}[t]
 \caption{Results on \texttt{dev\_public} (840 entries). Best values in \textbf{bold}. Bootstrap 95\% CIs shown in brackets where available. $^*$Partial evaluation due to API rate limiting; Plackett-Luce ranking handles this incomplete coverage. Coverage = fraction of entries processed.}
@@ -46,12 +51,12 @@ verify-citations$^*$& 0.042          & 0.024          & 0.071          & 0.062  
 \end{tabular}
 \end{table}
 
-\texttt{bibtex-updater} achieves the highest scores across all primary metrics: 95.4\% detection rate (372/390 hallucinations detected; 95\% CI: [0.94, 0.97]) and 0.96 F1 (95\% CI: [0.95, 0.97]).
-Its tier-weighted F1 (0.969) exceeds its standard F1 (0.962), indicating strong performance on harder hallucination types---precisely the cases that matter most for venue deployment.
-The conservative ensemble trades recall for precision, achieving the lowest FPR (0.007) but catching only 20.8\% of hallucinations.
-DOI-only performs poorly because most hallucination types in \textsc{Hallmark} use valid DOIs---only \texttt{fabricated\_doi} entries are caught by DOI resolution alone.
-Since Detection Rate and FPR are prevalence-independent, the differing hallucination prevalence across splits does not affect these primary metrics.
-F1 is prevalence-sensitive; we report per-split F1 values separately and caution against direct cross-split F1 comparison.
+The results reveal three key benchmark insights.
+First, \emph{DOI resolution alone is insufficient}: the DOI-only baseline catches only 22.3\% of hallucinations because most types in \textsc{Hallmark} use valid DOIs---only \texttt{fabricated\_doi} entries are caught by DOI resolution alone.
+Second, \emph{API rate limiting severely constrains multi-source tools}: HaRC and verify-citations completed only 2.4\% and 8.5\% of entries respectively, making them impractical for venue-scale use without caching.
+Third, \emph{calibration varies widely}: ECE ranges from 0.111 (DOI-only) to 0.452 (bibtex-updater), indicating that even high-accuracy tools produce unreliable confidence scores.
+Bibtex-updater achieves the highest detection rate (0.954; 95\% CI: [0.94, 0.97]) and F1 (0.962), but its poor calibration means practitioners should not rely on confidence scores for threshold tuning.
+Since Detection Rate and FPR are prevalence-independent, we emphasize these as primary metrics; F1 is prevalence-sensitive and should be compared within splits only.
 
 \paragraph{Confidence calibration.}
 While \texttt{bibtex-updater} achieves strong detection performance, its confidence scores are poorly calibrated (ECE = 0.452), indicating systematic overconfidence.
@@ -84,7 +89,7 @@ With 30 instances per type, per-type metrics have narrower confidence intervals 
 \texttt{bibtex-updater} achieves near-perfect detection on Tier~1 (120 entries) and Tier~3 (120 entries) but shows a drop on Tier~2 (150 entries), where cross-referencing metadata fields is required.
 The types it struggles with are \texttt{preprint\_as\_published} and \texttt{wrong\_venue}, both requiring venue-level verification that current database APIs do not reliably support.
 With 30 instances per type, these type-level detection rates provide more statistically robust estimates than the original 10-instance design.
-These are not limitations of our tool's design but of the underlying data sources: no publicly available API provides reliable structured venue-to-paper mappings.
+These are not limitations of any specific tool but of the underlying data sources: no publicly available API provides reliable structured venue-to-paper mappings.
 DOI-only detection is concentrated in Tier~1, as expected, with near-zero performance on Tiers~2 and~3.
 
 \begin{figure}[t]
@@ -99,14 +104,14 @@ DOI-only detection is concentrated in Tier~1, as expected, with near-zero perfor
 
 \cref{fig:heatmap} shows the per-type detection heatmap across all evaluated tools.
 With 30 instances per type, per-type breakdowns provide statistically meaningful comparisons.
-The reference tool (\texttt{bibtex-updater}) detects all instances of 11 out of 13 types, with reduced performance only on \texttt{preprint\_as\_published} and \texttt{wrong\_venue}.
+No single tool covers all 14 types with perfect recall.
+Bibtex-updater detects 12 of 14 types reliably but struggles with \texttt{preprint\_as\_published} and \texttt{wrong\_venue}, both requiring venue-level verification that current database APIs do not support.
 DOI-only detects \texttt{fabricated\_doi} reliably but misses all types that use valid DOIs.
-The ensemble inherits \texttt{bibtex-updater}'s type coverage but at reduced recall.
-No single tool covers all 13 types with perfect recall.
+The new types (\texttt{merged\_citation}, \texttt{partial\_author\_list}) expose author-matching gaps across all tools.
 
 \begin{figure}[t]
 \centering
 \includegraphics[width=0.85\linewidth]{figures/per_type_heatmap.pdf}
-\caption{Per-type detection rate across all evaluated tools. Each cell shows the detection rate for a specific hallucination type. \texttt{bibtex-updater} covers 11/13 types perfectly; its gaps (\texttt{preprint\_as\_published}, \texttt{wrong\_venue}) require venue-level verification.}
+\caption{Per-type detection rate across all evaluated tools. Each cell shows the detection rate for a specific hallucination type. No tool achieves perfect recall across all 14 types; venue-level types (\texttt{preprint\_as\_published}, \texttt{wrong\_venue}) remain challenging for all tools.}
 \label{fig:heatmap}
 \end{figure}

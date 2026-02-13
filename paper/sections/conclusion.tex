@@ -2,11 +2,10 @@
 \label{sec:conclusion}
 
 Citation hallucination is a growing threat to scientific integrity.
-We contribute \textsc{Hallmark}, the first standardized benchmark for citation verification tools: 13 hallucination types across 3 difficulty tiers, 2,229 annotated entries with 6 sub-tests each, tier-weighted metrics (rewarding detection of hard hallucinations), calibration assessment via ECE (measuring confidence accuracy), and principled ranking under incomplete data via Plackett-Luce.
-To demonstrate the benchmark's practical utility, we also contribute \texttt{bibtex-updater}, a reference implementation of a citation verification tool designed for venue-scale deployment---integration into CI/CD pipelines, pre-commit hooks, and batch workflows---achieving 0.95 detection rate (95\% CI: [0.94, 0.97]) with 0.96 F1.
+We contribute \textsc{Hallmark}, the first standardized benchmark for citation verification tools: 14 hallucination types across 3 difficulty tiers, 2,185 annotated entries with 6 sub-tests each, tier-weighted metrics (rewarding detection of hard hallucinations), calibration assessment via ECE (measuring confidence accuracy), and principled ranking under incomplete data via Plackett-Luce.
 
-Our evaluation reveals systematic blind spots shared across all tools---particularly on venue-level hallucinations where bibliographic APIs lack structured data---and wide variation in confidence calibration.
-These findings provide concrete, measurable targets for both tool developers and database maintainers.
+Our evaluation of five tools reveals systematic blind spots shared across all tools---particularly on venue-level hallucinations where bibliographic APIs lack structured data---and wide variation in confidence calibration.
+No single tool covers all 14 types, providing concrete, measurable targets for both tool developers and database maintainers.
 
-Both resources are designed to grow: \textsc{Hallmark}'s community contribution system, temporal segmentation, and atomic evaluation design ensure that new entries and tools can be incorporated without invalidating prior results.
-We release the full benchmark, evaluation infrastructure, and \texttt{bibtex-updater} as open-source software to support continued progress on this critical problem.
+\textsc{Hallmark} is designed to grow: its community contribution system, temporal segmentation, and atomic evaluation design ensure that new entries and tools can be incorporated without invalidating prior results.
+We release the full benchmark and evaluation infrastructure as open-source software to support continued progress on this critical problem.

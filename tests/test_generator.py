@@ -3,7 +3,6 @@
 from hallmark.dataset.generator import (
     generate_hybrid_fabrication,
     generate_plausible_fabrication,
-    generate_retracted_paper,
     generate_version_confusion,
 )
 from hallmark.dataset.schema import BenchmarkEntry
@@ -124,61 +123,6 @@ class TestGenerateVersionConfusion:
     def test_difficulty_tier_is_hard(self):
         entry = _make_base_entry()
         result = generate_version_confusion(entry, "2401.12345", "ICML", "2024")
-        assert result.difficulty_tier == 3
-
-
-class TestGenerateRetractedPaper:
-    def test_creates_hallucinated_entry(self):
-        entry = _make_base_entry()
-        result = generate_retracted_paper(
-            entry,
-            retracted_doi="10.1234/retracted.2020",
-            retracted_title="A Retracted Study",
-            retracted_authors="Bad Researcher",
-            retracted_venue="Nature",
-            retracted_year="2020",
-        )
-        assert result.label == "HALLUCINATED"
-
-    def test_all_subtests_true(self):
-        entry = _make_base_entry()
-        result = generate_retracted_paper(
-            entry,
-            retracted_doi="10.1234/retracted.2020",
-            retracted_title="A Retracted Study",
-            retracted_authors="Bad Researcher",
-            retracted_venue="Nature",
-            retracted_year="2020",
-        )
-        # All subtests should be True because paper was real before retraction
-        assert result.subtests["doi_resolves"] is True
-        assert result.subtests["title_exists"] is True
-        assert result.subtests["authors_match"] is True
-        assert result.subtests["venue_real"] is True
-        assert result.subtests["cross_db_agreement"] is True
-
-    def test_hallucination_type(self):
-        entry = _make_base_entry()
-        result = generate_retracted_paper(
-            entry,
-            retracted_doi="10.1234/retracted.2020",
-            retracted_title="A Retracted Study",
-            retracted_authors="Bad Researcher",
-            retracted_venue="Nature",
-            retracted_year="2020",
-        )
-        assert result.hallucination_type == "retracted_paper"
-
-    def test_difficulty_tier_is_hard(self):
-        entry = _make_base_entry()
-        result = generate_retracted_paper(
-            entry,
-            retracted_doi="10.1234/retracted.2020",
-            retracted_title="A Retracted Study",
-            retracted_authors="Bad Researcher",
-            retracted_venue="Nature",
-            retracted_year="2020",
-        )
         assert result.difficulty_tier == 3
 
 

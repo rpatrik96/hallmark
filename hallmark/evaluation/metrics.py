@@ -250,6 +250,28 @@ def per_type_metrics(
     return result
 
 
+def per_generation_method_metrics(
+    entries: list[BenchmarkEntry],
+    predictions: dict[str, Prediction],
+) -> dict[str, dict[str, float]]:
+    """Compute metrics broken down by generation method."""
+    method_entries: dict[str, list[BenchmarkEntry]] = defaultdict(list)
+    for entry in entries:
+        method = entry.generation_method or "unknown"
+        method_entries[method].append(entry)
+
+    result = {}
+    for method, method_e in sorted(method_entries.items()):
+        cm = build_confusion_matrix(method_e, predictions)
+        result[method] = {
+            "detection_rate": cm.detection_rate,
+            "false_positive_rate": cm.false_positive_rate,
+            "f1": cm.f1,
+            "count": len(method_e),
+        }
+    return result
+
+
 def cost_efficiency(predictions: list[Prediction]) -> dict[str, float]:
     """Compute cost efficiency metrics."""
     if not predictions:

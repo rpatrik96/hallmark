@@ -11,7 +11,7 @@ Commercial tools like GPTZero's hallucination detector~\citep{gptzero2025} and a
 RefChecker~\citep{refchecker2024} provides automated reference verification for academic manuscripts, while citation databases like OpenAlex and Scite offer structured citation data and verification capabilities.
 Commercial plagiarism detection services (e.g., Turnitin, iThenticate) focus on textual similarity rather than citation metadata verification and were therefore excluded from our evaluation.
 Critically, none of these tools are designed for venue-scale deployment: they lack CI/CD integration, batch processing, and the throughput needed to screen hundreds of submissions.
-\texttt{bibtex-updater}~\citep{bibtexupdater} addresses this gap with a multi-source verification pipeline designed for integration into publication workflows (\cref{sec:tool}).
+\texttt{bibtex-updater}~\citep{bibtexupdater} addresses this gap with a multi-source verification pipeline designed for integration into publication workflows (\cref{app:tool}).
 
 \paragraph{Hallucination detection benchmarks.}
 General-purpose hallucination benchmarks exist for LLM outputs~\citep{refchecker2024,hallueval2023} and long-form generation~\citep{halogen2024}, but these focus on factual claims rather than bibliographic metadata.
