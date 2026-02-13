@@ -5,9 +5,9 @@ At 2,207 entries (1,289 hallucinated, with at least 29 instances per type per pu
 With 30 instances per type per split, per-type metrics have 95\% Clopper-Pearson confidence interval width $\leq 0.24$ (e.g., a type-level detection rate of 90\% has a 95\% CI of [0.74, 0.98]).
 A two-proportion $z$-test with $n=30$ per type achieves 80\% power to detect a detection rate difference of $\geq 0.20$ between tools ($\alpha = 0.05$, two-sided).
 Hallucination prevalence differs across main splits (50.2\% in dev, 57.3\% in test, 57.8\% in hidden) due to the constraint that each of 11 main types requires $\geq 29$ instances per main split.
-We emphasize prevalence-independent metrics (Detection Rate, FPR, AUROC) as primary; prevalence-sensitive metrics (F1) should be compared within splits only.
+We emphasize prevalence-independent metrics (Detection Rate, FPR) as primary; prevalence-sensitive metrics (F1) should be compared within splits only.
 The benchmark covers only English-language BibTeX references.
-The majority of hallucinated entries are synthetically generated via perturbation, though the benchmark includes 215 LLM-generated entries (produced by prompting GPT-5.1 to generate plausible citations and verifying against CrossRef/DBLP with title similarity $\geq 85$ and author Jaccard $\geq 0.5$) and 72 real-world entries harvested from documented incidents (primarily from GPTZero's NeurIPS 2025 analysis, GhostCite, and HalluCitation).
+The majority of hallucinated entries are synthetically generated via perturbation, though the benchmark includes 162 LLM-generated entries (produced by prompting GPT-5.1 to generate plausible citations and verifying against CrossRef/DBLP with title similarity $\geq 85\%$ and author Jaccard $\geq 0.5$) and 72 real-world entries harvested from documented incidents (primarily from GPTZero's NeurIPS 2025 analysis, GhostCite, and HalluCitation).
 The real-world sample remains small and type-skewed (55\% \texttt{plausible\_fabrication}).
 Future versions should expand real-world coverage as more documented incidents become available.
 Baseline performance depends on bibliographic API availability and coverage; results may shift as APIs evolve.

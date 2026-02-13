@@ -180,36 +180,35 @@
   },
   "type_counts_per_split": {
     "dev_public": {
-      "arxiv_version_mismatch": 32,
-      "near_miss_title": 45,
-      "plausible_fabrication": 66,
-      "merged_citation": 32,
-      "nonexistent_venue": 32,
-      "hybrid_fabrication": 45,
-      "future_date": 29,
-      "swapped_authors": 38,
-      "fabricated_doi": 50,
-      "wrong_venue": 40,
       "chimeric_title": 40,
-      "partial_author_list": 38,
+      "fabricated_doi": 50,
+      "future_date": 29,
+      "hybrid_fabrication": 45,
+      "near_miss_title": 45,
+      "nonexistent_venue": 32,
       "placeholder_authors": 35,
-      "preprint_as_published": 33
+      "plausible_fabrication": 66,
+      "preprint_as_published": 33,
+      "swapped_authors": 38,
+      "wrong_venue": 40
     },
     "test_public": {
       "chimeric_title": 30,
-      "near_miss_title": 30,
-      "placeholder_authors": 32,
-      "merged_citation": 38,
-      "partial_author_list": 32,
       "fabricated_doi": 45,
-      "preprint_as_published": 30,
-      "nonexistent_venue": 32,
-      "hybrid_fabrication": 34,
-      "plausible_fabrication": 37,
       "future_date": 33,
-      "wrong_venue": 30,
+      "hybrid_fabrication": 34,
+      "near_miss_title": 30,
+      "nonexistent_venue": 32,
+      "placeholder_authors": 32,
+      "plausible_fabrication": 37,
+      "preprint_as_published": 30,
       "swapped_authors": 30,
-      "arxiv_version_mismatch": 30
+      "wrong_venue": 30
+    },
+    "stress_test": {
+      "arxiv_version_mismatch": 62,
+      "merged_citation": 70,
+      "partial_author_list": 70
     }
   },
   "doi_percentages_per_type": {

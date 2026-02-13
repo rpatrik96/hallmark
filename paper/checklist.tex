@@ -34,8 +34,8 @@
 
 \item {\bf Experiment statistical significance}
     \item[] Question: Does the paper report error bars suitably and correctly defined or other appropriate information about the statistical significance of the experiments?
-    \item[] Answer: \answerNo{}
-    \item[] Justification: Baseline evaluations are deterministic (no random components), so error bars do not apply. We acknowledge the small sample sizes for some hallucination types in \cref{sec:limitations}.
+    \item[] Answer: \answerYes{}
+    \item[] Justification: We report 95\% bootstrap confidence intervals (10{,}000 resamples, stratified by hallucination type) for Detection Rate and F1 in \cref{tab:results}. Per-type power analysis with Clopper-Pearson intervals is provided in \cref{app:statistics}.
 
 \item {\bf Experiments compute resources}
     \item[] Question: For each experiment, does the paper provide sufficient information on the computer resources (type of compute workers, memory, time of execution) needed to reproduce the experiments?

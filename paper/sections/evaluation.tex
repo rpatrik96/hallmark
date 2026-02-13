@@ -28,7 +28,7 @@ We partition predictions into $B=10$ equal-width confidence bins and compute:
 \text{ECE} = \sum_{b=1}^{B} \frac{|S_b|}{N} \left| \text{acc}(S_b) - \text{conf}(S_b) \right|, \label{eq:ece}
 \end{equation}
 where $S_b$ is the set of predictions in bin $b$, $\text{acc}(S_b)$ is the fraction of correct predictions, and $\text{conf}(S_b)$ is the mean confidence.
-Well-calibrated tools have ECE $\approx 0$.
+Well-calibrated tools have ECE $\approx 0$; in practice, ECE $< 0.05$ indicates excellent calibration, $0.05$--$0.15$ is acceptable, and ECE $> 0.2$ signals that confidence scores are unreliable for downstream decision-making.
 
 \paragraph{Diagnostic metrics.}
 \textbf{detect@$k$} is the fraction of hallucinations detected by at least one of $k$ verification strategies, analogous to HumanEval's pass@$k$~\citep{humaneval}.
@@ -42,7 +42,7 @@ Well-calibrated tools have ECE $\approx 0$.
 Not all tools can process all entries---rate-limited API access, timeouts, and tool-specific constraints mean evaluation matrices are typically sparse.
 Following ONEBench~\citep{onebench2024}, we adopt the Plackett-Luce model~\citep{luce1959,plackett1975} for ranking tools from incomplete data.
 
-The model assigns each tool $j$ a strength parameter $\theta_j > 0$.
+The model assigns each tool $j$ a strength parameter $\theta_j > 0$; intuitively, $\theta_j$ represents a tool's overall ``skill''---higher $\theta_j$ means the tool is more likely to win any head-to-head comparison, analogous to Elo ratings in chess.
 Given a set of pairwise comparisons derived from the results matrix (tool $j$ beats tool $k$ on entry $i$ if it scores higher), we estimate $\{\theta_j\}$ via the Iterative Luce Spectral Ranking (ILSR) algorithm~\citep{maystre2015}.
 The resulting parameters yield a principled ranking even when different tools have been evaluated on different subsets of entries.
 We also report a simpler mean-score ranking as a baseline comparison.

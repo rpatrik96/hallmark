@@ -37,6 +37,39 @@
 \end{tabular}
 \end{table}
 
+\section{Real-world incident mapping}
+\label{app:real-world-mapping}
+
+We mapped 72 real-world hallucinated citations from three documented incident studies to our taxonomy.
+\cref{tab:realworld} shows the mapping results.
+
+\begin{table}[h]
+\caption{Mapping of 72 real-world hallucinated citations to \textsc{Hallmark} taxonomy types. Citations were sourced from GPTZero's NeurIPS 2025 analysis, GhostCite, and HalluCitation.}
+\label{tab:realworld}
+\centering
+\small
+\begin{tabular}{llr}
+\toprule
+\textbf{Taxonomy type} & \textbf{Tier} & \textbf{Count} \\
+\midrule
+\texttt{plausible\_fabrication} & 3 & 40 \\
+\texttt{fabricated\_doi} & 1 & 10 \\
+\texttt{chimeric\_title} & 2 & 8 \\
+\texttt{near\_miss\_title} & 3 & 5 \\
+\texttt{wrong\_venue} & 2 & 4 \\
+\texttt{author\_mismatch} & 2 & 3 \\
+\texttt{hybrid\_fabrication} & 2 & 2 \\
+\midrule
+\textbf{Total mapped} & & \textbf{72} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\noindent Of the 72 real-world citations, 57 (79\%) map directly to existing taxonomy types.
+The remaining 15 exhibit compound failure modes (e.g., fabricated DOI \emph{and} wrong venue simultaneously); we assigned these to the highest-tier applicable type.
+The dominance of \texttt{plausible\_fabrication} (55\%) reflects the predominant LLM failure mode: models generate coherent but entirely fictional references rather than subtly corrupting real ones.
+Three taxonomy types---\texttt{merged\_citation}, \texttt{partial\_author\_list}, and \texttt{arxiv\_version\_mismatch}---have zero real-world instances, motivating their designation as stress-test types (\cref{sec:taxonomy}).
+
 \section{Dataset construction details}
 \label{app:dataset}
 
@@ -132,8 +165,11 @@ We conclude that the scaled entries are consistent with the original distributio
 \end{table}
 
 \noindent All main hallucination types have $\geq$30 instances per public split.
-Entries marked --- indicate insufficient coverage for per-type breakdowns (HaRC: 2.4\%, verify-citations: 8.5\%).
+Entries marked --- indicate insufficient coverage for per-type breakdowns (HaRC: 2.2\%, verify-citations: 7.9\%).
 DOI-only detects only types with fabricated or missing DOIs (\texttt{fabricated\_doi}, \texttt{plausible\_fabrication}), confirming that DOI resolution is necessary but far from sufficient.
+Note that \texttt{plausible\_fabrication} (Tier~3) shows 100\% detection by DOI-only: these entries are entirely fabricated, so their DOIs do not resolve.
+The Tier~3 classification reflects the \emph{difficulty of recognizing the entry as fake from metadata alone}---absent a DOI check, these entries are the hardest to detect because all other fields appear realistic.
+This highlights why multi-strategy evaluation matters: a tool relying solely on DOI checks would appear to ``solve'' this type while missing all Tier~2 types that use valid DOIs.
 
 \section{Statistical analysis}
 \label{app:statistics}
@@ -175,7 +211,7 @@ The estimated parameters are normalized to sum to 1, yielding a probability-like
 
 This approach handles the key challenge of incomplete data: tools evaluated on different subsets of entries can still be compared through their shared pairwise comparisons, weighted by the structure of the Plackett-Luce likelihood.
 
-For \textsc{Hallmark}, this allows us to rank HaRC (20/840 entries) and verify-citations (71/840 entries) alongside complete-coverage baselines by leveraging the pairwise comparisons available on the entries each tool did evaluate.
+For \textsc{Hallmark}, this allows us to rank HaRC (20/903 entries) and verify-citations (71/903 entries) alongside complete-coverage baselines by leveraging the pairwise comparisons available on the entries each tool did evaluate.
 
 \section{Pre-screening layer specification}
 \label{app:prescreening}
