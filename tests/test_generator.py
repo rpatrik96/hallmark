@@ -109,11 +109,12 @@ class TestGenerateVersionConfusion:
         result = generate_version_confusion(entry, "ICML")
         assert result.hallucination_type == "version_confusion"
 
-    def test_eprint_field_set(self):
+    def test_eprint_field_not_set(self):
+        """Per P0.3: eprint/archiveprefix are hallucination-only fields and should not be generated."""
         entry = _make_base_entry()
         result = generate_version_confusion(entry, "ICML")
-        assert result.fields.get("eprint") is not None
-        assert result.fields.get("archiveprefix") == "arXiv"
+        assert result.fields.get("eprint") is None
+        assert result.fields.get("archiveprefix") is None
 
     def test_booktitle_field_set(self):
         entry = _make_base_entry()

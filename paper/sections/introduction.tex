@@ -9,6 +9,11 @@ These findings reveal that citation hallucination is not anecdotal but systemati
 Several citation verification tools have been developed in response, ranging from DOI resolution checkers to multi-database cross-referencing systems.
 However, \emph{no standardized benchmark exists to compare these tools}: each is evaluated on ad-hoc datasets under different conditions, making it impossible to assess relative strengths, failure modes, or coverage gaps.
 
+\paragraph{Scope.}
+\textsc{Hallmark} focuses on citation \emph{metadata} verification---detecting fabricated, inconsistent, or nonexistent bibliographic references.
+We do not address claim-level hallucination, where a real paper is cited but its claims are misrepresented.
+Claim verification requires full-text analysis and semantic understanding of paper content, representing an important but orthogonal challenge for future work.
+
 We address this gap with four contributions:
 \begin{enumerate}
     \item \textbf{A hallucination taxonomy} of 14 types organized into three difficulty tiers (Easy, Medium, Hard), capturing the full spectrum from obviously fake DOIs to subtly plausible fabrications (\cref{sec:taxonomy}).

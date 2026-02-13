@@ -8,12 +8,21 @@ Combines valid + hallucinated entries and splits into:
 
 Maintains tier ratios: ~40% Tier 1, ~35% Tier 2, ~25% Tier 3
 
+IMPORTANT: After running this script, you MUST run scripts/sanitize_dataset.py
+to ensure consistency with P0 fixes:
+- Anonymize bibtex keys
+- Normalize bibtex_type to inproceedings
+- Strip hallucination-only fields
+- Constrain years to 2021-2023 (except future_date)
+- Eliminate title overlaps across splits
+
 Usage:
     python scripts/create_splits.py \
         --valid-entries data/raw/valid_entries.jsonl \
         --hallucinated-entries data/raw/hallucinated_entries.jsonl \
         --output-dir data/v1.0 \
         --hidden-dir data/hidden
+    python scripts/sanitize_dataset.py --data-dir data/v1.0
 """
 
 from __future__ import annotations

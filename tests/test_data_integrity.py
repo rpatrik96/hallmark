@@ -197,11 +197,12 @@ class TestVersionConfusionQuality:
         entry = generate_version_confusion(source, "ICML")
         assert entry.fields["title"] == source.fields["title"]
 
-    def test_sets_arxiv_eprint(self) -> None:
+    def test_no_arxiv_eprint(self) -> None:
+        """Per P0.3, eprint/archiveprefix are hallucination-only fields and must not be set."""
         source = self._make_source()
         entry = generate_version_confusion(source, "ICML")
-        assert entry.fields.get("eprint") is not None
-        assert entry.fields["archiveprefix"] == "arXiv"
+        assert "eprint" not in entry.fields
+        assert "archiveprefix" not in entry.fields
 
     def test_sets_wrong_venue(self) -> None:
         source = self._make_source()

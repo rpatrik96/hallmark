@@ -89,7 +89,10 @@ def generate_fabricated_doi(
 def generate_nonexistent_venue(
     entry: BenchmarkEntry, rng: random.Random | None = None
 ) -> BenchmarkEntry:
-    """Tier 1: Replace venue with an invented conference/journal name."""
+    """Tier 1: Replace venue with an invented conference/journal name.
+
+    Note: Always uses booktitle (normalized to inproceedings per P0.2).
+    """
     rng = rng or random.Random()
     new_entry = _clone_entry(entry)
     fake_venues = [
@@ -143,10 +146,64 @@ def generate_nonexistent_venue(
         "Symposium on Decision-Making Under Uncertainty",
         "International Conference on Intelligent Automation",
         "Conference on Emergent Communication in AI",
+        "IEEE Symposium on Adaptive Neural Systems",
+        "Workshop on Memory-Augmented Neural Networks",
+        "International Journal of Deep Learning Research",
+        "Conference on Structured Prediction Methods",
+        "Symposium on Transfer Learning Paradigms",
+        "ACM Workshop on Neural Architecture Design",
+        "Transactions on Meta-Learning and Adaptation",
+        "Conference on Distributed Machine Learning",
+        "Journal of Adversarial Machine Learning",
+        "International Workshop on Interpretable Models",
+        "Symposium on Online Learning Theory",
+        "Conference on Attention Mechanisms and Transformers",
+        "Workshop on Multi-Agent Learning Systems",
+        "Journal of Optimization in Neural Networks",
+        "International Conference on Semantic Understanding",
+        "Symposium on Probabilistic Reasoning",
+        "Conference on Zero-Shot and Few-Shot Learning",
+        "Workshop on Neural Information Retrieval",
+        "Transactions on Language Model Architectures",
+        "International Journal of Representation Learning",
+        "Conference on Active Learning Methods",
+        "Symposium on Regularization Techniques",
+        "Workshop on Curriculum Learning Strategies",
+        "Journal of Uncertainty Estimation",
+        "International Conference on Model Compression",
+        "Conference on Synthetic Data Generation",
+        "Symposium on Contrastive Learning Methods",
+        "Workshop on Attention and Memory Networks",
+        "Transactions on Graph Representation Learning",
+        "International Journal of Neural Inference",
+        "Conference on Prompt Engineering and Design",
+        "Symposium on Test-Time Adaptation Methods",
+        "Workshop on Domain Generalization",
+        "Journal of Efficient Neural Architectures",
+        "International Conference on Multimodal Integration",
+        "Conference on Neural Theorem Proving",
+        "Symposium on World Models and Planning",
+        "Workshop on Latent Variable Models",
+        "Transactions on Neural Rendering",
+        "International Journal of Metric Learning",
+        "Conference on Hierarchical Learning Systems",
+        "Symposium on Energy-Based Models",
+        "Workshop on Neural Differential Equations",
+        "Journal of Sequence Modeling",
+        "International Conference on Equivariant Networks",
+        "Conference on Disentangled Representations",
+        "Symposium on Neural Scaling Laws",
+        "Workshop on Sparse Neural Networks",
+        "Transactions on Instruction Following Models",
+        "International Journal of Context Learning",
+        "Conference on Reward Learning and Alignment",
+        "Symposium on Compositional Generalization",
     ]
     fake_venue = rng.choice(fake_venues)
-    venue_field = "booktitle" if "booktitle" in new_entry.fields else "journal"
-    new_entry.fields[venue_field] = fake_venue
+    # Always use booktitle (normalized to inproceedings per P0.2)
+    new_entry.fields["booktitle"] = fake_venue
+    new_entry.fields.pop("journal", None)  # Remove journal if present
+    new_entry.bibtex_type = "inproceedings"
     new_entry.label = "HALLUCINATED"
     new_entry.hallucination_type = HallucinationType.NONEXISTENT_VENUE.value
     new_entry.difficulty_tier = DifficultyTier.EASY.value
@@ -171,36 +228,104 @@ def generate_placeholder_authors(
     rng = rng or random.Random()
     new_entry = _clone_entry(entry)
     fake_author_sets = [
-        "John Doe and Jane Smith",
-        "Alice Johnson and Bob Williams",
-        "Test Author and Another Author",
-        "A. Researcher and B. Scientist",
-        "First Last and Second Person",
         "Wei Zhang and Priya Patel and James Brown",
         "Maria Santos and Hiroshi Tanaka",
         "Ahmed Hassan and Sarah O'Brien and Raj Gupta",
         "K. Mueller and L. Johansson",
-        "Anonymous Author and Co-Author",
         "Yusuf Ali and Elena Popova and David Lee",
         "R. Kumar and S. Nakamura and T. Fischer",
-        "Placeholder Name and Filler Author",
         "Jing Liu and Carlos Ramirez",
         "Olga Ivanova and Pierre Dubois and Min-Soo Kim",
-        "Author One and Author Two and Author Three",
         "M. Chen and A. Kowalski and B. Okafor",
         "Fatima Al-Rashid and Kenji Yamamoto",
-        "Unknown Contributor and Associate Researcher",
         "Dmitri Volkov and Aisha Mbeki and Luca Rossi",
         "J. Andersen and C. Morales",
-        "Sample Researcher and Example Coauthor",
         "Ravi Sharma and Mei-Ling Wu and Thomas Schmidt",
         "P. Novak and H. Sato and F. Osei",
-        "Generic Author and Placeholder Coauthor",
         "Soo-Jin Park and Rafael Costa",
         "N. Petersen and Y. Taniguchi and A. Mensah",
         "Ling Chen and Amara Diallo and Viktor Horvat",
-        "Researcher Alpha and Researcher Beta",
         "Q. Wang and D. Fernandez and E. Kimura",
+        "Hassan Ibrahim and Sofia Kowalczyk and Jun-Ho Lee",
+        "Isabella Romano and Kwame Mensah and Yuki Sato",
+        "Lars Bergström and Aisha Ndiaye and Chen Wei",
+        "Mateo Garcia and Nadia Petrova and Hiroshi Yamada",
+        "Elena Vasquez and Tariq Al-Mansour and Min-Ji Park",
+        "Viktor Sokolov and Amina Diop and Takeshi Nakamura",
+        "Gabriela Silva and Omar Farah and Yuna Choi",
+        "Andreas Schneider and Zainab Ahmed and Kenji Tanaka",
+        "Lucia Moretti and Jamal Williams and Hye-Jin Kim",
+        "Nikolai Ivanov and Fatou Sow and Akira Suzuki",
+        "Carmen Rodriguez and Kwasi Osei and Mei-Ling Huang",
+        "Stefan Müller and Amara Koné and Taro Watanabe",
+        "Valentina Costa and Ibrahim Kone and Soo-Yeon Lee",
+        "Dimitri Popov and Nadine Dubois and Yuki Matsumoto",
+        "Rosa Martinez and Adebayo Adeyemi and Ji-Woo Park",
+        "Henrik Larsen and Yasmin Hassan and Haruto Nakano",
+        "Francesca Bianchi and Mustafa Ali and Hana Taniguchi",
+        "Pavel Novotny and Fatima Ndoye and Ryota Kobayashi",
+        "Ana Santos and Kwame Asante and Min-Seo Kim",
+        "Mikhail Petrov and Amina Traoré and Kaito Yamamoto",
+        "Giulia Romano and Youssef Benali and Sora Takahashi",
+        "Jan Kowalski and Zara Ibrahim and Ren Watanabe",
+        "Marta Fernandez and Abdi Mohamed and Aiko Suzuki",
+        "Boris Volkov and Fatoumata Diallo and Riku Nakamura",
+        "Cristina Lopez and Tariq Hussein and Yui Tanaka",
+        "Andrei Ivanov and Mariama Sow and Haruki Sato",
+        "Bianca Silva and Omar Sharif and Ayumi Yamada",
+        "Dmitry Kozlov and Aissatou Diop and Sota Kobayashi",
+        "Elena Garcia and Adama Toure and Kaede Matsumoto",
+        "Igor Sokolov and Ndeye Ndiaye and Yuta Nakano",
+        "Laura Martinez and Hassan Ahmed and Rina Taniguchi",
+        "Maxim Petrov and Fatou Kone and Sho Watanabe",
+        "Nina Rodriguez and Ibrahim Diallo and Kenta Yamamoto",
+        "Oleg Volkov and Aminata Seck and Daiki Suzuki",
+        "Paula Santos and Yusuf Ibrahim and Hiro Takahashi",
+        "Roman Ivanov and Zeynab Hassan and Ryo Nakamura",
+        "Sara Lopez and Abdou Diop and Yuki Sato",
+        "Tomas Novotny and Fatouma Traore and Takumi Tanaka",
+        "Ulyana Petrova and Oumar Ndiaye and Shun Yamada",
+        "Vera Sokolova and Mamadou Kone and Kaito Matsumoto",
+        "Xavier Costa and Awa Sow and Ren Kobayashi",
+        "Yana Ivanova and Cheikh Diallo and Sora Nakano",
+        "Zara Fernandez and Boubacar Toure and Aoi Watanabe",
+        "Ali Rahman and Ingrid Johansson and Yuto Suzuki",
+        "Beatriz Silva and Jamal Ibrahim and Hana Yamamoto",
+        "Carlos Garcia and Khadija Hassan and Riku Tanaka",
+        "Diana Martinez and Lamine Ndiaye and Saki Sato",
+        "Emilio Rodriguez and Maimouna Diop and Yui Nakamura",
+        "Fatima Lopez and Ndongo Kone and Haruki Yamada",
+        "Gabriel Santos and Oumou Sow and Kaede Kobayashi",
+        "Hector Fernandez and Penda Diallo and Yuta Matsumoto",
+        "Ibrahim Costa and Ramata Traore and Sota Nakano",
+        "Jasmin Novotny and Saliou Ndiaye and Rina Taniguchi",
+        "Karim Petrov and Thiam Toure and Kenta Watanabe",
+        "Leila Ivanov and Ury Seck and Sho Yamamoto",
+        "Malik Sokolov and Viviane Kone and Daiki Suzuki",
+        "Noor Rodriguez and Waly Diop and Hiro Takahashi",
+        "Oscar Lopez and Xadi Sow and Ryo Nakamura",
+        "Petra Silva and Yacouba Ndiaye and Yuki Sato",
+        "Quinn Martinez and Zeinab Kone and Takumi Tanaka",
+        "Rashid Fernandez and Aida Traore and Shun Yamada",
+        "Salma Santos and Binta Diallo and Kaito Matsumoto",
+        "Tariq Garcia and Coumba Toure and Ren Kobayashi",
+        "Umi Rodriguez and Dieynaba Seck and Sora Nakano",
+        "Vera Costa and Elhadj Ndiaye and Aoi Watanabe",
+        "Walid Novotny and Fanta Kone and Yuto Suzuki",
+        "Yasmin Petrov and Gnima Sow and Hana Yamamoto",
+        "Zahra Ivanov and Habib Diop and Riku Tanaka",
+        "Amir Sokolov and Ina Diallo and Saki Sato",
+        "Basma Lopez and Juma Traore and Yui Nakamura",
+        "Cyril Silva and Kadiatou Ndiaye and Haruki Yamada",
+        "Dalia Martinez and Lassana Toure and Kaede Kobayashi",
+        "Elias Fernandez and Mame Seck and Yuta Matsumoto",
+        "Farah Santos and Ndiaga Kone and Sota Nakano",
+        "Ghazi Garcia and Oury Sow and Rina Taniguchi",
+        "Huda Rodriguez and Papa Ndiaye and Kenta Watanabe",
+        "Imran Costa and Qader Diop and Sho Yamamoto",
+        "Jana Novotny and Rokhaya Kone and Daiki Suzuki",
+        "Kareem Petrov and Safiatou Traore and Hiro Takahashi",
+        "Laila Ivanov and Tidiane Diallo and Ryo Nakamura",
     ]
     new_entry.fields["author"] = rng.choice(fake_author_sets)
     new_entry.label = "HALLUCINATED"
@@ -278,10 +403,15 @@ def generate_wrong_venue(
     wrong_year: str | None = None,
     rng: random.Random | None = None,
 ) -> BenchmarkEntry:
-    """Tier 2: Correct title/authors but wrong venue or year."""
+    """Tier 2: Correct title/authors but wrong venue or year.
+
+    Note: Always uses booktitle (normalized to inproceedings per P0.2).
+    """
     new_entry = _clone_entry(entry)
-    venue_field = "booktitle" if "booktitle" in new_entry.fields else "journal"
-    new_entry.fields[venue_field] = wrong_venue
+    # Always use booktitle (normalized to inproceedings per P0.2)
+    new_entry.fields["booktitle"] = wrong_venue
+    new_entry.fields.pop("journal", None)  # Remove journal if present
+    new_entry.bibtex_type = "inproceedings"
     if wrong_year:
         new_entry.fields["year"] = wrong_year
     new_entry.label = "HALLUCINATED"
@@ -369,12 +499,15 @@ def generate_near_miss_title(
         "estimation": "prediction",
         "prediction": "estimation",
         "classification": "categorization",
+        "categorization": "classification",
         "representation": "embedding",
         "embedding": "representation",
         "inference": "reasoning",
         "reasoning": "inference",
         "segmentation": "partitioning",
+        "partitioning": "segmentation",
         "regularization": "penalization",
+        "penalization": "regularization",
         "search": "exploration",
         "exploration": "search",
         "bounds": "guarantees",
@@ -402,7 +535,50 @@ def generate_near_miss_title(
         "information": "knowledge",
         "knowledge": "information",
         "image": "visual",
+        "visual": "image",
         "language": "linguistic",
+        "linguistic": "language",
+        "optimization": "tuning",
+        "tuning": "optimization",
+        "convergence": "stability",
+        "stability": "convergence",
+        "transformation": "mapping",
+        "mapping": "transformation",
+        "dimension": "feature",
+        "feature": "dimension",
+        "kernel": "filter",
+        "filter": "kernel",
+        "encoder": "compressor",
+        "compressor": "encoder",
+        "decoder": "reconstructor",
+        "reconstructor": "decoder",
+        "mechanism": "scheme",
+        "scheme": "mechanism",
+        "technique": "strategy",
+        "strategy": "technique",
+        "evaluation": "assessment",
+        "assessment": "evaluation",
+        "performance": "accuracy",
+        "accuracy": "performance",
+        "alignment": "matching",
+        "matching": "alignment",
+        "augmentation": "enhancement",
+        "enhancement": "augmentation",
+        "compression": "reduction",
+        "reduction": "compression",
+        "distillation": "compression",
+        "aggregation": "pooling",
+        "pooling": "aggregation",
+        "interpolation": "blending",
+        "blending": "interpolation",
+        "retrieval": "extraction",
+        "extraction": "retrieval",
+        "fusion": "integration",
+        "integration": "fusion",
+        "decomposition": "factorization",
+        "factorization": "decomposition",
+        "refinement": "improvement",
+        "improvement": "refinement",
     }
     _adj_synonyms = {
         "robust": "resilient",
@@ -414,11 +590,13 @@ def generate_near_miss_title(
         "deep": "hierarchical",
         "hierarchical": "deep",
         "adversarial": "competitive",
+        "competitive": "adversarial",
         "distributed": "decentralized",
         "decentralized": "distributed",
         "adaptive": "dynamic",
         "dynamic": "adaptive",
         "contrastive": "comparative",
+        "comparative": "contrastive",
         "deterministic": "stochastic",
         "stochastic": "deterministic",
         "neural": "learned",
@@ -432,13 +610,53 @@ def generate_near_miss_title(
         "fast": "rapid",
         "rapid": "fast",
         "unsupervised": "self-supervised",
+        "self-supervised": "unsupervised",
         "inverse": "reverse",
         "reverse": "inverse",
+        "sparse": "compact",
+        "compact": "sparse",
+        "dense": "rich",
+        "rich": "dense",
+        "generative": "probabilistic",
+        "probabilistic": "generative",
+        "discriminative": "predictive",
+        "predictive": "discriminative",
+        "continuous": "smooth",
+        "smooth": "continuous",
+        "discrete": "categorical",
+        "categorical": "discrete",
+        "local": "spatial",
+        "spatial": "local",
+        "global": "universal",
+        "universal": "global",
+        "temporal": "sequential",
+        "sequential": "temporal",
+        "modular": "compositional",
+        "compositional": "modular",
+        "differentiable": "smooth",
+        "lightweight": "compact",
+        "heavy": "complex",
+        "complex": "heavy",
+        "simple": "basic",
+        "basic": "simple",
+        "advanced": "sophisticated",
+        "sophisticated": "advanced",
+        "interpretable": "explainable",
+        "explainable": "interpretable",
+        "fair": "unbiased",
+        "unbiased": "fair",
     }
     _prep_synonyms = {
         "via": "through",
         "through": "via",
         "towards": "for",
+        "for": "towards",
+        "with": "using",
+        "using": "with",
+        "across": "over",
+        "over": "across",
+        "under": "beneath",
+        "beneath": "under",
     }
     replacements: dict[str, str] = {}
     replacements.update(_noun_synonyms)
@@ -638,12 +856,15 @@ def generate_preprint_as_published(
     Note: source entry should ideally be a genuine preprint (use is_preprint_source()
     to filter). If the source is already a conference paper, the result is effectively
     a wrong_venue entry.
+
+    Per P0.3: Does NOT add eprint/archiveprefix fields (stripped as hallucination-only).
     """
     new_entry = _clone_entry(entry)
     # Add a fake venue
     new_entry.fields["booktitle"] = fake_venue
+    new_entry.fields.pop("journal", None)  # Remove journal if present
     new_entry.bibtex_type = "inproceedings"
-    # Remove arXiv indicators
+    # Remove arXiv indicators (P0.3: these are hallucination-only fields)
     new_entry.fields.pop("eprint", None)
     new_entry.fields.pop("archiveprefix", None)
     new_entry.fields.pop("primaryclass", None)
@@ -690,6 +911,16 @@ def generate_plausible_fabrication(
         "Spectral Normalization",
         "Data Augmentation",
         "Domain Adaptation",
+        "Transfer Learning",
+        "Active Learning",
+        "Few-Shot Learning",
+        "Zero-Shot Learning",
+        "Multi-Task Learning",
+        "Adversarial Training",
+        "Continual Learning",
+        "Online Learning",
+        "Causal Inference",
+        "Information Bottleneck",
     ]
     _domains = [
         "Vision Transformers",
@@ -707,6 +938,16 @@ def generate_plausible_fabrication(
         "Text Classification",
         "Image Generation",
         "Robot Navigation",
+        "Question Answering",
+        "Neural Rendering",
+        "Protein Structure Prediction",
+        "Code Generation",
+        "Dialogue Systems",
+        "Video Understanding",
+        "Multi-Modal Retrieval",
+        "Drug Discovery",
+        "Traffic Prediction",
+        "Anomaly Detection",
     ]
     _properties = [
         "Robust",
@@ -721,6 +962,14 @@ def generate_plausible_fabrication(
         "Parameter-Efficient",
         "Provably Correct",
         "Certifiably Robust",
+        "Memory-Efficient",
+        "Data-Efficient",
+        "Compute-Efficient",
+        "Adaptive",
+        "Generalizable",
+        "Trustworthy",
+        "Explainable",
+        "Energy-Efficient",
     ]
     _nouns = [
         "Representations",
@@ -733,6 +982,16 @@ def generate_plausible_fabrication(
         "Objectives",
         "Gradients",
         "Attention Mechanisms",
+        "Loss Functions",
+        "Activation Functions",
+        "Optimization Strategies",
+        "Regularization Techniques",
+        "Sampling Methods",
+        "Inference Procedures",
+        "Training Dynamics",
+        "Model Weights",
+        "Hidden States",
+        "Latent Codes",
     ]
     _settings = [
         "Low-Resource Settings",
@@ -745,6 +1004,16 @@ def generate_plausible_fabrication(
         "Cross-Domain Scenarios",
         "Partial Observability",
         "Noisy Labels",
+        "Imbalanced Datasets",
+        "Distribution Shift",
+        "Out-of-Distribution Detection",
+        "Long-Tailed Recognition",
+        "Adversarial Perturbations",
+        "Missing Data",
+        "Limited Supervision",
+        "Real-Time Constraints",
+        "Cold-Start Problems",
+        "Extreme Classification",
     ]
 
     m, d, p = rng.choice(_methods), rng.choice(_domains), rng.choice(_properties)
@@ -883,8 +1152,10 @@ def generate_plausible_fabrication(
 
     # Keep a real prestigious venue
     real_venues = ["NeurIPS", "ICML", "ICLR", "AAAI", "ACL", "CVPR"]
-    venue_field = "booktitle" if new_entry.bibtex_type == "inproceedings" else "journal"
-    new_entry.fields[venue_field] = rng.choice(real_venues)
+    # Always use booktitle (normalized to inproceedings per P0.2)
+    new_entry.fields["booktitle"] = rng.choice(real_venues)
+    new_entry.fields.pop("journal", None)  # Remove journal if present
+    new_entry.bibtex_type = "inproceedings"
 
     # Remove DOI (fabricated paper won't have one)
     new_entry.fields.pop("doi", None)
@@ -928,11 +1199,13 @@ def generate_merged_citation(
 
     # Venue from entry_c if provided, else entry_a
     venue_source = entry_c if entry_c is not None else entry_a
-    venue_field = "booktitle" if new_entry.bibtex_type == "inproceedings" else "journal"
+    # Always use booktitle (normalized to inproceedings per P0.2)
     for vf in ("booktitle", "journal"):
         if vf in venue_source.fields:
-            new_entry.fields[venue_field] = venue_source.fields[vf]
+            new_entry.fields["booktitle"] = venue_source.fields[vf]
             break
+    new_entry.fields.pop("journal", None)  # Remove journal if present
+    new_entry.bibtex_type = "inproceedings"
 
     # Year from venue source
     if "year" in venue_source.fields:
@@ -1028,25 +1301,28 @@ def generate_version_confusion(
 
     Takes a real conference paper and creates an entry that mixes preprint and
     publication metadata: the title and authors are real (verifiable), but the
-    entry includes a fabricated arXiv eprint and claims the paper was published
-    at a wrong venue with a shifted year.
+    entry claims the paper was published at a wrong venue with a shifted year.
 
     This simulates real-world confusion where someone cites the arXiv version
     but attributes it to the wrong conference, or vice versa.
+
+    Note: Per P0.3, does NOT add eprint/archiveprefix fields (stripped as hallucination-only).
+    The confusion is signaled by wrong venue + year shift instead.
     """
     rng = rng or random.Random()
     new_entry = _clone_entry(entry)
 
-    # Generate a plausible arXiv eprint based on the paper's year
+    # Get current year for shifting
     year = int(entry.fields.get("year", "2020"))
-    arxiv_yymm = f"{year % 100:02d}{rng.randint(1, 12):02d}"
-    arxiv_seq = f"{rng.randint(1, 9999):05d}"
-    fabricated_arxiv = f"{arxiv_yymm}.{arxiv_seq}"
-    new_entry.fields["eprint"] = fabricated_arxiv
-    new_entry.fields["archiveprefix"] = "arXiv"
+
+    # Remove arXiv indicators if present (P0.3: hallucination-only fields)
+    new_entry.fields.pop("eprint", None)
+    new_entry.fields.pop("archiveprefix", None)
+    new_entry.fields.pop("primaryclass", None)
 
     # Claim it was published at a wrong conference venue
     new_entry.fields["booktitle"] = wrong_venue
+    new_entry.fields.pop("journal", None)  # Remove journal if present
     new_entry.bibtex_type = "inproceedings"
 
     # Shift year by ±1 (common confusion between arXiv date and conference date)
@@ -1061,9 +1337,8 @@ def generate_version_confusion(
     new_entry.difficulty_tier = DifficultyTier.HARD.value
     new_entry.generation_method = GenerationMethod.PERTURBATION.value
     new_entry.explanation = (
-        f"Real paper cited with fabricated arXiv:{fabricated_arxiv} and wrong venue "
-        f"'{wrong_venue}' (year shifted to {year + year_shift}); "
-        f"metadata mixes preprint and publication versions"
+        f"Real paper cited with wrong venue '{wrong_venue}' and year shifted to "
+        f"{year + year_shift}; metadata mixes preprint and publication versions"
     )
     has_identifier = bool(new_entry.fields.get("doi") or new_entry.fields.get("url"))
     new_entry.subtests = {

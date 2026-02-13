@@ -10,7 +10,8 @@ We define 14 citation hallucination types organized into three difficulty tiers 
 \textbf{Tier~3 (Hard)} hallucinations require deep verification or semantic reasoning: near-miss titles differ by one or two words from a real paper; plausible fabrications are entirely invented but realistic; and version confusion cites claims from a superseded preprint version.
 
 This taxonomy emerged from manual analysis of hallucinated citations found in the NeurIPS 2025 incident and related audits~\citep{ghostcite2026,hallucitation2026}, supplemented by adversarial brainstorming of failure modes that existing tools might miss.
-Of 72 real-world hallucinated citations in \textsc{Hallmark}, 79\% map to existing taxonomy types (\cref{app:real-world-mapping}), with uncovered types (\texttt{merged\_citation}, \texttt{partial\_author\_list}, \texttt{version\_confusion}) representing patterns identified through systematic analysis rather than observed incidents.
+Of 72 real-world hallucinated citations in \textsc{Hallmark}, 79\% map to existing taxonomy types (\cref{app:real-world-mapping}).
+We include three theoretically motivated types (\texttt{merged\_citation}, \texttt{partial\_author\_list}, \texttt{version\_confusion}) to stress-test tool robustness beyond observed failure modes, recognizing they may be revised in future versions as empirical evidence accumulates.
 
 \begin{table}[t]
 \caption{The \textsc{Hallmark} hallucination taxonomy: 14 types across 3 difficulty tiers. Each type has a characteristic sub-test failure pattern. Sub-tests: \textbf{D}OI resolves, \textbf{T}itle exists, \textbf{A}uthors match, \textbf{V}enue real, \textbf{F}ields complete, \textbf{X} cross-DB agreement.}
@@ -34,14 +35,16 @@ Of 72 real-world hallucinated citations in \textsc{Hallmark}, 79\% map to existi
 & \texttt{author\_mismatch} & Correct title, wrong authors & \ding{51} & \ding{51} & \ding{55} & \ding{51} & \ding{51} & \ding{55} \\
 & \texttt{preprint\_as\_published} & arXiv cited as venue paper & \ding{51} & \ding{51} & \ding{51} & \ding{55} & \ding{51} & \ding{55} \\
 & \texttt{hybrid\_fabrication} & Real DOI + fake metadata & \ding{51} & \ding{55} & \ding{55} & ? & \ding{51} & \ding{55} \\
-& \texttt{merged\_citation} & Metadata from 2+ papers & ? & \ding{51} & \ding{55} & \ding{51} & \ding{51} & \ding{55} \\
-& \texttt{partial\_author\_list} & Subset of real authors & \ding{51} & \ding{51} & \ding{55} & \ding{51} & \ding{51} & \ding{55} \\
+& \texttt{merged\_citation}\textsuperscript{\textcolor{blue}{\triangle}} & Metadata from 2+ papers & ? & \ding{51} & \ding{55} & \ding{51} & \ding{51} & \ding{55} \\
+& \texttt{partial\_author\_list}\textsuperscript{\dag\textcolor{blue}{\triangle}} & Subset of real authors & \ding{51} & \ding{51} & \ding{55} & \ding{51} & \ding{51} & \ding{55} \\
 \midrule
 \multirow{3}{*}{\rotatebox{90}{\textcolor{tier3}{\textbf{Hard}}}}
 & \texttt{near\_miss\_title} & Title off by 1--2 words & \ding{51} & \ding{55} & \ding{51} & \ding{51} & \ding{51} & \ding{55} \\
 & \texttt{plausible\_fabrication} & Entirely fabricated, realistic & \ding{55} & \ding{55} & \ding{55} & ? & ? & \ding{55} \\
-& \texttt{version\_confusion} & Wrong version claims & \ding{51} & \ding{51} & \ding{51} & \ding{51} & \ding{51} & \ding{55} \\
+& \texttt{version\_confusion}\textsuperscript{\textcolor{blue}{\triangle}} & Wrong version claims & \ding{51} & \ding{51} & \ding{51} & \ding{51} & \ding{51} & \ding{55} \\
 \bottomrule
+\multicolumn{9}{l}{\textsuperscript{\dag}Classified when $<$50\% authors present without ``et al.'' indicator.} \\
+\multicolumn{9}{l}{\textsuperscript{\textcolor{blue}{\triangle}}Theoretically motivated types; zero real-world instances in current dataset.}
 \end{tabular}
 \end{table}
 
@@ -68,6 +71,12 @@ We generated hallucinated entries using four methods:
 (2)~\emph{LLM generation}: prompting language models to generate plausible but fictional references for types requiring coherent fabrication (\texttt{plausible\_fabrication}, \texttt{chimeric\_title}).
 (3)~\emph{Adversarial crafting}: manually constructing entries designed to evade specific detection strategies.
 (4)~\emph{Real-world collection}: harvesting actual hallucinated citations from published papers identified in audits.
+
+These generation methods serve complementary purposes.
+Perturbation entries are \emph{controlled diagnostic tests}---each isolates a specific verification capability (e.g., DOI resolution, author matching), enabling fine-grained capability profiling.
+LLM-generated entries provide \emph{ecological validity}---produced by state-of-the-art language models, they reflect the coherent fabrication patterns that tools encounter in practice.
+Real-world entries provide \emph{ground truth validation}---extracted from documented incidents in published papers, they anchor the benchmark in empirical reality.
+Generation-method stratification enables practitioners to assess tool performance on each category independently.
 Verification is primarily algorithmic: perturbation-generated entries are validated by automated checks against DBLP and CrossRef (DOI resolution, title search, author matching), achieving $>$98\% agreement with ground truth labels.
 LLM-generated entries undergo additional automated filtering (title similarity $\geq 85\%$ and author Jaccard $\geq 0.5$ against bibliographic databases) to exclude entries that match real papers.
 Real-world and adversarial entries receive manual review to confirm hallucination status and type assignment.

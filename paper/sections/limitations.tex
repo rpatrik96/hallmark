@@ -15,6 +15,10 @@ Valid entries are drawn from 2018--2025 ML venues and may not generalize to othe
 The community contribution system is designed to address these coverage limitations over time.
 All synthetic entries are generated with a single fixed seed; we did not conduct seed-sensitivity analysis, though the deterministic generation ensures exact reproducibility.
 
+\paragraph{Benchmark-tool co-design.}
+As the authors of both the benchmark and one evaluated tool (bibtex-updater), we acknowledge potential co-design bias.
+We mitigate this through: (1) evaluating all tools with identical pre-screening infrastructure, (2) reporting pre-screening attribution transparently so readers can distinguish benchmark-level from tool-level detections, (3) releasing the full evaluation protocol for independent replication, and (4) actively soliciting independent tool submissions via the benchmark's public leaderboard.
+
 \paragraph{DOI-presence distributional artifact.}
 Approximately 38\% of valid entries in the dev split lack DOI fields.
 While DOI presence carries some signal for the \texttt{fabricated\_doi} hallucination type (which contains DOIs by definition), per-type metrics (\cref{sec:per_type}) enable practitioners to assess tool performance separately on types with and without this residual artifact.
