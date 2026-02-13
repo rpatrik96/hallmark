@@ -640,7 +640,7 @@ def generate_targeted_type(
             "Write a BibTeX entry for the foundational work on few-shot learning in medical imaging.",
             "Give me the citation for the breakthrough paper on interpretable reinforcement learning.",
         ],
-        HallucinationType.VERSION_CONFUSION: [
+        HallucinationType.ARXIV_VERSION_MISMATCH: [
             "Cite arXiv:2104.12345 as if it was published at NeurIPS 2021.",
             "Give me the BibTeX for arXiv:2203.98765 but list it as an ICML 2022 paper.",
         ],

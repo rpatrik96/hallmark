@@ -291,7 +291,7 @@ RETRACTED_ENTRIES = [
 ]
 
 # Version confusion entries: real papers with arXiv IDs
-VERSION_CONFUSION_SEEDS = [
+ARXIV_VERSION_MISMATCH_SEEDS = [
     {
         "title": "Language Models are Few-Shot Learners",
         "author": "Tom B. Brown and Benjamin Mann and Nick Ryder and Melanie Subbiah and Jared Kaplan",
@@ -818,12 +818,12 @@ def gen_retracted_paper(count: int = 15) -> list[dict]:
     return entries
 
 
-def gen_version_confusion(count: int = 15) -> list[dict]:
+def gen_arxiv_version_mismatch(count: int = 15) -> list[dict]:
     entries = []
     for i in range(count):
-        v = VERSION_CONFUSION_SEEDS[i % len(VERSION_CONFUSION_SEEDS)]
+        v = ARXIV_VERSION_MISMATCH_SEEDS[i % len(ARXIV_VERSION_MISMATCH_SEEDS)]
         e = {
-            "bibtex_key": make_key("version_confusion", i),
+            "bibtex_key": make_key("arxiv_version_mismatch", i),
             "bibtex_type": "inproceedings",
             "fields": {
                 "title": v["title"],
@@ -834,7 +834,7 @@ def gen_version_confusion(count: int = 15) -> list[dict]:
                 "url": f"https://arxiv.org/abs/{v['arxiv_id']}",
             },
             "label": "HALLUCINATED",
-            "hallucination_type": "version_confusion",
+            "hallucination_type": "arxiv_version_mismatch",
             "difficulty_tier": 3,
             "explanation": (
                 f"Cites arXiv preprint (arxiv:{v['arxiv_id']}) instead of "
@@ -875,7 +875,7 @@ generators = [
     ("near_miss_title", gen_near_miss_title),
     ("plausible_fabrication", gen_plausible_fabrication),
     ("retracted_paper", gen_retracted_paper),
-    ("version_confusion", gen_version_confusion),
+    ("arxiv_version_mismatch", gen_arxiv_version_mismatch),
 ]
 
 all_new_hallucinated: list[dict] = []

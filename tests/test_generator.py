@@ -1,11 +1,11 @@
 """Tests for hallmark.dataset.generator."""
 
 from hallmark.dataset.generator import (
+    generate_arxiv_version_mismatch,
     generate_chimeric_title,
     generate_hybrid_fabrication,
     generate_near_miss_title,
     generate_plausible_fabrication,
-    generate_version_confusion,
 )
 from hallmark.dataset.schema import BenchmarkEntry
 
@@ -103,48 +103,48 @@ class TestGenerateHybridFabrication:
 class TestGenerateVersionConfusion:
     def test_creates_hallucinated_entry(self):
         entry = _make_base_entry()
-        result = generate_version_confusion(entry, "ICML")
+        result = generate_arxiv_version_mismatch(entry, "ICML")
         assert result.label == "HALLUCINATED"
 
     def test_hallucination_type(self):
         entry = _make_base_entry()
-        result = generate_version_confusion(entry, "ICML")
-        assert result.hallucination_type == "version_confusion"
+        result = generate_arxiv_version_mismatch(entry, "ICML")
+        assert result.hallucination_type == "arxiv_version_mismatch"
 
     def test_eprint_field_not_set(self):
         """Per P0.3: eprint/archiveprefix are hallucination-only fields and should not be generated."""
         entry = _make_base_entry()
-        result = generate_version_confusion(entry, "ICML")
+        result = generate_arxiv_version_mismatch(entry, "ICML")
         assert result.fields.get("eprint") is None
         assert result.fields.get("archiveprefix") is None
 
     def test_booktitle_field_set(self):
         entry = _make_base_entry()
-        result = generate_version_confusion(entry, "ICML")
+        result = generate_arxiv_version_mismatch(entry, "ICML")
         assert result.fields.get("booktitle") == "ICML"
 
     def test_year_shifted(self):
         entry = _make_base_entry()
-        result = generate_version_confusion(entry, "ICML")
+        result = generate_arxiv_version_mismatch(entry, "ICML")
         original_year = int(entry.fields["year"])
         result_year = int(result.fields["year"])
         assert abs(result_year - original_year) == 1
 
     def test_difficulty_tier_is_hard(self):
         entry = _make_base_entry()
-        result = generate_version_confusion(entry, "ICML")
+        result = generate_arxiv_version_mismatch(entry, "ICML")
         assert result.difficulty_tier == 3
 
     def test_doi_preserved(self):
         """DOI should be kept since it points to the real paper."""
         entry = _make_base_entry()
-        result = generate_version_confusion(entry, "ICML")
+        result = generate_arxiv_version_mismatch(entry, "ICML")
         assert result.fields.get("doi") == entry.fields["doi"]
 
     def test_subtests_correct(self):
         """Verify subtests reflect DOI resolving but metadata mismatch."""
         entry = _make_base_entry()
-        result = generate_version_confusion(entry, "ICML")
+        result = generate_arxiv_version_mismatch(entry, "ICML")
         assert result.subtests["doi_resolves"] is True
         assert result.subtests["cross_db_agreement"] is False
 

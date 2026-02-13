@@ -2,10 +2,10 @@
 Citation hallucination---where language models generate plausible but fabricated references---poses a growing threat to scientific integrity.
 The NeurIPS 2025 incident, in which 53 accepted papers contained fabricated citations, and subsequent large-scale audits finding hundreds of affected publications across major venues, underscore the urgency of automated citation metadata verification.
 Yet no standardized benchmark exists to compare citation verification tools.
-We introduce \textsc{Hallmark} (\textbf{Hall}ucination bench\textbf{mark}), a benchmark for evaluating citation metadata verification systems, comprising 2,207 BibTeX entries spanning 14 hallucination types organized into three difficulty tiers.
+We introduce \textsc{Hallmark} (\textbf{Hall}ucination bench\textbf{mark}), a benchmark for evaluating citation metadata verification systems, comprising 2,207 BibTeX entries spanning 11 empirically-grounded hallucination types organized into three difficulty tiers, plus 3 stress-test types for forward-looking evaluation.
 Each entry undergoes six binary sub-tests inspired by HumanEval's multi-criteria evaluation, enabling fine-grained diagnostic analysis beyond binary detection.
 \textsc{Hallmark} provides tier-weighted metrics that reward detection of hard hallucinations, expected calibration error for confidence assessment, and a Plackett-Luce ranking system that handles incomplete evaluations.
-We validate the benchmark by evaluating five existing tools, revealing systematic blind spots on venue-level hallucinations that no current tool addresses and wide variation in confidence calibration.
+We validate the benchmark by evaluating three independent tools, revealing that no current tool detects more than 22\% of hallucinations, with systematic blind spots on venue-level and semantic hallucinations.
 The benchmark, evaluation infrastructure, and all data are open-source, pip-installable, and designed for community adoption.
 Code and data: \url{https://github.com/anonymous/hallmark}.
 \end{abstract}

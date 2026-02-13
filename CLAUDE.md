@@ -32,12 +32,14 @@ This is a single atomic workflow. The commit is not done until all hooks pass an
 - **Import + annotation edits**: When adding an import and updating the annotation that uses it, edit the annotation first — otherwise ruff may auto-remove the "unused" import before you get to update the annotation.
 - **CI vs pre-commit scope**: Pre-commit hooks only check staged files; CI runs `ruff format --check .` on the entire repo. Always run `uv run ruff format .` before pushing to catch files not covered by the hook.
 
-## Hallucination Taxonomy (14 types)
+## Hallucination Taxonomy (11 main + 3 stress-test)
 - **Tier 1 (Easy, 4 types):** fabricated_doi, nonexistent_venue, placeholder_authors, future_date
-- **Tier 2 (Medium, 7 types):** chimeric_title, wrong_venue, author_mismatch (enum value: `"swapped_authors"`), preprint_as_published, hybrid_fabrication, merged_citation, partial_author_list
-- **Tier 3 (Hard, 3 types):** near_miss_title, plausible_fabrication, version_confusion
+- **Tier 2 (Medium, 5 types):** chimeric_title, wrong_venue, author_mismatch (enum value: `"swapped_authors"`), preprint_as_published, hybrid_fabrication
+- **Tier 3 (Hard, 2 types):** near_miss_title, plausible_fabrication
+- **Stress-test (3 types, separate split):** merged_citation, partial_author_list, arxiv_version_mismatch
 - `AUTHOR_MISMATCH` enum member keeps value `"swapped_authors"` for backward compatibility with data files
 - `hybrid_fabrication`: real DOI + fabricated metadata — DOI resolves but authors/title don't match the DOI target
+- Stress-test types are theoretically-motivated (no real-world evidence yet), evaluated separately in `stress_test.jsonl`
 
 ## Evaluation Metrics
 - **Primary:** Detection Rate, FPR, F1-Hallucination, Tier-weighted F1, ECE

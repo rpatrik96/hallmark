@@ -12,6 +12,7 @@ from collections import Counter
 from pathlib import Path
 
 from hallmark.dataset.generator import (
+    generate_arxiv_version_mismatch,
     generate_chimeric_title,
     generate_fabricated_doi,
     generate_future_date,
@@ -22,7 +23,6 @@ from hallmark.dataset.generator import (
     generate_plausible_fabrication,
     generate_preprint_as_published,
     generate_swapped_authors,
-    generate_version_confusion,
     generate_wrong_venue,
     is_preprint_source,
 )
@@ -37,7 +37,7 @@ SEED = 2026_02_12
 ADDED_DATE = "2026-02-12"
 MIN_PER_TYPE = 30
 
-# ── Additional arXiv-to-venue mappings for version_confusion ────────────────
+# ── Additional arXiv-to-venue mappings for arxiv_version_mismatch ────────────────
 # Split into separate pools to prevent cross-split contamination
 
 
@@ -252,7 +252,7 @@ def _gen_plausible_fabrication(
     return entry
 
 
-def _gen_version_confusion(
+def _gen_arxiv_version_mismatch(
     source: BenchmarkEntry,
     rng: random.Random,
     split: str,
@@ -262,7 +262,7 @@ def _gen_version_confusion(
     current_venue = source.venue
     candidates = [v for v in VENUES if v != current_venue]
     wrong_venue = rng.choice(candidates)
-    entry = generate_version_confusion(source, wrong_venue, rng)
+    entry = generate_arxiv_version_mismatch(source, wrong_venue, rng)
     entry.added_to_benchmark = ADDED_DATE
     entry.bibtex_key = f"scaleup_version_{split}_{idx}"
     return entry
@@ -276,7 +276,7 @@ def decontaminate_splits(
     test_entries: list[BenchmarkEntry],
     rng: random.Random,
 ) -> int:
-    """Replace overlapping version_confusion eprints in dev with fresh ones.
+    """Replace overlapping arxiv_version_mismatch eprints in dev with fresh ones.
 
     Since eprints are now fabricated randomly, collisions are extremely rare.
     Modifies dev_entries in-place. Returns number of entries replaced.
@@ -284,13 +284,13 @@ def decontaminate_splits(
     test_version_eprints = {
         e.fields.get("eprint", "")
         for e in test_entries
-        if e.hallucination_type == "version_confusion"
+        if e.hallucination_type == "arxiv_version_mismatch"
     }
 
     replaced = 0
     for e in dev_entries:
         if (
-            e.hallucination_type == "version_confusion"
+            e.hallucination_type == "arxiv_version_mismatch"
             and e.fields.get("eprint", "") in test_version_eprints
         ):
             # Regenerate a unique fabricated eprint
@@ -406,8 +406,8 @@ def generate_entries_for_gaps(
             elif type_val == HallucinationType.PLAUSIBLE_FABRICATION.value:
                 entry = _gen_plausible_fabrication(source, rng, split_name, i)
                 entry.bibtex_key = make_unique_key("scaleup_plausible", i)
-            elif type_val == HallucinationType.VERSION_CONFUSION.value:
-                entry = _gen_version_confusion(source, rng, split_name, i)
+            elif type_val == HallucinationType.ARXIV_VERSION_MISMATCH.value:
+                entry = _gen_arxiv_version_mismatch(source, rng, split_name, i)
                 entry.bibtex_key = make_unique_key("scaleup_version", i)
             else:
                 raise ValueError(f"Unknown hallucination type: {type_val}")

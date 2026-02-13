@@ -116,7 +116,7 @@ hallmark leaderboard --results-dir results/
 |------|-------------|---------|
 | `near_miss_title` | Title off by 1-2 words | "Attention Is All You Want" vs "...Need" |
 | `plausible_fabrication` | Entirely fabricated but realistic | Realistic author + plausible title |
-| `version_confusion` | Mixed preprint/published metadata | arXiv ID with conference venue claim |
+| `arxiv_version_mismatch` | Mixed preprint/published metadata | arXiv ID with conference venue claim |
 
 ## Dataset
 

@@ -2,7 +2,7 @@
 """Apply data fixes to dev_public.jsonl and test_public.jsonl.
 
 This script performs:
-1. Fix DOI + subtests for chimeric_title, near_miss_title, version_confusion entries
+1. Fix DOI + subtests for chimeric_title, near_miss_title, arxiv_version_mismatch entries
 2. Top up test_public types below 30
 3. Populate source field for all entries
 4. Update metadata.json
@@ -17,10 +17,10 @@ from typing import Any
 
 # Import generator functions
 from hallmark.dataset.generator import (
+    generate_arxiv_version_mismatch,
     generate_chimeric_title,
     generate_near_miss_title,
     generate_preprint_as_published,
-    generate_version_confusion,
     generate_wrong_venue,
 )
 from hallmark.dataset.schema import BenchmarkEntry
@@ -123,7 +123,7 @@ def fix_doi_for_type(
 
 
 def step1_fix_dois(dev_entries: list[dict[str, Any]], test_entries: list[dict[str, Any]]) -> None:
-    """Step 1: Fix DOI + subtests for chimeric_title, near_miss_title, version_confusion."""
+    """Step 1: Fix DOI + subtests for chimeric_title, near_miss_title, arxiv_version_mismatch."""
     print("\n=== Step 1: Fix DOIs and subtests ===")
 
     # Get DOI pools from valid entries
@@ -167,22 +167,22 @@ def step1_fix_dois(dev_entries: list[dict[str, Any]], test_entries: list[dict[st
     )
     print(f"near_miss_title: added {dev_count} DOIs to dev, {test_count} to test")
 
-    # Fix version_confusion
+    # Fix arxiv_version_mismatch
     dev_count = fix_doi_for_type(
         dev_entries,
-        "version_confusion",
+        "arxiv_version_mismatch",
         dev_doi_pool,
         target_pct=0.6,
         subtest_updates={"doi_resolves": True, "cross_db_agreement": False},
     )
     test_count = fix_doi_for_type(
         test_entries,
-        "version_confusion",
+        "arxiv_version_mismatch",
         test_doi_pool,
         target_pct=0.6,
         subtest_updates={"doi_resolves": True, "cross_db_agreement": False},
     )
-    print(f"version_confusion: added {dev_count} DOIs to dev, {test_count} to test")
+    print(f"arxiv_version_mismatch: added {dev_count} DOIs to dev, {test_count} to test")
 
 
 def step2_topup_test(test_entries: list[dict[str, Any]]) -> list[dict[str, Any]]:
@@ -236,7 +236,7 @@ def step2_topup_test(test_entries: list[dict[str, Any]]) -> list[dict[str, Any]]
         return generate_preprint_as_published(entry, rng.choice(fake_venues), rng=rng)
 
     def gen_version(entry: BenchmarkEntry) -> BenchmarkEntry:
-        return generate_version_confusion(entry, rng.choice(fake_venues), rng=rng)
+        return generate_arxiv_version_mismatch(entry, rng.choice(fake_venues), rng=rng)
 
     # Define types that need top-up and their generators
     topup_needed = {
@@ -244,7 +244,7 @@ def step2_topup_test(test_entries: list[dict[str, Any]]) -> list[dict[str, Any]]
         "near_miss_title": (6, gen_near_miss),
         "wrong_venue": (5, gen_wrong_venue),
         "preprint_as_published": (2, gen_preprint),
-        "version_confusion": (2, gen_version),
+        "arxiv_version_mismatch": (2, gen_version),
     }
 
     # Get valid entries that haven't been used as perturbation sources

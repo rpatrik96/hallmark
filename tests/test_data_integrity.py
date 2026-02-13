@@ -13,12 +13,11 @@ from pathlib import Path
 import pytest
 
 from hallmark.dataset.generator import (
+    generate_arxiv_version_mismatch,
     generate_near_miss_title,
-    generate_version_confusion,
 )
 from hallmark.dataset.schema import (
     BenchmarkEntry,
-    HallucinationType,
     load_entries,
 )
 
@@ -64,12 +63,12 @@ class TestCrossSplitContamination:
         dev_arxiv = {
             e.fields.get("eprint", "")
             for e in dev_entries
-            if e.hallucination_type == "version_confusion"
+            if e.hallucination_type == "arxiv_version_mismatch"
         } - {""}
         test_arxiv = {
             e.fields.get("eprint", "")
             for e in test_entries
-            if e.hallucination_type == "version_confusion"
+            if e.hallucination_type == "arxiv_version_mismatch"
         } - {""}
         overlap = dev_arxiv & test_arxiv
         assert not overlap, f"Version confusion arXiv IDs in both splits: {overlap}"
@@ -86,27 +85,46 @@ class TestTypeBalance:
         dev_entries: list[BenchmarkEntry],
         test_entries: list[BenchmarkEntry],
     ) -> None:
+        """Main splits must have >= MIN_PER_TYPE for each main taxonomy type."""
+        from hallmark.dataset.schema import MAIN_TYPES
+
         entries = dev_entries if split_name == "dev" else test_entries
         type_counts: Counter[str] = Counter()
         for e in entries:
             if e.label == "HALLUCINATED" and e.hallucination_type:
                 type_counts[e.hallucination_type] += 1
 
-        for ht in HallucinationType:
+        for ht in MAIN_TYPES:
             count = type_counts.get(ht.value, 0)
             assert count >= MIN_PER_TYPE, (
                 f"{split_name}: {ht.value} has {count} entries, need >= {MIN_PER_TYPE}"
             )
 
-    def test_all_types_present_dev(self, dev_entries: list[BenchmarkEntry]) -> None:
-        types = {e.hallucination_type for e in dev_entries if e.label == "HALLUCINATED"}
-        expected = {ht.value for ht in HallucinationType}
-        assert types == expected, f"Missing types in dev: {expected - types}"
+    def test_all_main_types_present_dev(self, dev_entries: list[BenchmarkEntry]) -> None:
+        from hallmark.dataset.schema import MAIN_TYPES
 
-    def test_all_types_present_test(self, test_entries: list[BenchmarkEntry]) -> None:
+        types = {e.hallucination_type for e in dev_entries if e.label == "HALLUCINATED"}
+        expected = {ht.value for ht in MAIN_TYPES}
+        assert expected <= types, f"Missing main types in dev: {expected - types}"
+
+    def test_all_main_types_present_test(self, test_entries: list[BenchmarkEntry]) -> None:
+        from hallmark.dataset.schema import MAIN_TYPES
+
         types = {e.hallucination_type for e in test_entries if e.label == "HALLUCINATED"}
-        expected = {ht.value for ht in HallucinationType}
-        assert types == expected, f"Missing types in test: {expected - types}"
+        expected = {ht.value for ht in MAIN_TYPES}
+        assert expected <= types, f"Missing main types in test: {expected - types}"
+
+    def test_stress_types_not_in_main_splits(
+        self, dev_entries: list[BenchmarkEntry], test_entries: list[BenchmarkEntry]
+    ) -> None:
+        """Stress-test types should not appear in main splits."""
+        from hallmark.dataset.schema import STRESS_TEST_TYPES
+
+        stress_values = {ht.value for ht in STRESS_TEST_TYPES}
+        for name, entries in [("dev", dev_entries), ("test", test_entries)]:
+            found = {e.hallucination_type for e in entries if e.label == "HALLUCINATED"}
+            leaked = found & stress_values
+            assert not leaked, f"Stress types found in {name}: {leaked}"
 
 
 # ── Generator quality: near_miss_title ──────────────────────────────────────
@@ -172,11 +190,11 @@ class TestNearMissTitleQuality:
         )
 
 
-# ── Generator quality: version_confusion ────────────────────────────────────
+# ── Generator quality: arxiv_version_mismatch ────────────────────────────────────
 
 
 class TestVersionConfusionQuality:
-    """Verify version_confusion creates genuine metadata mixing."""
+    """Verify arxiv_version_mismatch creates genuine metadata mixing."""
 
     def _make_source(self) -> BenchmarkEntry:
         return BenchmarkEntry(
@@ -194,19 +212,19 @@ class TestVersionConfusionQuality:
 
     def test_keeps_original_title(self) -> None:
         source = self._make_source()
-        entry = generate_version_confusion(source, "ICML")
+        entry = generate_arxiv_version_mismatch(source, "ICML")
         assert entry.fields["title"] == source.fields["title"]
 
     def test_no_arxiv_eprint(self) -> None:
         """Per P0.3, eprint/archiveprefix are hallucination-only fields and must not be set."""
         source = self._make_source()
-        entry = generate_version_confusion(source, "ICML")
+        entry = generate_arxiv_version_mismatch(source, "ICML")
         assert "eprint" not in entry.fields
         assert "archiveprefix" not in entry.fields
 
     def test_sets_wrong_venue(self) -> None:
         source = self._make_source()
-        entry = generate_version_confusion(source, "ICML")
+        entry = generate_arxiv_version_mismatch(source, "ICML")
         assert entry.fields["booktitle"] == "ICML"
         # Year should be shifted by ±1 from original
         original_year = int(source.fields["year"])
@@ -215,7 +233,7 @@ class TestVersionConfusionQuality:
 
     def test_preserves_doi(self) -> None:
         source = self._make_source()
-        entry = generate_version_confusion(source, "ICML")
+        entry = generate_arxiv_version_mismatch(source, "ICML")
         assert entry.fields.get("doi") == source.fields["doi"]
         assert entry.subtests["doi_resolves"] is True
         assert entry.subtests["cross_db_agreement"] is False
@@ -252,7 +270,7 @@ class TestSurfaceDiversity:
         dev_entries: list[BenchmarkEntry],
         test_entries: list[BenchmarkEntry],
     ) -> None:
-        """Hallucinated entries must not have all subtests True (except version_confusion)."""
+        """Hallucinated entries must not have all subtests True (except arxiv_version_mismatch)."""
         entries = dev_entries if split_name == "dev" else test_entries
         violators = []
         for e in entries:
@@ -260,7 +278,7 @@ class TestSurfaceDiversity:
                 e.label == "HALLUCINATED"
                 and e.subtests
                 and all(v is True for v in e.subtests.values())
-                and e.hallucination_type != "version_confusion"
+                and e.hallucination_type != "arxiv_version_mismatch"
             ):
                 violators.append(e.bibtex_key)
         assert not violators, (

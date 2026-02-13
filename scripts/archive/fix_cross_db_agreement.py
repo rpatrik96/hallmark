@@ -4,7 +4,7 @@ For hallucination types where the core paper identity (title + authors) is real
 and verifiable across databases, cross_db_agreement should be True:
 - wrong_venue: real paper, just wrong venue
 - preprint_as_published: real preprint, fabricated venue
-- version_confusion: real paper, mixed preprint/conference metadata
+- arxiv_version_mismatch: real paper, mixed preprint/conference metadata
 
 This breaks the 99.9% correlation between cross_db_agreement and label,
 making the subtest genuinely diagnostic rather than a label proxy.
@@ -18,7 +18,7 @@ from pathlib import Path
 from hallmark.dataset.schema import load_entries, save_entries
 
 # Types where title+authors are real → databases agree on core identity
-CROSS_DB_TRUE_TYPES = {"wrong_venue", "preprint_as_published", "version_confusion"}
+CROSS_DB_TRUE_TYPES = {"wrong_venue", "preprint_as_published", "arxiv_version_mismatch"}
 
 
 def fix_split(path: Path) -> tuple[int, int]:

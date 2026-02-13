@@ -27,7 +27,7 @@ FAKE_REALWORLD_KEYS = {
 
 # Hallucination types where cross_db_agreement should be True
 # (mislabeled in some LLM-generated entries)
-CROSS_DB_TRUE_TYPES = {"wrong_venue", "preprint_as_published", "version_confusion"}
+CROSS_DB_TRUE_TYPES = {"wrong_venue", "preprint_as_published", "arxiv_version_mismatch"}
 
 
 def _split_entries_stratified(

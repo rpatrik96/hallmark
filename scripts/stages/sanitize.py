@@ -58,7 +58,7 @@ FAKE_REALWORLD_KEYS = {
 }
 
 # Types where title+authors are real -> cross_db_agreement should be True
-CROSS_DB_TRUE_TYPES = {"wrong_venue", "preprint_as_published", "version_confusion"}
+CROSS_DB_TRUE_TYPES = {"wrong_venue", "preprint_as_published", "arxiv_version_mismatch"}
 
 # Required fields for fields_complete subtest
 REQUIRED_FIELDS = {"title", "author", "year"}
@@ -168,7 +168,11 @@ def _fix_publication_dates(entries: list[BenchmarkEntry]) -> int:
 
 
 def _recompute_fields_complete(entries: list[BenchmarkEntry]) -> int:
-    """Recompute fields_complete subtest based on required fields + identifier."""
+    """Recompute fields_complete subtest based on required fields + identifier.
+
+    Also coerces any non-boolean values to bool (guards against generator bugs
+    that assign the identifier string instead of bool(identifier)).
+    """
     changed = 0
     for entry in entries:
         fields = entry.fields
@@ -179,6 +183,9 @@ def _recompute_fields_complete(entries: list[BenchmarkEntry]) -> int:
 
         new_val = has_required and has_venue and has_identifier
         old_val = entry.subtests.get("fields_complete")
+        # Coerce any non-boolean values (e.g., stale string from generator bug)
+        if old_val is not None and not isinstance(old_val, bool):
+            old_val = bool(old_val)
         if old_val != new_val:
             changed += 1
         entry.subtests["fields_complete"] = new_val
@@ -196,6 +203,62 @@ def _fix_cross_db_agreement(entries: list[BenchmarkEntry]) -> int:
         ):
             entry.subtests["cross_db_agreement"] = True
             fixed += 1
+    return fixed
+
+
+_VENUE_CODE_MAP = {
+    "neurips": "nips",
+    "icml": "icml",
+    "iclr": "iclr",
+    "cvpr": "cvpr",
+    "iccv": "iccv",
+    "eccv": "eccv",
+    "aaai": "aaai",
+    "acl": "acl",
+    "emnlp": "emnlp",
+    "naacl": "naacl",
+    "sigir": "sigir",
+    "kdd": "kdd",
+    "www": "www",
+    "ijcai": "ijcai",
+    "colt": "colt",
+    "aistats": "aistats",
+}
+
+
+def _ensure_url_presence(entries: list[BenchmarkEntry]) -> int:
+    """Add plausible DBLP-style URLs to entries missing them (prevents URL-presence leak)."""
+    import hashlib
+
+    fixed = 0
+    for entry in entries:
+        if entry.fields.get("url"):
+            continue
+
+        fields = entry.fields
+        author = fields.get("author", "Unknown")
+        year = fields.get("year", "2022")
+        booktitle = fields.get("booktitle", "").lower()
+
+        # Determine venue code
+        venue_code = "conf"
+        for name, code in _VENUE_CODE_MAP.items():
+            if name in booktitle:
+                venue_code = code
+                break
+
+        # Extract first author's last name
+        first_author = author.split(" and ")[0].strip()
+        parts = first_author.split()
+        lastname = re.sub(r"[^a-zA-Z]", "", parts[-1]) if parts else "Author"
+
+        # Hash-based suffix for uniqueness
+        key_hash = hashlib.md5(entry.bibtex_key.encode()).hexdigest()[:4].upper()
+        yr = year[-2:] if len(year) >= 2 else "22"
+
+        entry.fields["url"] = f"https://dblp.org/rec/conf/{venue_code}/{lastname}{key_hash}{yr}"
+        fixed += 1
+
     return fixed
 
 
@@ -244,6 +307,10 @@ def stage_sanitize(
         # 3. Strip leaky fields
         n = _strip_leaky_fields(entries)
         total_fixes[f"{split_name}_leaky_fields"] = n
+
+        # 3b. Ensure all entries have a URL (prevents URL-presence leak)
+        n = _ensure_url_presence(entries)
+        total_fixes[f"{split_name}_url_presence"] = n
 
         # 4. Fix temporal distribution
         n = _fix_temporal_distribution(entries, seed)

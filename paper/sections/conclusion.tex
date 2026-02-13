@@ -2,10 +2,10 @@
 \label{sec:conclusion}
 
 Citation hallucination is a growing threat to scientific integrity.
-We contribute \textsc{Hallmark}, the first standardized benchmark for citation verification tools: 14 hallucination types across 3 difficulty tiers, 2,184 annotated entries with 6 sub-tests each, tier-weighted metrics (rewarding detection of hard hallucinations), calibration assessment via ECE (measuring confidence accuracy), and principled ranking under incomplete data via Plackett-Luce.
+We contribute \textsc{Hallmark}, the first standardized benchmark for citation verification tools: 11 empirically-grounded hallucination types across 3 difficulty tiers plus 3 stress-test types, 2,207 annotated entries with 6 sub-tests each, tier-weighted metrics (rewarding detection of hard hallucinations), calibration assessment via ECE (measuring confidence accuracy), and principled ranking under incomplete data via Plackett-Luce.
 
-Our evaluation of five tools reveals systematic blind spots shared across all tools---particularly on venue-level hallucinations where bibliographic APIs lack structured data---and wide variation in confidence calibration.
-No single tool covers all 14 types, providing concrete, measurable targets for both tool developers and database maintainers.
+Our evaluation of three independent tools reveals that no current tool detects more than 22\% of hallucinations, with systematic blind spots on venue-level hallucinations where bibliographic APIs lack structured data.
+No single tool covers all 11 main types, providing concrete, measurable targets for both tool developers and database maintainers.
 
 \textsc{Hallmark} is designed to grow: its community contribution system, temporal segmentation, and atomic evaluation design ensure that new entries and tools can be incorporated without invalidating prior results.
 We release the full benchmark and evaluation infrastructure as open-source software to support continued progress on this critical problem.

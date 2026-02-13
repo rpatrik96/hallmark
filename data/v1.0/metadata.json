@@ -7,71 +7,64 @@
   "splits": {
     "dev_public": {
       "file": "dev_public.jsonl",
-      "total": 1005,
+      "total": 903,
       "valid": 450,
-      "hallucinated": 555,
+      "hallucinated": 453,
       "tier_distribution": {
         "1": 146,
-        "2": 266,
-        "3": 143
+        "2": 196,
+        "3": 111
       },
       "type_distribution": {
-        "version_confusion": 32,
-        "near_miss_title": 45,
-        "plausible_fabrication": 66,
-        "merged_citation": 32,
-        "nonexistent_venue": 32,
-        "hybrid_fabrication": 45,
-        "future_date": 29,
-        "swapped_authors": 38,
-        "fabricated_doi": 50,
-        "wrong_venue": 40,
         "chimeric_title": 40,
-        "partial_author_list": 38,
+        "fabricated_doi": 50,
+        "future_date": 29,
+        "hybrid_fabrication": 45,
+        "near_miss_title": 45,
+        "nonexistent_venue": 32,
         "placeholder_authors": 35,
-        "preprint_as_published": 33
+        "plausible_fabrication": 66,
+        "preprint_as_published": 33,
+        "swapped_authors": 38,
+        "wrong_venue": 40
       },
       "generation_method_distribution": {
-        "perturbation": 388,
-        "gptzero_neurips2025": 28,
-        "dblp": 450,
         "adversarial": 67,
-        "llm_generated": 72
+        "llm_generated": 72,
+        "perturbation": 286,
+        "real_world": 28,
+        "scraped": 450
       }
     },
     "test_public": {
       "file": "test_public.jsonl",
-      "total": 733,
+      "total": 633,
       "valid": 270,
-      "hallucinated": 463,
+      "hallucinated": 363,
       "tier_distribution": {
         "1": 142,
-        "2": 209,
-        "3": 89
+        "2": 154,
+        "3": 67
       },
       "type_distribution": {
         "chimeric_title": 30,
-        "near_miss_title": 30,
-        "placeholder_authors": 32,
-        "merged_citation": 38,
-        "partial_author_list": 32,
         "fabricated_doi": 45,
-        "preprint_as_published": 30,
-        "nonexistent_venue": 32,
-        "hybrid_fabrication": 34,
-        "plausible_fabrication": 37,
         "future_date": 33,
-        "wrong_venue": 30,
+        "hybrid_fabrication": 34,
+        "near_miss_title": 30,
+        "nonexistent_venue": 32,
+        "placeholder_authors": 32,
+        "plausible_fabrication": 37,
+        "preprint_as_published": 30,
         "swapped_authors": 30,
-        "version_confusion": 30
+        "wrong_venue": 30
       },
       "generation_method_distribution": {
-        "dblp": 270,
-        "perturbation": 333,
-        "llm_generated": 44,
         "adversarial": 36,
-        "gptzero_neurips2025": 27,
-        "perturbation_scaleup": 23
+        "llm_generated": 44,
+        "perturbation": 256,
+        "real_world": 27,
+        "scraped": 270
       }
     },
     "test_hidden": {
@@ -97,7 +90,7 @@
         "plausible_fabrication": 30,
         "preprint_as_published": 15,
         "swapped_authors": 18,
-        "version_confusion": 15,
+        "arxiv_version_mismatch": 15,
         "wrong_venue": 16
       },
       "generation_method_distribution": {
@@ -106,6 +99,24 @@
         "perturbation": 171,
         "real_world": 17,
         "scraped": 198
+      }
+    },
+    "stress_test": {
+      "file": "stress_test.jsonl",
+      "total": 202,
+      "valid": 0,
+      "hallucinated": 202,
+      "tier_distribution": {
+        "2": 140,
+        "3": 62
+      },
+      "type_distribution": {
+        "arxiv_version_mismatch": 62,
+        "merged_citation": 70,
+        "partial_author_list": 70
+      },
+      "generation_method_distribution": {
+        "perturbation": 202
       }
     }
   },
@@ -150,7 +161,7 @@
     "tier_3": [
       "near_miss_title",
       "plausible_fabrication",
-      "version_confusion"
+      "arxiv_version_mismatch"
     ]
   },
   "subtests": [
@@ -169,7 +180,7 @@
   },
   "type_counts_per_split": {
     "dev_public": {
-      "version_confusion": 32,
+      "arxiv_version_mismatch": 32,
       "near_miss_title": 45,
       "plausible_fabrication": 66,
       "merged_citation": 32,
@@ -198,12 +209,12 @@
       "future_date": 33,
       "wrong_venue": 30,
       "swapped_authors": 30,
-      "version_confusion": 30
+      "arxiv_version_mismatch": 30
     }
   },
   "doi_percentages_per_type": {
     "dev_public": {
-      "version_confusion": 59.4,
+      "arxiv_version_mismatch": 59.4,
       "near_miss_title": 60.0,
       "plausible_fabrication": 21.2,
       "merged_citation": 75.0,
@@ -232,7 +243,7 @@
       "future_date": 39.4,
       "wrong_venue": 43.3,
       "swapped_authors": 40.0,
-      "version_confusion": 60.0
+      "arxiv_version_mismatch": 60.0
     }
   },
   "source_distribution": {

@@ -1289,7 +1289,7 @@ def generate_partial_author_list(
     return new_entry
 
 
-def generate_version_confusion(
+def generate_arxiv_version_mismatch(
     entry: BenchmarkEntry,
     wrong_venue: str,
     rng: random.Random | None = None,
@@ -1327,23 +1327,24 @@ def generate_version_confusion(
     new_entry.fields["year"] = str(year + year_shift)
 
     new_entry.label = "HALLUCINATED"
-    new_entry.hallucination_type = HallucinationType.VERSION_CONFUSION.value
+    new_entry.hallucination_type = HallucinationType.ARXIV_VERSION_MISMATCH.value
     new_entry.difficulty_tier = DifficultyTier.HARD.value
     new_entry.generation_method = GenerationMethod.PERTURBATION.value
     new_entry.explanation = (
         f"Real paper cited with wrong venue '{wrong_venue}' and year shifted to "
         f"{year + year_shift}; metadata mixes preprint and publication versions"
     )
+    has_doi = bool(new_entry.fields.get("doi"))
     has_identifier = bool(new_entry.fields.get("doi") or new_entry.fields.get("url"))
     new_entry.subtests = {
-        "doi_resolves": True,  # DOI resolves to the real paper
+        "doi_resolves": True if has_doi else None,  # DOI resolves to the real paper; N/A if no DOI
         "title_exists": True,
         "authors_match": True,
         "venue_real": True,
         "fields_complete": has_identifier,
         "cross_db_agreement": False,  # venue/year don't match what DOI resolves to
     }
-    new_entry.bibtex_key = f"version_{new_entry.bibtex_key}"
+    new_entry.bibtex_key = f"arxiv_vm_{new_entry.bibtex_key}"
     return new_entry
 
 
@@ -1531,7 +1532,7 @@ def generate_tier3_batch(
     rng = random.Random(seed)
     results = []
 
-    # Conference venues and years for version_confusion
+    # Conference venues and years for arxiv_version_mismatch
     conferences = [
         ("NeurIPS", "2023"),
         ("ICML", "2023"),
@@ -1542,16 +1543,16 @@ def generate_tier3_batch(
 
     for _i in range(count):
         source = rng.choice(valid_entries)
-        # Randomly choose between near_miss_title, plausible_fabrication, and version_confusion
-        method = rng.choice(["near_miss_title", "plausible_fabrication", "version_confusion"])
+        # Randomly choose between near_miss_title, plausible_fabrication, and arxiv_version_mismatch
+        method = rng.choice(["near_miss_title", "plausible_fabrication", "arxiv_version_mismatch"])
 
         if method == "near_miss_title":
             results.append(generate_near_miss_title(source, rng))
         elif method == "plausible_fabrication":
             results.append(generate_plausible_fabrication(source, rng))
-        elif method == "version_confusion":
+        elif method == "arxiv_version_mismatch":
             conf_venue, _conf_year = rng.choice(conferences)
-            results.append(generate_version_confusion(source, conf_venue, rng))
+            results.append(generate_arxiv_version_mismatch(source, conf_venue, rng))
 
     return results
 

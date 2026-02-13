@@ -4,17 +4,17 @@
 \subsection{Hallucination taxonomy}
 \label{sec:taxonomy}
 
-We define 14 citation hallucination types organized into three difficulty tiers based on the verification effort required (\cref{tab:taxonomy}).
+We define 14 citation hallucination types---11 empirically grounded and 3 stress-test types---organized into three difficulty tiers based on the verification effort required (\cref{tab:taxonomy}).
 \textbf{Tier~1 (Easy)} hallucinations are detectable by a single API lookup---a fabricated DOI that does not resolve, a nonexistent venue name, placeholder author names, or a publication date in the future.
 \textbf{Tier~2 (Medium)} hallucinations require cross-referencing multiple metadata fields: a chimeric title pairs real authors with a fabricated title; a wrong venue assigns a real paper to the wrong conference; author mismatch attaches the wrong author list to a real title; preprint-as-published fabricates a venue acceptance for an arXiv-only paper; hybrid fabrication pairs a valid, resolving DOI with fabricated metadata; merged citation combines metadata from two or more real papers into one entry; and partial author list cites a real paper with only a subset of its authors.
-\textbf{Tier~3 (Hard)} hallucinations require deep verification or semantic reasoning: near-miss titles differ by one or two words from a real paper; plausible fabrications are entirely invented but realistic; and version confusion cites claims from a superseded preprint version.
+\textbf{Tier~3 (Hard)} hallucinations require deep verification or semantic reasoning: near-miss titles differ by one or two words from a real paper; plausible fabrications are entirely invented but realistic; and arXiv version mismatches cite a preprint with wrong venue and shifted year.
 
 This taxonomy emerged from manual analysis of hallucinated citations found in the NeurIPS 2025 incident and related audits~\citep{ghostcite2026,hallucitation2026}, supplemented by adversarial brainstorming of failure modes that existing tools might miss.
 Of 72 real-world hallucinated citations in \textsc{Hallmark}, 79\% map to existing taxonomy types (\cref{app:real-world-mapping}).
-We include three theoretically motivated types (\texttt{merged\_citation}, \texttt{partial\_author\_list}, \texttt{version\_confusion}) to stress-test tool robustness beyond observed failure modes, recognizing they may be revised in future versions as empirical evidence accumulates.
+We include three theoretically motivated types (\texttt{merged\_citation}, \texttt{partial\_author\_list}, \texttt{arxiv\_version\_mismatch}) to stress-test tool robustness beyond observed failure modes, recognizing they may be revised in future versions as empirical evidence accumulates.
 
 \begin{table}[t]
-\caption{The \textsc{Hallmark} hallucination taxonomy: 14 types across 3 difficulty tiers. Each type has a characteristic sub-test failure pattern. Sub-tests: \textbf{D}OI resolves, \textbf{T}itle exists, \textbf{A}uthors match, \textbf{V}enue real, \textbf{F}ields complete, \textbf{X} cross-DB agreement.}
+\caption{The \textsc{Hallmark} hallucination taxonomy: 11 empirically-grounded types plus 3 stress-test types (\textsuperscript{\textcolor{blue}{$\triangle$}}) across 3 difficulty tiers. Each type has a characteristic sub-test failure pattern. Sub-tests: \textbf{D}OI resolves, \textbf{T}itle exists, \textbf{A}uthors match, \textbf{V}enue real, \textbf{F}ields complete, \textbf{X} cross-DB agreement.}
 \label{tab:taxonomy}
 \centering
 \small
@@ -41,7 +41,7 @@ We include three theoretically motivated types (\texttt{merged\_citation}, \text
 \multirow{3}{*}{\rotatebox{90}{\textcolor{tier3}{\textbf{Hard}}}}
 & \texttt{near\_miss\_title} & Title off by 1--2 words & \ding{51} & \ding{55} & \ding{51} & \ding{51} & \ding{51} & \ding{55} \\
 & \texttt{plausible\_fabrication} & Entirely fabricated, realistic & \ding{55} & \ding{55} & \ding{55} & ? & ? & \ding{55} \\
-& \texttt{version\_confusion}\textsuperscript{\textcolor{blue}{$\triangle$}} & Wrong version claims & \ding{51} & \ding{51} & \ding{51} & \ding{51} & \ding{51} & \ding{55} \\
+& \texttt{arxiv\_version\_mismatch}\textsuperscript{\textcolor{blue}{$\triangle$}} & Wrong version claims & \ding{51} & \ding{51} & \ding{51} & \ding{51} & \ding{51} & \ding{55} \\
 \bottomrule
 \end{tabular}
 \par\vspace{2pt}
@@ -81,8 +81,8 @@ Generation-method stratification enables practitioners to assess tool performanc
 Verification is primarily algorithmic: perturbation-generated entries are validated by automated checks against DBLP and CrossRef (DOI resolution, title search, author matching), achieving $>$98\% agreement with ground truth labels.
 LLM-generated entries undergo additional automated filtering (title similarity $\geq 85\%$ and author Jaccard $\geq 0.5$ against bibliographic databases) to exclude entries that match real papers.
 Real-world and adversarial entries receive manual review to confirm hallucination status and type assignment.
-With $\geq 29$ instances per type per public split, per-type metrics achieve 95\% Clopper-Pearson confidence interval width $\leq 0.24$ for type-level detection rates.
-The design prioritizes \emph{coverage}---ensuring all 14 types have sufficient instances for per-type analysis---over volume.
+With $\geq 29$ instances per main type per public split, per-type metrics achieve 95\% Clopper-Pearson confidence interval width $\leq 0.24$ for type-level detection rates.
+The design prioritizes \emph{coverage}---ensuring all 11 main types have sufficient instances for per-type analysis---over volume.
 
 \paragraph{Quality control.}
 Every entry undergoes automated validation checking field completeness, BibTeX well-formedness, and sub-test label consistency.
@@ -90,7 +90,7 @@ Sub-test labels are verified for logical consistency with entry metadata (e.g., 
 Contributed entries pass through a validation pipeline that enforces the schema constraints programmatically before inclusion.
 
 \paragraph{Scaling for statistical power.}
-To ensure per-type statistical validity, we scaled the hallucinated portion so that every type has at least 29 instances per public split.
+To ensure per-type statistical validity, we scaled the hallucinated portion so that every main type has at least 29 instances per main split.
 New entries were generated deterministically (seed-controlled) using the same perturbation generators as the original entries.
 
 \paragraph{Type distribution.}
@@ -101,7 +101,7 @@ The evaluation API also supports \emph{generation-method stratification}, breaki
 This enables practitioners to assess whether a tool detects template-based perturbations versus genuinely novel hallucinations---a critical distinction for real-world deployment.
 
 \begin{table}[t]
-\caption{Dataset statistics by split. Tier distribution refers to hallucinated entries only. All splits cover all 14 hallucination types with $n \geq 29$ per type.}
+\caption{Dataset statistics by split. Tier distribution refers to hallucinated entries only. Main splits cover all 11 main types with $n \geq 29$ per type; stress-test types are evaluated in a separate split.}
 \label{tab:stats}
 \centering
 \small
@@ -109,8 +109,9 @@ This enables practitioners to assess whether a tool detects template-based pertu
 \toprule
 \textbf{Split} & \textbf{Valid} & \textbf{Halluc.} & \textbf{Total} & \textbf{Tier 1} & \textbf{Tier 2} & \textbf{Tier 3} & \textbf{Types} \\
 \midrule
-\texttt{dev\_public}   & 450 & 555 & 1,005 & 164 & 253 & 138 & 14 \\
-\texttt{test\_public}  & 270 & 463 & 733 & 124 & 237 & 102 & 14 \\
+\texttt{dev\_public}   & 450 & 453 & 903 & 146 & 196 & 111 & 11 \\
+\texttt{test\_public}  & 270 & 363 & 633 & 142 & 154 & 67 & 11 \\
+\texttt{stress\_test}  & 0 & 202 & 202 & --- & 140 & 62 & 3 \\
 \texttt{test\_hidden}  & 198 & 271 & 469 & 83 & 125 & 63 & 14 \\
 \midrule
 \textbf{Total}         & 918 & 1,289 & 2,207 & 371 & 615 & 303 & 14 \\

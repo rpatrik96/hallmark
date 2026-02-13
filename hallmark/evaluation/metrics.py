@@ -888,40 +888,29 @@ def equivalence_test(
     # Build prediction map
     pred_map = {p.bibtex_key: p for p in predictions}
 
-    # Filter predictions for each entry set
-    preds_a = [pred_map[e.bibtex_key] for e in entries_a if e.bibtex_key in pred_map]
-    preds_b = [pred_map[e.bibtex_key] for e in entries_b if e.bibtex_key in pred_map]
-
     # Compute observed difference (using F1 as default metric)
     cm_a = build_confusion_matrix(entries_a, pred_map)
     cm_b = build_confusion_matrix(entries_b, pred_map)
     observed_diff = cm_a.f1 - cm_b.f1
 
-    # Permutation test
+    # Permutation test: shuffle entry assignment to groups, predictions stay
+    # mapped by bibtex_key. The null hypothesis is that group assignment
+    # (A vs B) doesn't affect the metric.
     combined_entries = entries_a + entries_b
-    combined_preds = preds_a + preds_b
     n_a = len(entries_a)
 
     permuted_diffs = []
     for _ in range(n_permutations):
-        # Permute combined data
         perm_indices = rng.permutation(len(combined_entries))
         perm_entries = [combined_entries[i] for i in perm_indices]
-        perm_preds = [combined_preds[i] for i in perm_indices if i < len(combined_preds)]
 
-        # Split permuted data
         perm_entries_a = perm_entries[:n_a]
         perm_entries_b = perm_entries[n_a:]
-        perm_preds_a = perm_preds[:n_a]
-        perm_preds_b = perm_preds[n_a:]
 
-        # Compute metric on permuted split
-        perm_pred_map_a = {p.bibtex_key: p for p in perm_preds_a}
-        perm_pred_map_b = {p.bibtex_key: p for p in perm_preds_b}
-
+        # Use the shared pred_map — predictions are looked up by bibtex_key
         if perm_entries_a and perm_entries_b:
-            cm_perm_a = build_confusion_matrix(perm_entries_a, perm_pred_map_a)
-            cm_perm_b = build_confusion_matrix(perm_entries_b, perm_pred_map_b)
+            cm_perm_a = build_confusion_matrix(perm_entries_a, pred_map)
+            cm_perm_b = build_confusion_matrix(perm_entries_b, pred_map)
             permuted_diffs.append(cm_perm_a.f1 - cm_perm_b.f1)
 
     # TOST: Two One-Sided Tests

@@ -25,7 +25,7 @@ Hallucinated entries must:
 
 **Tier 2 (Medium):** `chimeric_title`, `wrong_venue`, `author_mismatch` (covers swapped and fabricated authors), `preprint_as_published`, `hybrid_fabrication`
 
-**Tier 3 (Hard):** `near_miss_title`, `plausible_fabrication`, `retracted_paper`, `version_confusion`
+**Tier 3 (Hard):** `near_miss_title`, `plausible_fabrication`, `retracted_paper`, `arxiv_version_mismatch`
 
 ## How to Contribute
 

@@ -10,7 +10,12 @@ from typing import Literal
 
 
 class HallucinationType(str, Enum):
-    """Taxonomy of citation hallucination types, organized by difficulty tier."""
+    """Taxonomy of citation hallucination types, organized by difficulty tier.
+
+    The main taxonomy (11 types) covers empirically-grounded hallucination patterns.
+    Stress-test types (3 types) are theoretically-motivated patterns included for
+    completeness but evaluated separately from the main benchmark.
+    """
 
     # Tier 1: Easy (detectable by simple API lookup)
     FABRICATED_DOI = "fabricated_doi"
@@ -24,13 +29,15 @@ class HallucinationType(str, Enum):
     AUTHOR_MISMATCH = "swapped_authors"  # Covers swapped and fabricated author names
     PREPRINT_AS_PUBLISHED = "preprint_as_published"
     HYBRID_FABRICATION = "hybrid_fabrication"
-    MERGED_CITATION = "merged_citation"
-    PARTIAL_AUTHOR_LIST = "partial_author_list"
 
     # Tier 3: Hard (requires deep verification / semantic reasoning)
     NEAR_MISS_TITLE = "near_miss_title"
     PLAUSIBLE_FABRICATION = "plausible_fabrication"
-    VERSION_CONFUSION = "version_confusion"
+
+    # Stress-test types (theoretically-motivated, evaluated separately)
+    MERGED_CITATION = "merged_citation"
+    PARTIAL_AUTHOR_LIST = "partial_author_list"
+    ARXIV_VERSION_MISMATCH = "arxiv_version_mismatch"
 
 
 class DifficultyTier(int, Enum):
@@ -66,8 +73,18 @@ HALLUCINATION_TIER_MAP: dict[HallucinationType, DifficultyTier] = {
     HallucinationType.PARTIAL_AUTHOR_LIST: DifficultyTier.MEDIUM,
     HallucinationType.NEAR_MISS_TITLE: DifficultyTier.HARD,
     HallucinationType.PLAUSIBLE_FABRICATION: DifficultyTier.HARD,
-    HallucinationType.VERSION_CONFUSION: DifficultyTier.HARD,
+    HallucinationType.ARXIV_VERSION_MISMATCH: DifficultyTier.HARD,
 }
+
+# Stress-test types: theoretically-motivated, evaluated in separate split
+STRESS_TEST_TYPES: set[HallucinationType] = {
+    HallucinationType.MERGED_CITATION,
+    HallucinationType.PARTIAL_AUTHOR_LIST,
+    HallucinationType.ARXIV_VERSION_MISMATCH,
+}
+
+# Main taxonomy types: empirically-grounded, used in primary evaluation
+MAIN_TYPES: set[HallucinationType] = set(HallucinationType) - STRESS_TEST_TYPES
 
 
 # Standard sub-test names

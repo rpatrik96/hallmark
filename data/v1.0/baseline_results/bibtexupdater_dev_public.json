@@ -116,7 +116,7 @@
       "f1": 0.0,
       "count": 450
     },
-    "version_confusion": {
+    "arxiv_version_mismatch": {
       "detection_rate": 1.0,
       "false_positive_rate": 0.0,
       "f1": 1.0,

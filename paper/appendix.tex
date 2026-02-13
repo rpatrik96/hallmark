@@ -18,19 +18,21 @@
 & \texttt{placeholder\_authors} & \texttt{author = \{\textcolor{red}{John Doe and Jane Smith}\}} \\
 & \texttt{future\_date} & \texttt{year = \{\textcolor{red}{2030}\}} \\
 \midrule
-\multirow{7}{*}{2}
+\multirow{5}{*}{2}
 & \texttt{chimeric\_title} & Real authors, \texttt{title = \{\textcolor{red}{A Novel Approach...}\}} (nonexistent) \\
 & \texttt{wrong\_venue} & Real paper, \texttt{booktitle = \{\textcolor{red}{ICML}\}} (actually NeurIPS) \\
 & \texttt{author\_mismatch} & Real title, \texttt{author = \{\textcolor{red}{Wrong Author List}\}} \\
 & \texttt{preprint\_as\_published} & arXiv paper, \texttt{booktitle = \{\textcolor{red}{NeurIPS}\}} (never published) \\
 & \texttt{hybrid\_fabrication} & Valid DOI resolves, but \texttt{title = \{\textcolor{red}{...}\}} doesn't match \\
-& \texttt{merged\_citation} & Authors from paper A, \texttt{title} from \textcolor{red}{paper B}, venue from C \\
-& \texttt{partial\_author\_list} & Real paper, \texttt{author = \{\textcolor{red}{First and Last}\}} (middle dropped) \\
 \midrule
-\multirow{3}{*}{3}
+\multirow{2}{*}{3}
 & \texttt{near\_miss\_title} & \texttt{title = \{Attention Is All You \textcolor{red}{Want}\}} (vs.\ ``Need'') \\
 & \texttt{plausible\_fabrication} & Entirely fabricated, all fields realistic but nonexistent \\
-& \texttt{version\_confusion} & Claims from \textcolor{red}{v1} that were corrected in v2 \\
+\midrule
+\multirow{3}{*}{\rotatebox{90}{\scriptsize Stress}}
+& \texttt{merged\_citation} & Authors from paper A, \texttt{title} from \textcolor{red}{paper B}, venue from C \\
+& \texttt{partial\_author\_list} & Real paper, \texttt{author = \{\textcolor{red}{First and Last}\}} (middle dropped) \\
+& \texttt{arxiv\_version\_mismatch} & arXiv preprint cited with \textcolor{red}{wrong venue} and shifted year \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -59,7 +61,7 @@ Systematic perturbations follow deterministic rules per hallucination type:
     \item \texttt{plausible\_fabrication}: LLM-generate a complete, realistic but nonexistent entry.
     \item \texttt{merged\_citation}: Combine metadata from 2--3 real papers into one entry (e.g., authors from paper A, title from paper B, venue from paper C).
     \item \texttt{partial\_author\_list}: Take a real paper and drop one or more middle co-authors, keeping only the first and last.
-    \item \texttt{version\_confusion}: Cite specific claims from superseded arXiv versions.
+    \item \texttt{arxiv\_version\_mismatch}: Cite specific claims from superseded arXiv versions.
 \end{itemize}
 
 \paragraph{LLM-generated entries.}
@@ -73,7 +75,7 @@ The remaining entries were assigned sub-test labels based on their hallucination
 We harvested 72 hallucinated citations from three documented incident studies: GPTZero's NeurIPS 2025 analysis, GhostCite~\citep{ghostcite2026}, and HalluCitation~\citep{hallucitation2026}.
 Each entry was mapped to the closest taxonomy type based on its failure mode (e.g., a citation with a non-resolving DOI was classified as \texttt{fabricated\_doi}; a citation to a non-existent paper with plausible metadata was classified as \texttt{plausible\_fabrication}).
 The real-world sample is type-skewed: 55\% are \texttt{plausible\_fabrication}, reflecting the predominant LLM failure mode in practice.
-Types without real-world examples (\texttt{merged\_citation}, \texttt{partial\_author\_list}, \texttt{version\_confusion}) are flagged as theoretically motivated rather than empirically observed.
+Types without real-world examples (\texttt{merged\_citation}, \texttt{partial\_author\_list}, \texttt{arxiv\_version\_mismatch}) are relegated to a separate stress-test split, evaluated independently from the main taxonomy.
 
 \paragraph{Adversarial crafting.}
 We manually constructed entries designed to evade specific detection strategies.
@@ -100,41 +102,38 @@ We conclude that the scaled entries are consistent with the original distributio
 \cref{tab:pertype_full} reports detection rate, F1, and count for every hallucination type and baseline.
 
 \begin{table}[h]
-\caption{Per-type detection rate on \texttt{dev\_public} for all baselines. All types have 30 instances.}
+\caption{Per-type detection rate on \texttt{dev\_public} for independent tools. All main types have $\geq$30 instances. Stress-test types are evaluated in the separate \texttt{stress\_test} split.}
 \label{tab:pertype_full}
 \centering
 \small
 \setlength{\tabcolsep}{3pt}
-\begin{tabular}{llccccc}
+\begin{tabular}{llccc}
 \toprule
-\textbf{Tier} & \textbf{Type} & \textbf{btx-upd} & \textbf{Ensemble} & \textbf{HaRC$^*$} & \textbf{DOI} & \textbf{v-cit$^*$} \\
+\textbf{Tier} & \textbf{Type} & \textbf{DOI} & \textbf{HaRC$^*$} & \textbf{v-cit$^*$} \\
 \midrule
 \multirow{4}{*}{1}
-& \texttt{fabricated\_doi}        & 1.000 & --- & --- & 1.000 & --- \\
-& \texttt{nonexistent\_venue}     & 1.000 & --- & --- & 0.000 & --- \\
-& \texttt{placeholder\_authors}   & 1.000 & --- & --- & 0.000 & --- \\
-& \texttt{future\_date}           & 1.000 & --- & --- & 0.000 & --- \\
+& \texttt{fabricated\_doi}        & 1.000 & --- & --- \\
+& \texttt{nonexistent\_venue}     & 0.000 & --- & --- \\
+& \texttt{placeholder\_authors}   & 0.000 & --- & --- \\
+& \texttt{future\_date}           & 0.000 & --- & --- \\
 \midrule
-\multirow{7}{*}{2}
-& \texttt{chimeric\_title}        & 1.000 & --- & --- & 0.000 & --- \\
-& \texttt{wrong\_venue}           & 0.633 & --- & --- & 0.000 & --- \\
-& \texttt{author\_mismatch}       & 1.000 & --- & --- & 0.000 & --- \\
-& \texttt{preprint\_as\_pub.}     & 0.533 & --- & --- & 0.000 & --- \\
-& \texttt{hybrid\_fabrication}    & 1.000 & --- & --- & 0.000 & --- \\
-& \texttt{merged\_citation}       & \multicolumn{5}{c}{\emph{evaluation pending}} \\
-& \texttt{partial\_author\_list}  & \multicolumn{5}{c}{\emph{evaluation pending}} \\
+\multirow{5}{*}{2}
+& \texttt{chimeric\_title}        & 0.000 & --- & --- \\
+& \texttt{wrong\_venue}           & 0.000 & --- & --- \\
+& \texttt{author\_mismatch}       & 0.000 & --- & --- \\
+& \texttt{preprint\_as\_pub.}     & 0.000 & --- & --- \\
+& \texttt{hybrid\_fabrication}    & 0.000 & --- & --- \\
 \midrule
-\multirow{3}{*}{3}
-& \texttt{near\_miss\_title}      & 1.000 & --- & --- & 0.000 & --- \\
-& \texttt{plausible\_fabrication} & 1.000 & --- & --- & 1.000 & --- \\
-& \texttt{version\_confusion}     & 1.000 & --- & --- & 0.000 & --- \\
+\multirow{2}{*}{3}
+& \texttt{near\_miss\_title}      & 0.000 & --- & --- \\
+& \texttt{plausible\_fabrication} & 1.000 & --- & --- \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-\noindent All hallucination types have $\geq$30 instances per public split in the expanded dataset.
-LLM-generated entries concentrate on \texttt{plausible\_fabrication} (40\%) and \texttt{fabricated\_doi} (33\%), reflecting that GPT-5.1 predominantly produces citations that cannot be verified in any database rather than entries with partially correct metadata.
-Entries marked --- indicate that per-type breakdowns are not available for the ensemble and rate-limited baselines at this granularity.
+\noindent All main hallucination types have $\geq$30 instances per public split.
+Entries marked --- indicate insufficient coverage for per-type breakdowns (HaRC: 2.4\%, verify-citations: 8.5\%).
+DOI-only detects only types with fabricated or missing DOIs (\texttt{fabricated\_doi}, \texttt{plausible\_fabrication}), confirming that DOI resolution is necessary but far from sufficient.
 
 \section{Statistical analysis}
 \label{app:statistics}
@@ -246,7 +245,7 @@ Following \citet{gebru2021datasheets}, we provide a datasheet for the \textsc{Ha
 \textsc{Hallmark} was created to provide a standardized benchmark for evaluating citation hallucination detection tools, motivated by the NeurIPS 2025 incident and subsequent audits.
 
 \paragraph{Composition.}
-The dataset contains 2,184 BibTeX entries: 918 valid entries scraped from DBLP and 1,266 hallucinated entries generated through perturbation, LLM generation, adversarial crafting, and real-world collection across 14 hallucination types.
+The dataset contains 2,207 BibTeX entries: 918 valid entries scraped from DBLP and 1,289 hallucinated entries generated through perturbation, LLM generation, adversarial crafting, and real-world collection across 11 main hallucination types plus 3 stress-test types.
 Each entry includes 6 binary sub-test labels.
 
 \paragraph{Collection process.}
@@ -268,6 +267,35 @@ The hidden test set is not publicly distributed.
 
 \paragraph{Maintenance.}
 The benchmark is maintained by the authors and accepts community contributions through the structured submission process described in \cref{sec:contribution}.
+
+\section{Co-designed tool evaluation}
+\label{app:codesign}
+
+\texttt{bibtex-updater}~\citep{bibtexupdater2026} is a multi-database cross-referencing tool developed by the authors of this benchmark.
+We report its results separately to maintain transparency about the co-design relationship: the benchmark taxonomy and sub-test structure were informed by the tool's detection capabilities, creating a potential circularity that could inflate its apparent performance.
+
+\begin{table}[h]
+\caption{Results for \texttt{bibtex-updater} (co-designed by the authors). Reported separately from independent tools in \cref{tab:results} due to co-design bias concerns.}
+\label{tab:codesign}
+\centering
+\small
+\begin{tabular}{lcccccc}
+\toprule
+\textbf{Tool} & \textbf{DR $\uparrow$} & \textbf{FPR $\downarrow$} & \textbf{F1 $\uparrow$} & \textbf{TW-F1 $\uparrow$} & \textbf{ECE $\downarrow$} & \textbf{Cov.} \\
+\midrule
+bibtex-updater & 0.954 & 0.024 & 0.962 & 0.969 & 0.452 & 1.00 \\
+Ensemble (doi+btx) & 0.208 & 0.007 & 0.342 & 0.296 & 0.289 & 1.00 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\noindent While \texttt{bibtex-updater} achieves a detection rate of 0.954 (95\% CI: [0.94, 0.97]) and F1 of 0.962, readers should interpret these results with caution:
+(1)~the tool's multi-database verification strategy was developed concurrently with the benchmark design;
+(2)~the sub-test structure (DOI resolution, title existence, author matching, venue verification) mirrors the tool's internal verification pipeline;
+(3)~the pre-screening layer was designed to complement the tool's known blind spots.
+
+Despite these concerns, \texttt{bibtex-updater} serves a useful diagnostic role: its high detection rate provides an upper-bound estimate for what multi-database cross-referencing can achieve, while its poor calibration (ECE = 0.452) reveals that even thorough verification tools produce unreliable confidence scores.
+We encourage independent tool developers to submit evaluations via \textsc{Hallmark}'s contribution framework to establish unbiased baselines.
 
 \section{Additional figures}
 \label{app:figures}

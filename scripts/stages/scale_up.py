@@ -11,6 +11,7 @@ import random
 from collections import Counter
 
 from hallmark.dataset.generator import (
+    generate_arxiv_version_mismatch,
     generate_chimeric_title,
     generate_fabricated_doi,
     generate_future_date,
@@ -23,7 +24,6 @@ from hallmark.dataset.generator import (
     generate_plausible_fabrication,
     generate_preprint_as_published,
     generate_swapped_authors,
-    generate_version_confusion,
     generate_wrong_venue,
     is_preprint_source,
 )
@@ -195,10 +195,10 @@ def _generate_for_type(
         entry = generate_near_miss_title(source, rng)
     elif type_val == HallucinationType.PLAUSIBLE_FABRICATION.value:
         entry = generate_plausible_fabrication(source, rng)
-    elif type_val == HallucinationType.VERSION_CONFUSION.value:
+    elif type_val == HallucinationType.ARXIV_VERSION_MISMATCH.value:
         current = source.venue
         candidates = [v for v in VENUES if v != current]
-        entry = generate_version_confusion(source, rng.choice(candidates), rng)
+        entry = generate_arxiv_version_mismatch(source, rng.choice(candidates), rng)
     else:
         raise ValueError(f"Unknown hallucination type: {type_val}")
 

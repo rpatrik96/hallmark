@@ -3,7 +3,7 @@
 Creates instances for missing hallucination types:
 - chimeric_title
 - plausible_fabrication
-- version_confusion
+- arxiv_version_mismatch
 - hybrid_fabrication
 """
 
@@ -13,14 +13,14 @@ import random
 from pathlib import Path
 
 from hallmark.dataset.generator import (
+    generate_arxiv_version_mismatch,
     generate_chimeric_title,
     generate_hybrid_fabrication,
     generate_plausible_fabrication,
-    generate_version_confusion,
 )
 from hallmark.dataset.schema import BenchmarkEntry, load_entries, save_entries
 
-# Real papers with arXiv versions for version_confusion
+# Real papers with arXiv versions for arxiv_version_mismatch
 VERSION_CONFUSED_PAPERS = [
     {"arxiv_id": "1706.03762", "conference_venue": "NeurIPS", "conference_year": "2017"},
     {"arxiv_id": "1810.04805", "conference_venue": "NAACL", "conference_year": "2019"},
@@ -76,12 +76,12 @@ def generate_instances_for_split(
         entry.bibtex_key = f"plausible_{split_name}_{i + 1}"
         new_entries.append(entry)
 
-    # Generate version_confusion instances
-    print(f"  Generating {num_version} version_confusion instances...")
+    # Generate arxiv_version_mismatch instances
+    print(f"  Generating {num_version} arxiv_version_mismatch instances...")
     version_pool = VERSION_CONFUSED_PAPERS[:num_version]
     for i, version_data in enumerate(version_pool):
         source = rng.choice(valid_entries)
-        entry = generate_version_confusion(
+        entry = generate_arxiv_version_mismatch(
             source,
             version_data["arxiv_id"],
             version_data["conference_venue"],
@@ -165,14 +165,14 @@ def main() -> None:
     print(f"  Total entries: {len(dev_entries)} (+{len(dev_new)})")
     print(f"  New chimeric_title: {5}")
     print(f"  New plausible_fabrication: {5}")
-    print(f"  New version_confusion: {3}")
+    print(f"  New arxiv_version_mismatch: {3}")
     print(f"  New hybrid_fabrication: {5}")
 
     print("\nTest split (test_public.jsonl):")
     print(f"  Total entries: {len(test_entries)} (+{len(test_new)})")
     print(f"  New chimeric_title: {3}")
     print(f"  New plausible_fabrication: {3}")
-    print(f"  New version_confusion: {2}")
+    print(f"  New arxiv_version_mismatch: {2}")
     print(f"  New hybrid_fabrication: {3}")
 
     print("\nVerifying dataset integrity...")

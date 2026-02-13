@@ -105,8 +105,11 @@ def build_results_matrix(
 
             pred = pred_lookup[tool_name][entry_key]
 
+            # Treat UNCERTAIN as VALID (per evaluation protocol)
+            pred_label = "VALID" if pred.label == "UNCERTAIN" else pred.label
+
             # Compute correctness
-            is_correct = pred.label == entry.label
+            is_correct = pred_label == entry.label
             correctness = 1.0 if is_correct else 0.0
 
             # Weight hallucinated entries by confidence
