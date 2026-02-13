@@ -124,7 +124,8 @@ Every generated entry passes through automated validation:
 \section{Core subset analysis}
 \label{app:core-subset}
 
-To verify that scaling the hallucinated entries (from 134 to 975) does not distort evaluation signals, we re-evaluate all baselines on the original 521-entry core subset (71 hallucinated in dev, 43 in test).
+The hallucinated entries were scaled from 114 (71 in dev, 43 in test) to 816 (453 in dev, 363 in test) by generating additional entries across all main hallucination types.
+To verify that this scaling does not distort evaluation signals, we re-evaluate all baselines on the original core subset containing only the 114 seed hallucinations alongside the 720 valid entries.
 Aggregate metrics differ by less than 2\% between the core subset and the full dataset across all baselines: detection rate changes by at most 0.015, F1 by at most 0.02, and tier-weighted F1 by at most 0.018.
 Per-type rankings are preserved---no baseline changes rank on any type.
 We conclude that the scaled entries are consistent with the original distribution and do not introduce systematic bias.

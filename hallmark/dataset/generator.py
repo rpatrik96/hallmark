@@ -1569,11 +1569,20 @@ def generate_tier3_batch(
 
 
 def _clone_entry(entry: BenchmarkEntry) -> BenchmarkEntry:
-    """Deep clone a BenchmarkEntry."""
+    """Deep clone a BenchmarkEntry.
+
+    Strips the ``url`` field from cloned entries to prevent a trivial
+    shortcut: hallucinated entries that inherit the source paper's DBLP
+    URL allow tools to detect mismatches by simply resolving the URL
+    and comparing returned metadata.
+    """
+    fields = copy.deepcopy(entry.fields)
+    # Remove URL to prevent metadata-comparison shortcut
+    fields.pop("url", None)
     return BenchmarkEntry(
         bibtex_key=entry.bibtex_key,
         bibtex_type=entry.bibtex_type,
-        fields=copy.deepcopy(entry.fields),
+        fields=fields,
         label=entry.label,
         hallucination_type=entry.hallucination_type,
         difficulty_tier=entry.difficulty_tier,

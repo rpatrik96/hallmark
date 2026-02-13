@@ -181,12 +181,13 @@ class TestGenerateChimericTitle:
         assert result.subtests["fields_complete"] is True
 
     def test_fields_complete_without_doi(self):
-        """fields_complete should check DOI or URL."""
+        """fields_complete is False when DOI is absent (URL is stripped by _clone_entry)."""
         entry = _make_base_entry()
         entry.fields.pop("doi")
         entry.fields["url"] = "https://example.com"
         result = generate_chimeric_title(entry, "Fake Title for Testing")
-        assert result.subtests["fields_complete"] is True
+        # URL stripped to prevent metadata-comparison shortcut; no DOI → incomplete
+        assert result.subtests["fields_complete"] is False
 
 
 class TestGenerateNearMissTitle:
