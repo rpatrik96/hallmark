@@ -13,7 +13,7 @@
 \textbf{Tier} & \textbf{Type} & \textbf{Example (hallucinated field in red)} \\
 \midrule
 \multirow{4}{*}{1}
-& \texttt{fabricated\_doi} & \texttt{doi = \{\textcolor{red}{10.9999/fake.2024.001}\}} \\
+& \texttt{fabricated\_doi} & \texttt{doi = \{\textcolor{red}{10.9999/nips2024.1847}\}} \\
 & \texttt{nonexistent\_venue} & \texttt{booktitle = \{\textcolor{red}{Intl.\ Conf.\ on Advanced AI Systems}\}} \\
 & \texttt{placeholder\_authors} & \texttt{author = \{\textcolor{red}{John Doe and Jane Smith}\}} \\
 & \texttt{future\_date} & \texttt{year = \{\textcolor{red}{2030}\}} \\
@@ -39,14 +39,14 @@
 \label{app:dataset}
 
 \paragraph{DBLP scraping.}
-Valid entries were scraped from the DBLP API (\texttt{dblp.org/search/publ/api}) using venue-specific queries for NeurIPS, ICML, ICLR, AAAI, ACL, EMNLP, CVPR, and ECCV.
+Valid entries were scraped from the DBLP API (\texttt{dblp.org/search/publ/api}) using venue-specific queries for NeurIPS, ICML, ICLR, AAAI, and CVPR.
 We retrieved BibTeX records, verified DOI resolution via CrossRef, and confirmed title existence in Semantic Scholar.
 Entries failing any verification step were excluded.
 
 \paragraph{Perturbation pipeline.}
 Systematic perturbations follow deterministic rules per hallucination type:
 \begin{itemize}
-    \item \texttt{fabricated\_doi}: Replace DOI with \texttt{10.XXXX/fake.YYYY.NNN} where XXXX is a non-existent prefix.
+    \item \texttt{fabricated\_doi}: Replace DOI with a non-resolving DOI using one of 20 non-existent prefixes and four suffix styles (path, identifier, year-indexed, and conference-indexed) to avoid template-detectable patterns.
     \item \texttt{nonexistent\_venue}: Replace venue with an LLM-generated plausible but nonexistent conference name.
     \item \texttt{placeholder\_authors}: Replace author list with common placeholder names.
     \item \texttt{future\_date}: Set year to current year + 5.
@@ -55,12 +55,30 @@ Systematic perturbations follow deterministic rules per hallucination type:
     \item \texttt{author\_mismatch}: Keep title and venue, replace authors with those from a different paper.
     \item \texttt{preprint\_as\_published}: Take an arXiv-only paper and add a fabricated venue field.
     \item \texttt{hybrid\_fabrication}: Keep a valid DOI but replace title and authors with fabricated metadata.
-    \item \texttt{near\_miss\_title}: Modify 1--2 words in the title (synonym substitution or deletion).
+    \item \texttt{near\_miss\_title}: Modify 1--2 words via six strategies: synonym substitution (POS-safe pairs), plural/singular flipping, British/American spelling swap, abbreviation expansion/contraction (e.g., ``RL'' $\leftrightarrow$ ``Reinforcement Learning''), hyphenation toggling (e.g., ``self-supervised'' $\leftrightarrow$ ``self supervised''), and article removal.
     \item \texttt{plausible\_fabrication}: LLM-generate a complete, realistic but nonexistent entry.
     \item \texttt{merged\_citation}: Combine metadata from 2--3 real papers into one entry (e.g., authors from paper A, title from paper B, venue from paper C).
     \item \texttt{partial\_author\_list}: Take a real paper and drop one or more middle co-authors, keeping only the first and last.
     \item \texttt{version\_confusion}: Cite specific claims from superseded arXiv versions.
 \end{itemize}
+
+\paragraph{LLM-generated entries.}
+We prompted GPT-5.1 to generate plausible but fictional citations for types requiring coherent fabrication (\texttt{plausible\_fabrication}, \texttt{chimeric\_title}, \texttt{fabricated\_doi}).
+Each prompt requested a BibTeX entry with realistic metadata for a specified ML venue and year range.
+Generated entries were verified against CrossRef and DBLP: entries with title similarity $\geq 85\%$ (token-sort ratio) and author Jaccard similarity $\geq 0.5$ to any real paper were flagged as potential duplicates of real work and excluded.
+This filtering removed approximately 12\% of generated entries, documenting an LLM recall failure rate where the model reproduces real papers rather than fabricating new ones.
+The remaining entries were assigned sub-test labels based on their hallucination type's expected failure pattern.
+
+\paragraph{Real-world collection.}
+We harvested 72 hallucinated citations from three documented incident studies: GPTZero's NeurIPS 2025 analysis, GhostCite~\citep{ghostcite2026}, and HalluCitation~\citep{hallucitation2026}.
+Each entry was mapped to the closest taxonomy type based on its failure mode (e.g., a citation with a non-resolving DOI was classified as \texttt{fabricated\_doi}; a citation to a non-existent paper with plausible metadata was classified as \texttt{plausible\_fabrication}).
+The real-world sample is type-skewed: 55\% are \texttt{plausible\_fabrication}, reflecting the predominant LLM failure mode in practice.
+Types without real-world examples (\texttt{merged\_citation}, \texttt{partial\_author\_list}, \texttt{version\_confusion}) are flagged as theoretically motivated rather than empirically observed.
+
+\paragraph{Adversarial crafting.}
+We manually constructed entries designed to evade specific detection strategies.
+These include entries with DOIs that resolve to unrelated papers (\texttt{hybrid\_fabrication}), entries combining metadata from multiple real papers (\texttt{merged\_citation}), and entries with plausible but non-existent venues chosen to be close to real venue names.
+Adversarial entries stress-test tool robustness beyond what template-based perturbation achieves.
 
 \paragraph{Quality control.}
 Every generated entry passes through automated validation:
@@ -99,12 +117,12 @@ We conclude that the scaled entries are consistent with the original distributio
 \midrule
 \multirow{7}{*}{2}
 & \texttt{chimeric\_title}        & 1.000 & --- & --- & 0.000 & --- \\
-& \texttt{wrong\_venue}           & 0.633 & --- & --- & 0.000 & --- \\ % TODO: Confirm with actual evaluation data
+& \texttt{wrong\_venue}           & 0.633 & --- & --- & 0.000 & --- \\
 & \texttt{author\_mismatch}       & 1.000 & --- & --- & 0.000 & --- \\
-& \texttt{preprint\_as\_pub.}     & 0.533 & --- & --- & 0.000 & --- \\ % TODO: Confirm with actual evaluation data
+& \texttt{preprint\_as\_pub.}     & 0.533 & --- & --- & 0.000 & --- \\
 & \texttt{hybrid\_fabrication}    & 1.000 & --- & --- & 0.000 & --- \\
-& \texttt{merged\_citation}       & ---   & --- & --- & ---   & --- \\
-& \texttt{partial\_author\_list}  & ---   & --- & --- & ---   & --- \\
+& \texttt{merged\_citation}       & \multicolumn{5}{c}{\emph{evaluation pending}} \\
+& \texttt{partial\_author\_list}  & \multicolumn{5}{c}{\emph{evaluation pending}} \\
 \midrule
 \multirow{3}{*}{3}
 & \texttt{near\_miss\_title}      & 1.000 & --- & --- & 0.000 & --- \\
@@ -228,7 +246,7 @@ Following \citet{gebru2021datasheets}, we provide a datasheet for the \textsc{Ha
 \textsc{Hallmark} was created to provide a standardized benchmark for evaluating citation hallucination detection tools, motivated by the NeurIPS 2025 incident and subsequent audits.
 
 \paragraph{Composition.}
-The dataset contains 2,185 BibTeX entries: 918 valid entries scraped from DBLP and 1,267 hallucinated entries generated through perturbation, LLM generation, adversarial crafting, and real-world collection across 14 hallucination types.
+The dataset contains 2,184 BibTeX entries: 918 valid entries scraped from DBLP and 1,266 hallucinated entries generated through perturbation, LLM generation, adversarial crafting, and real-world collection across 14 hallucination types.
 Each entry includes 6 binary sub-test labels.
 
 \paragraph{Collection process.}

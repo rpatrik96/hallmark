@@ -101,28 +101,35 @@ class TestGenerateHybridFabrication:
 class TestGenerateVersionConfusion:
     def test_creates_hallucinated_entry(self):
         entry = _make_base_entry()
-        result = generate_version_confusion(entry, "2401.12345", "ICML", "2024")
+        result = generate_version_confusion(entry, "ICML")
         assert result.label == "HALLUCINATED"
 
     def test_hallucination_type(self):
         entry = _make_base_entry()
-        result = generate_version_confusion(entry, "2401.12345", "ICML", "2024")
+        result = generate_version_confusion(entry, "ICML")
         assert result.hallucination_type == "version_confusion"
 
     def test_eprint_field_set(self):
         entry = _make_base_entry()
-        result = generate_version_confusion(entry, "2401.12345", "ICML", "2024")
-        assert result.fields.get("eprint") == "2401.12345"
+        result = generate_version_confusion(entry, "ICML")
+        assert result.fields.get("eprint") is not None
         assert result.fields.get("archiveprefix") == "arXiv"
 
     def test_booktitle_field_set(self):
         entry = _make_base_entry()
-        result = generate_version_confusion(entry, "2401.12345", "ICML", "2024")
+        result = generate_version_confusion(entry, "ICML")
         assert result.fields.get("booktitle") == "ICML"
+
+    def test_year_shifted(self):
+        entry = _make_base_entry()
+        result = generate_version_confusion(entry, "ICML")
+        original_year = int(entry.fields["year"])
+        result_year = int(result.fields["year"])
+        assert abs(result_year - original_year) == 1
 
     def test_difficulty_tier_is_hard(self):
         entry = _make_base_entry()
-        result = generate_version_confusion(entry, "2401.12345", "ICML", "2024")
+        result = generate_version_confusion(entry, "ICML")
         assert result.difficulty_tier == 3
 
 

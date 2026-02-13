@@ -32,10 +32,10 @@ This is a single atomic workflow. The commit is not done until all hooks pass an
 - **Import + annotation edits**: When adding an import and updating the annotation that uses it, edit the annotation first — otherwise ruff may auto-remove the "unused" import before you get to update the annotation.
 - **CI vs pre-commit scope**: Pre-commit hooks only check staged files; CI runs `ruff format --check .` on the entire repo. Always run `uv run ruff format .` before pushing to catch files not covered by the hook.
 
-## Hallucination Taxonomy (13 types)
+## Hallucination Taxonomy (14 types)
 - **Tier 1 (Easy, 4 types):** fabricated_doi, nonexistent_venue, placeholder_authors, future_date
-- **Tier 2 (Medium, 5 types):** chimeric_title, wrong_venue, author_mismatch (enum value: `"swapped_authors"`), preprint_as_published, hybrid_fabrication
-- **Tier 3 (Hard, 4 types):** near_miss_title, plausible_fabrication, retracted_paper, version_confusion
+- **Tier 2 (Medium, 7 types):** chimeric_title, wrong_venue, author_mismatch (enum value: `"swapped_authors"`), preprint_as_published, hybrid_fabrication, merged_citation, partial_author_list
+- **Tier 3 (Hard, 3 types):** near_miss_title, plausible_fabrication, version_confusion
 - `AUTHOR_MISMATCH` enum member keeps value `"swapped_authors"` for backward compatibility with data files
 - `hybrid_fabrication`: real DOI + fabricated metadata — DOI resolves but authors/title don't match the DOI target
 
@@ -49,8 +49,8 @@ This is a single atomic workflow. The commit is not done until all hooks pass an
 - `hallmark/baselines/registry.py` — central baseline registry (discovery, availability, dispatch)
 - `hallmark/evaluation/ranking.py` — ONEBench-inspired Plackett-Luce ranking
 - `scripts/` — orchestrator scripts (run_all_baselines.py, run_evaluation.py, generate_reference_results.py, generate_new_instances.py)
-- `tests/` — pytest test suite (256 tests)
-- `data/v1.0/` — benchmark data splits (dev: 981, test: 768, hidden: 480; total 2,229 entries)
+- `tests/` — pytest test suite (252 tests)
+- `data/v1.0/` — benchmark data splits (dev: 1,005, test: 710, hidden: 469; total 2,184 entries)
 - `data/v1.0/baseline_results/` — pre-computed reference results for rate-limited baselines
 - `.github/workflows/` — CI (tests.yml, baselines.yml)
 

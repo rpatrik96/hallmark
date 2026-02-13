@@ -1,12 +1,12 @@
 \section{Limitations}
 \label{sec:limitations}
 
-At 2,185 entries (1,267 hallucinated, with at least 30 instances per type per public split), the dataset provides statistical power per type but remains small relative to the full diversity of possible citation hallucinations.
+At 2,184 entries (1,266 hallucinated, with at least 30 instances per type per public split), the dataset provides statistical power per type but remains small relative to the full diversity of possible citation hallucinations.
 With 30 instances per type per split, per-type metrics have 95\% Clopper-Pearson confidence interval width $\leq 0.24$ (e.g., a type-level detection rate of 90\% has a 95\% CI of [0.74, 0.98]).
 Hallucination prevalence differs across splits (55.3\% in dev, 62.0\% in test, 57.8\% in hidden) due to the constraint that each of 14 types requires $\geq 30$ instances.
 We emphasize prevalence-independent metrics (Detection Rate, FPR, AUROC) as primary; prevalence-sensitive metrics (F1) should be compared within splits only.
 The benchmark covers only English-language BibTeX references.
-The majority of hallucinated entries are synthetically generated via perturbation, though the benchmark includes 215 LLM-generated entries (produced by prompting GPT-5.1 to generate plausible citations and verifying against CrossRef/DBLP with title similarity $\geq 85$ and author Jaccard $\geq 0.5$) and 86 real-world entries harvested from documented incidents (primarily from GPTZero's NeurIPS 2025 analysis, GhostCite, and HalluCitation).
+The majority of hallucinated entries are synthetically generated via perturbation, though the benchmark includes 215 LLM-generated entries (produced by prompting GPT-5.1 to generate plausible citations and verifying against CrossRef/DBLP with title similarity $\geq 85$ and author Jaccard $\geq 0.5$) and 72 real-world entries harvested from documented incidents (primarily from GPTZero's NeurIPS 2025 analysis, GhostCite, and HalluCitation).
 The real-world sample remains small and type-skewed (55\% \texttt{plausible\_fabrication}).
 Future versions should expand real-world coverage as more documented incidents become available.
 Baseline performance depends on bibliographic API availability and coverage; results may shift as APIs evolve.

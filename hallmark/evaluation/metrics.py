@@ -534,6 +534,37 @@ def source_stratified_metrics(
     return result
 
 
+def generation_method_stratified_metrics(
+    entries: list[BenchmarkEntry],
+    predictions: dict[str, Prediction],
+) -> dict[str, dict[str, float]]:
+    """Compute detection metrics stratified by generation method.
+
+    Groups entries by generation_method (perturbation, llm_generated, real_world,
+    adversarial) and computes per-group detection rate, FPR, and F1.
+    Shows whether a tool detects templates vs. genuine hallucinations.
+    """
+    method_groups: dict[str, list[BenchmarkEntry]] = defaultdict(list)
+    for entry in entries:
+        method_groups[entry.generation_method].append(entry)
+
+    result = {}
+    for method, group_entries in sorted(method_groups.items()):
+        group_keys = {e.bibtex_key for e in group_entries}
+        group_preds = {k: v for k, v in predictions.items() if k in group_keys}
+        if not group_preds:
+            continue
+        cm = build_confusion_matrix(group_entries, group_preds)
+        result[method] = {
+            "detection_rate": cm.detection_rate,
+            "false_positive_rate": cm.false_positive_rate,
+            "f1": cm.f1,
+            "count": len(group_entries),
+        }
+
+    return result
+
+
 def subtest_accuracy_table(
     entries: list[BenchmarkEntry],
     predictions: dict[str, Prediction],

@@ -10,7 +10,7 @@ We define 14 citation hallucination types organized into three difficulty tiers 
 \textbf{Tier~3 (Hard)} hallucinations require deep verification or semantic reasoning: near-miss titles differ by one or two words from a real paper; plausible fabrications are entirely invented but realistic; and version confusion cites claims from a superseded preprint version.
 
 This taxonomy emerged from manual analysis of hallucinated citations found in the NeurIPS 2025 incident and related audits~\citep{ghostcite2026,hallucitation2026}, supplemented by adversarial brainstorming of failure modes that existing tools might miss.
-Of 86 real-world hallucinated citations in \textsc{Hallmark}, 79\% map to existing taxonomy types (\cref{app:real-world-mapping}), with uncovered types (\texttt{merged\_citation}, \texttt{partial\_author\_list}, \texttt{version\_confusion}) representing patterns identified through systematic analysis rather than observed incidents.
+Of 72 real-world hallucinated citations in \textsc{Hallmark}, 79\% map to existing taxonomy types (\cref{app:real-world-mapping}), with uncovered types (\texttt{merged\_citation}, \texttt{partial\_author\_list}, \texttt{version\_confusion}) representing patterns identified through systematic analysis rather than observed incidents.
 
 \begin{table}[t]
 \caption{The \textsc{Hallmark} hallucination taxonomy: 14 types across 3 difficulty tiers. Each type has a characteristic sub-test failure pattern. Sub-tests: \textbf{D}OI resolves, \textbf{T}itle exists, \textbf{A}uthors match, \textbf{V}enue real, \textbf{F}ields complete, \textbf{X} cross-DB agreement.}
@@ -58,7 +58,7 @@ This hierarchy directly informs tool design---a tool that only performs DOI look
 The dataset contains two classes of entries: \emph{valid} references scraped from DBLP and \emph{hallucinated} references generated through controlled perturbation.
 
 \paragraph{Valid entries.}
-We scraped BibTeX records from DBLP~\citep{dblp} for papers published at major ML venues (NeurIPS, ICML, ICLR, AAAI, ACL, EMNLP, CVPR, ECCV) between 2018 and 2025.
+We scraped BibTeX records from DBLP~\citep{dblp} for papers published at major ML venues (NeurIPS, ICML, ICLR, AAAI, CVPR) between 2018 and 2025.
 Each entry was verified by confirming DOI resolution, title existence in at least two databases, and author-venue consistency.
 We retained 918 valid entries across all splits.
 
@@ -68,7 +68,9 @@ We generated hallucinated entries using four methods:
 (2)~\emph{LLM generation}: prompting language models to generate plausible but fictional references for types requiring coherent fabrication (\texttt{plausible\_fabrication}, \texttt{chimeric\_title}).
 (3)~\emph{Adversarial crafting}: manually constructing entries designed to evade specific detection strategies.
 (4)~\emph{Real-world collection}: harvesting actual hallucinated citations from published papers identified in audits.
-Each hallucinated entry was manually verified to confirm that (a)~it is indeed hallucinated and (b)~it matches its assigned type.
+Verification is primarily algorithmic: perturbation-generated entries are validated by automated checks against DBLP and CrossRef (DOI resolution, title search, author matching), achieving $>$98\% agreement with ground truth labels.
+LLM-generated entries undergo additional automated filtering (title similarity $\geq 85\%$ and author Jaccard $\geq 0.5$ against bibliographic databases) to exclude entries that match real papers.
+Real-world and adversarial entries receive manual review to confirm hallucination status and type assignment.
 With $\geq 30$ instances per type per public split, per-type metrics achieve 95\% Clopper-Pearson confidence interval width $\leq 0.24$ for type-level detection rates.
 The design prioritizes \emph{coverage}---ensuring all 14 types have sufficient instances for per-type analysis---over volume.
 
@@ -85,6 +87,8 @@ New entries were generated deterministically (seed-controlled) using the same pe
 We use a uniform distribution across hallucination types to maximize per-type statistical power, recognizing that real-world type prevalence likely differs.
 Per-type metrics (\cref{sec:per_type}) enable prevalence-adjusted evaluation when empirical type frequencies become available.
 Practitioners with access to empirical prevalence data can reweight per-type performance by observed frequencies to compute domain-specific aggregate metrics.
+The evaluation API also supports \emph{generation-method stratification}, breaking down metrics by how entries were produced (perturbation, LLM-generated, real-world, adversarial).
+This enables practitioners to assess whether a tool detects template-based perturbations versus genuinely novel hallucinations---a critical distinction for real-world deployment.
 
 \begin{table}[t]
 \caption{Dataset statistics by split. Tier distribution refers to hallucinated entries only. All splits cover all 14 hallucination types with $n \geq 15$ per type.}
@@ -95,11 +99,11 @@ Practitioners with access to empirical prevalence data can reweight per-type per
 \toprule
 \textbf{Split} & \textbf{Valid} & \textbf{Halluc.} & \textbf{Total} & \textbf{Tier 1} & \textbf{Tier 2} & \textbf{Tier 3} & \textbf{Types} \\
 \midrule
-\texttt{dev\_public}   & 450 & 556 & 1,006 & 164 & 253 & 139 & 14 \\
+\texttt{dev\_public}   & 450 & 555 & 1,005 & 164 & 253 & 138 & 14 \\
 \texttt{test\_public}  & 270 & 440 & 710 & 124 & 222 & 94 & 14 \\
 \texttt{test\_hidden}  & 198 & 271 & 469 & 83 & 125 & 63 & 14 \\
 \midrule
-\textbf{Total}         & 918 & 1,267 & 2,185 & 371 & 600 & 296 & 14 \\
+\textbf{Total}         & 918 & 1,266 & 2,184 & 371 & 600 & 295 & 14 \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -107,7 +111,8 @@ Practitioners with access to empirical prevalence data can reweight per-type per
 \subsection{Sub-test design}
 \label{sec:subtests}
 
-Inspired by HumanEval's functional correctness tests~\citep{humaneval}, each \textsc{Hallmark} entry includes six binary sub-tests that decompose citation validity into independently verifiable dimensions:
+Inspired by HumanEval's functional correctness tests~\citep{humaneval}, each \textsc{Hallmark} entry includes six sub-tests that decompose citation validity into independently verifiable dimensions.
+Each sub-test takes one of three values: \texttt{True} (verified pass), \texttt{False} (verified fail), or \texttt{null} (not applicable, e.g., \texttt{doi\_resolves} when no DOI field is present).
 \begin{enumerate}
     \item \textbf{DOI resolves}: The DOI field, if present, resolves to a valid record.
     \item \textbf{Title exists}: The title appears in at least one bibliographic database (DBLP, Semantic Scholar, CrossRef).

@@ -19,8 +19,8 @@ HALLMARK draws on best practices from established benchmarks:
 
 ## Features
 
-- **Hallucination taxonomy**: 13 types across 3 difficulty tiers (Easy / Medium / Hard)
-- **1,700 annotated entries**: 900 valid (from DBLP) + 800 hallucinated with ground truth
+- **Hallucination taxonomy**: 14 types across 3 difficulty tiers (Easy / Medium / Hard)
+- **2,184 annotated entries**: 918 valid (from DBLP) + 1,266 hallucinated with ground truth
 - **6 sub-tests per entry**: DOI resolution, title matching, author consistency, venue verification, field completeness, cross-database agreement
 - **Evaluation metrics**: Detection Rate, F1, tier-weighted F1, detect@k, ECE
 - **Built-in baselines**: DOI-only, bibtex-updater, LLM-based, ensemble, HaRC, CiteVerifier, hallucinator, verify-citations
@@ -107,6 +107,8 @@ hallmark leaderboard --results-dir results/
 | `author_mismatch` | Author list swapped or fabricated | Correct title, wrong author list |
 | `preprint_as_published` | arXiv paper cited as venue paper | Correct paper, fabricated venue acceptance |
 | `hybrid_fabrication` | Real DOI + fabricated metadata | Valid DOI resolves but authors/title don't match |
+| `merged_citation` | Metadata from 2-3 papers merged | Authors from paper A, title from paper B |
+| `partial_author_list` | Subset of real author list | First and last author only, middle dropped |
 
 ### Tier 3: Hard (requires deep verification)
 
@@ -114,8 +116,7 @@ hallmark leaderboard --results-dir results/
 |------|-------------|---------|
 | `near_miss_title` | Title off by 1-2 words | "Attention Is All You Want" vs "...Need" |
 | `plausible_fabrication` | Entirely fabricated but realistic | Realistic author + plausible title |
-| `retracted_paper` | Citing retracted work | Paper exists but was retracted |
-| `version_confusion` | Wrong version claims | v1 claims corrected in v2 |
+| `version_confusion` | Mixed preprint/published metadata | arXiv ID with conference venue claim |
 
 ## Dataset
 
@@ -123,11 +124,11 @@ hallmark leaderboard --results-dir results/
 
 | Split | Valid | Hallucinated | Total | Purpose |
 |-------|-------|-------------|-------|---------|
-| `dev_public` | 450 | 390 | 840 | Development and tuning |
-| `test_public` | 270 | 390 | 660 | Public leaderboard |
-| `test_hidden` | 180 | 20 | 200 | Anti-gaming evaluation |
+| `dev_public` | 450 | 555 | 1,005 | Development and tuning |
+| `test_public` | 270 | 440 | 710 | Public leaderboard |
+| `test_hidden` | 198 | 271 | 469 | Anti-gaming evaluation |
 
-Tier distribution per split: ~30.8% Tier 1, ~38.5% Tier 2, ~30.8% Tier 3 (hallucinated entries).
+Tier distribution per split: ~29% Tier 1, ~45% Tier 2, ~25% Tier 3 (hallucinated entries).
 
 ### Data Format
 
@@ -170,7 +171,7 @@ Each entry is a JSON object in JSONL format:
 | **ECE** | Expected Calibration Error — measures confidence calibration quality |
 | **detect@k** | Fraction detected using k verification strategies (analogous to pass@k) |
 
-## Baseline Results (dev_public, 840 entries)
+## Baseline Results (dev_public, 1,005 entries)
 
 | Baseline | Detection Rate | F1 | Tier-weighted F1 | FPR | ECE |
 |----------|:---:|:---:|:---:|:---:|:---:|
@@ -306,7 +307,7 @@ hallmark/
 ├── .github/workflows/
 │   ├── tests.yml              # CI: test suite across Python versions
 │   └── baselines.yml          # CI: weekly free baseline evaluation
-├── tests/                     # Test suite (244 tests)
+├── tests/                     # Test suite (256 tests)
 ├── figures/                   # Evaluation figures
 └── examples/                  # Usage examples
 ```

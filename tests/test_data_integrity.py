@@ -194,24 +194,27 @@ class TestVersionConfusionQuality:
 
     def test_keeps_original_title(self) -> None:
         source = self._make_source()
-        entry = generate_version_confusion(source, "1706.03762", "ICML", "2018")
+        entry = generate_version_confusion(source, "ICML")
         assert entry.fields["title"] == source.fields["title"]
 
     def test_sets_arxiv_eprint(self) -> None:
         source = self._make_source()
-        entry = generate_version_confusion(source, "1706.03762", "ICML", "2018")
-        assert entry.fields["eprint"] == "1706.03762"
+        entry = generate_version_confusion(source, "ICML")
+        assert entry.fields.get("eprint") is not None
         assert entry.fields["archiveprefix"] == "arXiv"
 
-    def test_sets_conference_venue(self) -> None:
+    def test_sets_wrong_venue(self) -> None:
         source = self._make_source()
-        entry = generate_version_confusion(source, "1706.03762", "ICML", "2018")
+        entry = generate_version_confusion(source, "ICML")
         assert entry.fields["booktitle"] == "ICML"
-        assert entry.fields["year"] == "2018"
+        # Year should be shifted by ±1 from original
+        original_year = int(source.fields["year"])
+        result_year = int(entry.fields["year"])
+        assert abs(result_year - original_year) == 1
 
     def test_removes_doi(self) -> None:
         source = self._make_source()
-        entry = generate_version_confusion(source, "1706.03762", "ICML", "2018")
+        entry = generate_version_confusion(source, "ICML")
         assert "doi" not in entry.fields
 
 

@@ -40,10 +40,35 @@ def generate_fabricated_doi(
             "10.3141",
             "10.2718",
             "10.1618",
+            "10.48550",
+            "10.32614",
+            "10.15439",
+            "10.21033",
+            "10.60715",
+            "10.47281",
+            "10.93105",
+            "10.82004",
+            "10.55910",
+            "10.71336",
         ]
     )
-    fake_suffix = "".join(rng.choices(string.ascii_lowercase + string.digits, k=8))
-    new_entry.fields["doi"] = f"{fake_prefix}/fake.{fake_suffix}"
+    # Vary suffix patterns to avoid a single learnable format
+    suffix_style = rng.choice(["path", "id", "year_id", "conf_id"])
+    if suffix_style == "path":
+        seg1 = "".join(rng.choices(string.ascii_lowercase, k=rng.randint(3, 6)))
+        seg2 = "".join(rng.choices(string.digits, k=rng.randint(4, 7)))
+        fake_suffix = f"{seg1}.{seg2}"
+    elif suffix_style == "id":
+        fake_suffix = "".join(rng.choices(string.ascii_lowercase + string.digits, k=10))
+    elif suffix_style == "year_id":
+        year = rng.choice(["2019", "2020", "2021", "2022", "2023", "2024"])
+        seq = "".join(rng.choices(string.digits, k=5))
+        fake_suffix = f"{year}.{seq}"
+    else:  # conf_id
+        conf = rng.choice(["conf", "proc", "jour", "art", "pub"])
+        seq = "".join(rng.choices(string.digits, k=7))
+        fake_suffix = f"{conf}/{seq}"
+    new_entry.fields["doi"] = f"{fake_prefix}/{fake_suffix}"
     new_entry.label = "HALLUCINATED"
     new_entry.hallucination_type = HallucinationType.FABRICATED_DOI.value
     new_entry.difficulty_tier = DifficultyTier.EASY.value
@@ -206,12 +231,13 @@ def generate_future_date(entry: BenchmarkEntry, rng: random.Random | None = None
     new_entry.difficulty_tier = DifficultyTier.EASY.value
     new_entry.generation_method = GenerationMethod.PERTURBATION.value
     new_entry.explanation = f"Publication year {future_year} is in the future"
+    has_identifier = bool(new_entry.fields.get("doi") or new_entry.fields.get("url"))
     new_entry.subtests = {
         "doi_resolves": True,
         "title_exists": True,
         "authors_match": True,
         "venue_real": True,
-        "fields_complete": False,
+        "fields_complete": has_identifier,  # True if DOI/URL present
         "cross_db_agreement": False,
     }
     new_entry.bibtex_key = f"future_{new_entry.bibtex_key}"
@@ -242,6 +268,7 @@ def generate_chimeric_title(
     new_entry.bibtex_key = f"chimeric_{new_entry.bibtex_key}"
     # Remove DOI since the title changed
     new_entry.fields.pop("doi", None)
+    new_entry.subtests["fields_complete"] = bool(new_entry.fields.get("url"))
     return new_entry
 
 
@@ -268,7 +295,7 @@ def generate_wrong_venue(
         "authors_match": True,
         "venue_real": False,
         "fields_complete": True,
-        "cross_db_agreement": False,
+        "cross_db_agreement": True,  # title+authors match across databases; only venue is wrong
     }
     new_entry.bibtex_key = f"wrong_venue_{new_entry.bibtex_key}"
     return new_entry
@@ -309,7 +336,9 @@ def generate_near_miss_title(
     - synonym: replace a word with a same-POS synonym
     - plural: flip singular/plural on a safe noun
     - spelling: British/American spelling swap
-    - article: remove an existing article
+    - abbreviation: expand or contract ML abbreviations (e.g., RL <-> Reinforcement Learning)
+    - hyphen: toggle hyphenation (e.g., self-supervised <-> self supervised)
+    - article: remove an existing article (fallback)
 
     The "swap" strategy (swap adjacent words) is intentionally excluded
     because it almost always produces ungrammatical titles.
@@ -448,10 +477,28 @@ def generate_near_miss_title(
         "sample",
     }
 
+    # Common ML abbreviations for expansion/contraction
+    _abbreviations = {
+        "RL": "Reinforcement Learning",
+        "NLP": "Natural Language Processing",
+        "GAN": "Generative Adversarial Network",
+        "CNN": "Convolutional Neural Network",
+        "RNN": "Recurrent Neural Network",
+        "VAE": "Variational Autoencoder",
+        "SGD": "Stochastic Gradient Descent",
+        "MLP": "Multi-Layer Perceptron",
+        "GNN": "Graph Neural Network",
+        "LLM": "Large Language Model",
+    }
+    # Build reverse map (expansion -> abbreviation)
+    _expansions = {v.lower(): k for k, v in _abbreviations.items()}
+
     new_title = title
     if len(words) >= 3:
         # Choose a mutation strategy (no "swap" -- it breaks grammar)
-        strategy = rng.choice(["synonym", "plural", "synonym", "spelling"])
+        strategy = rng.choice(
+            ["synonym", "plural", "synonym", "spelling", "abbreviation", "hyphen"]
+        )
 
         if strategy == "plural":
             # Flip plural/singular on a safe noun
@@ -477,6 +524,44 @@ def generate_near_miss_title(
                 new_title = title.replace("ization", "isation", 1)
             elif "isation" in title:
                 new_title = title.replace("isation", "ization", 1)
+
+        elif strategy == "abbreviation":
+            # Expand abbreviation or contract multi-word phrase
+            title_lower = title.lower()
+            for expansion, abbr in _expansions.items():
+                pos = title_lower.find(expansion)
+                if pos >= 0:
+                    # Contract to abbreviation
+                    new_title = title[:pos] + abbr + title[pos + len(expansion) :]
+                    break
+            if new_title == title:
+                for abbr, expansion in _abbreviations.items():
+                    if abbr in title:
+                        new_title = title.replace(abbr, expansion, 1)
+                        break
+
+        elif strategy == "hyphen":
+            # Toggle hyphenation (e.g., "self-supervised" <-> "self supervised")
+            if "-" in title:
+                # Remove a hyphen
+                hyphen_pos = title.index("-")
+                new_title = title[:hyphen_pos] + " " + title[hyphen_pos + 1 :]
+            else:
+                # Add a hyphen between common compound modifiers
+                _compounds = [
+                    ("self ", "self-"),
+                    ("semi ", "semi-"),
+                    ("multi ", "multi-"),
+                    ("cross ", "cross-"),
+                    ("non ", "non-"),
+                    ("pre ", "pre-"),
+                    ("co ", "co-"),
+                ]
+                for old, new in _compounds:
+                    if old in title.lower():
+                        pos = title.lower().index(old)
+                        new_title = title[:pos] + new + title[pos + len(old) :]
+                        break
 
         if strategy == "synonym" or new_title == title:
             # Synonym substitution (primary strategy and fallback)
@@ -514,6 +599,7 @@ def generate_near_miss_title(
 
     new_entry.fields["title"] = new_title
     new_entry.fields.pop("doi", None)
+    has_identifier = bool(new_entry.fields.get("url"))
     new_entry.label = "HALLUCINATED"
     new_entry.hallucination_type = HallucinationType.NEAR_MISS_TITLE.value
     new_entry.difficulty_tier = DifficultyTier.HARD.value
@@ -524,11 +610,22 @@ def generate_near_miss_title(
         "title_exists": False,
         "authors_match": True,
         "venue_real": True,
-        "fields_complete": True,
+        "fields_complete": has_identifier,
         "cross_db_agreement": False,
     }
     new_entry.bibtex_key = f"near_miss_{new_entry.bibtex_key}"
     return new_entry
+
+
+def is_preprint_source(entry: BenchmarkEntry) -> bool:
+    """Check if an entry looks like an arXiv preprint (suitable for preprint_as_published)."""
+    has_eprint = bool(entry.fields.get("eprint"))
+    has_conference_doi = bool(entry.fields.get("doi"))
+    # A preprint either has an eprint field, or lacks a conference DOI
+    # Entries with both DOI and booktitle are conference papers, not preprints
+    if has_eprint:
+        return True
+    return not has_conference_doi and entry.bibtex_type in ("misc", "article")
 
 
 def generate_preprint_as_published(
@@ -536,7 +633,12 @@ def generate_preprint_as_published(
     fake_venue: str,
     rng: random.Random | None = None,
 ) -> BenchmarkEntry:
-    """Tier 2: arXiv preprint cited as if published at a venue."""
+    """Tier 2: arXiv preprint cited as if published at a venue.
+
+    Note: source entry should ideally be a genuine preprint (use is_preprint_source()
+    to filter). If the source is already a conference paper, the result is effectively
+    a wrong_venue entry.
+    """
     new_entry = _clone_entry(entry)
     # Add a fake venue
     new_entry.fields["booktitle"] = fake_venue
@@ -550,13 +652,14 @@ def generate_preprint_as_published(
     new_entry.difficulty_tier = DifficultyTier.MEDIUM.value
     new_entry.generation_method = GenerationMethod.PERTURBATION.value
     new_entry.explanation = f"Preprint falsely cited as published at '{fake_venue}'"
+    has_identifier = bool(new_entry.fields.get("doi") or new_entry.fields.get("url"))
     new_entry.subtests = {
         "doi_resolves": False,
         "title_exists": True,
         "authors_match": True,
         "venue_real": False,
-        "fields_complete": True,
-        "cross_db_agreement": False,
+        "fields_complete": has_identifier,
+        "cross_db_agreement": True,  # title+authors match across databases; venue is fabricated
     }
     new_entry.bibtex_key = f"preprint_pub_{new_entry.bibtex_key}"
     return new_entry
@@ -786,6 +889,7 @@ def generate_plausible_fabrication(
     # Remove DOI (fabricated paper won't have one)
     new_entry.fields.pop("doi", None)
 
+    has_identifier = bool(new_entry.fields.get("doi") or new_entry.fields.get("url"))
     new_entry.label = "HALLUCINATED"
     new_entry.hallucination_type = HallucinationType.PLAUSIBLE_FABRICATION.value
     new_entry.difficulty_tier = DifficultyTier.HARD.value
@@ -796,7 +900,7 @@ def generate_plausible_fabrication(
         "title_exists": False,
         "authors_match": False,
         "venue_real": True,
-        "fields_complete": True,
+        "fields_complete": has_identifier,
         "cross_db_agreement": False,
     }
     new_entry.bibtex_key = f"plausible_{new_entry.bibtex_key}"
@@ -917,23 +1021,37 @@ def generate_partial_author_list(
 
 def generate_version_confusion(
     entry: BenchmarkEntry,
-    arxiv_id: str,
-    conference_venue: str,
-    conference_year: str,
+    wrong_venue: str,
     rng: random.Random | None = None,
 ) -> BenchmarkEntry:
-    """Tier 3: Mix arXiv preprint metadata with conference publication metadata."""
+    """Tier 3: Mix arXiv preprint metadata with conference publication metadata.
+
+    Takes a real conference paper and creates an entry that mixes preprint and
+    publication metadata: the title and authors are real (verifiable), but the
+    entry includes a fabricated arXiv eprint and claims the paper was published
+    at a wrong venue with a shifted year.
+
+    This simulates real-world confusion where someone cites the arXiv version
+    but attributes it to the wrong conference, or vice versa.
+    """
+    rng = rng or random.Random()
     new_entry = _clone_entry(entry)
 
-    # Keep the original title and authors (they represent the real paper)
-    # Set eprint field to the given arxiv_id (arXiv metadata)
-    new_entry.fields["eprint"] = arxiv_id
+    # Generate a plausible arXiv eprint based on the paper's year
+    year = int(entry.fields.get("year", "2020"))
+    arxiv_yymm = f"{year % 100:02d}{rng.randint(1, 12):02d}"
+    arxiv_seq = f"{rng.randint(1, 9999):05d}"
+    fabricated_arxiv = f"{arxiv_yymm}.{arxiv_seq}"
+    new_entry.fields["eprint"] = fabricated_arxiv
     new_entry.fields["archiveprefix"] = "arXiv"
 
-    # But claim it was published at a conference (venue metadata that doesn't match)
-    new_entry.fields["booktitle"] = conference_venue
-    new_entry.fields["year"] = conference_year
+    # Claim it was published at a wrong conference venue
+    new_entry.fields["booktitle"] = wrong_venue
     new_entry.bibtex_type = "inproceedings"
+
+    # Shift year by ±1 (common confusion between arXiv date and conference date)
+    year_shift = rng.choice([-1, 1])
+    new_entry.fields["year"] = str(year + year_shift)
 
     # Remove DOI since version confusion creates ambiguity
     new_entry.fields.pop("doi", None)
@@ -943,16 +1061,18 @@ def generate_version_confusion(
     new_entry.difficulty_tier = DifficultyTier.HARD.value
     new_entry.generation_method = GenerationMethod.PERTURBATION.value
     new_entry.explanation = (
-        f"Entry cites arXiv:{arxiv_id} but claims venue {conference_venue} {conference_year}; "
+        f"Real paper cited with fabricated arXiv:{fabricated_arxiv} and wrong venue "
+        f"'{wrong_venue}' (year shifted to {year + year_shift}); "
         f"metadata mixes preprint and publication versions"
     )
+    has_identifier = bool(new_entry.fields.get("doi") or new_entry.fields.get("url"))
     new_entry.subtests = {
         "doi_resolves": False,
         "title_exists": True,
         "authors_match": True,
         "venue_real": True,
-        "fields_complete": True,
-        "cross_db_agreement": False,
+        "fields_complete": has_identifier,
+        "cross_db_agreement": True,  # title+authors match; version mismatch is subtle
     }
     new_entry.bibtex_key = f"version_{new_entry.bibtex_key}"
     return new_entry
@@ -1161,10 +1281,8 @@ def generate_tier3_batch(
         elif method == "plausible_fabrication":
             results.append(generate_plausible_fabrication(source, rng))
         elif method == "version_confusion":
-            # Generate a plausible arXiv ID
-            arxiv_id = f"{rng.randint(2001, 2312)}.{rng.randint(10000, 99999)}"
-            conf_venue, conf_year = rng.choice(conferences)
-            results.append(generate_version_confusion(source, arxiv_id, conf_venue, conf_year, rng))
+            conf_venue, _conf_year = rng.choice(conferences)
+            results.append(generate_version_confusion(source, conf_venue, rng))
 
     return results
 

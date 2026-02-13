@@ -21,10 +21,10 @@ from hallmark.dataset.generator import (
     generate_placeholder_authors,
     generate_plausible_fabrication,
     generate_preprint_as_published,
-    generate_retracted_paper,
     generate_swapped_authors,
     generate_version_confusion,
     generate_wrong_venue,
+    is_preprint_source,
 )
 from hallmark.dataset.schema import (
     BenchmarkEntry,
@@ -37,332 +37,9 @@ SEED = 2026_02_12
 ADDED_DATE = "2026-02-12"
 MIN_PER_TYPE = 30
 
-# ── Additional retracted CS papers (from Retraction Watch) ──────────────────
-# Split into separate pools to prevent cross-split contamination
-
-RETRACTED_PAPERS_DEV = [
-    {
-        "doi": "10.1007/s10462-023-10527-6",
-        "title": "A comprehensive survey on deep learning techniques in educational data mining",
-        "authors": "Yuanguo Lin and Hong Chen and Wei Xia and Fan Lin",
-        "venue": "Artificial Intelligence Review",
-        "year": "2023",
-    },
-    {
-        "doi": "10.1016/j.eswa.2022.118833",
-        "title": (
-            "A systematic review and meta-analysis of artificial neural network "
-            "application in geotechnical engineering"
-        ),
-        "authors": "Wenchao Zhang and Chaoshui Xu and Yong Li",
-        "venue": "Expert Systems with Applications",
-        "year": "2023",
-    },
-    {
-        "doi": "10.1007/s11042-023-15067-5",
-        "title": "A comprehensive review on image enhancement techniques",
-        "authors": "Anil Bhujel and Dibakar Raj Pant",
-        "venue": "Multimedia Tools and Applications",
-        "year": "2023",
-    },
-    {
-        "doi": "10.1016/j.asoc.2023.110085",
-        "title": "An ensemble deep learning approach for COVID-19 severity prediction",
-        "authors": "Xiangyu Meng and Wei Zou",
-        "venue": "Applied Soft Computing",
-        "year": "2023",
-    },
-    {
-        "doi": "10.1007/s11042-023-14957-w",
-        "title": (
-            "A comprehensive survey of image segmentation: clustering methods, "
-            "performance parameters, and benchmark datasets"
-        ),
-        "authors": "Chander Prabha and Sukhdev Singh",
-        "venue": "Multimedia Tools and Applications",
-        "year": "2023",
-    },
-    {
-        "doi": "10.1016/j.neucom.2023.126199",
-        "title": "A survey on graph neural networks for recommendation",
-        "authors": "Liang Qu and Ningzhi Tang",
-        "venue": "Neurocomputing",
-        "year": "2023",
-    },
-    {
-        "doi": "10.1016/j.inffus.2023.101805",
-        "title": "A comprehensive survey on multi-modal learning",
-        "authors": "Zheyu Zhang and Jun Yu",
-        "venue": "Information Fusion",
-        "year": "2023",
-    },
-    {
-        "doi": "10.1007/s10462-023-10508-9",
-        "title": "A systematic survey on deep generative models for graph generation",
-        "authors": "Xiaojie Guo and Liang Zhao",
-        "venue": "Artificial Intelligence Review",
-        "year": "2023",
-    },
-    {
-        "doi": "10.1016/j.patcog.2023.109582",
-        "title": "A survey on federated learning: challenges and applications",
-        "authors": "Jie Wen and Zhihui Lai",
-        "venue": "Pattern Recognition",
-        "year": "2023",
-    },
-    {
-        "doi": "10.1016/j.neunet.2023.01.011",
-        "title": "A comprehensive survey on knowledge distillation of diffusion models",
-        "authors": "Xiaohua Zhai and Alexander Kolesnikov",
-        "venue": "Neural Networks",
-        "year": "2023",
-    },
-    {
-        "doi": "10.1007/s11042-023-16143-w",
-        "title": "Deep learning for medical image analysis: recent advances and future directions",
-        "authors": "Mingxing Tan and Quoc Le",
-        "venue": "Multimedia Tools and Applications",
-        "year": "2023",
-    },
-    {
-        "doi": "10.1016/j.eswa.2023.120432",
-        "title": "A review of transformer-based models for time series forecasting",
-        "authors": "Haoyi Zhou and Shanghang Zhang",
-        "venue": "Expert Systems with Applications",
-        "year": "2023",
-    },
-    {
-        "doi": "10.1016/j.asoc.2022.109456",
-        "title": "A survey on deep learning for object detection",
-        "authors": "Licheng Jiao and Fan Zhang",
-        "venue": "Applied Soft Computing",
-        "year": "2023",
-    },
-    {
-        "doi": "10.1007/s10462-023-10445-7",
-        "title": "Graph attention networks: a comprehensive survey",
-        "authors": "Yunsheng Shi and Zhengjie Huang",
-        "venue": "Artificial Intelligence Review",
-        "year": "2023",
-    },
-    {
-        "doi": "10.1016/j.neucom.2023.125678",
-        "title": "Self-supervised learning for natural language processing",
-        "authors": "Zhengyan Zhang and Xu Han",
-        "venue": "Neurocomputing",
-        "year": "2023",
-    },
-    {
-        "doi": "10.1016/j.patcog.2022.108934",
-        "title": "A review of few-shot learning methods",
-        "authors": "Yaqing Wang and Quanming Yao",
-        "venue": "Pattern Recognition",
-        "year": "2023",
-    },
-    {
-        "doi": "10.1007/s11042-023-15234-1",
-        "title": "Deep learning for speech emotion recognition: a review",
-        "authors": "Surekha Akula and Raghavendra Sharma",
-        "venue": "Multimedia Tools and Applications",
-        "year": "2023",
-    },
-    {
-        "doi": "10.1016/j.inffus.2023.101678",
-        "title": "A comprehensive survey on zero-shot learning",
-        "authors": "Wei Wang and Zheng Wang",
-        "venue": "Information Fusion",
-        "year": "2023",
-    },
-    {
-        "doi": "10.1007/s10462-022-10334-5",
-        "title": "Adversarial attacks on deep neural networks: a survey",
-        "authors": "Naveed Akhtar and Ajmal Mian",
-        "venue": "Artificial Intelligence Review",
-        "year": "2023",
-    },
-    {
-        "doi": "10.1016/j.neunet.2023.03.045",
-        "title": "Meta-learning for deep learning: a survey",
-        "authors": "Timothy Hospedales and Antreas Antoniou",
-        "venue": "Neural Networks",
-        "year": "2023",
-    },
-]
-
-RETRACTED_PAPERS_TEST = [
-    {
-        "doi": "10.1007/s10462-023-10466-2",
-        "title": "Deep learning for aspect-based sentiment analysis: a review",
-        "authors": "Rajae Bensoltane and Taher Zaki",
-        "venue": "Artificial Intelligence Review",
-        "year": "2023",
-    },
-    {
-        "doi": "10.1016/j.knosys.2023.110428",
-        "title": ("A survey on knowledge graph embedding: approaches, applications and benchmarks"),
-        "authors": "Yuanfei Dai and Shiping Wang and Neal N. Xiong",
-        "venue": "Knowledge-Based Systems",
-        "year": "2023",
-    },
-    {
-        "doi": "10.1007/s10462-022-10306-1",
-        "title": "A review of deep learning methods for semantic segmentation",
-        "authors": "Yaniv Orel and Sagi Eppel",
-        "venue": "Artificial Intelligence Review",
-        "year": "2023",
-    },
-    {
-        "doi": "10.1016/j.engappai.2023.106189",
-        "title": "Federated learning for smart healthcare: a comprehensive review",
-        "authors": "Tao Huang and Jiahao Sun",
-        "venue": "Engineering Applications of Artificial Intelligence",
-        "year": "2023",
-    },
-    {
-        "doi": "10.1007/s11042-022-13596-9",
-        "title": "A survey of deep learning for lung disease detection on medical images",
-        "authors": "Haifeng Wang and Hong Zhu",
-        "venue": "Multimedia Tools and Applications",
-        "year": "2023",
-    },
-    {
-        "doi": "10.1016/j.neunet.2023.02.017",
-        "title": ("Physics-informed neural networks: recent trends and prospects"),
-        "authors": "Zhiping Mao and Lu Lu",
-        "venue": "Neural Networks",
-        "year": "2023",
-    },
-    {
-        "doi": "10.1016/j.asoc.2022.109789",
-        "title": "Deep learning approaches for anomaly detection: a survey",
-        "authors": "Guansong Pang and Chunhua Shen",
-        "venue": "Applied Soft Computing",
-        "year": "2023",
-    },
-    {
-        "doi": "10.1007/s10462-022-10287-1",
-        "title": "A comprehensive survey on graph convolutional networks",
-        "authors": "Ziwei Zhang and Peng Cui",
-        "venue": "Artificial Intelligence Review",
-        "year": "2023",
-    },
-    {
-        "doi": "10.1016/j.neucom.2022.12.089",
-        "title": "Recent advances in visual question answering",
-        "authors": "Qi Wu and Damien Teney",
-        "venue": "Neurocomputing",
-        "year": "2023",
-    },
-    {
-        "doi": "10.1016/j.patcog.2023.109321",
-        "title": "Transfer learning in computer vision: a survey",
-        "authors": "Fuzhen Zhuang and Zhiyuan Qi",
-        "venue": "Pattern Recognition",
-        "year": "2023",
-    },
-    {
-        "doi": "10.1007/s11042-023-14678-0",
-        "title": "A systematic review of emotion recognition from physiological signals",
-        "authors": "Seyed Mojtaba Hosseini and Ramaswamy Palaniappan",
-        "venue": "Multimedia Tools and Applications",
-        "year": "2023",
-    },
-    {
-        "doi": "10.1016/j.eswa.2023.119456",
-        "title": "Deep reinforcement learning for autonomous driving: a comprehensive survey",
-        "authors": "Xiaodan Liang and Liang Lin",
-        "venue": "Expert Systems with Applications",
-        "year": "2023",
-    },
-    {
-        "doi": "10.1016/j.inffus.2022.11.023",
-        "title": "Multi-view learning: a survey",
-        "authors": "Jing Zhao and Xijiong Xie",
-        "venue": "Information Fusion",
-        "year": "2023",
-    },
-    {
-        "doi": "10.1007/s10462-023-10389-y",
-        "title": "A survey on graph neural networks for time series forecasting",
-        "authors": "Ming Jin and Yifan Zhang",
-        "venue": "Artificial Intelligence Review",
-        "year": "2023",
-    },
-    {
-        "doi": "10.1016/j.neunet.2022.10.034",
-        "title": "A comprehensive survey of continual learning",
-        "authors": "Matthias De Lange and Rahaf Aljundi",
-        "venue": "Neural Networks",
-        "year": "2023",
-    },
-    {
-        "doi": "10.1016/j.knosys.2023.110234",
-        "title": "Explainable recommendation systems: a survey",
-        "authors": "Yongfeng Zhang and Xu Chen",
-        "venue": "Knowledge-Based Systems",
-        "year": "2023",
-    },
-    {
-        "doi": "10.1007/s11042-022-13245-1",
-        "title": "Deep learning for video understanding: a comprehensive review",
-        "authors": "Shuiwang Ji and Wei Li",
-        "venue": "Multimedia Tools and Applications",
-        "year": "2023",
-    },
-]
-
 # ── Additional arXiv-to-venue mappings for version_confusion ────────────────
 # Split into separate pools to prevent cross-split contamination
 
-VERSION_CONFUSED_PAPERS_DEV = [
-    {"arxiv_id": "1706.03762", "conference_venue": "NeurIPS", "conference_year": "2017"},
-    {"arxiv_id": "1810.04805", "conference_venue": "NAACL", "conference_year": "2019"},
-    {"arxiv_id": "2005.14165", "conference_venue": "NeurIPS", "conference_year": "2020"},
-    {"arxiv_id": "2302.13971", "conference_venue": "ICLR", "conference_year": "2024"},
-    {"arxiv_id": "2203.15556", "conference_venue": "NeurIPS", "conference_year": "2022"},
-    {"arxiv_id": "1512.03385", "conference_venue": "CVPR", "conference_year": "2016"},
-    {"arxiv_id": "1409.1556", "conference_venue": "ICLR", "conference_year": "2015"},
-    {"arxiv_id": "1406.2661", "conference_venue": "NeurIPS", "conference_year": "2014"},
-    {"arxiv_id": "1511.06434", "conference_venue": "ICLR", "conference_year": "2016"},
-    {"arxiv_id": "1711.05101", "conference_venue": "CVPR", "conference_year": "2018"},
-    {"arxiv_id": "1412.6980", "conference_venue": "ICLR", "conference_year": "2015"},
-    {"arxiv_id": "1409.0473", "conference_venue": "ICLR", "conference_year": "2015"},
-    {"arxiv_id": "1412.3555", "conference_venue": "ICLR", "conference_year": "2015"},
-    {"arxiv_id": "1506.02640", "conference_venue": "CVPR", "conference_year": "2016"},
-    {"arxiv_id": "1609.04747", "conference_venue": "AAAI", "conference_year": "2017"},
-    {"arxiv_id": "1508.06576", "conference_venue": "ICCV", "conference_year": "2015"},
-    {"arxiv_id": "1611.07004", "conference_venue": "CVPR", "conference_year": "2017"},
-    {"arxiv_id": "1703.06870", "conference_venue": "CVPR", "conference_year": "2017"},
-    {"arxiv_id": "1807.03748", "conference_venue": "ICLR", "conference_year": "2019"},
-    {"arxiv_id": "1910.13461", "conference_venue": "ICLR", "conference_year": "2020"},
-    {"arxiv_id": "2006.11239", "conference_venue": "NeurIPS", "conference_year": "2020"},
-    {"arxiv_id": "2104.09864", "conference_venue": "CVPR", "conference_year": "2021"},
-    {"arxiv_id": "2110.02178", "conference_venue": "ICLR", "conference_year": "2022"},
-]
-
-VERSION_CONFUSED_PAPERS_TEST = [
-    {"arxiv_id": "1502.03167", "conference_venue": "ICML", "conference_year": "2015"},
-    {"arxiv_id": "1607.06450", "conference_venue": "EMNLP", "conference_year": "2017"},
-    {"arxiv_id": "2010.11929", "conference_venue": "ICLR", "conference_year": "2021"},
-    {"arxiv_id": "2103.14030", "conference_venue": "ICML", "conference_year": "2021"},
-    {"arxiv_id": "1301.3781", "conference_venue": "NeurIPS", "conference_year": "2013"},
-    {"arxiv_id": "2106.09685", "conference_venue": "ICLR", "conference_year": "2022"},
-    {"arxiv_id": "1706.01427", "conference_venue": "ICML", "conference_year": "2017"},
-    {"arxiv_id": "1503.02531", "conference_venue": "ICCV", "conference_year": "2015"},
-    {"arxiv_id": "1508.01211", "conference_venue": "CVPR", "conference_year": "2016"},
-    {"arxiv_id": "1505.04597", "conference_venue": "ICML", "conference_year": "2015"},
-    {"arxiv_id": "1411.4555", "conference_venue": "CVPR", "conference_year": "2015"},
-    {"arxiv_id": "1605.07146", "conference_venue": "ICML", "conference_year": "2016"},
-    {"arxiv_id": "1704.04861", "conference_venue": "CVPR", "conference_year": "2017"},
-    {"arxiv_id": "1802.03426", "conference_venue": "CVPR", "conference_year": "2018"},
-    {"arxiv_id": "1906.08237", "conference_venue": "ICCV", "conference_year": "2019"},
-    {"arxiv_id": "2001.08361", "conference_venue": "ECCV", "conference_year": "2020"},
-    {"arxiv_id": "2103.00020", "conference_venue": "CVPR", "conference_year": "2021"},
-    {"arxiv_id": "2105.15203", "conference_venue": "NeurIPS", "conference_year": "2021"},
-    {"arxiv_id": "2201.03545", "conference_venue": "ICLR", "conference_year": "2022"},
-    {"arxiv_id": "2204.06125", "conference_venue": "CVPR", "conference_year": "2022"},
-    {"arxiv_id": "2303.08774", "conference_venue": "CVPR", "conference_year": "2023"},
-]
 
 # ── ML buzzwords for chimeric titles ────────────────────────────────────────
 
@@ -575,43 +252,17 @@ def _gen_plausible_fabrication(
     return entry
 
 
-def _gen_retracted_paper(
-    source: BenchmarkEntry,
-    rng: random.Random,
-    split: str,
-    idx: int,
-    retracted_pool: list[dict[str, str]],
-) -> BenchmarkEntry:
-    retracted = retracted_pool[idx % len(retracted_pool)]
-    entry = generate_retracted_paper(
-        source,
-        retracted["doi"],
-        retracted["title"],
-        retracted["authors"],
-        retracted["venue"],
-        retracted["year"],
-        rng,
-    )
-    entry.added_to_benchmark = ADDED_DATE
-    entry.bibtex_key = f"scaleup_retracted_{split}_{idx}"
-    return entry
-
-
 def _gen_version_confusion(
     source: BenchmarkEntry,
     rng: random.Random,
     split: str,
     idx: int,
-    version_pool: list[dict[str, str]],
 ) -> BenchmarkEntry:
-    version_data = version_pool[idx % len(version_pool)]
-    entry = generate_version_confusion(
-        source,
-        version_data["arxiv_id"],
-        version_data["conference_venue"],
-        version_data["conference_year"],
-        rng,
-    )
+    # Pick a venue different from the source's actual venue
+    current_venue = source.venue
+    candidates = [v for v in VENUES if v != current_venue]
+    wrong_venue = rng.choice(candidates)
+    entry = generate_version_confusion(source, wrong_venue, rng)
     entry.added_to_benchmark = ADDED_DATE
     entry.bibtex_key = f"scaleup_version_{split}_{idx}"
     return entry
@@ -625,75 +276,28 @@ def decontaminate_splits(
     test_entries: list[BenchmarkEntry],
     rng: random.Random,
 ) -> int:
-    """Replace overlapping retracted/version entries in dev with fresh metadata.
+    """Replace overlapping version_confusion eprints in dev with fresh ones.
 
+    Since eprints are now fabricated randomly, collisions are extremely rare.
     Modifies dev_entries in-place. Returns number of entries replaced.
     """
-    # Collect DOIs/arXiv IDs used by test
-    test_retracted_dois = {
-        e.fields.get("doi", "") for e in test_entries if e.hallucination_type == "retracted_paper"
-    }
-    test_version_arxiv = {
+    test_version_eprints = {
         e.fields.get("eprint", "")
         for e in test_entries
         if e.hallucination_type == "version_confusion"
     }
 
-    # Collect DOIs/arXiv IDs already used by dev (to avoid self-collision)
-    dev_retracted_dois = {
-        e.fields.get("doi", "") for e in dev_entries if e.hallucination_type == "retracted_paper"
-    }
-    dev_version_arxiv = {
-        e.fields.get("eprint", "")
-        for e in dev_entries
-        if e.hallucination_type == "version_confusion"
-    }
-
-    # Available replacements: dev pool entries not used by either split
-    avail_retracted = [
-        p
-        for p in RETRACTED_PAPERS_DEV
-        if p["doi"] not in test_retracted_dois and p["doi"] not in dev_retracted_dois
-    ]
-    avail_version = [
-        p
-        for p in VERSION_CONFUSED_PAPERS_DEV
-        if p["arxiv_id"] not in test_version_arxiv and p["arxiv_id"] not in dev_version_arxiv
-    ]
-
     replaced = 0
     for e in dev_entries:
         if (
-            e.hallucination_type == "retracted_paper"
-            and e.fields.get("doi", "") in test_retracted_dois
-        ):
-            if not avail_retracted:
-                continue
-            repl = avail_retracted.pop(0)
-            e.fields["doi"] = repl["doi"]
-            e.fields["title"] = repl["title"]
-            e.fields["author"] = repl["authors"]
-            e.fields["year"] = repl["year"]
-            venue_field = "booktitle" if e.bibtex_type == "inproceedings" else "journal"
-            e.fields[venue_field] = repl["venue"]
-            e.explanation = f"Paper '{repl['title']}' was retracted after publication"
-            replaced += 1
-
-        elif (
             e.hallucination_type == "version_confusion"
-            and e.fields.get("eprint", "") in test_version_arxiv
+            and e.fields.get("eprint", "") in test_version_eprints
         ):
-            if not avail_version:
-                continue
-            repl = avail_version.pop(0)
-            e.fields["eprint"] = repl["arxiv_id"]
-            e.fields["booktitle"] = repl["conference_venue"]
-            e.fields["year"] = repl["conference_year"]
-            e.explanation = (
-                f"Entry cites arXiv:{repl['arxiv_id']} but claims venue "
-                f"{repl['conference_venue']} {repl['conference_year']}; "
-                f"metadata mixes preprint and publication versions"
-            )
+            # Regenerate a unique fabricated eprint
+            year = int(e.fields.get("year", "2020"))
+            arxiv_yymm = f"{year % 100:02d}{rng.randint(1, 12):02d}"
+            arxiv_seq = f"{rng.randint(1, 9999):05d}"
+            e.fields["eprint"] = f"{arxiv_yymm}.{arxiv_seq}"
             replaced += 1
 
     return replaced
@@ -758,28 +362,6 @@ def generate_entries_for_gaps(
     available_buzzwords = [b for b in ML_BUZZWORDS if b not in existing_chimeric_titles]
     rng.shuffle(available_buzzwords)
 
-    # Select pools based on split to prevent cross-split contamination
-    retracted_pool = RETRACTED_PAPERS_DEV if split_name == "dev" else RETRACTED_PAPERS_TEST
-    version_pool = (
-        VERSION_CONFUSED_PAPERS_DEV if split_name == "dev" else VERSION_CONFUSED_PAPERS_TEST
-    )
-
-    # Filter pools to exclude papers already present in the OTHER split
-    if other_split_entries:
-        other_retracted_dois = {
-            e.fields.get("doi", "")
-            for e in other_split_entries
-            if e.hallucination_type == "retracted_paper"
-        }
-        retracted_pool = [p for p in retracted_pool if p["doi"] not in other_retracted_dois]
-
-        other_version_arxiv = {
-            e.fields.get("eprint", "")
-            for e in other_split_entries
-            if e.hallucination_type == "version_confusion"
-        }
-        version_pool = [p for p in version_pool if p["arxiv_id"] not in other_version_arxiv]
-
     for type_val, count in sorted(gaps.items()):
         for i in range(count):
             source = rng.choice(valid_entries)
@@ -809,6 +391,10 @@ def generate_entries_for_gaps(
                 entry = _gen_swapped_authors(source, valid_entries, rng, split_name, i)
                 entry.bibtex_key = make_unique_key("scaleup_swapped", i)
             elif type_val == HallucinationType.PREPRINT_AS_PUBLISHED.value:
+                # Filter for genuine preprint sources (no conference DOI)
+                preprint_sources = [e for e in valid_entries if is_preprint_source(e)]
+                if preprint_sources:
+                    source = rng.choice(preprint_sources)
                 entry = _gen_preprint_as_published(source, rng, split_name, i)
                 entry.bibtex_key = make_unique_key("scaleup_preprint", i)
             elif type_val == HallucinationType.HYBRID_FABRICATION.value:
@@ -820,11 +406,8 @@ def generate_entries_for_gaps(
             elif type_val == HallucinationType.PLAUSIBLE_FABRICATION.value:
                 entry = _gen_plausible_fabrication(source, rng, split_name, i)
                 entry.bibtex_key = make_unique_key("scaleup_plausible", i)
-            elif type_val == HallucinationType.RETRACTED_PAPER.value:
-                entry = _gen_retracted_paper(source, rng, split_name, i, retracted_pool)
-                entry.bibtex_key = make_unique_key("scaleup_retracted", i)
             elif type_val == HallucinationType.VERSION_CONFUSION.value:
-                entry = _gen_version_confusion(source, rng, split_name, i, version_pool)
+                entry = _gen_version_confusion(source, rng, split_name, i)
                 entry.bibtex_key = make_unique_key("scaleup_version", i)
             else:
                 raise ValueError(f"Unknown hallucination type: {type_val}")

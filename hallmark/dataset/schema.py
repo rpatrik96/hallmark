@@ -82,7 +82,7 @@ SUBTEST_NAMES = [
 
 
 # Default sub-test values for verified entries (all checks pass)
-VALID_SUBTESTS: dict[str, bool] = {
+VALID_SUBTESTS: dict[str, bool | None] = {
     "doi_resolves": True,
     "title_exists": True,
     "authors_match": True,
@@ -118,7 +118,9 @@ class BenchmarkEntry:
     added_to_benchmark: str = ""  # ISO date (YYYY-MM-DD)
 
     # Sub-test ground truth (HumanEval-inspired)
-    subtests: dict[str, bool] = field(default_factory=dict)
+    # Three-valued: True (verified pass), False (verified fail), None (not applicable)
+    # e.g., doi_resolves=None when entry has no DOI field
+    subtests: dict[str, bool | None] = field(default_factory=dict)
 
     # Optional: the raw BibTeX string
     raw_bibtex: str | None = None

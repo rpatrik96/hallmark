@@ -3,7 +3,6 @@
 Creates instances for missing hallucination types:
 - chimeric_title
 - plausible_fabrication
-- retracted_paper
 - version_confusion
 - hybrid_fabrication
 """
@@ -17,55 +16,9 @@ from hallmark.dataset.generator import (
     generate_chimeric_title,
     generate_hybrid_fabrication,
     generate_plausible_fabrication,
-    generate_retracted_paper,
     generate_version_confusion,
 )
 from hallmark.dataset.schema import BenchmarkEntry, load_entries, save_entries
-
-# Real retracted CS papers (hardcoded to avoid Crossref API calls)
-RETRACTED_PAPERS = [
-    {
-        "doi": "10.1007/s10462-023-10527-6",
-        "title": "A comprehensive survey on deep learning techniques in educational data mining",
-        "authors": "Yuanguo Lin and Hong Chen and Wei Xia and Fan Lin",
-        "venue": "Artificial Intelligence Review",
-        "year": "2023",
-    },
-    {
-        "doi": "10.1016/j.eswa.2022.118833",
-        "title": (
-            "A systematic review and meta-analysis of artificial neural network "
-            "application in geotechnical engineering"
-        ),
-        "authors": "Wenchao Zhang and Chaoshui Xu and Yong Li",
-        "venue": "Expert Systems with Applications",
-        "year": "2023",
-    },
-    {
-        "doi": "10.1007/s11042-023-15067-5",
-        "title": "A comprehensive review on image enhancement techniques",
-        "authors": "Anil Bhujel and Dibakar Raj Pant",
-        "venue": "Multimedia Tools and Applications",
-        "year": "2023",
-    },
-    {
-        "doi": "10.1016/j.asoc.2023.110085",
-        "title": "An ensemble deep learning approach for COVID-19 severity prediction",
-        "authors": "Xiangyu Meng and Wei Zou",
-        "venue": "Applied Soft Computing",
-        "year": "2023",
-    },
-    {
-        "doi": "10.1007/s11042-023-14957-w",
-        "title": (
-            "A comprehensive survey of image segmentation: clustering methods, "
-            "performance parameters, and benchmark datasets"
-        ),
-        "authors": "Chander Prabha and Sukhdev Singh",
-        "venue": "Multimedia Tools and Applications",
-        "year": "2023",
-    },
-]
 
 # Real papers with arXiv versions for version_confusion
 VERSION_CONFUSED_PAPERS = [
@@ -97,7 +50,6 @@ def generate_instances_for_split(
     valid_entries: list[BenchmarkEntry],
     num_chimeric: int,
     num_plausible: int,
-    num_retracted: int,
     num_version: int,
     num_hybrid: int,
     rng: random.Random,
@@ -122,24 +74,6 @@ def generate_instances_for_split(
         entry = generate_plausible_fabrication(source, rng)
         entry.added_to_benchmark = ADDED_DATE
         entry.bibtex_key = f"plausible_{split_name}_{i + 1}"
-        new_entries.append(entry)
-
-    # Generate retracted_paper instances
-    print(f"  Generating {num_retracted} retracted_paper instances...")
-    retracted_pool = RETRACTED_PAPERS[:num_retracted]
-    for i, retracted in enumerate(retracted_pool):
-        source = rng.choice(valid_entries)
-        entry = generate_retracted_paper(
-            source,
-            retracted["doi"],
-            retracted["title"],
-            retracted["authors"],
-            retracted["venue"],
-            retracted["year"],
-            rng,
-        )
-        entry.added_to_benchmark = ADDED_DATE
-        entry.bibtex_key = f"retracted_{split_name}_{i + 1}"
         new_entries.append(entry)
 
     # Generate version_confusion instances
@@ -197,7 +131,6 @@ def main() -> None:
         dev_valid,
         num_chimeric=5,
         num_plausible=5,
-        num_retracted=3,
         num_version=3,
         num_hybrid=5,
         rng=rng,
@@ -210,7 +143,6 @@ def main() -> None:
         test_valid,
         num_chimeric=3,
         num_plausible=3,
-        num_retracted=2,
         num_version=2,
         num_hybrid=3,
         rng=rng,
@@ -233,7 +165,6 @@ def main() -> None:
     print(f"  Total entries: {len(dev_entries)} (+{len(dev_new)})")
     print(f"  New chimeric_title: {5}")
     print(f"  New plausible_fabrication: {5}")
-    print(f"  New retracted_paper: {3}")
     print(f"  New version_confusion: {3}")
     print(f"  New hybrid_fabrication: {5}")
 
@@ -241,7 +172,6 @@ def main() -> None:
     print(f"  Total entries: {len(test_entries)} (+{len(test_new)})")
     print(f"  New chimeric_title: {3}")
     print(f"  New plausible_fabrication: {3}")
-    print(f"  New retracted_paper: {2}")
     print(f"  New version_confusion: {2}")
     print(f"  New hybrid_fabrication: {3}")
 

@@ -7,13 +7,13 @@
     "splits": {
         "dev_public": {
             "file": "dev_public.jsonl",
-            "total": 1006,
+            "total": 1005,
             "valid": 450,
-            "hallucinated": 556,
+            "hallucinated": 555,
             "tier_distribution": {
                 "1": 164,
                 "2": 253,
-                "3": 139
+                "3": 138
             },
             "type_distribution": {
                 "chimeric_title": 32,
@@ -25,17 +25,17 @@
                 "nonexistent_venue": 33,
                 "partial_author_list": 35,
                 "placeholder_authors": 34,
-                "plausible_fabrication": 74,
+                "plausible_fabrication": 73,
                 "preprint_as_published": 31,
                 "swapped_authors": 38,
                 "version_confusion": 30,
                 "wrong_venue": 33
             },
             "generation_method_distribution": {
-                "adversarial": 58,
-                "llm_generated": 79,
+                "adversarial": 69,
+                "llm_generated": 78,
                 "perturbation": 370,
-                "real_world": 49,
+                "real_world": 38,
                 "scraped": 450
             }
         },
@@ -66,10 +66,10 @@
                 "wrong_venue": 32
             },
             "generation_method_distribution": {
-                "adversarial": 31,
+                "adversarial": 34,
                 "llm_generated": 38,
                 "perturbation": 351,
-                "real_world": 20,
+                "real_world": 17,
                 "scraped": 270
             }
         },
@@ -132,7 +132,6 @@
         "ICML",
         "ICLR",
         "AAAI",
-        "ACL",
         "CVPR"
     ],
     "hallucination_types": {
