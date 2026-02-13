@@ -113,6 +113,7 @@ def _generate_hidden_entry(
     else:
         raise ValueError(f"Unknown hallucination type: {type_val}")
 
+    entry.source = "perturbation_hidden"
     entry.added_to_benchmark = build_date
     entry.bibtex_key = f"hidden_{type_val}_{idx}"
     return entry

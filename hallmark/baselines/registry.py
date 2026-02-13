@@ -146,6 +146,20 @@ _PIP_TO_MODULE: dict[str, str] = {
 def _register_builtins() -> None:
     """Register all built-in baselines on module import."""
 
+    # --- DOI-presence heuristic (no extra deps) ---
+    def _run_doi_presence_heuristic(entries: list[BenchmarkEntry], **kw: Any) -> list[Prediction]:
+        from hallmark.baselines.doi_presence import run_doi_presence_heuristic
+
+        return run_doi_presence_heuristic(entries, **kw)
+
+    register(
+        BaselineInfo(
+            name="doi_presence_heuristic",
+            description="Trivial heuristic: predict HALLUCINATED when DOI is absent",
+            runner=_run_doi_presence_heuristic,
+        )
+    )
+
     # --- DOI-only (no extra deps) ---
     def _run_doi_only(entries: list[BenchmarkEntry], **kw: Any) -> list[Prediction]:
         from hallmark.baselines.doi_only import run_doi_only

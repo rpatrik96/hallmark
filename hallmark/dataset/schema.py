@@ -114,6 +114,7 @@ class BenchmarkEntry:
     # Metadata
     generation_method: str = "scraped"  # from GenerationMethod enum
     source_conference: str | None = None  # original venue for valid entries
+    source: str | None = None  # provenance: where this entry came from
     publication_date: str = ""  # ISO date (YYYY-MM-DD)
     added_to_benchmark: str = ""  # ISO date (YYYY-MM-DD)
 

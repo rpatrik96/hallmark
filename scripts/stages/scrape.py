@@ -40,6 +40,11 @@ def stage_scrape_valid(
 
     config = ScraperConfig(venues=conferences, years=years)
     entries = scrape_proceedings(config)
+
+    # Set source field for scraped entries
+    for entry in entries:
+        entry.source = "dblp"
+
     logger.info("Scraped %d valid entries from %d conferences", len(entries), len(conferences))
     return entries
 
@@ -89,6 +94,7 @@ def stage_load_journal_articles(path: Path) -> list[BenchmarkEntry]:
                     label=data.get("label", "VALID"),
                     generation_method=data.get("generation_method", "scraped"),
                     source_conference=data.get("source"),
+                    source="dblp",
                     subtests=data.get("subtests", {}),
                     raw_bibtex=data.get("bibtex"),
                 )

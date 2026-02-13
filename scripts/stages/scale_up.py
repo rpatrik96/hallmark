@@ -202,6 +202,7 @@ def _generate_for_type(
     else:
         raise ValueError(f"Unknown hallucination type: {type_val}")
 
+    entry.source = "perturbation_scaleup"
     entry.added_to_benchmark = build_date
     entry.bibtex_key = f"scaleup_{type_val}_{split_name}_{idx}"
     return entry

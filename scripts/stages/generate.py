@@ -62,5 +62,10 @@ def stage_generate_hallucinations(
     tier3 = generate_tier3_batch(valid_entries, t3_count, seed=t3_seed)
 
     all_entries = tier1 + tier2 + tier3
+
+    # Set source field for perturbation-generated entries
+    for entry in all_entries:
+        entry.source = "perturbation"
+
     logger.info("Generated %d total hallucinated entries", len(all_entries))
     return all_entries

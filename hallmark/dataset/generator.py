@@ -382,18 +382,16 @@ def generate_chimeric_title(
     new_entry.difficulty_tier = DifficultyTier.MEDIUM.value
     new_entry.generation_method = GenerationMethod.PERTURBATION.value
     new_entry.explanation = f"Title '{fake_title}' is fabricated; authors are real"
+    has_identifier = bool(new_entry.fields.get("doi") or new_entry.fields.get("url"))
     new_entry.subtests = {
-        "doi_resolves": False,
+        "doi_resolves": True,  # DOI still resolves to original paper
         "title_exists": False,
         "authors_match": True,
         "venue_real": True,
-        "fields_complete": True,
+        "fields_complete": has_identifier,
         "cross_db_agreement": False,
     }
     new_entry.bibtex_key = f"chimeric_{new_entry.bibtex_key}"
-    # Remove DOI since the title changed
-    new_entry.fields.pop("doi", None)
-    new_entry.subtests["fields_complete"] = bool(new_entry.fields.get("url"))
     return new_entry
 
 
@@ -816,15 +814,14 @@ def generate_near_miss_title(
                 new_title = " ".join(words)
 
     new_entry.fields["title"] = new_title
-    new_entry.fields.pop("doi", None)
-    has_identifier = bool(new_entry.fields.get("url"))
+    has_identifier = bool(new_entry.fields.get("doi") or new_entry.fields.get("url"))
     new_entry.label = "HALLUCINATED"
     new_entry.hallucination_type = HallucinationType.NEAR_MISS_TITLE.value
     new_entry.difficulty_tier = DifficultyTier.HARD.value
     new_entry.generation_method = GenerationMethod.PERTURBATION.value
     new_entry.explanation = f"Title slightly modified: '{new_title}' (original: '{title}')"
     new_entry.subtests = {
-        "doi_resolves": False,
+        "doi_resolves": True,  # DOI resolves to original (correct) paper
         "title_exists": False,
         "authors_match": True,
         "venue_real": True,
@@ -1329,9 +1326,6 @@ def generate_version_confusion(
     year_shift = rng.choice([-1, 1])
     new_entry.fields["year"] = str(year + year_shift)
 
-    # Remove DOI since version confusion creates ambiguity
-    new_entry.fields.pop("doi", None)
-
     new_entry.label = "HALLUCINATED"
     new_entry.hallucination_type = HallucinationType.VERSION_CONFUSION.value
     new_entry.difficulty_tier = DifficultyTier.HARD.value
@@ -1342,12 +1336,12 @@ def generate_version_confusion(
     )
     has_identifier = bool(new_entry.fields.get("doi") or new_entry.fields.get("url"))
     new_entry.subtests = {
-        "doi_resolves": False,
+        "doi_resolves": True,  # DOI resolves to the real paper
         "title_exists": True,
         "authors_match": True,
         "venue_real": True,
         "fields_complete": has_identifier,
-        "cross_db_agreement": True,  # title+authors match; version mismatch is subtle
+        "cross_db_agreement": False,  # venue/year don't match what DOI resolves to
     }
     new_entry.bibtex_key = f"version_{new_entry.bibtex_key}"
     return new_entry

@@ -1,7 +1,9 @@
 """Tests for hallmark.dataset.generator."""
 
 from hallmark.dataset.generator import (
+    generate_chimeric_title,
     generate_hybrid_fabrication,
+    generate_near_miss_title,
     generate_plausible_fabrication,
     generate_version_confusion,
 )
@@ -131,6 +133,96 @@ class TestGenerateVersionConfusion:
     def test_difficulty_tier_is_hard(self):
         entry = _make_base_entry()
         result = generate_version_confusion(entry, "ICML")
+        assert result.difficulty_tier == 3
+
+    def test_doi_preserved(self):
+        """DOI should be kept since it points to the real paper."""
+        entry = _make_base_entry()
+        result = generate_version_confusion(entry, "ICML")
+        assert result.fields.get("doi") == entry.fields["doi"]
+
+    def test_subtests_correct(self):
+        """Verify subtests reflect DOI resolving but metadata mismatch."""
+        entry = _make_base_entry()
+        result = generate_version_confusion(entry, "ICML")
+        assert result.subtests["doi_resolves"] is True
+        assert result.subtests["cross_db_agreement"] is False
+
+
+class TestGenerateChimericTitle:
+    def test_creates_hallucinated_entry(self):
+        entry = _make_base_entry()
+        result = generate_chimeric_title(entry, "Fake Title for Testing")
+        assert result.label == "HALLUCINATED"
+
+    def test_hallucination_type(self):
+        entry = _make_base_entry()
+        result = generate_chimeric_title(entry, "Fake Title for Testing")
+        assert result.hallucination_type == "chimeric_title"
+
+    def test_doi_preserved(self):
+        """DOI should be kept since it points to the real paper with real authors."""
+        entry = _make_base_entry()
+        result = generate_chimeric_title(entry, "Fake Title for Testing")
+        assert result.fields.get("doi") == entry.fields["doi"]
+
+    def test_subtests_correct(self):
+        """DOI resolves but title doesn't match."""
+        entry = _make_base_entry()
+        result = generate_chimeric_title(entry, "Fake Title for Testing")
+        assert result.subtests["doi_resolves"] is True
+        assert result.subtests["title_exists"] is False
+        assert result.subtests["authors_match"] is True
+
+    def test_fields_complete_with_doi(self):
+        """fields_complete should be True when DOI is present."""
+        entry = _make_base_entry()
+        result = generate_chimeric_title(entry, "Fake Title for Testing")
+        assert result.subtests["fields_complete"] is True
+
+    def test_fields_complete_without_doi(self):
+        """fields_complete should check DOI or URL."""
+        entry = _make_base_entry()
+        entry.fields.pop("doi")
+        entry.fields["url"] = "https://example.com"
+        result = generate_chimeric_title(entry, "Fake Title for Testing")
+        assert result.subtests["fields_complete"] is True
+
+
+class TestGenerateNearMissTitle:
+    def test_creates_hallucinated_entry(self):
+        entry = _make_base_entry()
+        result = generate_near_miss_title(entry)
+        assert result.label == "HALLUCINATED"
+
+    def test_hallucination_type(self):
+        entry = _make_base_entry()
+        result = generate_near_miss_title(entry)
+        assert result.hallucination_type == "near_miss_title"
+
+    def test_doi_preserved(self):
+        """DOI should be kept since it resolves to the original paper."""
+        entry = _make_base_entry()
+        result = generate_near_miss_title(entry)
+        assert result.fields.get("doi") == entry.fields["doi"]
+
+    def test_subtests_correct(self):
+        """DOI resolves to original paper but title is slightly off."""
+        entry = _make_base_entry()
+        result = generate_near_miss_title(entry)
+        assert result.subtests["doi_resolves"] is True
+        assert result.subtests["title_exists"] is False
+        assert result.subtests["authors_match"] is True
+
+    def test_title_differs(self):
+        """Title should be modified from original."""
+        entry = _make_base_entry()
+        result = generate_near_miss_title(entry)
+        assert result.fields["title"] != entry.fields["title"]
+
+    def test_difficulty_tier_is_hard(self):
+        entry = _make_base_entry()
+        result = generate_near_miss_title(entry)
         assert result.difficulty_tier == 3
 
 

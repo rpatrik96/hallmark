@@ -1,169 +1,255 @@
 {
-    "name": "HALLMARK",
-    "version": "1.0",
-    "description": "Citation hallucination detection benchmark",
-    "created": "2026-02-09",
-    "license": "MIT",
-    "splits": {
-        "dev_public": {
-            "file": "dev_public.jsonl",
-            "total": 1005,
-            "valid": 450,
-            "hallucinated": 555,
-            "tier_distribution": {
-                "1": 146,
-                "2": 266,
-                "3": 143
-            },
-            "type_distribution": {
-                "chimeric_title": 40,
-                "fabricated_doi": 50,
-                "future_date": 29,
-                "hybrid_fabrication": 45,
-                "merged_citation": 32,
-                "near_miss_title": 45,
-                "nonexistent_venue": 32,
-                "partial_author_list": 38,
-                "placeholder_authors": 35,
-                "plausible_fabrication": 66,
-                "preprint_as_published": 33,
-                "swapped_authors": 38,
-                "version_confusion": 32,
-                "wrong_venue": 40
-            },
-            "generation_method_distribution": {
-                "adversarial": 67,
-                "llm_generated": 72,
-                "perturbation": 388,
-                "real_world": 28,
-                "scraped": 450
-            }
-        },
-        "test_public": {
-            "file": "test_public.jsonl",
-            "total": 710,
-            "valid": 270,
-            "hallucinated": 440,
-            "tier_distribution": {
-                "1": 142,
-                "2": 209,
-                "3": 89
-            },
-            "type_distribution": {
-                "chimeric_title": 22,
-                "fabricated_doi": 45,
-                "future_date": 33,
-                "hybrid_fabrication": 34,
-                "merged_citation": 38,
-                "near_miss_title": 24,
-                "nonexistent_venue": 32,
-                "partial_author_list": 32,
-                "placeholder_authors": 32,
-                "plausible_fabrication": 37,
-                "preprint_as_published": 28,
-                "swapped_authors": 30,
-                "version_confusion": 28,
-                "wrong_venue": 25
-            },
-            "generation_method_distribution": {
-                "adversarial": 36,
-                "llm_generated": 44,
-                "perturbation": 333,
-                "real_world": 27,
-                "scraped": 270
-            }
-        },
-        "test_hidden": {
-            "file": "test_hidden.jsonl",
-            "total": 469,
-            "valid": 198,
-            "hallucinated": 271,
-            "tier_distribution": {
-                "1": 83,
-                "2": 125,
-                "3": 63
-            },
-            "type_distribution": {
-                "chimeric_title": 16,
-                "fabricated_doi": 35,
-                "future_date": 15,
-                "hybrid_fabrication": 24,
-                "merged_citation": 18,
-                "near_miss_title": 18,
-                "nonexistent_venue": 16,
-                "partial_author_list": 18,
-                "placeholder_authors": 17,
-                "plausible_fabrication": 30,
-                "preprint_as_published": 15,
-                "swapped_authors": 18,
-                "version_confusion": 15,
-                "wrong_venue": 16
-            },
-            "generation_method_distribution": {
-                "adversarial": 37,
-                "llm_generated": 46,
-                "perturbation": 171,
-                "real_world": 17,
-                "scraped": 198
-            }
-        }
+  "name": "HALLMARK",
+  "version": "1.0",
+  "description": "Citation hallucination detection benchmark",
+  "created": "2026-02-09",
+  "license": "MIT",
+  "splits": {
+    "dev_public": {
+      "file": "dev_public.jsonl",
+      "total": 1005,
+      "valid": 450,
+      "hallucinated": 555,
+      "tier_distribution": {
+        "1": 146,
+        "2": 266,
+        "3": 143
+      },
+      "type_distribution": {
+        "version_confusion": 32,
+        "near_miss_title": 45,
+        "plausible_fabrication": 66,
+        "merged_citation": 32,
+        "nonexistent_venue": 32,
+        "hybrid_fabrication": 45,
+        "future_date": 29,
+        "swapped_authors": 38,
+        "fabricated_doi": 50,
+        "wrong_venue": 40,
+        "chimeric_title": 40,
+        "partial_author_list": 38,
+        "placeholder_authors": 35,
+        "preprint_as_published": 33
+      },
+      "generation_method_distribution": {
+        "perturbation": 388,
+        "gptzero_neurips2025": 28,
+        "dblp": 450,
+        "adversarial": 67,
+        "llm_generated": 72
+      }
     },
-    "hallucination_tier_distribution": {
-        "tier_1_easy": 0.4,
-        "tier_2_medium": 0.35,
-        "tier_3_hard": 0.25
+    "test_public": {
+      "file": "test_public.jsonl",
+      "total": 733,
+      "valid": 270,
+      "hallucinated": 463,
+      "tier_distribution": {
+        "1": 142,
+        "2": 209,
+        "3": 89
+      },
+      "type_distribution": {
+        "chimeric_title": 30,
+        "near_miss_title": 30,
+        "placeholder_authors": 32,
+        "merged_citation": 38,
+        "partial_author_list": 32,
+        "fabricated_doi": 45,
+        "preprint_as_published": 30,
+        "nonexistent_venue": 32,
+        "hybrid_fabrication": 34,
+        "plausible_fabrication": 37,
+        "future_date": 33,
+        "wrong_venue": 30,
+        "swapped_authors": 30,
+        "version_confusion": 30
+      },
+      "generation_method_distribution": {
+        "dblp": 270,
+        "perturbation": 333,
+        "llm_generated": 44,
+        "adversarial": 36,
+        "gptzero_neurips2025": 27,
+        "perturbation_scaleup": 23
+      }
     },
-    "temporal_segments": {
-        "valid_range": {
-            "start": "2021-01-01",
-            "end": "2023-12-31"
-        },
-        "future_date": {
-            "start": "2027-01-01",
-            "end": "2036-12-31"
-        }
-    },
-    "venues": [
-        "NeurIPS",
-        "ICML",
-        "ICLR",
-        "AAAI",
-        "CVPR"
-    ],
-    "hallucination_types": {
-        "tier_1": [
-            "fabricated_doi",
-            "nonexistent_venue",
-            "placeholder_authors",
-            "future_date"
-        ],
-        "tier_2": [
-            "chimeric_title",
-            "wrong_venue",
-            "swapped_authors",
-            "preprint_as_published",
-            "hybrid_fabrication",
-            "merged_citation",
-            "partial_author_list"
-        ],
-        "tier_3": [
-            "near_miss_title",
-            "plausible_fabrication",
-            "version_confusion"
-        ]
-    },
-    "subtests": [
-        "doi_resolves",
-        "title_exists",
-        "authors_match",
-        "venue_real",
-        "fields_complete",
-        "cross_db_agreement"
-    ],
-    "benchmarks_inspired_by": {
-        "HumanEval": "Multi-criteria per sample, detect@k metric",
-        "SWE-bench": "Contamination awareness",
-        "LiveCodeBench": "Temporal segmentation, continuous updates",
-        "ONEBench": "Sample-level atomic evaluation, ever-expanding pool, heterogeneous aggregation"
+    "test_hidden": {
+      "file": "test_hidden.jsonl",
+      "total": 469,
+      "valid": 198,
+      "hallucinated": 271,
+      "tier_distribution": {
+        "1": 83,
+        "2": 125,
+        "3": 63
+      },
+      "type_distribution": {
+        "chimeric_title": 16,
+        "fabricated_doi": 35,
+        "future_date": 15,
+        "hybrid_fabrication": 24,
+        "merged_citation": 18,
+        "near_miss_title": 18,
+        "nonexistent_venue": 16,
+        "partial_author_list": 18,
+        "placeholder_authors": 17,
+        "plausible_fabrication": 30,
+        "preprint_as_published": 15,
+        "swapped_authors": 18,
+        "version_confusion": 15,
+        "wrong_venue": 16
+      },
+      "generation_method_distribution": {
+        "adversarial": 37,
+        "llm_generated": 46,
+        "perturbation": 171,
+        "real_world": 17,
+        "scraped": 198
+      }
     }
+  },
+  "hallucination_tier_distribution": {
+    "tier_1_easy": 0.4,
+    "tier_2_medium": 0.35,
+    "tier_3_hard": 0.25
+  },
+  "temporal_segments": {
+    "valid_range": {
+      "start": "2021-01-01",
+      "end": "2023-12-31"
+    },
+    "future_date": {
+      "start": "2027-01-01",
+      "end": "2036-12-31"
+    }
+  },
+  "venues": [
+    "NeurIPS",
+    "ICML",
+    "ICLR",
+    "AAAI",
+    "CVPR"
+  ],
+  "hallucination_types": {
+    "tier_1": [
+      "fabricated_doi",
+      "nonexistent_venue",
+      "placeholder_authors",
+      "future_date"
+    ],
+    "tier_2": [
+      "chimeric_title",
+      "wrong_venue",
+      "swapped_authors",
+      "preprint_as_published",
+      "hybrid_fabrication",
+      "merged_citation",
+      "partial_author_list"
+    ],
+    "tier_3": [
+      "near_miss_title",
+      "plausible_fabrication",
+      "version_confusion"
+    ]
+  },
+  "subtests": [
+    "doi_resolves",
+    "title_exists",
+    "authors_match",
+    "venue_real",
+    "fields_complete",
+    "cross_db_agreement"
+  ],
+  "benchmarks_inspired_by": {
+    "HumanEval": "Multi-criteria per sample, detect@k metric",
+    "SWE-bench": "Contamination awareness",
+    "LiveCodeBench": "Temporal segmentation, continuous updates",
+    "ONEBench": "Sample-level atomic evaluation, ever-expanding pool, heterogeneous aggregation"
+  },
+  "type_counts_per_split": {
+    "dev_public": {
+      "version_confusion": 32,
+      "near_miss_title": 45,
+      "plausible_fabrication": 66,
+      "merged_citation": 32,
+      "nonexistent_venue": 32,
+      "hybrid_fabrication": 45,
+      "future_date": 29,
+      "swapped_authors": 38,
+      "fabricated_doi": 50,
+      "wrong_venue": 40,
+      "chimeric_title": 40,
+      "partial_author_list": 38,
+      "placeholder_authors": 35,
+      "preprint_as_published": 33
+    },
+    "test_public": {
+      "chimeric_title": 30,
+      "near_miss_title": 30,
+      "placeholder_authors": 32,
+      "merged_citation": 38,
+      "partial_author_list": 32,
+      "fabricated_doi": 45,
+      "preprint_as_published": 30,
+      "nonexistent_venue": 32,
+      "hybrid_fabrication": 34,
+      "plausible_fabrication": 37,
+      "future_date": 33,
+      "wrong_venue": 30,
+      "swapped_authors": 30,
+      "version_confusion": 30
+    }
+  },
+  "doi_percentages_per_type": {
+    "dev_public": {
+      "version_confusion": 59.4,
+      "near_miss_title": 60.0,
+      "plausible_fabrication": 21.2,
+      "merged_citation": 75.0,
+      "nonexistent_venue": 37.5,
+      "hybrid_fabrication": 55.6,
+      "future_date": 31.0,
+      "swapped_authors": 50.0,
+      "fabricated_doi": 96.0,
+      "wrong_venue": 42.5,
+      "chimeric_title": 60.0,
+      "partial_author_list": 60.5,
+      "placeholder_authors": 37.1,
+      "preprint_as_published": 45.5
+    },
+    "test_public": {
+      "chimeric_title": 63.3,
+      "near_miss_title": 60.0,
+      "placeholder_authors": 31.2,
+      "merged_citation": 57.9,
+      "partial_author_list": 75.0,
+      "fabricated_doi": 100.0,
+      "preprint_as_published": 40.0,
+      "nonexistent_venue": 31.2,
+      "hybrid_fabrication": 58.8,
+      "plausible_fabrication": 21.6,
+      "future_date": 39.4,
+      "wrong_venue": 43.3,
+      "swapped_authors": 40.0,
+      "version_confusion": 60.0
+    }
+  },
+  "source_distribution": {
+    "dev_public": {
+      "perturbation": 388,
+      "gptzero_neurips2025": 28,
+      "dblp": 450,
+      "adversarial": 67,
+      "llm_generated": 72
+    },
+    "test_public": {
+      "dblp": 270,
+      "perturbation": 333,
+      "llm_generated": 44,
+      "adversarial": 36,
+      "gptzero_neurips2025": 27,
+      "perturbation_scaleup": 23
+    }
+  }
 }

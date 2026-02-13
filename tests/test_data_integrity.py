@@ -213,10 +213,12 @@ class TestVersionConfusionQuality:
         result_year = int(entry.fields["year"])
         assert abs(result_year - original_year) == 1
 
-    def test_removes_doi(self) -> None:
+    def test_preserves_doi(self) -> None:
         source = self._make_source()
         entry = generate_version_confusion(source, "ICML")
-        assert "doi" not in entry.fields
+        assert entry.fields.get("doi") == source.fields["doi"]
+        assert entry.subtests["doi_resolves"] is True
+        assert entry.subtests["cross_db_agreement"] is False
 
 
 # ── Surface diversity ───────────────────────────────────────────────────────

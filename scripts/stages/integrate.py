@@ -147,10 +147,16 @@ def stage_integrate_external(
     if fixed:
         logger.info("Fixed cross_db_agreement on %d LLM entries", fixed)
 
-    # Set build date on all new entries
-    for source_entries in [real_world, llm_entries, gptzero_entries]:
-        for e in source_entries:
-            e.added_to_benchmark = build_date
+    # Set source field and build date on all new entries
+    for e in real_world:
+        e.source = "real_world"
+        e.added_to_benchmark = build_date
+    for e in llm_entries:
+        e.source = "llm_generated"
+        e.added_to_benchmark = build_date
+    for e in gptzero_entries:
+        e.source = "gptzero_neurips2025"
+        e.added_to_benchmark = build_date
 
     # Stratify and integrate each source
     sources = [
@@ -186,6 +192,7 @@ def stage_integrate_external(
         n_test = round(n * 0.30)
 
         for e in journal_entries:
+            e.source = "dblp"
             e.added_to_benchmark = build_date
 
         dev_journal = journal_entries[:n_dev]
