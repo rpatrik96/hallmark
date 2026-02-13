@@ -82,7 +82,7 @@ Generation-method stratification enables practitioners to assess tool performanc
 Verification is primarily algorithmic: perturbation-generated entries are validated by automated checks against DBLP and CrossRef (DOI resolution, title search, author matching), achieving $>$98\% agreement with ground truth labels.
 LLM-generated entries undergo additional automated filtering (title similarity $\geq 85\%$ and author Jaccard $\geq 0.5$ against bibliographic databases) to exclude entries that match real papers.
 Real-world and adversarial entries receive manual review to confirm hallucination status and type assignment.
-With $\geq 29$ instances per main type per public split, per-type metrics achieve 95\% Clopper-Pearson confidence interval width $\leq 0.24$ for type-level detection rates.
+With $\geq 29$ instances per main type per public split, per-type 95\% Clopper-Pearson confidence intervals have width $\leq 0.25$ at detection rates near 0 or 1 (e.g., $[0.73, 0.98]$ at DR $= 0.90$, $n = 29$), providing meaningful per-type comparisons.
 The design prioritizes \emph{coverage}---ensuring all 11 main types have sufficient instances for per-type analysis---over volume.
 
 \paragraph{Quality control.}

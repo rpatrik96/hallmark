@@ -3,7 +3,7 @@
 
 Citation hallucination---the generation of plausible but fabricated bibliographic references by language models---has emerged as a concrete threat to scientific publishing.
 In late 2025, the NeurIPS program committee identified 53 accepted papers containing fabricated citations that had passed peer review~\citep{neurips2025incident}.
-Independent audits confirmed the scale of the problem: \citet{ghostcite2026} analyzed 2.2 million citations across 56,000 papers and flagged 604 papers with likely hallucinated references; \citet{hallucitation2026} found approximately 300 affected papers in ACL, NAACL, and EMNLP proceedings alone; and \citet{mysterious2026} documented a sharp rise from zero detected cases in 2021 to consistent problems across HPC venues by 2025.
+Independent audits confirmed the scale of the problem: \citet{ghostcite2026} analyzed 2.2 million citations across 56,000 papers and flagged 604 papers with likely hallucinated references; \citet{hallucitation2026} found over 100 affected main-conference papers in ACL, NAACL, and EMNLP alone; and \citet{mysterious2026} documented a sharp rise from zero detected cases in 2021 to consistent problems across HPC venues by 2025.
 These findings reveal that citation hallucination is not anecdotal but systematic, and that neither authors nor reviewers reliably catch fabricated references.
 
 Several citation verification tools have been developed in response, ranging from DOI resolution checkers to multi-database cross-referencing systems.
@@ -33,7 +33,7 @@ We address this gap with four contributions:
 \midrule
 \multicolumn{6}{l}{\emph{Citation audits}} \\
 GhostCite~\citep{ghostcite2026} & 56K papers & --- & \ding{55} & \ding{55} & \ding{55} \\
-HalluCitation~\citep{hallucitation2026} & 300 papers & 3 & \ding{55} & \ding{55} & \ding{51} \\
+HalluCitation~\citep{hallucitation2026} & 100{+} papers & 3 & \ding{55} & \ding{55} & \ding{51} \\
 Mysterious Citations~\citep{mysterious2026} & HPC venues & --- & \ding{55} & \ding{55} & \ding{55} \\
 \midrule
 \multicolumn{6}{l}{\emph{Citation verification benchmarks}} \\
@@ -42,6 +42,6 @@ Mysterious Citations~\citep{mysterious2026} & HPC venues & --- & \ding{55} & \di
 \end{tabular}
 \end{table}
 
-We evaluate three independent tools on \textsc{Hallmark}---a DOI-only baseline, HaRC, and verify-citations---revealing that no independent tool detects more than 23\% of hallucinations, with systematic blind spots on venue-level and semantic hallucinations requiring metadata cross-referencing.
+We evaluate three independent tools (i.e., not co-developed with the benchmark) on \textsc{Hallmark}---a DOI-only baseline, HaRC, and verify-citations---revealing that no independent tool detects more than 23\% of hallucinations, with systematic blind spots on venue-level and semantic hallucinations requiring metadata cross-referencing.
 We additionally evaluate bibtex-updater, a tool co-developed by the authors, reporting results separately in \cref{app:codesign} to maintain transparency.
 These results demonstrate the value of a structured benchmark for identifying actionable improvement targets.

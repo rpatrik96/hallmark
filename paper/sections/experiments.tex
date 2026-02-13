@@ -10,6 +10,7 @@ We additionally report results for \texttt{bibtex-updater}, a tool developed by 
 \paragraph{DOI-only.}
 A minimal baseline that checks whether each entry's DOI field resolves via the CrossRef API.
 Entries with a non-resolving DOI are flagged as hallucinated; entries without a DOI field are conservatively assumed valid.
+Results in \cref{tab:results} include the shared pre-screening layer (\cref{sec:prescreening}); pure DOI-only performance without pre-screening is ${\sim}5$pp lower on Tier~1 types.
 This baseline tests the lower bound of what simple metadata checks can achieve.
 
 \paragraph{HaRC.}
