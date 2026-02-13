@@ -1,8 +1,12 @@
 #!/usr/bin/env python3
-"""Enrich valid entries with DOIs from CrossRef API.
+"""Enrich valid entries with DOIs from DBLP and CrossRef APIs.
 
 This script adds DOIs to VALID entries that currently lack them, reducing
 the DOI distributional artifact in the benchmark dataset.
+
+Strategy:
+1. Try DBLP API first (better CS conference coverage)
+2. Fall back to CrossRef if DBLP finds no match
 
 Usage:
     python scripts/enrich_valid_dois.py
@@ -51,6 +55,51 @@ def extract_last_names(author_string: str) -> set[str]:
     return last_names
 
 
+def query_dblp(title: str, max_retries: int = 3) -> list[dict[str, Any]]:
+    """Query DBLP API for a title with retry logic.
+
+    Args:
+        title: Paper title to search for
+        max_retries: Maximum number of retry attempts
+
+    Returns:
+        List of matching publications from DBLP
+    """
+    url = "https://dblp.org/search/publ/api"
+    params = {
+        "q": title,
+        "format": "json",
+        "h": 5,
+    }
+    headers = {
+        "User-Agent": "HALLMARK-Benchmark/1.0",
+    }
+
+    for attempt in range(max_retries):
+        try:
+            response = requests.get(url, params=params, headers=headers, timeout=60)
+            response.raise_for_status()
+            data = response.json()
+            hits = data.get("result", {}).get("hits", {}).get("hit", [])
+            return [hit.get("info", {}) for hit in hits]
+        except Exception as e:
+            if attempt < max_retries - 1:
+                wait_time = 2**attempt  # Exponential backoff: 1s, 2s, 4s
+                print(
+                    f"  ⚠️  DBLP API error (attempt {attempt + 1}/{max_retries}), "
+                    f"retrying in {wait_time}s...",
+                    file=sys.stderr,
+                )
+                time.sleep(wait_time)
+            else:
+                print(
+                    f"  ⚠️  DBLP API error after {max_retries} attempts: {e}",
+                    file=sys.stderr,
+                )
+                return []
+    return []
+
+
 def query_crossref(title: str) -> list[dict[str, Any]]:
     """Query CrossRef API for a title.
 
@@ -79,7 +128,59 @@ def query_crossref(title: str) -> list[dict[str, Any]]:
         return []
 
 
-def find_doi_match(
+def find_dblp_doi_match(
+    entry_title: str, entry_authors: str, dblp_results: list[dict[str, Any]]
+) -> str | None:
+    """Find a high-confidence DOI match from DBLP results.
+
+    Match criteria:
+    - Title similarity >= 90 (using token_sort_ratio)
+    - At least one author last name match
+
+    Args:
+        entry_title: Title from benchmark entry
+        entry_authors: Author string from benchmark entry
+        dblp_results: Results from DBLP API
+
+    Returns:
+        DOI string if high-confidence match found, None otherwise
+    """
+    entry_last_names = extract_last_names(entry_authors)
+
+    for result in dblp_results:
+        # Check title similarity
+        dblp_title = result.get("title", "")
+        title_similarity = fuzz.token_sort_ratio(entry_title.lower(), dblp_title.lower())
+
+        if title_similarity < 90:
+            continue
+
+        # Check author match
+        authors_data = result.get("authors", {})
+        author_list = authors_data.get("author", [])
+
+        # Handle both single author (dict) and multiple authors (list)
+        if isinstance(author_list, dict):
+            author_list = [author_list]
+
+        dblp_last_names = set()
+        for author in author_list:
+            author_text = author.get("text", "")
+            # Extract last name from "First Last" format
+            parts = author_text.split()
+            if parts:
+                dblp_last_names.add(parts[-1].lower())
+
+        # At least one author last name must match
+        if entry_last_names & dblp_last_names:
+            doi = result.get("doi")
+            if doi:
+                return doi
+
+    return None
+
+
+def find_crossref_doi_match(
     entry_title: str, entry_authors: str, crossref_results: list[dict[str, Any]]
 ) -> str | None:
     """Find a high-confidence DOI match from CrossRef results.
@@ -182,17 +283,28 @@ def enrich_file(input_path: Path, output_path: Path) -> dict[str, int]:
 
         print(f"  🔍 Querying: {entry.bibtex_key} - {title[:60]}...")
 
-        crossref_results = query_crossref(title)
-        doi = find_doi_match(title, author, crossref_results)
+        # Try DBLP first
+        dblp_results = query_dblp(title)
+        doi = find_dblp_doi_match(title, author, dblp_results)
 
         if doi:
-            print(f"    ✅ Found DOI: {doi}")
+            print(f"    ✅ Found DOI (DBLP): {doi}")
             # Add DOI to entry fields
             entry.fields["doi"] = doi
             stats["enriched"] += 1
         else:
-            print("    ❌ No high-confidence match")
-            stats["skipped_no_match"] += 1
+            # Fall back to CrossRef
+            print("    ⚙️  DBLP: no match, trying CrossRef...")
+            crossref_results = query_crossref(title)
+            doi = find_crossref_doi_match(title, author, crossref_results)
+
+            if doi:
+                print(f"    ✅ Found DOI (CrossRef): {doi}")
+                entry.fields["doi"] = doi
+                stats["enriched"] += 1
+            else:
+                print("    ❌ No high-confidence match")
+                stats["skipped_no_match"] += 1
 
         enriched_entries.append(entry)
 

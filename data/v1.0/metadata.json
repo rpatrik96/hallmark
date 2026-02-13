@@ -7,23 +7,23 @@
     "splits": {
         "dev_public": {
             "file": "dev_public.jsonl",
-            "total": 941,
+            "total": 981,
             "valid": 450,
-            "hallucinated": 491,
+            "hallucinated": 531,
             "tier_distribution": {
-                "1": 124,
-                "2": 244,
-                "3": 123
+                "1": 131,
+                "2": 246,
+                "3": 154
             },
             "type_distribution": {
-                "chimeric_title": 37,
-                "fabricated_doi": 31,
+                "chimeric_title": 38,
+                "fabricated_doi": 33,
                 "future_date": 31,
-                "hybrid_fabrication": 31,
-                "near_miss_title": 31,
-                "nonexistent_venue": 31,
-                "placeholder_authors": 31,
-                "plausible_fabrication": 32,
+                "hybrid_fabrication": 32,
+                "near_miss_title": 35,
+                "nonexistent_venue": 33,
+                "placeholder_authors": 34,
+                "plausible_fabrication": 59,
                 "preprint_as_published": 31,
                 "retracted_paper": 30,
                 "swapped_authors": 111,
@@ -34,29 +34,29 @@
                 "adversarial": 60,
                 "llm_generated": 89,
                 "perturbation": 300,
-                "real_world": 42,
+                "real_world": 82,
                 "scraped": 450
             }
         },
         "test_public": {
             "file": "test_public.jsonl",
-            "total": 737,
+            "total": 768,
             "valid": 270,
-            "hallucinated": 467,
+            "hallucinated": 498,
             "tier_distribution": {
-                "1": 120,
+                "1": 126,
                 "2": 224,
-                "3": 123
+                "3": 148
             },
             "type_distribution": {
                 "chimeric_title": 35,
-                "fabricated_doi": 30,
+                "fabricated_doi": 32,
                 "future_date": 30,
                 "hybrid_fabrication": 30,
-                "near_miss_title": 31,
-                "nonexistent_venue": 30,
-                "placeholder_authors": 30,
-                "plausible_fabrication": 32,
+                "near_miss_title": 34,
+                "nonexistent_venue": 31,
+                "placeholder_authors": 33,
+                "plausible_fabrication": 54,
                 "preprint_as_published": 30,
                 "retracted_paper": 30,
                 "swapped_authors": 96,
@@ -67,29 +67,29 @@
                 "adversarial": 60,
                 "llm_generated": 74,
                 "perturbation": 300,
-                "real_world": 33,
+                "real_world": 64,
                 "scraped": 270
             }
         },
         "test_hidden": {
             "file": "test_hidden.jsonl",
-            "total": 454,
+            "total": 480,
             "valid": 198,
-            "hallucinated": 256,
+            "hallucinated": 282,
             "tier_distribution": {
-                "1": 60,
+                "1": 64,
                 "2": 134,
-                "3": 62
+                "3": 84
             },
             "type_distribution": {
                 "chimeric_title": 18,
-                "fabricated_doi": 15,
+                "fabricated_doi": 16,
                 "future_date": 15,
                 "hybrid_fabrication": 15,
-                "near_miss_title": 15,
-                "nonexistent_venue": 15,
-                "placeholder_authors": 15,
-                "plausible_fabrication": 17,
+                "near_miss_title": 18,
+                "nonexistent_venue": 16,
+                "placeholder_authors": 17,
+                "plausible_fabrication": 36,
                 "preprint_as_published": 15,
                 "retracted_paper": 15,
                 "swapped_authors": 69,
@@ -100,7 +100,7 @@
                 "adversarial": 60,
                 "llm_generated": 59,
                 "perturbation": 135,
-                "real_world": 2,
+                "real_world": 28,
                 "scraped": 198
             }
         }

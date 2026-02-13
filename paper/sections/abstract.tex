@@ -3,7 +3,7 @@ Citation hallucination---where language models generate plausible but fabricated
 The NeurIPS 2025 incident, in which 53 accepted papers contained fabricated citations, and subsequent large-scale audits finding hundreds of affected publications across major venues, underscore the urgency of automated verification.
 Yet no standardized benchmark exists to compare citation verification tools, and no tool is designed for venue-scale deployment.
 We address both gaps.
-First, we introduce \textsc{Hallmark} (\textbf{Hall}ucination bench\textbf{mark}), a benchmark comprising 2,132 BibTeX entries (1,214 hallucinated, 918 valid) spanning 13 hallucination types organized into three difficulty tiers.
+First, we introduce \textsc{Hallmark} (\textbf{Hall}ucination bench\textbf{mark}), a benchmark comprising 2,229 BibTeX entries (1,311 hallucinated, 918 valid) spanning 13 hallucination types organized into three difficulty tiers.
 Each entry undergoes six binary sub-tests inspired by HumanEval's multi-criteria evaluation, enabling fine-grained diagnostic analysis beyond binary detection.
 \textsc{Hallmark} provides tier-weighted metrics that reward detection of hard hallucinations, expected calibration error for confidence assessment, and a Plackett-Luce ranking system that handles incomplete evaluations.
 Second, to demonstrate the benchmark's practical utility, we present \texttt{bibtex-updater}: a reference implementation of a citation verification tool designed for venue-scale deployment---integration into CI/CD pipelines, pre-commit hooks, and batch submission processing---rather than benchmark optimization.
