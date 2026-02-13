@@ -149,11 +149,10 @@ def tier_weighted_f1(
             else:
                 weighted_fn += w
         else:
-            # FP weighting: VALID entries have no tier, so they use weight 1.0.
-            # This is intentional—false positives are penalized uniformly regardless
-            # of weighting scheme, affecting only precision, not recall.
+            # FP weighting: VALID entries are penalized uniformly (weight 1.0)
+            # regardless of weighting scheme, affecting only precision, not recall.
             if pred is not None and pred_label == "HALLUCINATED":
-                weighted_fp += w
+                weighted_fp += 1.0
 
     precision = (
         weighted_tp / (weighted_tp + weighted_fp) if (weighted_tp + weighted_fp) > 0 else 0.0

@@ -9,7 +9,7 @@ We additionally report results for \texttt{bibtex-updater}, a tool developed by 
 
 \paragraph{DOI-only.}
 A minimal baseline that checks whether each entry's DOI field resolves via the CrossRef API.
-Entries without a DOI or with a non-resolving DOI are flagged as hallucinated.
+Entries with a non-resolving DOI are flagged as hallucinated; entries without a DOI field are conservatively assumed valid.
 This baseline tests the lower bound of what simple metadata checks can achieve.
 
 \paragraph{HaRC.}
@@ -55,7 +55,7 @@ The framework supports LLM-based baselines (e.g., GPT-4o, Claude) which would pr
 Plackett-Luce ranking (\cref{app:ranking}) provides a principled framework for comparing tools with heterogeneous coverage but requires substantially higher pairwise overlap than achieved here.
 
 We compute 95\% confidence intervals using stratified bootstrap (10{,}000 resamples, stratified by hallucination type).
-With 30 instances per type, per-type metrics have narrower confidence intervals than the original 10-instance design; we provide exact counts and power analysis in \cref{app:statistics}.
+With $\geq$29 instances per type, per-type metrics have narrower confidence intervals than the original 10-instance design; we provide exact counts and power analysis in \cref{app:statistics}.
 
 \subsection{Per-tier analysis}
 \label{sec:per_tier}

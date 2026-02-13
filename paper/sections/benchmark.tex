@@ -87,7 +87,7 @@ The design prioritizes \emph{coverage}---ensuring all 11 main types have suffici
 \paragraph{Quality control.}
 Every entry undergoes automated validation checking field completeness, BibTeX well-formedness, and sub-test label consistency.
 Sub-test labels are verified for logical consistency with entry metadata (e.g., \texttt{doi\_resolves} matches DOI field presence); automated verification achieves $>$98\% agreement across all splits.
-To prevent a trivial shortcut---hallucinated entries generated from valid entries inherit the source paper's DBLP URL, enabling detection via URL resolution and metadata comparison---we strip the \texttt{url} field from all hallucinated entries.
+To prevent trivial shortcuts, we strip the \texttt{url} field from all entries: hallucinated entries would otherwise inherit the source paper's DBLP URL (enabling detection via URL resolution and metadata comparison), and stripping only from hallucinated entries would make URL presence a perfect label discriminator.
 Contributed entries pass through a validation pipeline that enforces the schema constraints programmatically before inclusion.
 
 \paragraph{Scaling for statistical power.}

@@ -115,12 +115,8 @@ def build_results_matrix(
             # Weight hallucinated entries by confidence
             # (Penalize overconfident incorrect predictions)
             if entry.label == "HALLUCINATED":
-                # If correct (predicted HALLUCINATED), reward confidence
-                # If incorrect (predicted VALID), penalize by 1 - confidence
-                if is_correct:
-                    score = correctness * pred.confidence
-                else:
-                    score = correctness * (1.0 - pred.confidence)
+                # Correct: reward by confidence; incorrect: partial credit for low confidence
+                score = pred.confidence if is_correct else 1.0 - pred.confidence
             else:
                 # For valid entries, simple correctness
                 score = correctness
