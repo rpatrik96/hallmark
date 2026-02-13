@@ -300,9 +300,8 @@ def expected_calibration_error(
     Bins predictions by confidence, computes |accuracy - mean_confidence| per bin,
     returns weighted average by bin size.
 
-    For HALLUCINATED predictions, confidence means P(hallucinated).
-    For VALID predictions, confidence means P(valid), so we use 1-confidence for
-    the "correctness" probability when the prediction is VALID.
+    Confidence represents the tool's belief in its own prediction: a tool
+    predicting HALLUCINATED with confidence 0.9 claims 90% certainty.
 
     UNCERTAIN predictions are treated as VALID with the reported confidence.
     """
