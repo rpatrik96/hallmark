@@ -35,17 +35,18 @@ We include three theoretically motivated types (\texttt{merged\_citation}, \text
 & \texttt{author\_mismatch} & Correct title, wrong authors & \ding{51} & \ding{51} & \ding{55} & \ding{51} & \ding{51} & \ding{55} \\
 & \texttt{preprint\_as\_published} & arXiv cited as venue paper & \ding{51} & \ding{51} & \ding{51} & \ding{55} & \ding{51} & \ding{55} \\
 & \texttt{hybrid\_fabrication} & Real DOI + fake metadata & \ding{51} & \ding{55} & \ding{55} & ? & \ding{51} & \ding{55} \\
-& \texttt{merged\_citation}\textsuperscript{\textcolor{blue}{\triangle}} & Metadata from 2+ papers & ? & \ding{51} & \ding{55} & \ding{51} & \ding{51} & \ding{55} \\
-& \texttt{partial\_author\_list}\textsuperscript{\dag\textcolor{blue}{\triangle}} & Subset of real authors & \ding{51} & \ding{51} & \ding{55} & \ding{51} & \ding{51} & \ding{55} \\
+& \texttt{merged\_citation}\textsuperscript{\textcolor{blue}{$\triangle$}} & Metadata from 2+ papers & ? & \ding{51} & \ding{55} & \ding{51} & \ding{51} & \ding{55} \\
+& \texttt{partial\_author\_list}\textsuperscript{\dag\textcolor{blue}{$\triangle$}} & Subset of real authors & \ding{51} & \ding{51} & \ding{55} & \ding{51} & \ding{51} & \ding{55} \\
 \midrule
 \multirow{3}{*}{\rotatebox{90}{\textcolor{tier3}{\textbf{Hard}}}}
 & \texttt{near\_miss\_title} & Title off by 1--2 words & \ding{51} & \ding{55} & \ding{51} & \ding{51} & \ding{51} & \ding{55} \\
 & \texttt{plausible\_fabrication} & Entirely fabricated, realistic & \ding{55} & \ding{55} & \ding{55} & ? & ? & \ding{55} \\
-& \texttt{version\_confusion}\textsuperscript{\textcolor{blue}{\triangle}} & Wrong version claims & \ding{51} & \ding{51} & \ding{51} & \ding{51} & \ding{51} & \ding{55} \\
+& \texttt{version\_confusion}\textsuperscript{\textcolor{blue}{$\triangle$}} & Wrong version claims & \ding{51} & \ding{51} & \ding{51} & \ding{51} & \ding{51} & \ding{55} \\
 \bottomrule
-\multicolumn{9}{l}{\textsuperscript{\dag}Classified when $<$50\% authors present without ``et al.'' indicator.} \\
-\multicolumn{9}{l}{\textsuperscript{\textcolor{blue}{\triangle}}Theoretically motivated types; zero real-world instances in current dataset.}
 \end{tabular}
+\par\vspace{2pt}
+{\footnotesize \textsuperscript{\dag}Classified when $<$50\% authors present without ``et al.'' indicator.\quad
+\textsuperscript{\textcolor{blue}{$\triangle$}}Theoretically motivated types; zero real-world instances in current dataset.}
 \end{table}
 
 \paragraph{Verification decision tree.}
