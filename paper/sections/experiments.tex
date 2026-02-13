@@ -56,7 +56,7 @@ First, \emph{DOI resolution alone is insufficient}: the DOI-only baseline catche
 Second, \emph{API rate limiting severely constrains multi-source tools}: HaRC and verify-citations completed only 2.4\% and 8.5\% of entries respectively, making them impractical for venue-scale use without caching.
 Third, \emph{calibration varies widely}: ECE ranges from 0.111 (DOI-only) to 0.452 (bibtex-updater), indicating that even high-accuracy tools produce unreliable confidence scores.
 Bibtex-updater achieves the highest detection rate (0.954; 95\% CI: [0.94, 0.97]) and F1 (0.962), but its poor calibration means practitioners should not rely on confidence scores for threshold tuning.
-Since Detection Rate and FPR are prevalence-independent, we emphasize these as primary metrics; F1 is prevalence-sensitive and should be compared within splits only.
+Since Detection Rate and FPR are prevalence-independent, we emphasize these alongside AUROC as primary metrics.\footnote{F1 is prevalence-sensitive: a benchmark with 55\% hallucination prevalence inflates F1 relative to real-world deployment where hallucination rates may be much lower. F1 values should only be compared within the same split, never across splits or with external results.}
 
 \paragraph{Confidence calibration.}
 While \texttt{bibtex-updater} achieves strong detection performance, its confidence scores are poorly calibrated (ECE = 0.452), indicating systematic overconfidence.

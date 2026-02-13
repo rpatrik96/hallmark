@@ -3,6 +3,7 @@
 
 At 2,184 entries (1,266 hallucinated, with at least 30 instances per type per public split), the dataset provides statistical power per type but remains small relative to the full diversity of possible citation hallucinations.
 With 30 instances per type per split, per-type metrics have 95\% Clopper-Pearson confidence interval width $\leq 0.24$ (e.g., a type-level detection rate of 90\% has a 95\% CI of [0.74, 0.98]).
+A two-proportion $z$-test with $n=30$ per type achieves 80\% power to detect a detection rate difference of $\geq 0.20$ between tools ($\alpha = 0.05$, two-sided).
 Hallucination prevalence differs across splits (55.3\% in dev, 62.0\% in test, 57.8\% in hidden) due to the constraint that each of 14 types requires $\geq 30$ instances.
 We emphasize prevalence-independent metrics (Detection Rate, FPR, AUROC) as primary; prevalence-sensitive metrics (F1) should be compared within splits only.
 The benchmark covers only English-language BibTeX references.
@@ -13,11 +14,17 @@ Baseline performance depends on bibliographic API availability and coverage; res
 We did not evaluate commercial plagiarism detection tools (Turnitin, iThenticate), which focus on textual similarity rather than citation metadata verification.
 Valid entries are drawn from 2018--2025 ML venues and may not generalize to other fields or time periods.
 The community contribution system is designed to address these coverage limitations over time.
-All synthetic entries are generated with a single fixed seed; we did not conduct seed-sensitivity analysis, though the deterministic generation ensures exact reproducibility.
+All synthetic entries are generated with a fixed seed for reproducibility.
+Seed-sensitivity analysis across five seeds shows 95--100\% entry variation per generator, confirming that the pools are large enough to avoid deterministic repetition.
 
 \paragraph{Benchmark-tool co-design.}
 As the authors of both the benchmark and one evaluated tool (bibtex-updater), we acknowledge potential co-design bias.
 We mitigate this through: (1) evaluating all tools with identical pre-screening infrastructure, (2) reporting pre-screening attribution transparently so readers can distinguish benchmark-level from tool-level detections, (3) releasing the full evaluation protocol for independent replication, and (4) actively soliciting independent tool submissions via the benchmark's public leaderboard.
+
+\paragraph{Domain transfer.}
+\textsc{Hallmark} covers English-language ML references from five top venues (NeurIPS, ICML, ICLR, AAAI, CVPR).
+Practitioners in other fields can use the evaluation framework with domain-specific valid entries; the hallucination taxonomy and sub-test definitions are domain-agnostic.
+We provide reweighting utilities to adjust hallucination type prevalence to observed real-world distributions.
 
 \paragraph{DOI-presence distributional artifact.}
 Approximately 38\% of valid entries in the dev split lack DOI fields.

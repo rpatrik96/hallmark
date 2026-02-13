@@ -8,12 +8,21 @@ from __future__ import annotations
 
 import argparse
 import json
+import ssl
 import sys
 import time
 import urllib.parse
 import urllib.request
 from pathlib import Path
 from typing import Any
+
+# SSL context with certifi fallback for macOS
+try:
+    import certifi
+
+    _SSL_CTX = ssl.create_default_context(cafile=certifi.where())
+except ImportError:
+    _SSL_CTX = ssl.create_default_context()
 
 
 def fetch_dblp_journal(
@@ -52,7 +61,7 @@ def fetch_dblp_journal(
         req = urllib.request.Request(url)
         req.add_header("User-Agent", "HALLMARK-Benchmark/1.0 (mailto:research@example.com)")
 
-        with urllib.request.urlopen(req, timeout=30) as response:
+        with urllib.request.urlopen(req, timeout=30, context=_SSL_CTX) as response:
             data = json.loads(response.read().decode())
 
         if "result" in data and "hits" in data["result"]:
@@ -255,10 +264,16 @@ def main() -> None:
         print(f"✓ Saved {len(all_entries)} entries to {args.output}", file=sys.stderr)
 
         # Print summary statistics
-        with_doi = sum(1 for e in all_entries if e["metadata"]["has_doi"])
-        pct = 100 * with_doi / len(all_entries)
-        print("\nSummary:", file=sys.stderr)
-        print(f"  Entries with DOI: {with_doi}/{len(all_entries)} ({pct:.1f}%)", file=sys.stderr)
+        if all_entries:
+            with_doi = sum(1 for e in all_entries if e["metadata"]["has_doi"])
+            pct = 100 * with_doi / len(all_entries)
+            print("\nSummary:", file=sys.stderr)
+            print(
+                f"  Entries with DOI: {with_doi}/{len(all_entries)} ({pct:.1f}%)",
+                file=sys.stderr,
+            )
+        else:
+            print("\nNo entries collected. Check network/SSL settings.", file=sys.stderr)
 
 
 if __name__ == "__main__":

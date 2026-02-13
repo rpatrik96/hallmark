@@ -10,12 +10,21 @@ import argparse
 import difflib
 import json
 import random
+import ssl
 import sys
 import time
 import urllib.parse
 import urllib.request
 from pathlib import Path
 from typing import Any
+
+# SSL context with certifi fallback for macOS
+try:
+    import certifi
+
+    _SSL_CTX = ssl.create_default_context(cafile=certifi.where())
+except ImportError:
+    _SSL_CTX = ssl.create_default_context()
 
 
 def normalize_title(title: str) -> str:
@@ -98,7 +107,7 @@ def query_crossref_by_doi(doi: str) -> dict[str, Any] | None:
         req = urllib.request.Request(url)
         req.add_header("User-Agent", "HALLMARK-Benchmark/1.0 (mailto:research@example.com)")
 
-        with urllib.request.urlopen(req, timeout=30) as response:
+        with urllib.request.urlopen(req, timeout=30, context=_SSL_CTX) as response:
             data = json.loads(response.read().decode())
             message = data.get("message")
             return message if isinstance(message, dict) else None
@@ -132,7 +141,7 @@ def query_crossref_by_title(title: str) -> dict[str, Any] | None:
         req = urllib.request.Request(url)
         req.add_header("User-Agent", "HALLMARK-Benchmark/1.0 (mailto:research@example.com)")
 
-        with urllib.request.urlopen(req, timeout=30) as response:
+        with urllib.request.urlopen(req, timeout=30, context=_SSL_CTX) as response:
             data = json.loads(response.read().decode())
             items = data.get("message", {}).get("items", [])
             return items[0] if items else None
