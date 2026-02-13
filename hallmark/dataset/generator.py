@@ -222,24 +222,34 @@ def generate_near_miss_title(
     entry: BenchmarkEntry,
     rng: random.Random | None = None,
 ) -> BenchmarkEntry:
-    """Tier 3: Title off by 1-2 words from the real paper."""
+    """Tier 3: Title off by 1-2 words from the real paper.
+
+    Strategies (all preserve grammatical correctness):
+    - synonym: replace a word with a same-POS synonym
+    - plural: flip singular/plural on a safe noun
+    - spelling: British/American spelling swap
+    - article: remove an existing article
+
+    The "swap" strategy (swap adjacent words) is intentionally excluded
+    because it almost always produces ungrammatical titles.
+    """
     rng = rng or random.Random()
     new_entry = _clone_entry(entry)
     title = new_entry.fields.get("title", "")
     words = title.split()
 
-    # Expanded replacement dictionary with subtle academic synonyms
-    replacements = {
+    # Part-of-speech-safe synonym pairs (noun-noun, adj-adj, prep-prep)
+    _noun_synonyms = {
         "learning": "training",
         "training": "learning",
-        "network": "networks",
-        "networks": "network",
-        "model": "models",
-        "models": "model",
+        "network": "architecture",
+        "architecture": "network",
+        "model": "framework",
+        "framework": "model",
         "method": "approach",
         "approach": "method",
-        "framework": "system",
-        "system": "framework",
+        "system": "pipeline",
+        "pipeline": "system",
         "analysis": "study",
         "study": "analysis",
         "detection": "recognition",
@@ -249,69 +259,177 @@ def generate_near_miss_title(
         "estimation": "prediction",
         "prediction": "estimation",
         "classification": "categorization",
-        "optimization": "optimisation",
-        "optimisation": "optimization",
         "representation": "embedding",
         "embedding": "representation",
-        "transformer": "transformers",
-        "transformers": "transformer",
+        "inference": "reasoning",
+        "reasoning": "inference",
+        "segmentation": "partitioning",
+        "regularization": "penalization",
+        "search": "exploration",
+        "exploration": "search",
+        "bounds": "guarantees",
+        "guarantees": "bounds",
+        "loss": "objective",
+        "objective": "loss",
+        "task": "problem",
+        "problem": "task",
+        "survey": "review",
+        "review": "survey",
+        "score": "metric",
+        "metric": "score",
+        "bottleneck": "limitation",
+        "limitation": "bottleneck",
+        "corruption": "perturbation",
+        "perturbation": "corruption",
+        "design": "construction",
+        "construction": "design",
+        "planning": "scheduling",
+        "scheduling": "planning",
+        "attention": "focus",
+        "focus": "attention",
+        "need": "require",
+        "require": "need",
+        "information": "knowledge",
+        "knowledge": "information",
+        "image": "visual",
+        "language": "linguistic",
+    }
+    _adj_synonyms = {
+        "robust": "resilient",
+        "resilient": "robust",
+        "efficient": "scalable",
+        "scalable": "efficient",
+        "optimal": "approximate",
+        "approximate": "optimal",
+        "deep": "hierarchical",
+        "hierarchical": "deep",
+        "adversarial": "competitive",
+        "distributed": "decentralized",
+        "decentralized": "distributed",
+        "adaptive": "dynamic",
+        "dynamic": "adaptive",
+        "contrastive": "comparative",
+        "deterministic": "stochastic",
+        "stochastic": "deterministic",
+        "neural": "learned",
+        "learned": "neural",
+        "causal": "structural",
+        "structural": "causal",
+        "latent": "hidden",
+        "hidden": "latent",
+        "exact": "precise",
+        "precise": "exact",
+        "fast": "rapid",
+        "rapid": "fast",
+        "unsupervised": "self-supervised",
+        "inverse": "reverse",
+        "reverse": "inverse",
+    }
+    _prep_synonyms = {
         "via": "through",
         "through": "via",
-        "using": "with",
-        "with": "using",
-        "for": "towards",
         "towards": "for",
-        "an": "a",
+    }
+    replacements: dict[str, str] = {}
+    replacements.update(_noun_synonyms)
+    replacements.update(_adj_synonyms)
+    replacements.update(_prep_synonyms)
+
+    # Safe nouns for plural/singular flipping
+    safe_plural_roots = {
+        "model",
+        "network",
+        "method",
+        "bound",
+        "guarantee",
+        "constraint",
+        "representation",
+        "feature",
+        "tree",
+        "approach",
+        "system",
+        "attack",
+        "image",
+        "embedding",
+        "distribution",
+        "score",
+        "prediction",
+        "algorithm",
+        "graph",
+        "function",
+        "layer",
+        "node",
+        "weight",
+        "task",
+        "objective",
+        "problem",
+        "gradient",
+        "sample",
     }
 
     new_title = title
     if len(words) >= 3:
-        # Choose a mutation strategy randomly
-        strategy = rng.choice(["swap", "plural", "synonym", "article"])
+        # Choose a mutation strategy (no "swap" -- it breaks grammar)
+        strategy = rng.choice(["synonym", "plural", "synonym", "spelling"])
 
-        if strategy == "swap" and len(words) >= 5:
-            # Strategy A: Swap two adjacent words
-            idx = rng.randint(0, len(words) - 2)
-            words[idx], words[idx + 1] = words[idx + 1], words[idx]
-            new_title = " ".join(words)
-        elif strategy == "plural" and len(words) >= 3:
-            # Strategy B: Flip plural/singular
-            idx = rng.randint(0, len(words) - 1)
-            word = words[idx].rstrip(".,;:!?")
-            if word.endswith("s") and len(word) > 2:
-                words[idx] = word[:-1]
-            elif not word.endswith("s"):
-                words[idx] = word + "s"
-            new_title = " ".join(words)
-        elif strategy == "article":
-            # Strategy D: Insert or remove article
-            articles = ["a", "an", "the"]
-            # Find a word that could have an article before it
-            for idx in range(len(words)):
-                word_lower = words[idx].lower()
-                if idx > 0 and words[idx - 1].lower() in articles:
-                    # Remove article
-                    words.pop(idx - 1)
+        if strategy == "plural":
+            # Flip plural/singular on a safe noun
+            indices = list(range(len(words)))
+            rng.shuffle(indices)
+            for idx in indices:
+                raw = words[idx]
+                stripped = raw.rstrip(".,;:!?")
+                suffix = raw[len(stripped) :]
+                lower = stripped.lower()
+                if lower.endswith("s") and lower[:-1] in safe_plural_roots:
+                    words[idx] = stripped[:-1] + suffix
                     new_title = " ".join(words)
                     break
-                elif idx < len(words) - 1 and word_lower not in articles:
-                    # Insert article
-                    article = rng.choice(["a", "the"])
-                    words.insert(idx, article)
+                elif lower in safe_plural_roots:
+                    words[idx] = stripped + "s" + suffix
                     new_title = " ".join(words)
                     break
-            else:
-                # Fallback to synonym if article strategy didn't apply
-                strategy = "synonym"
+
+        elif strategy == "spelling":
+            # British/American spelling swap
+            if "ization" in title:
+                new_title = title.replace("ization", "isation", 1)
+            elif "isation" in title:
+                new_title = title.replace("isation", "ization", 1)
 
         if strategy == "synonym" or new_title == title:
-            # Strategy C: Synonym substitution (also fallback)
-            for idx in range(len(words)):
-                word_lower = words[idx].lower().rstrip(".,;:!?")
-                if word_lower in replacements:
-                    words[idx] = replacements[word_lower]
+            # Synonym substitution (primary strategy and fallback)
+            indices = list(range(len(words)))
+            rng.shuffle(indices)
+            for idx in indices:
+                raw = words[idx]
+                stripped = raw.rstrip(".,;:!?")
+                suffix = raw[len(stripped) :]
+                key = stripped.lower()
+                if key in replacements:
+                    repl = replacements[key]
+                    # Preserve capitalization
+                    if stripped[0].isupper():
+                        repl = repl[0].upper() + repl[1:]
+                    words[idx] = repl + suffix
                     new_title = " ".join(words)
                     break
+
+        # Final fallback: remove an article if present
+        if new_title == title:
+            for idx in range(1, len(words)):
+                if words[idx].lower() in {"a", "an", "the"}:
+                    words_copy = words[:idx] + words[idx + 1 :]
+                    new_title = " ".join(words_copy)
+                    break
+
+        # Absolute last resort: flip plural on a long word
+        if new_title == title and len(words) >= 2:
+            idx = rng.randint(0, len(words) - 1)
+            w = words[idx].rstrip(".,;:!?")
+            if len(w) >= 4 and w[0].isalpha():
+                words[idx] = w + "s" if not w.endswith("s") else w[:-1]
+                new_title = " ".join(words)
 
     new_entry.fields["title"] = new_title
     new_entry.fields.pop("doi", None)
@@ -370,57 +488,214 @@ def generate_plausible_fabrication(
     rng = rng or random.Random()
     new_entry = _clone_entry(entry)
 
-    # ML buzzwords for plausible-sounding titles
-    buzzwords = [
-        "Attention",
-        "Transformer",
-        "Self-Supervised",
-        "Contrastive",
+    # Diverse title templates that produce grammatically correct ML paper titles.
+    # Each template is a callable that takes the rng and returns a title string.
+    _methods = [
+        "Contrastive Learning",
+        "Self-Supervised Pre-Training",
+        "Variational Inference",
+        "Reinforcement Learning",
         "Meta-Learning",
-        "Few-Shot",
-        "Multi-Modal",
-        "Reinforcement",
-        "Diffusion",
-        "Retrieval-Augmented",
-        "Neural",
-        "Deep",
+        "Knowledge Distillation",
+        "Prompt Tuning",
+        "Bayesian Optimization",
+        "Curriculum Learning",
+        "Federated Averaging",
+        "Neural Architecture Search",
+        "Gradient Descent",
+        "Spectral Normalization",
+        "Data Augmentation",
+        "Domain Adaptation",
+    ]
+    _domains = [
+        "Vision Transformers",
+        "Large Language Models",
+        "Graph Neural Networks",
+        "Point Cloud Processing",
+        "Medical Image Analysis",
+        "Autonomous Driving",
+        "Molecular Property Prediction",
+        "Speech Recognition",
+        "Recommender Systems",
+        "Time Series Forecasting",
+        "Object Detection",
+        "Semantic Segmentation",
+        "Text Classification",
+        "Image Generation",
+        "Robot Navigation",
+    ]
+    _properties = [
+        "Robust",
         "Efficient",
         "Scalable",
-        "Adaptive",
+        "Calibrated",
+        "Interpretable",
+        "Fair",
+        "Privacy-Preserving",
+        "Communication-Efficient",
+        "Sample-Efficient",
+        "Parameter-Efficient",
+        "Provably Correct",
+        "Certifiably Robust",
     ]
-    tasks = [
-        "Classification",
-        "Generation",
-        "Reasoning",
-        "Understanding",
-        "Translation",
-        "Segmentation",
-        "Detection",
-        "Retrieval",
-        "Synthesis",
-        "Alignment",
+    _nouns = [
+        "Representations",
+        "Embeddings",
+        "Features",
+        "Predictions",
+        "Distributions",
+        "Policies",
+        "Architectures",
+        "Objectives",
+        "Gradients",
+        "Attention Mechanisms",
+    ]
+    _settings = [
+        "Low-Resource Settings",
+        "Non-Stationary Environments",
+        "High-Dimensional Spaces",
+        "Heterogeneous Data",
+        "Label-Scarce Regimes",
+        "Streaming Data",
+        "Multi-Task Settings",
+        "Cross-Domain Scenarios",
+        "Partial Observability",
+        "Noisy Labels",
     ]
 
-    # Generate plausible title combining buzzwords
+    m, d, p = rng.choice(_methods), rng.choice(_domains), rng.choice(_properties)
+    n, s = rng.choice(_nouns), rng.choice(_settings)
+
     title_template = rng.choice(
         [
-            f"{rng.choice(buzzwords)} {rng.choice(buzzwords)} for {rng.choice(tasks)}",
-            f"{rng.choice(buzzwords)}-Based {rng.choice(tasks)}",
-            f"Learning {rng.choice(tasks)} via {rng.choice(buzzwords)} Methods",
-            f"{rng.choice(buzzwords)} Approaches to {rng.choice(tasks)}",
+            # "Method via Technique for Domain"
+            f"{p} {d} via {m}",
+            # "On the Property of Method in Domain"
+            f"On the Convergence of {m} for {d}",
+            # "Toward Property Domain with Method"
+            f"Toward {p} {d} with {m}",
+            # "Method for Noun in Setting"
+            f"{m} for {p} {n} in {s}",
+            # "Property Domain: A Method Approach"
+            f"{p} {d}: A {m} Approach",
+            # "Rethinking Noun: Method for Domain"
+            f"Rethinking {n} in {d} via {m}",
+            # "Beyond Method: Property Noun for Domain"
+            f"Beyond {m}: {p} {n} for {d}",
+            # "Method with Property Constraints for Domain"
+            f"{m} with {p} Constraints for {d}",
+            # "Noun Alignment via Method in Setting"
+            f"{n} Alignment via {m} in {s}",
+            # "Property Method for Domain under Setting"
+            f"{p} {m} for {d} under {s}",
+            # "Understanding Noun in Domain through Method"
+            f"Understanding {n} in {d} through {m}",
+            # "Unifying Method and Technique for Domain"
+            f"Unifying {m} and {rng.choice(_methods)} for {d}",
+            # Standard NeurIPS-style with colon
+            f"{d}: {p} {n} via {m}",
+            # Question-style title
+            f"When Does {m} Help {d}?",
+            # "On Property of Noun for Domain"
+            f"On {p} {n} for {d}",
+            # Acronym-style
+            f"{p} {m} for {d} in {s}",
+            # "A Theoretical Analysis of..."
+            f"A Theoretical Analysis of {m} for {d}",
+            # "Bridging X and Y..."
+            f"Bridging {m} and {rng.choice(_methods)} for {d}",
+            # "Revisiting..."
+            f"Revisiting {m} for {p} {d}",
+            # Simple clean pattern
+            f"{m} in {s}: Applications to {d}",
         ]
     )
     new_entry.fields["title"] = title_template
 
-    # Fabricated but realistic author names
-    author_sets = [
-        "Wei Zhang and Sarah Chen and Marcus Johnson",
-        "Yuki Tanaka and Elena Rodriguez and James Kim",
-        "Sofia Andersson and Ravi Patel and Maria Santos",
-        "Alex Wu and Emma Thompson and David Lee",
-        "Nina Kowalski and Omar Hassan and Lisa Wang",
+    # Diverse pool of 35 fabricated but realistic author combinations
+    _first_names = [
+        "Wei",
+        "Yuki",
+        "Sofia",
+        "Alex",
+        "Nina",
+        "Gabriel",
+        "Tomoko",
+        "Leonardo",
+        "Kexin",
+        "Jieyu",
+        "Pavel",
+        "Daphne",
+        "Elena",
+        "Aditya",
+        "Ziqian",
+        "Ryuichi",
+        "Tamara",
+        "Jessica",
+        "Ruiqi",
+        "Anton",
+        "Wenda",
+        "Robin",
+        "Yuntao",
+        "Hanlin",
+        "Tiancheng",
+        "Georg",
+        "Minjoon",
+        "Ilia",
+        "Fei",
+        "Lin",
+        "Ekin",
+        "Shuang",
+        "Yuxin",
+        "Zhouhan",
+        "Yao",
     ]
-    new_entry.fields["author"] = rng.choice(author_sets)
+    _last_names = [
+        "Zhang",
+        "Tanaka",
+        "Andersson",
+        "Wu",
+        "Kowalski",
+        "Moreira",
+        "Watanabe",
+        "Ricci",
+        "Pei",
+        "Chen",
+        "Tokmakov",
+        "Cornelisse",
+        "Vorontsova",
+        "Grover",
+        "Zhong",
+        "Yamamoto",
+        "Broderick",
+        "Hamrick",
+        "Gao",
+        "Obukhov",
+        "Chu",
+        "Rombach",
+        "Bai",
+        "Goh",
+        "Zhao",
+        "Martius",
+        "Seo",
+        "Sucholutsky",
+        "Sha",
+        "Gui",
+        "Cubuk",
+        "Li",
+        "Sindhwani",
+        "Fu",
+        "Gu",
+    ]
+
+    # Generate 3-5 unique authors
+    n_authors = rng.randint(3, 5)
+    first_pool = list(_first_names)
+    last_pool = list(_last_names)
+    rng.shuffle(first_pool)
+    rng.shuffle(last_pool)
+    authors = [f"{first_pool[i]} {last_pool[i]}" for i in range(n_authors)]
+    new_entry.fields["author"] = " and ".join(authors)
 
     # Keep a real prestigious venue
     real_venues = ["NeurIPS", "ICML", "ICLR", "AAAI", "ACL", "CVPR"]

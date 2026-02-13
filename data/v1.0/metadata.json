@@ -59,22 +59,28 @@
         },
         "test_hidden": {
             "file": "test_hidden.jsonl",
-            "total": 200,
-            "valid": 180,
-            "hallucinated": 20,
+            "total": 393,
+            "valid": 198,
+            "hallucinated": 195,
             "tier_distribution": {
-                "1": 8,
-                "2": 7,
-                "3": 5
+                "1": 60,
+                "2": 75,
+                "3": 60
             },
             "type_distribution": {
-                "fabricated_doi": 3,
-                "future_date": 3,
-                "swapped_authors": 2,
-                "preprint_as_published": 3,
-                "near_miss_title": 5,
-                "wrong_venue": 2,
-                "placeholder_authors": 2
+                "chimeric_title": 15,
+                "fabricated_doi": 15,
+                "future_date": 15,
+                "hybrid_fabrication": 15,
+                "near_miss_title": 15,
+                "nonexistent_venue": 15,
+                "placeholder_authors": 15,
+                "plausible_fabrication": 15,
+                "preprint_as_published": 15,
+                "retracted_paper": 15,
+                "swapped_authors": 15,
+                "version_confusion": 15,
+                "wrong_venue": 15
             }
         }
     },

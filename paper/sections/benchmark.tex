@@ -67,7 +67,7 @@ We generated hallucinated entries using four methods:
 (3)~\emph{Adversarial crafting}: manually constructing entries designed to evade specific detection strategies.
 (4)~\emph{Real-world collection}: harvesting actual hallucinated citations from published papers identified in audits.
 Each hallucinated entry was manually verified to confirm that (a)~it is indeed hallucinated and (b)~it matches its assigned type.
-At 1,700 entries, \textsc{Hallmark} is comparable in scale to specialized evaluation suites such as SWE-bench~\citep{swebench} (2,294 instances) and HumanEval~\citep{humaneval} (164 problems).
+At 1,893 entries, \textsc{Hallmark} is comparable in scale to specialized evaluation suites such as SWE-bench~\citep{swebench} (2,294 instances) and HumanEval~\citep{humaneval} (164 problems).
 The design prioritizes \emph{coverage}---ensuring all 13 types have sufficient instances for per-type analysis---over volume.
 
 \paragraph{Quality control.}
@@ -85,7 +85,7 @@ Per-type metrics (\cref{sec:per_type}) enable prevalence-adjusted evaluation whe
 Practitioners with access to empirical prevalence data can reweight per-type performance by observed frequencies to compute domain-specific aggregate metrics.
 
 \begin{table}[t]
-\caption{Dataset statistics by split. Tier distribution refers to hallucinated entries only.}
+\caption{Dataset statistics by split. Tier distribution refers to hallucinated entries only. All splits cover all 13 hallucination types with $n \geq 15$ per type.}
 \label{tab:stats}
 \centering
 \small
@@ -95,9 +95,9 @@ Practitioners with access to empirical prevalence data can reweight per-type per
 \midrule
 \texttt{dev\_public}   & 450 & 390 & 840 & 120 & 150 & 120 & 13 \\
 \texttt{test\_public}  & 270 & 390 & 660 & 120 & 150 & 120 & 13 \\
-\texttt{test\_hidden}  & 180 &  20 & 200 &  8 &  7 &  5 & 13 \\
+\texttt{test\_hidden}  & 198 & 195 & 393 & 60 & 75 & 60 & 13 \\
 \midrule
-\textbf{Total}         & 900 & 800 & 1,700 & 248 & 307 & 245 & 13 \\
+\textbf{Total}         & 918 & 975 & 1,893 & 300 & 375 & 300 & 13 \\
 \bottomrule
 \end{tabular}
 \end{table}

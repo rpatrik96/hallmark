@@ -645,10 +645,17 @@ def equivalence_test(
     n_permutations: int = 10_000,
     seed: int = 42,
 ) -> tuple[bool, float, float]:
-    """Permutation-based equivalence test for dataset scaling validation.
+    """TOST-based equivalence test for dataset scaling validation.
 
-    Tests whether metrics on entries_a vs entries_b differ by more than epsilon.
-    Returns (is_equivalent, observed_diff, p_value).
+    Uses Two One-Sided Tests (TOST) with permutation distributions to test:
+    - H0: |metric(A) - metric(B)| >= epsilon (groups are NOT equivalent)
+    - H1: |metric(A) - metric(B)| < epsilon (groups ARE equivalent)
+
+    The TOST procedure performs two one-sided tests:
+    1. Upper bound test: H0_upper: diff >= epsilon
+    2. Lower bound test: H0_lower: diff <= -epsilon
+
+    Equivalence is concluded if BOTH one-sided tests reject (p_tost < alpha).
 
     Args:
         entries_a: First set of benchmark entries.
@@ -659,10 +666,10 @@ def equivalence_test(
         seed: Random seed for reproducibility.
 
     Returns:
-        Tuple (is_equivalent, observed_diff, p_value).
-        - is_equivalent: True if |observed_diff| <= epsilon and p > 0.05
+        Tuple (is_equivalent, observed_diff, p_tost).
+        - is_equivalent: True if p_tost < 0.05 (reject non-equivalence)
         - observed_diff: metric_A - metric_B on original split
-        - p_value: fraction of permutations with |diff| >= |observed_diff|
+        - p_tost: max(p_upper, p_lower) from TOST procedure
     """
     try:
         import numpy as np
@@ -710,16 +717,27 @@ def equivalence_test(
             cm_perm_b = build_confusion_matrix(perm_entries_b, perm_pred_map_b)
             permuted_diffs.append(cm_perm_a.f1 - cm_perm_b.f1)
 
-    # p-value: fraction of permutations with |diff| >= |observed_diff|
+    # TOST: Two One-Sided Tests
+    # The permutation distribution is centered at 0 (null of no difference).
+    # We shift it to test against the equivalence bounds ±epsilon.
     if permuted_diffs:
-        p_value = float(np.mean([abs(d) >= abs(observed_diff) for d in permuted_diffs]))
+        # Upper bound test: H0_upper: true_diff >= epsilon
+        # p_upper = P(perm_diff <= observed_diff - epsilon)
+        p_upper = float(np.mean([d <= observed_diff - epsilon for d in permuted_diffs]))
+
+        # Lower bound test: H0_lower: true_diff <= -epsilon
+        # p_lower = P(perm_diff >= observed_diff + epsilon)
+        p_lower = float(np.mean([d >= observed_diff + epsilon for d in permuted_diffs]))
+
+        # TOST p-value: reject non-equivalence only if BOTH tests reject
+        p_tost = max(p_upper, p_lower)
     else:
-        p_value = 1.0
+        p_tost = 1.0
 
-    # Equivalence: |observed_diff| <= epsilon and p > 0.05
-    is_equivalent = abs(observed_diff) <= epsilon and p_value > 0.05
+    # Equivalence: reject H0 of non-equivalence if p_tost < alpha
+    is_equivalent = p_tost < 0.05
 
-    return (is_equivalent, observed_diff, p_value)
+    return (is_equivalent, observed_diff, p_tost)
 
 
 def evaluate(
