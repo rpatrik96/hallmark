@@ -1,0 +1,461 @@
+{
+  "summary": {
+    "total_entries": 50,
+    "verified_count": 22,
+    "failed_count": 7,
+    "no_doi_count": 21,
+    "verification_rate": 0.44
+  },
+  "results": [
+    {
+      "bibtex_key": "hallmark_dev_0014",
+      "has_doi": true,
+      "verified": true,
+      "verification_method": "doi",
+      "title_similarity": 1.0,
+      "authors_match": true,
+      "details": "Verified via DOI (title_sim=1.00)"
+    },
+    {
+      "bibtex_key": "hallmark_dev_0397",
+      "has_doi": true,
+      "verified": false,
+      "verification_method": null,
+      "title_similarity": 0.0,
+      "authors_match": false,
+      "details": "DOI 10.48550/ARXIV.2301.13857 not found in CrossRef"
+    },
+    {
+      "bibtex_key": "hallmark_dev_0728",
+      "has_doi": true,
+      "verified": true,
+      "verification_method": "doi",
+      "title_similarity": 1.0,
+      "authors_match": true,
+      "details": "Verified via DOI (title_sim=1.00)"
+    },
+    {
+      "bibtex_key": "hallmark_test_0461",
+      "has_doi": true,
+      "verified": false,
+      "verification_method": null,
+      "title_similarity": 0.0,
+      "authors_match": false,
+      "details": "DOI 10.48550/ARXIV.2210.16966 not found in CrossRef"
+    },
+    {
+      "bibtex_key": "hallmark_dev_0573",
+      "has_doi": true,
+      "verified": true,
+      "verification_method": "doi",
+      "title_similarity": 1.0,
+      "authors_match": true,
+      "details": "Verified via DOI (title_sim=1.00)"
+    },
+    {
+      "bibtex_key": "hallmark_dev_0193",
+      "has_doi": true,
+      "verified": true,
+      "verification_method": "doi",
+      "title_similarity": 1.0,
+      "authors_match": true,
+      "details": "Verified via DOI (title_sim=1.00)"
+    },
+    {
+      "bibtex_key": "hallmark_dev_0530",
+      "has_doi": false,
+      "verified": false,
+      "verification_method": null,
+      "title_similarity": 0.3978494623655914,
+      "authors_match": false,
+      "details": "Title search found but failed: title_sim=0.40<0.85, no_author_match"
+    },
+    {
+      "bibtex_key": "hallmark_dev_0460",
+      "has_doi": false,
+      "verified": false,
+      "verification_method": null,
+      "title_similarity": 1.0,
+      "authors_match": false,
+      "details": "Title search found but failed: no_author_match"
+    },
+    {
+      "bibtex_key": "hallmark_test_0411",
+      "has_doi": true,
+      "verified": true,
+      "verification_method": "doi",
+      "title_similarity": 1.0,
+      "authors_match": true,
+      "details": "Verified via DOI (title_sim=1.00)"
+    },
+    {
+      "bibtex_key": "hallmark_test_0062",
+      "has_doi": true,
+      "verified": true,
+      "verification_method": "doi",
+      "title_similarity": 1.0,
+      "authors_match": true,
+      "details": "Verified via DOI (title_sim=1.00)"
+    },
+    {
+      "bibtex_key": "hallmark_dev_0158",
+      "has_doi": true,
+      "verified": true,
+      "verification_method": "doi",
+      "title_similarity": 1.0,
+      "authors_match": true,
+      "details": "Verified via DOI (title_sim=1.00)"
+    },
+    {
+      "bibtex_key": "hallmark_dev_0897",
+      "has_doi": true,
+      "verified": true,
+      "verification_method": "doi",
+      "title_similarity": 1.0,
+      "authors_match": true,
+      "details": "Verified via DOI (title_sim=1.00)"
+    },
+    {
+      "bibtex_key": "hallmark_dev_0026",
+      "has_doi": true,
+      "verified": true,
+      "verification_method": "doi",
+      "title_similarity": 1.0,
+      "authors_match": true,
+      "details": "Verified via DOI (title_sim=1.00)"
+    },
+    {
+      "bibtex_key": "hallmark_dev_0645",
+      "has_doi": false,
+      "verified": false,
+      "verification_method": null,
+      "title_similarity": 0.2389937106918239,
+      "authors_match": false,
+      "details": "Title search found but failed: title_sim=0.24<0.85, no_author_match"
+    },
+    {
+      "bibtex_key": "hallmark_dev_0958",
+      "has_doi": false,
+      "verified": false,
+      "verification_method": null,
+      "title_similarity": 0.8363636363636363,
+      "authors_match": false,
+      "details": "Title search found but failed: title_sim=0.84<0.85, no_author_match"
+    },
+    {
+      "bibtex_key": "hallmark_test_0555",
+      "has_doi": false,
+      "verified": false,
+      "verification_method": null,
+      "title_similarity": 0.4161849710982659,
+      "authors_match": false,
+      "details": "Title search found but failed: title_sim=0.42<0.85, no_author_match"
+    },
+    {
+      "bibtex_key": "hallmark_test_0468",
+      "has_doi": true,
+      "verified": true,
+      "verification_method": "doi",
+      "title_similarity": 1.0,
+      "authors_match": true,
+      "details": "Verified via DOI (title_sim=1.00)"
+    },
+    {
+      "bibtex_key": "hallmark_dev_0677",
+      "has_doi": false,
+      "verified": false,
+      "verification_method": null,
+      "title_similarity": 0.31272727272727274,
+      "authors_match": false,
+      "details": "Title search found but failed: title_sim=0.31<0.85, no_author_match"
+    },
+    {
+      "bibtex_key": "hallmark_dev_0057",
+      "has_doi": false,
+      "verified": false,
+      "verification_method": null,
+      "title_similarity": 0.8359788359788359,
+      "authors_match": false,
+      "details": "Title search found but failed: title_sim=0.84<0.85, no_author_match"
+    },
+    {
+      "bibtex_key": "hallmark_test_0230",
+      "has_doi": true,
+      "verified": false,
+      "verification_method": null,
+      "title_similarity": 0.0,
+      "authors_match": false,
+      "details": "DOI 10.48550/ARXIV.2205.13051 not found in CrossRef"
+    },
+    {
+      "bibtex_key": "hallmark_dev_0391",
+      "has_doi": false,
+      "verified": false,
+      "verification_method": null,
+      "title_similarity": 0.2550335570469799,
+      "authors_match": false,
+      "details": "Title search found but failed: title_sim=0.26<0.85, no_author_match"
+    },
+    {
+      "bibtex_key": "hallmark_dev_0939",
+      "has_doi": false,
+      "verified": false,
+      "verification_method": null,
+      "title_similarity": 0.4659090909090909,
+      "authors_match": false,
+      "details": "Title search found but failed: title_sim=0.47<0.85, no_author_match"
+    },
+    {
+      "bibtex_key": "hallmark_dev_0385",
+      "has_doi": true,
+      "verified": true,
+      "verification_method": "doi",
+      "title_similarity": 1.0,
+      "authors_match": true,
+      "details": "Verified via DOI (title_sim=1.00)"
+    },
+    {
+      "bibtex_key": "hallmark_dev_0110",
+      "has_doi": true,
+      "verified": false,
+      "verification_method": null,
+      "title_similarity": 0.0,
+      "authors_match": false,
+      "details": "DOI 10.48550/ARXIV.2210.05995 not found in CrossRef"
+    },
+    {
+      "bibtex_key": "hallmark_test_0637",
+      "has_doi": true,
+      "verified": true,
+      "verification_method": "doi",
+      "title_similarity": 1.0,
+      "authors_match": true,
+      "details": "Verified via DOI (title_sim=1.00)"
+    },
+    {
+      "bibtex_key": "hallmark_test_0524",
+      "has_doi": true,
+      "verified": true,
+      "verification_method": "doi",
+      "title_similarity": 1.0,
+      "authors_match": true,
+      "details": "Verified via DOI (title_sim=1.00)"
+    },
+    {
+      "bibtex_key": "hallmark_dev_0798",
+      "has_doi": true,
+      "verified": false,
+      "verification_method": null,
+      "title_similarity": 0.0,
+      "authors_match": false,
+      "details": "DOI 10.48550/ARXIV.2210.03954 not found in CrossRef"
+    },
+    {
+      "bibtex_key": "hallmark_test_0273",
+      "has_doi": false,
+      "verified": false,
+      "verification_method": null,
+      "title_similarity": 0.4666666666666667,
+      "authors_match": false,
+      "details": "Title search found but failed: title_sim=0.47<0.85, no_author_match"
+    },
+    {
+      "bibtex_key": "hallmark_dev_0056",
+      "has_doi": false,
+      "verified": false,
+      "verification_method": null,
+      "title_similarity": 0.7066666666666667,
+      "authors_match": true,
+      "details": "Title search found but failed: title_sim=0.71<0.85"
+    },
+    {
+      "bibtex_key": "hallmark_dev_0498",
+      "has_doi": false,
+      "verified": false,
+      "verification_method": null,
+      "title_similarity": 0.7640449438202247,
+      "authors_match": false,
+      "details": "Title search found but failed: title_sim=0.76<0.85, no_author_match"
+    },
+    {
+      "bibtex_key": "hallmark_dev_0039",
+      "has_doi": true,
+      "verified": true,
+      "verification_method": "doi",
+      "title_similarity": 1.0,
+      "authors_match": true,
+      "details": "Verified via DOI (title_sim=1.00)"
+    },
+    {
+      "bibtex_key": "hallmark_test_0282",
+      "has_doi": false,
+      "verified": false,
+      "verification_method": null,
+      "title_similarity": 0.46258503401360546,
+      "authors_match": true,
+      "details": "Title search found but failed: title_sim=0.46<0.85"
+    },
+    {
+      "bibtex_key": "hallmark_dev_0122",
+      "has_doi": true,
+      "verified": true,
+      "verification_method": "doi",
+      "title_similarity": 1.0,
+      "authors_match": true,
+      "details": "Verified via DOI (title_sim=1.00)"
+    },
+    {
+      "bibtex_key": "hallmark_test_0026",
+      "has_doi": false,
+      "verified": false,
+      "verification_method": null,
+      "title_similarity": 0.39111111111111113,
+      "authors_match": false,
+      "details": "Title search found but failed: title_sim=0.39<0.85, no_author_match"
+    },
+    {
+      "bibtex_key": "hallmark_test_0698",
+      "has_doi": true,
+      "verified": true,
+      "verification_method": "doi",
+      "title_similarity": 1.0,
+      "authors_match": true,
+      "details": "Verified via DOI (title_sim=1.00)"
+    },
+    {
+      "bibtex_key": "hallmark_test_0144",
+      "has_doi": false,
+      "verified": false,
+      "verification_method": null,
+      "title_similarity": 0.40816326530612246,
+      "authors_match": false,
+      "details": "Title search found but failed: title_sim=0.41<0.85, no_author_match"
+    },
+    {
+      "bibtex_key": "hallmark_test_0246",
+      "has_doi": false,
+      "verified": false,
+      "verification_method": null,
+      "title_similarity": 0.20320855614973263,
+      "authors_match": false,
+      "details": "Title search found but failed: title_sim=0.20<0.85, no_author_match"
+    },
+    {
+      "bibtex_key": "hallmark_test_0380",
+      "has_doi": true,
+      "verified": true,
+      "verification_method": "doi",
+      "title_similarity": 1.0,
+      "authors_match": true,
+      "details": "Verified via DOI (title_sim=1.00)"
+    },
+    {
+      "bibtex_key": "hallmark_test_0580",
+      "has_doi": true,
+      "verified": true,
+      "verification_method": "doi",
+      "title_similarity": 1.0,
+      "authors_match": true,
+      "details": "Verified via DOI (title_sim=1.00)"
+    },
+    {
+      "bibtex_key": "hallmark_dev_0860",
+      "has_doi": true,
+      "verified": true,
+      "verification_method": "doi",
+      "title_similarity": 1.0,
+      "authors_match": true,
+      "details": "Verified via DOI (title_sim=1.00)"
+    },
+    {
+      "bibtex_key": "hallmark_dev_0103",
+      "has_doi": false,
+      "verified": false,
+      "verification_method": null,
+      "title_similarity": 0.5590062111801242,
+      "authors_match": true,
+      "details": "Title search found but failed: title_sim=0.56<0.85"
+    },
+    {
+      "bibtex_key": "hallmark_dev_0936",
+      "has_doi": true,
+      "verified": true,
+      "verification_method": "doi",
+      "title_similarity": 1.0,
+      "authors_match": true,
+      "details": "Verified via DOI (title_sim=1.00)"
+    },
+    {
+      "bibtex_key": "hallmark_test_0181",
+      "has_doi": false,
+      "verified": false,
+      "verification_method": null,
+      "title_similarity": 0.5148514851485149,
+      "authors_match": false,
+      "details": "Title search found but failed: title_sim=0.51<0.85, no_author_match"
+    },
+    {
+      "bibtex_key": "hallmark_test_0615",
+      "has_doi": true,
+      "verified": true,
+      "verification_method": "doi",
+      "title_similarity": 1.0,
+      "authors_match": true,
+      "details": "Verified via DOI (title_sim=1.00)"
+    },
+    {
+      "bibtex_key": "hallmark_dev_0303",
+      "has_doi": false,
+      "verified": false,
+      "verification_method": null,
+      "title_similarity": 0.3728813559322034,
+      "authors_match": false,
+      "details": "Title search found but failed: title_sim=0.37<0.85, no_author_match"
+    },
+    {
+      "bibtex_key": "hallmark_test_0307",
+      "has_doi": true,
+      "verified": false,
+      "verification_method": null,
+      "title_similarity": 0.0,
+      "authors_match": false,
+      "details": "DOI 10.48550/ARXIV.2203.15386 not found in CrossRef"
+    },
+    {
+      "bibtex_key": "hallmark_test_0679",
+      "has_doi": false,
+      "verified": false,
+      "verification_method": null,
+      "title_similarity": 0.3787878787878788,
+      "authors_match": false,
+      "details": "Title search found but failed: title_sim=0.38<0.85, no_author_match"
+    },
+    {
+      "bibtex_key": "hallmark_dev_0080",
+      "has_doi": true,
+      "verified": true,
+      "verification_method": "doi",
+      "title_similarity": 1.0,
+      "authors_match": true,
+      "details": "Verified via DOI (title_sim=1.00)"
+    },
+    {
+      "bibtex_key": "hallmark_test_0101",
+      "has_doi": false,
+      "verified": false,
+      "verification_method": null,
+      "title_similarity": 0.5607476635514018,
+      "authors_match": false,
+      "details": "Title search found but failed: title_sim=0.56<0.85, no_author_match"
+    },
+    {
+      "bibtex_key": "hallmark_test_0086",
+      "has_doi": true,
+      "verified": false,
+      "verification_method": null,
+      "title_similarity": 0.0,
+      "authors_match": false,
+      "details": "DOI 10.48550/ARXIV.2203.07681 not found in CrossRef"
+    }
+  ]
+}
