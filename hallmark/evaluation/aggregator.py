@@ -12,7 +12,10 @@ from __future__ import annotations
 from collections import defaultdict
 from dataclasses import dataclass, field
 
-import numpy as np
+try:
+    import numpy as np
+except ImportError:
+    np = None  # type: ignore[assignment]
 
 
 @dataclass
@@ -252,6 +255,8 @@ def _bootstrap_ci(
     confidence: float = 0.95,
 ) -> tuple[float, float]:
     """Compute bootstrap confidence interval."""
+    if np is None:
+        raise ImportError("numpy is required for bootstrap CIs: pip install numpy")
     if len(values) < 2:
         mean = values[0] if values else 0.0
         return (mean, mean)

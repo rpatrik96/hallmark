@@ -87,9 +87,13 @@ def _weighted_vote(
         total_weight += w
 
         if pred is None:
-            valid_weight += w  # Missing = assume valid
+            valid_weight += w  # Missing = assume valid (unweighted by confidence)
             continue
 
+        # Confidence-weighted voting: each tool's vote is scaled by its confidence.
+        # hall_fraction = sum(w_i * conf_i for HALL) / sum(w_i) is a confidence-weighted
+        # average, not a majority vote. The threshold thus represents a minimum
+        # confidence-weighted proportion, not a vote count.
         if pred.label == "HALLUCINATED":
             hall_weight += w * pred.confidence
             reasons.append(f"{name}: HALL ({pred.confidence:.2f})")

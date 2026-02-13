@@ -149,6 +149,9 @@ def tier_weighted_f1(
             else:
                 weighted_fn += w
         else:
+            # FP weighting: VALID entries have no tier, so they use weight 1.0.
+            # This is intentional—false positives are penalized uniformly regardless
+            # of weighting scheme, affecting only precision, not recall.
             if pred is not None and pred_label == "HALLUCINATED":
                 weighted_fp += w
 
@@ -487,8 +490,9 @@ def auprc(entries: list[BenchmarkEntry], predictions: dict[str, Prediction]) -> 
             recall = tp / num_positive
             precision = tp / (tp + fp) if (tp + fp) > 0 else 0.0
 
-            # Use the current precision for the entire recall interval
-            # This is the standard way to compute AUPRC (right-hand Riemann sum)
+            # Right-hand Riemann sum approximation of AUPRC.
+            # Note: this differs from sklearn's interpolated average_precision_score.
+            # We use this simpler method for transparency; differences are typically <0.01.
             area += precision * (recall - prev_recall)
 
             prev_recall = recall
@@ -665,10 +669,21 @@ def stratified_bootstrap_ci(
 
     for entry in entries:
         h_type = entry.hallucination_type or "valid"
+        # Include all entries (not just those with predictions) so CIs reflect
+        # uncertainty from missing predictions, consistent with build_confusion_matrix.
         pred = pred_map.get(entry.bibtex_key)
+        type_groups[h_type][0].append(entry)
         if pred is not None:
-            type_groups[h_type][0].append(entry)
             type_groups[h_type][1].append(pred)
+        else:
+            # Missing prediction → treated as VALID with default confidence
+            type_groups[h_type][1].append(
+                Prediction(
+                    bibtex_key=entry.bibtex_key,
+                    label="VALID",
+                    confidence=0.5,
+                )
+            )
 
     # Bootstrap resampling
     bootstrap_metrics = []
@@ -754,12 +769,18 @@ def paired_bootstrap_test(
         indices = rng.choice(n, size=n, replace=True)
         resampled_entries = [entries[i] for i in indices]
 
-        # Resample predictions using same indices (filter out None)
+        # Resample predictions using same indices, preserving entry-prediction alignment.
+        # Missing predictions become VALID with default confidence (same convention as
+        # build_confusion_matrix).
         resampled_preds_a = [
-            p for i in indices if (p := pred_map_a.get(entries[i].bibtex_key)) is not None
+            pred_map_a.get(entries[i].bibtex_key)
+            or Prediction(bibtex_key=entries[i].bibtex_key, label="VALID", confidence=0.5)
+            for i in indices
         ]
         resampled_preds_b = [
-            p for i in indices if (p := pred_map_b.get(entries[i].bibtex_key)) is not None
+            pred_map_b.get(entries[i].bibtex_key)
+            or Prediction(bibtex_key=entries[i].bibtex_key, label="VALID", confidence=0.5)
+            for i in indices
         ]
 
         if resampled_preds_a and resampled_preds_b:
