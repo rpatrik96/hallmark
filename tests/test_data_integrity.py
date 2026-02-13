@@ -65,12 +65,12 @@ class TestCrossSplitContamination:
             e.fields.get("eprint", "")
             for e in dev_entries
             if e.hallucination_type == "version_confusion"
-        }
+        } - {""}
         test_arxiv = {
             e.fields.get("eprint", "")
             for e in test_entries
             if e.hallucination_type == "version_confusion"
-        }
+        } - {""}
         overlap = dev_arxiv & test_arxiv
         assert not overlap, f"Version confusion arXiv IDs in both splits: {overlap}"
 

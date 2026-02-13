@@ -11,31 +11,31 @@
             "valid": 450,
             "hallucinated": 555,
             "tier_distribution": {
-                "1": 164,
-                "2": 253,
-                "3": 138
+                "1": 146,
+                "2": 266,
+                "3": 143
             },
             "type_distribution": {
-                "chimeric_title": 32,
-                "fabricated_doi": 65,
-                "future_date": 32,
-                "hybrid_fabrication": 49,
-                "merged_citation": 35,
-                "near_miss_title": 35,
-                "nonexistent_venue": 33,
-                "partial_author_list": 35,
-                "placeholder_authors": 34,
-                "plausible_fabrication": 73,
-                "preprint_as_published": 31,
+                "chimeric_title": 40,
+                "fabricated_doi": 50,
+                "future_date": 29,
+                "hybrid_fabrication": 45,
+                "merged_citation": 32,
+                "near_miss_title": 45,
+                "nonexistent_venue": 32,
+                "partial_author_list": 38,
+                "placeholder_authors": 35,
+                "plausible_fabrication": 66,
+                "preprint_as_published": 33,
                 "swapped_authors": 38,
-                "version_confusion": 30,
-                "wrong_venue": 33
+                "version_confusion": 32,
+                "wrong_venue": 40
             },
             "generation_method_distribution": {
-                "adversarial": 69,
-                "llm_generated": 78,
-                "perturbation": 370,
-                "real_world": 38,
+                "adversarial": 67,
+                "llm_generated": 72,
+                "perturbation": 388,
+                "real_world": 28,
                 "scraped": 450
             }
         },
@@ -45,31 +45,31 @@
             "valid": 270,
             "hallucinated": 440,
             "tier_distribution": {
-                "1": 124,
-                "2": 222,
-                "3": 94
+                "1": 142,
+                "2": 209,
+                "3": 89
             },
             "type_distribution": {
-                "chimeric_title": 30,
-                "fabricated_doi": 30,
-                "future_date": 30,
-                "hybrid_fabrication": 30,
-                "merged_citation": 35,
-                "near_miss_title": 34,
-                "nonexistent_venue": 31,
-                "partial_author_list": 35,
-                "placeholder_authors": 33,
-                "plausible_fabrication": 30,
-                "preprint_as_published": 30,
+                "chimeric_title": 22,
+                "fabricated_doi": 45,
+                "future_date": 33,
+                "hybrid_fabrication": 34,
+                "merged_citation": 38,
+                "near_miss_title": 24,
+                "nonexistent_venue": 32,
+                "partial_author_list": 32,
+                "placeholder_authors": 32,
+                "plausible_fabrication": 37,
+                "preprint_as_published": 28,
                 "swapped_authors": 30,
-                "version_confusion": 30,
-                "wrong_venue": 32
+                "version_confusion": 28,
+                "wrong_venue": 25
             },
             "generation_method_distribution": {
-                "adversarial": 34,
-                "llm_generated": 38,
-                "perturbation": 351,
-                "real_world": 17,
+                "adversarial": 36,
+                "llm_generated": 44,
+                "perturbation": 333,
+                "real_world": 27,
                 "scraped": 270
             }
         },
@@ -114,17 +114,13 @@
         "tier_3_hard": 0.25
     },
     "temporal_segments": {
-        "historical": {
-            "start": "2015-01-01",
+        "valid_range": {
+            "start": "2021-01-01",
             "end": "2023-12-31"
         },
-        "recent": {
-            "start": "2024-01-01",
-            "end": "2025-12-31"
-        },
-        "future": {
-            "start": "2026-01-01",
-            "end": "2030-12-31"
+        "future_date": {
+            "start": "2027-01-01",
+            "end": "2036-12-31"
         }
     },
     "venues": [
