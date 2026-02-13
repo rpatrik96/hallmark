@@ -159,7 +159,7 @@ class TestRequestWithRetry:
 
 class TestRollingSplitCreation:
     def test_create_splits_with_rolling_config(self) -> None:
-        from scripts.create_splits import ROLLING_SPLIT_CONFIG, create_splits
+        from scripts.archive.create_splits import ROLLING_SPLIT_CONFIG, create_splits
 
         valid = [_make_valid_entry(f"valid_{i}") for i in range(300)]
         hallucinated = [_make_hallucinated_entry(f"hall_{i}") for i in range(50)]
@@ -170,7 +170,11 @@ class TestRollingSplitCreation:
         assert len(splits) == 1  # Only one split in rolling mode
 
     def test_rolling_output_directory_structure(self) -> None:
-        from scripts.create_splits import ROLLING_SPLIT_CONFIG, create_splits, update_metadata
+        from scripts.archive.create_splits import (
+            ROLLING_SPLIT_CONFIG,
+            create_splits,
+            update_metadata,
+        )
 
         valid = [_make_valid_entry(f"valid_{i}") for i in range(300)]
         hallucinated = [_make_hallucinated_entry(f"hall_{i}") for i in range(50)]

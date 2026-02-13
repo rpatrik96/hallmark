@@ -173,8 +173,8 @@ def run_pipeline(args: argparse.Namespace) -> int:
     logger.info("Step 3/4: Creating rolling split...")
     rolling_dir.mkdir(parents=True, exist_ok=True)
 
-    from scripts.create_splits import ROLLING_SPLIT_CONFIG as SPLIT_CFG
-    from scripts.create_splits import create_splits, update_metadata
+    from scripts.archive.create_splits import ROLLING_SPLIT_CONFIG as SPLIT_CFG
+    from scripts.archive.create_splits import create_splits, update_metadata
 
     splits = create_splits(
         valid_entries,
