@@ -51,7 +51,8 @@ Since Detection Rate and FPR are prevalence-independent, we emphasize these as p
 \paragraph{Incomplete-coverage tools.}
 HaRC and verify-citations completed only 2.2\% and 7.9\% of entries respectively due to API rate limiting.
 Their metrics reflect performance on the completed subset only and are not directly comparable to full-coverage tools.
-The framework supports LLM-based baselines (e.g., GPT-4o, Claude) which would provide independent high-coverage comparisons; we encourage the community to submit such evaluations.
+The framework supports LLM-based baselines (e.g., GPT-4o, Claude), which would provide independent high-coverage comparisons and likely represent the most practical deployment path for venues.
+We did not evaluate them in this work due to API cost constraints but provide a reference implementation; we encourage the community to submit such evaluations.
 Plackett-Luce ranking (\cref{app:ranking}) provides a principled framework for comparing tools with heterogeneous coverage but requires substantially higher pairwise overlap than achieved here.
 
 We compute 95\% confidence intervals using stratified bootstrap (10{,}000 resamples, stratified by hallucination type).
