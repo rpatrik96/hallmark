@@ -209,8 +209,9 @@ def generate_nonexistent_venue(
     new_entry.difficulty_tier = DifficultyTier.EASY.value
     new_entry.generation_method = GenerationMethod.PERTURBATION.value
     new_entry.explanation = f"Venue fabricated: '{fake_venue}' does not exist"
+    has_doi = bool(new_entry.fields.get("doi"))
     new_entry.subtests = {
-        "doi_resolves": True,
+        "doi_resolves": True if has_doi else None,
         "title_exists": True,
         "authors_match": True,
         "venue_real": False,
@@ -333,8 +334,9 @@ def generate_placeholder_authors(
     new_entry.difficulty_tier = DifficultyTier.EASY.value
     new_entry.generation_method = GenerationMethod.PERTURBATION.value
     new_entry.explanation = f"Authors are placeholders: {new_entry.fields['author']}"
+    has_doi = bool(new_entry.fields.get("doi"))
     new_entry.subtests = {
-        "doi_resolves": True,
+        "doi_resolves": True if has_doi else None,
         "title_exists": True,
         "authors_match": False,
         "venue_real": True,
@@ -356,9 +358,10 @@ def generate_future_date(entry: BenchmarkEntry, rng: random.Random | None = None
     new_entry.difficulty_tier = DifficultyTier.EASY.value
     new_entry.generation_method = GenerationMethod.PERTURBATION.value
     new_entry.explanation = f"Publication year {future_year} is in the future"
-    has_identifier = bool(new_entry.fields.get("doi") or new_entry.fields.get("url"))
+    has_doi = bool(new_entry.fields.get("doi"))
+    has_identifier = has_doi or bool(new_entry.fields.get("url"))
     new_entry.subtests = {
-        "doi_resolves": True,
+        "doi_resolves": True if has_doi else None,
         "title_exists": True,
         "authors_match": True,
         "venue_real": True,
@@ -382,9 +385,10 @@ def generate_chimeric_title(
     new_entry.difficulty_tier = DifficultyTier.MEDIUM.value
     new_entry.generation_method = GenerationMethod.PERTURBATION.value
     new_entry.explanation = f"Title '{fake_title}' is fabricated; authors are real"
-    has_identifier = bool(new_entry.fields.get("doi") or new_entry.fields.get("url"))
+    has_doi = bool(new_entry.fields.get("doi"))
+    has_identifier = has_doi or bool(new_entry.fields.get("url"))
     new_entry.subtests = {
-        "doi_resolves": True,  # DOI still resolves to original paper
+        "doi_resolves": True if has_doi else None,  # DOI still resolves to original paper
         "title_exists": False,
         "authors_match": True,
         "venue_real": True,
@@ -417,8 +421,9 @@ def generate_wrong_venue(
     new_entry.difficulty_tier = DifficultyTier.MEDIUM.value
     new_entry.generation_method = GenerationMethod.PERTURBATION.value
     new_entry.explanation = f"Venue changed to '{wrong_venue}' (original was different)"
+    has_doi = bool(new_entry.fields.get("doi"))
     new_entry.subtests = {
-        "doi_resolves": True,
+        "doi_resolves": True if has_doi else None,
         "title_exists": True,
         "authors_match": True,
         "venue_real": False,
@@ -442,8 +447,9 @@ def generate_swapped_authors(
     new_entry.difficulty_tier = DifficultyTier.MEDIUM.value
     new_entry.generation_method = GenerationMethod.PERTURBATION.value
     new_entry.explanation = f"Authors swapped from '{donor_entry.bibtex_key}'"
+    has_doi = bool(new_entry.fields.get("doi"))
     new_entry.subtests = {
-        "doi_resolves": True,
+        "doi_resolves": True if has_doi else None,
         "title_exists": True,
         "authors_match": False,
         "venue_real": True,
@@ -814,14 +820,15 @@ def generate_near_miss_title(
                 new_title = " ".join(words)
 
     new_entry.fields["title"] = new_title
-    has_identifier = bool(new_entry.fields.get("doi") or new_entry.fields.get("url"))
+    has_doi = bool(new_entry.fields.get("doi"))
+    has_identifier = has_doi or bool(new_entry.fields.get("url"))
     new_entry.label = "HALLUCINATED"
     new_entry.hallucination_type = HallucinationType.NEAR_MISS_TITLE.value
     new_entry.difficulty_tier = DifficultyTier.HARD.value
     new_entry.generation_method = GenerationMethod.PERTURBATION.value
     new_entry.explanation = f"Title slightly modified: '{new_title}' (original: '{title}')"
     new_entry.subtests = {
-        "doi_resolves": True,  # DOI resolves to original (correct) paper
+        "doi_resolves": True if has_doi else None,  # DOI resolves to original (correct) paper
         "title_exists": False,
         "authors_match": True,
         "venue_real": True,
@@ -1408,8 +1415,9 @@ def generate_hybrid_fabrication(
     new_entry.difficulty_tier = DifficultyTier.MEDIUM.value
     new_entry.generation_method = GenerationMethod.ADVERSARIAL.value
     new_entry.explanation = "Real DOI with fabricated authors and modified title"
+    has_doi = bool(new_entry.fields.get("doi"))
     new_entry.subtests = {
-        "doi_resolves": True,
+        "doi_resolves": True if has_doi else None,
         "title_exists": False,
         "authors_match": False,
         "venue_real": True,
@@ -1576,4 +1584,5 @@ def _clone_entry(entry: BenchmarkEntry) -> BenchmarkEntry:
         added_to_benchmark=entry.added_to_benchmark,
         subtests=copy.deepcopy(entry.subtests),
         raw_bibtex=None,
+        source=entry.source,
     )
