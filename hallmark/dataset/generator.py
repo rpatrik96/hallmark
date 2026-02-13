@@ -359,13 +359,12 @@ def generate_future_date(entry: BenchmarkEntry, rng: random.Random | None = None
     new_entry.generation_method = GenerationMethod.PERTURBATION.value
     new_entry.explanation = f"Publication year {future_year} is in the future"
     has_doi = bool(new_entry.fields.get("doi"))
-    has_identifier = has_doi or bool(new_entry.fields.get("url"))
     new_entry.subtests = {
         "doi_resolves": True if has_doi else None,
         "title_exists": True,
         "authors_match": True,
         "venue_real": True,
-        "fields_complete": has_identifier,  # True if DOI/URL present
+        "fields_complete": False,  # future year = malformed metadata
         "cross_db_agreement": False,
     }
     new_entry.bibtex_key = f"future_{new_entry.bibtex_key}"
@@ -386,13 +385,12 @@ def generate_chimeric_title(
     new_entry.generation_method = GenerationMethod.PERTURBATION.value
     new_entry.explanation = f"Title '{fake_title}' is fabricated; authors are real"
     has_doi = bool(new_entry.fields.get("doi"))
-    has_identifier = has_doi or bool(new_entry.fields.get("url"))
     new_entry.subtests = {
         "doi_resolves": True if has_doi else None,  # DOI still resolves to original paper
         "title_exists": False,
         "authors_match": True,
         "venue_real": True,
-        "fields_complete": has_identifier,
+        "fields_complete": True,
         "cross_db_agreement": False,
     }
     new_entry.bibtex_key = f"chimeric_{new_entry.bibtex_key}"
@@ -428,7 +426,7 @@ def generate_wrong_venue(
         "authors_match": True,
         "venue_real": False,
         "fields_complete": True,
-        "cross_db_agreement": True,  # title+authors match across databases; only venue is wrong
+        "cross_db_agreement": False,  # venue mismatch causes cross-DB disagreement
     }
     new_entry.bibtex_key = f"wrong_venue_{new_entry.bibtex_key}"
     return new_entry
@@ -821,7 +819,6 @@ def generate_near_miss_title(
 
     new_entry.fields["title"] = new_title
     has_doi = bool(new_entry.fields.get("doi"))
-    has_identifier = has_doi or bool(new_entry.fields.get("url"))
     new_entry.label = "HALLUCINATED"
     new_entry.hallucination_type = HallucinationType.NEAR_MISS_TITLE.value
     new_entry.difficulty_tier = DifficultyTier.HARD.value
@@ -832,7 +829,7 @@ def generate_near_miss_title(
         "title_exists": False,
         "authors_match": True,
         "venue_real": True,
-        "fields_complete": has_identifier,
+        "fields_complete": True,
         "cross_db_agreement": False,
     }
     new_entry.bibtex_key = f"near_miss_{new_entry.bibtex_key}"
@@ -877,14 +874,14 @@ def generate_preprint_as_published(
     new_entry.difficulty_tier = DifficultyTier.MEDIUM.value
     new_entry.generation_method = GenerationMethod.PERTURBATION.value
     new_entry.explanation = f"Preprint falsely cited as published at '{fake_venue}'"
-    has_identifier = bool(new_entry.fields.get("doi") or new_entry.fields.get("url"))
+    has_doi = bool(new_entry.fields.get("doi"))
     new_entry.subtests = {
-        "doi_resolves": False,
+        "doi_resolves": True if has_doi else None,  # real paper DOI resolves; N/A if no DOI
         "title_exists": True,
         "authors_match": True,
         "venue_real": False,
-        "fields_complete": has_identifier,
-        "cross_db_agreement": True,  # title+authors match across databases; venue is fabricated
+        "fields_complete": True,
+        "cross_db_agreement": False,  # fabricated venue causes cross-DB disagreement
     }
     new_entry.bibtex_key = f"preprint_pub_{new_entry.bibtex_key}"
     return new_entry
@@ -1342,13 +1339,12 @@ def generate_arxiv_version_mismatch(
         f"{year + year_shift}; metadata mixes preprint and publication versions"
     )
     has_doi = bool(new_entry.fields.get("doi"))
-    has_identifier = bool(new_entry.fields.get("doi") or new_entry.fields.get("url"))
     new_entry.subtests = {
         "doi_resolves": True if has_doi else None,  # DOI resolves to the real paper; N/A if no DOI
         "title_exists": True,
         "authors_match": True,
         "venue_real": True,
-        "fields_complete": has_identifier,
+        "fields_complete": True,
         "cross_db_agreement": False,  # venue/year don't match what DOI resolves to
     }
     new_entry.bibtex_key = f"arxiv_vm_{new_entry.bibtex_key}"

@@ -215,7 +215,7 @@
   "doi_percentages_per_type": {
     "dev_public": {
       "chimeric_title": 60.0,
-      "fabricated_doi": 96.0,
+      "fabricated_doi": 100.0,
       "future_date": 31.0,
       "hybrid_fabrication": 55.6,
       "near_miss_title": 60.0,
