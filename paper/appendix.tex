@@ -132,10 +132,10 @@ We conclude that the scaled entries are consistent with the original distributio
 \section{Full per-type results}
 \label{app:pertype}
 
-\cref{tab:pertype_full} reports detection rate, F1, and count for every hallucination type and baseline.
+\cref{tab:pertype_full} reports detection rate for every hallucination type and baseline.
 
 \begin{table}[h]
-\caption{Per-type detection rate on \texttt{dev\_public} for independent tools. All main types have $\geq$30 instances. Stress-test types are evaluated in the separate \texttt{stress\_test} split.}
+\caption{Per-type detection rate on \texttt{dev\_public} for independent tools. All main types have $\geq$29 instances. Stress-test types are evaluated in the separate \texttt{stress\_test} split.}
 \label{tab:pertype_full}
 \centering
 \small
@@ -164,7 +164,7 @@ We conclude that the scaled entries are consistent with the original distributio
 \end{tabular}
 \end{table}
 
-\noindent All main hallucination types have $\geq$30 instances per public split.
+\noindent All main hallucination types have $\geq$29 instances per public split.
 Entries marked --- indicate insufficient coverage for per-type breakdowns (HaRC: 2.2\%, verify-citations: 7.9\%).
 DOI-only detects only types with fabricated or missing DOIs (\texttt{fabricated\_doi}, \texttt{plausible\_fabrication}), confirming that DOI resolution is necessary but far from sufficient.
 Note that \texttt{plausible\_fabrication} (Tier~3) shows 100\% detection by DOI-only: these entries are entirely fabricated, so their DOIs do not resolve.
@@ -184,8 +184,8 @@ For each pair of tools $(A, B)$, we resample entries with replacement and comput
 The $p$-value is the fraction of resamples where $\Delta \leq 0$.
 
 \paragraph{Per-type power analysis.}
-With $n = 30$ instances per type per split, binary classification metrics have substantially narrower confidence intervals than the original 10-instance design.
-For detection rate, a type with 30 hallucinated entries and 90\% true detection rate has a 95\% Clopper-Pearson confidence interval of $[0.74, 0.98]$, compared to $[0.55, 0.998]$ for $n=10$.
+With $n \geq 29$ instances per type per split, binary classification metrics have substantially narrower confidence intervals than the original 10-instance design.
+For detection rate, a type with 29 hallucinated entries and 90\% true detection rate has a 95\% Clopper-Pearson confidence interval of $[0.73, 0.98]$, compared to $[0.55, 0.998]$ for $n=10$.
 We report per-type results with improved statistical confidence, enabling more definitive type-level claims.
 As the dataset grows through community contributions, per-type statistical power will continue to improve.
 
@@ -302,12 +302,12 @@ The dataset is distributed under the MIT license via GitHub and PyPI.
 The hidden test set is not publicly distributed.
 
 \paragraph{Maintenance.}
-The benchmark is maintained by the authors and accepts community contributions through the structured submission process described in \cref{sec:contribution}.
+The benchmark is maintained by the authors and accepts community contributions through a structured submission process (pull requests to the GitHub repository, validated by automated checks for BibTeX well-formedness, sub-test consistency, and duplicate detection).
 
 \section{Co-designed tool evaluation}
 \label{app:codesign}
 
-\texttt{bibtex-updater}~\citep{bibtexupdater2026} is a multi-database cross-referencing tool developed by the authors of this benchmark.
+\texttt{bibtex-updater}~\citep{bibtexupdater} is a multi-database cross-referencing tool developed by the authors of this benchmark.
 We report its results separately to maintain transparency about the co-design relationship: the benchmark taxonomy and sub-test structure were informed by the tool's detection capabilities, creating a potential circularity that could inflate its apparent performance.
 
 \begin{table}[h]
@@ -320,10 +320,14 @@ We report its results separately to maintain transparency about the co-design re
 \textbf{Tool} & \textbf{DR $\uparrow$} & \textbf{FPR $\downarrow$} & \textbf{F1 $\uparrow$} & \textbf{TW-F1 $\uparrow$} & \textbf{ECE $\downarrow$} & \textbf{Cov.} \\
 \midrule
 bibtex-updater & 0.954 & 0.024 & 0.962 & 0.969 & 0.452 & 1.00 \\
-Ensemble (doi+btx) & 0.208 & 0.007 & 0.342 & 0.296 & 0.289 & 1.00 \\
+Ensemble (doi+btx)$^\dagger$ & 0.208 & 0.007 & 0.342 & 0.296 & 0.289 & 1.00 \\
 \bottomrule
 \end{tabular}
 \end{table}
+
+\noindent $^\dagger$The ensemble uses confidence-weighted voting: an entry is flagged as hallucinated only when the weighted vote exceeds a threshold.
+Because DOI-only assigns moderate confidence (0.5--0.7) while bibtex-updater assigns high confidence to both hallucinated and valid predictions, the ensemble's threshold filters out many DOI-only detections, producing lower DR than either tool alone.
+This conservative behavior reduces false positives (FPR = 0.007) at the cost of recall.
 
 \noindent While \texttt{bibtex-updater} achieves a detection rate of 0.954 (95\% CI: [0.94, 0.97]) and F1 of 0.962, readers should interpret these results with caution:
 (1)~the tool's multi-database verification strategy was developed concurrently with the benchmark design;

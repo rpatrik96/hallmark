@@ -121,9 +121,10 @@
     }
   },
   "hallucination_tier_distribution": {
-    "tier_1_easy": 0.4,
-    "tier_2_medium": 0.35,
-    "tier_3_hard": 0.25
+    "tier_1_easy": 0.288,
+    "tier_2_medium": 0.477,
+    "tier_3_hard": 0.235,
+    "_note": "Actual proportions across all 1,289 hallucinated entries (371/615/303)"
   },
   "temporal_segments": {
     "valid_range": {
@@ -213,53 +214,47 @@
   },
   "doi_percentages_per_type": {
     "dev_public": {
-      "arxiv_version_mismatch": 59.4,
-      "near_miss_title": 60.0,
-      "plausible_fabrication": 21.2,
-      "merged_citation": 75.0,
-      "nonexistent_venue": 37.5,
-      "hybrid_fabrication": 55.6,
-      "future_date": 31.0,
-      "swapped_authors": 50.0,
-      "fabricated_doi": 96.0,
-      "wrong_venue": 42.5,
       "chimeric_title": 60.0,
-      "partial_author_list": 60.5,
+      "fabricated_doi": 96.0,
+      "future_date": 31.0,
+      "hybrid_fabrication": 55.6,
+      "near_miss_title": 60.0,
+      "nonexistent_venue": 37.5,
       "placeholder_authors": 37.1,
-      "preprint_as_published": 45.5
+      "plausible_fabrication": 21.2,
+      "preprint_as_published": 45.5,
+      "swapped_authors": 50.0,
+      "wrong_venue": 42.5
     },
     "test_public": {
       "chimeric_title": 63.3,
-      "near_miss_title": 60.0,
-      "placeholder_authors": 31.2,
-      "merged_citation": 57.9,
-      "partial_author_list": 75.0,
       "fabricated_doi": 100.0,
-      "preprint_as_published": 40.0,
-      "nonexistent_venue": 31.2,
-      "hybrid_fabrication": 58.8,
-      "plausible_fabrication": 21.6,
       "future_date": 39.4,
-      "wrong_venue": 43.3,
+      "hybrid_fabrication": 58.8,
+      "near_miss_title": 60.0,
+      "nonexistent_venue": 31.2,
+      "placeholder_authors": 31.2,
+      "plausible_fabrication": 21.6,
+      "preprint_as_published": 40.0,
       "swapped_authors": 40.0,
-      "arxiv_version_mismatch": 60.0
+      "wrong_venue": 43.3
     }
   },
   "source_distribution": {
+    "_note": "Source provenance of entries. generation_method_distribution counts by method; source_distribution counts by origin including stress-test entries before split extraction.",
     "dev_public": {
-      "perturbation": 388,
-      "gptzero_neurips2025": 28,
       "dblp": 450,
+      "perturbation": 286,
       "adversarial": 67,
-      "llm_generated": 72
+      "llm_generated": 72,
+      "gptzero_neurips2025": 28
     },
     "test_public": {
       "dblp": 270,
-      "perturbation": 333,
+      "perturbation": 256,
       "llm_generated": 44,
       "adversarial": 36,
-      "gptzero_neurips2025": 27,
-      "perturbation_scaleup": 23
+      "gptzero_neurips2025": 27
     }
   }
 }
