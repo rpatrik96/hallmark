@@ -1,5 +1,12 @@
 #!/usr/bin/env python3
-"""Generate hallucinated citations using OpenAI gpt-5.1.
+"""Generate hallucinated citations using multiple LLM backends.
+
+Supported backends:
+- openai: OpenAI API (GPT-4o, GPT-5.1, etc.)
+- ollama: Local Ollama server (Llama 3.1, Mistral, etc.)
+- anthropic: Anthropic API (Claude 3.5/4)
+- mistral: Mistral API (Mistral Large, etc.)
+- gemini: Google Gemini API (Gemini Pro, etc.)
 
 Two strategies:
 1. Naive bibliography: Ask LLM to write bibliographies on topics, verify against CrossRef
@@ -11,11 +18,16 @@ All entries are validated before output.
 from __future__ import annotations
 
 import argparse
+import json as json_mod
 import logging
 import os
 import re
+import ssl
 import sys
 import time
+import urllib.parse
+import urllib.request
+from abc import ABC, abstractmethod
 from collections import defaultdict
 from datetime import date
 from pathlib import Path
@@ -41,15 +53,220 @@ CROSSREF_API = "https://api.crossref.org/works"
 CROSSREF_HEADERS = {"User-Agent": "HALLMARK-Generator/1.0 (mailto:patrik.reizinger@gmail.com)"}
 RATE_LIMIT_DELAY = 1.0  # seconds between requests
 
+# SSL context for macOS
+try:
+    import certifi
 
-def check_openai_key() -> str | None:
-    """Check if OpenAI API key is available."""
-    api_key = os.environ.get("OPENAI_API_KEY")
-    if not api_key:
-        logger.error("OPENAI_API_KEY environment variable not set")
-        logger.info("Set it with: export OPENAI_API_KEY='your-key-here'")
-        return None
-    return api_key
+    _SSL_CTX = ssl.create_default_context(cafile=certifi.where())
+except ImportError:
+    _SSL_CTX = ssl.create_default_context()
+
+
+# ---------------------------------------------------------------------------
+# Multi-backend LLM abstraction
+# ---------------------------------------------------------------------------
+
+
+class LLMBackend(ABC):
+    """Abstract base class for LLM backends."""
+
+    name: str
+    model: str
+
+    @abstractmethod
+    def generate(self, prompt: str, temperature: float = 0.7, max_tokens: int = 2048) -> str:
+        """Generate text from a prompt. Returns the response string."""
+
+    def __repr__(self) -> str:
+        return f"{self.name}({self.model})"
+
+
+class OpenAIBackend(LLMBackend):
+    """OpenAI API backend (GPT-4o, GPT-5.1, etc.)."""
+
+    name = "openai"
+
+    def __init__(self, model: str = "gpt-5.1") -> None:
+        self.model = model
+        api_key = os.environ.get("OPENAI_API_KEY")
+        if not api_key:
+            raise RuntimeError("OPENAI_API_KEY not set. Export it: export OPENAI_API_KEY='sk-...'")
+        import openai
+
+        self.client = openai.OpenAI(api_key=api_key)
+
+    def generate(self, prompt: str, temperature: float = 0.7, max_tokens: int = 2048) -> str:
+        response = self.client.chat.completions.create(
+            model=self.model,
+            messages=[{"role": "user", "content": prompt}],
+            temperature=temperature,
+            max_completion_tokens=max_tokens,
+        )
+        return response.choices[0].message.content.strip()
+
+
+class OllamaBackend(LLMBackend):
+    """Ollama local backend (Llama 3.1, Mistral, etc.)."""
+
+    name = "ollama"
+
+    def __init__(
+        self, model: str = "llama3.1:8b", base_url: str = "http://localhost:11434"
+    ) -> None:
+        self.model = model
+        self.base_url = base_url
+        # Verify Ollama is running
+        try:
+            req = urllib.request.Request(f"{base_url}/api/tags")
+            with urllib.request.urlopen(req, timeout=5) as r:
+                data = json_mod.loads(r.read().decode())
+                available = [m["name"] for m in data.get("models", [])]
+                if model not in available:
+                    logger.warning(
+                        f"Model '{model}' not found in Ollama. Available: {available}. "
+                        f"Pull it with: ollama pull {model}"
+                    )
+        except Exception as e:
+            raise RuntimeError(
+                f"Cannot connect to Ollama at {base_url}. Start it with: ollama serve\nError: {e}"
+            ) from e
+
+    def generate(self, prompt: str, temperature: float = 0.7, max_tokens: int = 2048) -> str:
+        url = f"{self.base_url}/api/generate"
+        payload = json_mod.dumps(
+            {
+                "model": self.model,
+                "prompt": prompt,
+                "stream": False,
+                "options": {"temperature": temperature, "num_predict": max_tokens},
+            }
+        ).encode()
+        req = urllib.request.Request(url, data=payload, method="POST")
+        req.add_header("Content-Type", "application/json")
+        with urllib.request.urlopen(req, timeout=120) as r:
+            data = json_mod.loads(r.read().decode())
+        return data.get("response", "").strip()
+
+
+class AnthropicBackend(LLMBackend):
+    """Anthropic API backend (Claude)."""
+
+    name = "anthropic"
+
+    def __init__(self, model: str = "claude-sonnet-4-5-20250929") -> None:
+        self.model = model
+        api_key = os.environ.get("ANTHROPIC_API_KEY")
+        if not api_key:
+            raise RuntimeError(
+                "ANTHROPIC_API_KEY not set. Get your key at "
+                "https://console.anthropic.com/settings/keys then: "
+                "export ANTHROPIC_API_KEY='sk-ant-...'"
+            )
+        import anthropic
+
+        self.client = anthropic.Anthropic(api_key=api_key)
+
+    def generate(self, prompt: str, temperature: float = 0.7, max_tokens: int = 2048) -> str:
+        response = self.client.messages.create(
+            model=self.model,
+            max_tokens=max_tokens,
+            temperature=temperature,
+            messages=[{"role": "user", "content": prompt}],
+        )
+        return response.content[0].text.strip()
+
+
+class MistralBackend(LLMBackend):
+    """Mistral API backend."""
+
+    name = "mistral"
+
+    def __init__(self, model: str = "mistral-large-latest") -> None:
+        self.model = model
+        api_key = os.environ.get("MISTRAL_API_KEY")
+        if not api_key:
+            raise RuntimeError(
+                "MISTRAL_API_KEY not set. Get your key at "
+                "https://console.mistral.ai/api-keys then: "
+                "export MISTRAL_API_KEY='...'"
+            )
+        self.api_key = api_key
+
+    def generate(self, prompt: str, temperature: float = 0.7, max_tokens: int = 2048) -> str:
+        url = "https://api.mistral.ai/v1/chat/completions"
+        payload = json_mod.dumps(
+            {
+                "model": self.model,
+                "messages": [{"role": "user", "content": prompt}],
+                "temperature": temperature,
+                "max_tokens": max_tokens,
+            }
+        ).encode()
+        req = urllib.request.Request(url, data=payload, method="POST")
+        req.add_header("Content-Type", "application/json")
+        req.add_header("Authorization", f"Bearer {self.api_key}")
+        with urllib.request.urlopen(req, timeout=60, context=_SSL_CTX) as r:
+            data = json_mod.loads(r.read().decode())
+        return data["choices"][0]["message"]["content"].strip()
+
+
+class GeminiBackend(LLMBackend):
+    """Google Gemini API backend."""
+
+    name = "gemini"
+
+    def __init__(self, model: str = "gemini-2.0-flash") -> None:
+        self.model = model
+        api_key = os.environ.get("GEMINI_API_KEY") or os.environ.get("GOOGLE_API_KEY")
+        if not api_key:
+            raise RuntimeError(
+                "GEMINI_API_KEY (or GOOGLE_API_KEY) not set. Get your key at "
+                "https://aistudio.google.com/app/apikey then: "
+                "export GEMINI_API_KEY='...'"
+            )
+        self.api_key = api_key
+
+    def generate(self, prompt: str, temperature: float = 0.7, max_tokens: int = 2048) -> str:
+        url = (
+            f"https://generativelanguage.googleapis.com/v1beta/models/"
+            f"{self.model}:generateContent?key={self.api_key}"
+        )
+        payload = json_mod.dumps(
+            {
+                "contents": [{"parts": [{"text": prompt}]}],
+                "generationConfig": {
+                    "temperature": temperature,
+                    "maxOutputTokens": max_tokens,
+                },
+            }
+        ).encode()
+        req = urllib.request.Request(url, data=payload, method="POST")
+        req.add_header("Content-Type", "application/json")
+        with urllib.request.urlopen(req, timeout=60, context=_SSL_CTX) as r:
+            data = json_mod.loads(r.read().decode())
+        candidates = data.get("candidates", [])
+        if not candidates:
+            return ""
+        parts = candidates[0].get("content", {}).get("parts", [])
+        return parts[0].get("text", "").strip() if parts else ""
+
+
+BACKENDS: dict[str, type[LLMBackend]] = {
+    "openai": OpenAIBackend,
+    "ollama": OllamaBackend,
+    "anthropic": AnthropicBackend,
+    "mistral": MistralBackend,
+    "gemini": GeminiBackend,
+}
+
+# Default models per backend
+DEFAULT_MODELS: dict[str, str] = {
+    "openai": "gpt-5.1",
+    "ollama": "llama3.1:8b",
+    "anthropic": "claude-sonnet-4-5-20250929",
+    "mistral": "mistral-large-latest",
+    "gemini": "gemini-2.0-flash",
+}
 
 
 def verify_title_in_crossref(title: str) -> dict | None:
@@ -289,7 +506,7 @@ def classify_hallucination(entry_dict: dict, crossref_data: dict | None) -> tupl
 
 
 def generate_naive_bibliography(
-    client, model: str, topic: str, count: int = 10
+    backend: LLMBackend, topic: str, count: int = 10
 ) -> list[BenchmarkEntry]:
     """Strategy A: Ask LLM to write bibliography, verify against CrossRef.
 
@@ -305,15 +522,9 @@ Output only the BibTeX entries, nothing else."""
     logger.info(f"Generating bibliography for: {topic}")
 
     try:
-        response = client.chat.completions.create(
-            model=model,
-            messages=[{"role": "user", "content": prompt}],
-            temperature=0.7,
-            max_completion_tokens=2048,
-        )
-        content = response.choices[0].message.content.strip()
+        content = backend.generate(prompt, temperature=0.7, max_tokens=2048)
     except Exception as e:
-        logger.error(f"OpenAI API error for {topic}: {e}")
+        logger.error(f"LLM API error for {topic}: {e}")
         return []
 
     # Extract individual BibTeX entries
@@ -356,7 +567,7 @@ Output only the BibTeX entries, nothing else."""
             label="HALLUCINATED",
             hallucination_type=hall_type,
             difficulty_tier=difficulty_tier,
-            explanation=f"LLM-generated via {model}. Prompt: 'Bibliography on {topic}'. Verification: {explanation}",
+            explanation=f"LLM-generated via {backend}. Prompt: 'Bibliography on {topic}'. Verification: {explanation}",
             generation_method=GenerationMethod.LLM_GENERATED.value,
             source_conference=None,
             publication_date="",
@@ -371,7 +582,7 @@ Output only the BibTeX entries, nothing else."""
 
 
 def generate_targeted_type(
-    client, model: str, hall_type: HallucinationType, count: int = 5
+    backend: LLMBackend, hall_type: HallucinationType, count: int = 5
 ) -> list[BenchmarkEntry]:
     """Strategy B: Craft prompts that naturally produce specific hallucination types."""
 
@@ -445,15 +656,9 @@ def generate_targeted_type(
         logger.info(f"Generating {hall_type.value} with prompt: {prompt[:60]}...")
 
         try:
-            response = client.chat.completions.create(
-                model=model,
-                messages=[{"role": "user", "content": prompt}],
-                temperature=0.7,
-                max_completion_tokens=512,
-            )
-            content = response.choices[0].message.content.strip()
+            content = backend.generate(prompt, temperature=0.7, max_tokens=512)
         except Exception as e:
-            logger.error(f"OpenAI API error: {e}")
+            logger.error(f"LLM API error: {e}")
             continue
 
         # Extract BibTeX entry
@@ -491,7 +696,7 @@ def generate_targeted_type(
             label="HALLUCINATED",
             hallucination_type=final_type,
             difficulty_tier=difficulty_tier,
-            explanation=f"LLM-generated via {model}. Prompt: '{prompt}'. Verification: {explanation}",
+            explanation=f"LLM-generated via {backend}. Prompt: '{prompt}'. Verification: {explanation}",
             generation_method=GenerationMethod.LLM_GENERATED.value,
             source_conference=None,
             publication_date="",
@@ -506,11 +711,20 @@ def generate_targeted_type(
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Generate hallucinated citations using LLM")
+    backends_list = ", ".join(BACKENDS.keys())
+    parser = argparse.ArgumentParser(
+        description="Generate hallucinated citations using multiple LLM backends"
+    )
+    parser.add_argument(
+        "--backend",
+        choices=list(BACKENDS.keys()),
+        default="openai",
+        help=f"LLM backend to use ({backends_list}) (default: openai)",
+    )
     parser.add_argument(
         "--model",
-        default="gpt-5.1",
-        help="OpenAI model to use (default: gpt-5.1)",
+        default=None,
+        help="Model name (default: backend-specific, see DEFAULT_MODELS)",
     )
     parser.add_argument(
         "--strategy",
@@ -538,20 +752,18 @@ def main():
 
     args = parser.parse_args()
 
-    # Check API key
-    api_key = check_openai_key()
-    if api_key is None:
-        return 1
+    # Resolve model
+    model = args.model or DEFAULT_MODELS[args.backend]
 
-    # Initialize OpenAI client
+    # Initialize backend
+    backend_cls = BACKENDS[args.backend]
     try:
-        import openai
-
-        client = openai.OpenAI(api_key=api_key)
-    except ImportError:
-        logger.error("openai package not installed. Install with: pip install openai")
-        logger.info("Or: uv pip install 'hallmark[baselines]'")
+        backend = backend_cls(model=model)
+    except RuntimeError as e:
+        logger.error(str(e))
         return 1
+
+    logger.info(f"Using backend: {backend}")
 
     all_entries = []
 
@@ -585,7 +797,7 @@ def main():
         ]
 
         for topic in topics[: args.naive_topics]:
-            entries = generate_naive_bibliography(client, args.model, topic, count=10)
+            entries = generate_naive_bibliography(backend, topic, count=10)
             all_entries.extend(entries)
             logger.info(f"Found {len(entries)} hallucinations for '{topic}'")
 
@@ -597,9 +809,7 @@ def main():
 
         for hall_type in HallucinationType:
             logger.info(f"\nGenerating {hall_type.value}...")
-            entries = generate_targeted_type(
-                client, args.model, hall_type, count=args.target_per_type
-            )
+            entries = generate_targeted_type(backend, hall_type, count=args.target_per_type)
             all_entries.extend(entries)
             logger.info(f"  Generated {len(entries)} entries")
 
