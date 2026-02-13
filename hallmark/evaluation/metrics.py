@@ -320,6 +320,160 @@ def expected_calibration_error(
     return ece
 
 
+def auroc(entries: list[BenchmarkEntry], predictions: dict[str, Prediction]) -> float | None:
+    """Compute Area Under ROC Curve for hallucination detection.
+
+    Positive class: HALLUCINATED. Score = confidence for HALLUCINATED predictions,
+    (1 - confidence) for VALID predictions. UNCERTAIN treated as VALID.
+    Missing predictions treated as VALID with confidence 0.5.
+    Returns None if fewer than 2 classes present.
+
+    Args:
+        entries: Benchmark entries (ground truth).
+        predictions: Tool's predictions.
+
+    Returns:
+        AUROC score in [0, 1], or None if insufficient class diversity.
+    """
+    # Build (score, true_label) pairs where true_label is 1 for HALLUCINATED, 0 for VALID
+    pairs: list[tuple[float, int]] = []
+    for entry in entries:
+        pred = predictions.get(entry.bibtex_key)
+
+        # Determine score (probability of HALLUCINATED)
+        if pred is None:
+            score = 0.5  # Missing prediction -> neutral
+        elif pred.label == "UNCERTAIN":
+            score = 0.5  # UNCERTAIN treated as VALID but with neutral confidence
+        elif pred.label == "HALLUCINATED":
+            score = pred.confidence
+        else:  # VALID
+            score = 1.0 - pred.confidence
+
+        true_label = 1 if entry.label == "HALLUCINATED" else 0
+        pairs.append((score, true_label))
+
+    if not pairs:
+        return None
+
+    # Check if we have both classes
+    unique_labels = set(label for _, label in pairs)
+    if len(unique_labels) < 2:
+        return None
+
+    # Sort by score descending
+    pairs.sort(key=lambda x: x[0], reverse=True)
+
+    # Compute ROC curve points (TPR, FPR) using trapezoidal integration
+    num_positive = sum(label for _, label in pairs)
+    num_negative = len(pairs) - num_positive
+
+    if num_positive == 0 or num_negative == 0:
+        return None
+
+    # Walk through sorted list computing TPR/FPR at each threshold
+    tp = 0
+    fp = 0
+    prev_tpr = 0.0
+    prev_fpr = 0.0
+    area = 0.0
+
+    for i, (score, label) in enumerate(pairs):
+        if label == 1:
+            tp += 1
+        else:
+            fp += 1
+
+        # At each threshold change, compute area increment
+        # Check if this is the last point or score changes
+        is_last = i == len(pairs) - 1
+        score_changes = is_last or pairs[i + 1][0] != score
+
+        if score_changes:
+            tpr = tp / num_positive
+            fpr = fp / num_negative
+
+            # Trapezoidal rule: area += (fpr - prev_fpr) * (tpr + prev_tpr) / 2
+            area += (fpr - prev_fpr) * (tpr + prev_tpr) / 2.0
+
+            prev_tpr = tpr
+            prev_fpr = fpr
+
+    return area
+
+
+def auprc(entries: list[BenchmarkEntry], predictions: dict[str, Prediction]) -> float | None:
+    """Compute Area Under Precision-Recall Curve for hallucination detection.
+
+    Same scoring convention as auroc(). Returns None if no positive examples.
+
+    Args:
+        entries: Benchmark entries (ground truth).
+        predictions: Tool's predictions.
+
+    Returns:
+        AUPRC score in [0, 1], or None if no positive examples.
+    """
+    # Build (score, true_label) pairs where true_label is 1 for HALLUCINATED, 0 for VALID
+    pairs: list[tuple[float, int]] = []
+    for entry in entries:
+        pred = predictions.get(entry.bibtex_key)
+
+        # Determine score (probability of HALLUCINATED)
+        if pred is None:
+            score = 0.5  # Missing prediction -> neutral
+        elif pred.label == "UNCERTAIN":
+            score = 0.5  # UNCERTAIN treated as VALID but with neutral confidence
+        elif pred.label == "HALLUCINATED":
+            score = pred.confidence
+        else:  # VALID
+            score = 1.0 - pred.confidence
+
+        true_label = 1 if entry.label == "HALLUCINATED" else 0
+        pairs.append((score, true_label))
+
+    if not pairs:
+        return None
+
+    # Check if we have positive examples
+    num_positive = sum(label for _, label in pairs)
+    if num_positive == 0:
+        return None
+
+    # Sort by score descending
+    pairs.sort(key=lambda x: x[0], reverse=True)
+
+    # Walk through sorted list computing precision/recall at each threshold
+    # For PR curve, we compute area using the points we actually visit
+    tp = 0
+    fp = 0
+    area = 0.0
+    prev_recall = 0.0
+
+    for i, (score, label) in enumerate(pairs):
+        if label == 1:
+            tp += 1
+        else:
+            fp += 1
+
+        # At each threshold change, compute area increment
+        # Check if this is the last point or score changes
+        is_last = i == len(pairs) - 1
+        score_changes = is_last or pairs[i + 1][0] != score
+
+        if score_changes:
+            recall = tp / num_positive
+            precision = tp / (tp + fp) if (tp + fp) > 0 else 0.0
+
+            # Use the current precision for the entire recall interval
+            # This is the standard way to compute AUPRC (right-hand Riemann sum)
+            area += precision * (recall - prev_recall)
+
+            prev_recall = recall
+
+    return area
+
+
 def source_stratified_metrics(
     entries: list[BenchmarkEntry],
     predictions: dict[str, Prediction],
@@ -778,6 +932,8 @@ def evaluate(
     type_metrics = per_type_metrics(entries, pred_map)
     cost = cost_efficiency(predictions)
     ece_score = expected_calibration_error(entries, pred_map)
+    auroc_score = auroc(entries, pred_map)
+    auprc_score = auprc(entries, pred_map)
 
     dat_k: dict[int, float] = {}
     if predictions_per_strategy:
@@ -848,6 +1004,8 @@ def evaluate(
         cost_efficiency=cost.get("entries_per_second"),
         mean_api_calls=cost.get("mean_api_calls"),
         ece=ece_score,
+        auroc=auroc_score,
+        auprc=auprc_score,
         num_uncertain=num_uncertain,
         per_tier_metrics=tier_metrics,
         per_type_metrics=type_metrics,

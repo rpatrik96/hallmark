@@ -67,7 +67,7 @@ We generated hallucinated entries using four methods:
 (3)~\emph{Adversarial crafting}: manually constructing entries designed to evade specific detection strategies.
 (4)~\emph{Real-world collection}: harvesting actual hallucinated citations from published papers identified in audits.
 Each hallucinated entry was manually verified to confirm that (a)~it is indeed hallucinated and (b)~it matches its assigned type.
-At 1,893 entries, \textsc{Hallmark} is comparable in scale to specialized evaluation suites such as SWE-bench~\citep{swebench} (2,294 instances) and HumanEval~\citep{humaneval} (164 problems).
+At 2,132 entries, \textsc{Hallmark} is comparable in scale to specialized evaluation suites such as SWE-bench~\citep{swebench} (2,294 instances) and HumanEval~\citep{humaneval} (164 problems).
 The design prioritizes \emph{coverage}---ensuring all 13 types have sufficient instances for per-type analysis---over volume.
 
 \paragraph{Quality control.}
@@ -93,11 +93,11 @@ Practitioners with access to empirical prevalence data can reweight per-type per
 \toprule
 \textbf{Split} & \textbf{Valid} & \textbf{Halluc.} & \textbf{Total} & \textbf{Tier 1} & \textbf{Tier 2} & \textbf{Tier 3} & \textbf{Types} \\
 \midrule
-\texttt{dev\_public}   & 450 & 390 & 840 & 120 & 150 & 120 & 13 \\
-\texttt{test\_public}  & 270 & 390 & 660 & 120 & 150 & 120 & 13 \\
-\texttt{test\_hidden}  & 198 & 195 & 393 & 60 & 75 & 60 & 13 \\
+\texttt{dev\_public}   & 450 & 491 & 941 & 124 & 244 & 123 & 13 \\
+\texttt{test\_public}  & 270 & 467 & 737 & 120 & 224 & 123 & 13 \\
+\texttt{test\_hidden}  & 198 & 256 & 454 & 60 & 134 & 62 & 13 \\
 \midrule
-\textbf{Total}         & 918 & 975 & 1,893 & 300 & 375 & 300 & 13 \\
+\textbf{Total}         & 918 & 1,214 & 2,132 & 304 & 602 & 308 & 13 \\
 \bottomrule
 \end{tabular}
 \end{table}

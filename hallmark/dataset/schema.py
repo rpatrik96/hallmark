@@ -237,6 +237,8 @@ class EvaluationResult:
     cost_efficiency: float | None = None  # entries per second
     mean_api_calls: float | None = None
     ece: float | None = None  # Expected Calibration Error
+    auroc: float | None = None  # Area Under ROC Curve
+    auprc: float | None = None  # Area Under Precision-Recall Curve
     num_uncertain: int = 0  # Count of UNCERTAIN predictions
 
     # Confidence intervals (95% by default, via stratified bootstrap)

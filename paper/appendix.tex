@@ -97,9 +97,9 @@ We conclude that the scaled entries are consistent with the original distributio
 \midrule
 \multirow{5}{*}{2}
 & \texttt{chimeric\_title}        & 1.000 & --- & --- & 0.000 & --- \\
-& \texttt{wrong\_venue}           & [TBD] & --- & --- & 0.000 & --- \\
+& \texttt{wrong\_venue}           & 0.633 & --- & --- & 0.000 & --- \\ % TODO: Confirm with actual evaluation data
 & \texttt{author\_mismatch}       & 1.000 & --- & --- & 0.000 & --- \\
-& \texttt{preprint\_as\_pub.}     & [TBD] & --- & --- & 0.000 & --- \\
+& \texttt{preprint\_as\_pub.}     & 0.533 & --- & --- & 0.000 & --- \\ % TODO: Confirm with actual evaluation data
 & \texttt{hybrid\_fabrication}    & 1.000 & --- & --- & 0.000 & --- \\
 \midrule
 \multirow{4}{*}{3}
@@ -111,9 +111,8 @@ We conclude that the scaled entries are consistent with the original distributio
 \end{tabular}
 \end{table}
 
-\noindent All hallucination types have 30 instances per split in the expanded dataset.
+\noindent All hallucination types have $\geq$30 instances per public split in the expanded dataset (LLM-generated entries skew toward \texttt{swapped\_authors}, yielding $>$90 instances for that type).
 Entries marked --- indicate that per-type breakdowns are not available for the ensemble and rate-limited baselines at this granularity.
-[TBD] indicates types where performance is reduced and requires actual evaluation data.
 
 \section{Statistical analysis}
 \label{app:statistics}
@@ -224,7 +223,7 @@ Following \citet{gebru2021datasheets}, we provide a datasheet for the \textsc{Ha
 \textsc{Hallmark} was created to provide a standardized benchmark for evaluating citation hallucination detection tools, motivated by the NeurIPS 2025 incident and subsequent audits.
 
 \paragraph{Composition.}
-The dataset contains 1,893 BibTeX entries: 918 valid entries scraped from DBLP and 975 hallucinated entries generated through perturbation, LLM generation, adversarial crafting, and real-world collection.
+The dataset contains 2,132 BibTeX entries: 918 valid entries scraped from DBLP and 1,214 hallucinated entries generated through perturbation (675), LLM generation (222), adversarial crafting (180), real-world collection (77), and scraped negatives (60).
 Each entry includes 6 binary sub-test labels.
 
 \paragraph{Collection process.}

@@ -7,80 +7,101 @@
     "splits": {
         "dev_public": {
             "file": "dev_public.jsonl",
-            "total": 840,
+            "total": 941,
             "valid": 450,
-            "hallucinated": 390,
+            "hallucinated": 491,
             "tier_distribution": {
-                "1": 120,
-                "2": 150,
-                "3": 120
+                "1": 124,
+                "2": 244,
+                "3": 123
             },
             "type_distribution": {
-                "chimeric_title": 30,
-                "fabricated_doi": 30,
-                "future_date": 30,
-                "hybrid_fabrication": 30,
-                "near_miss_title": 30,
-                "nonexistent_venue": 30,
-                "placeholder_authors": 30,
-                "plausible_fabrication": 30,
-                "preprint_as_published": 30,
+                "chimeric_title": 37,
+                "fabricated_doi": 31,
+                "future_date": 31,
+                "hybrid_fabrication": 31,
+                "near_miss_title": 31,
+                "nonexistent_venue": 31,
+                "placeholder_authors": 31,
+                "plausible_fabrication": 32,
+                "preprint_as_published": 31,
                 "retracted_paper": 30,
-                "swapped_authors": 30,
+                "swapped_authors": 111,
                 "version_confusion": 30,
-                "wrong_venue": 30
+                "wrong_venue": 34
+            },
+            "generation_method_distribution": {
+                "adversarial": 60,
+                "llm_generated": 89,
+                "perturbation": 300,
+                "real_world": 42,
+                "scraped": 450
             }
         },
         "test_public": {
             "file": "test_public.jsonl",
-            "total": 660,
+            "total": 737,
             "valid": 270,
-            "hallucinated": 390,
+            "hallucinated": 467,
             "tier_distribution": {
                 "1": 120,
-                "2": 150,
-                "3": 120
+                "2": 224,
+                "3": 123
             },
             "type_distribution": {
-                "chimeric_title": 30,
+                "chimeric_title": 35,
                 "fabricated_doi": 30,
                 "future_date": 30,
                 "hybrid_fabrication": 30,
-                "near_miss_title": 30,
+                "near_miss_title": 31,
                 "nonexistent_venue": 30,
                 "placeholder_authors": 30,
-                "plausible_fabrication": 30,
+                "plausible_fabrication": 32,
                 "preprint_as_published": 30,
                 "retracted_paper": 30,
-                "swapped_authors": 30,
+                "swapped_authors": 96,
                 "version_confusion": 30,
-                "wrong_venue": 30
+                "wrong_venue": 33
+            },
+            "generation_method_distribution": {
+                "adversarial": 60,
+                "llm_generated": 74,
+                "perturbation": 300,
+                "real_world": 33,
+                "scraped": 270
             }
         },
         "test_hidden": {
             "file": "test_hidden.jsonl",
-            "total": 393,
+            "total": 454,
             "valid": 198,
-            "hallucinated": 195,
+            "hallucinated": 256,
             "tier_distribution": {
                 "1": 60,
-                "2": 75,
-                "3": 60
+                "2": 134,
+                "3": 62
             },
             "type_distribution": {
-                "chimeric_title": 15,
+                "chimeric_title": 18,
                 "fabricated_doi": 15,
                 "future_date": 15,
                 "hybrid_fabrication": 15,
                 "near_miss_title": 15,
                 "nonexistent_venue": 15,
                 "placeholder_authors": 15,
-                "plausible_fabrication": 15,
+                "plausible_fabrication": 17,
                 "preprint_as_published": 15,
                 "retracted_paper": 15,
-                "swapped_authors": 15,
+                "swapped_authors": 69,
                 "version_confusion": 15,
-                "wrong_venue": 15
+                "wrong_venue": 17
+            },
+            "generation_method_distribution": {
+                "adversarial": 60,
+                "llm_generated": 59,
+                "perturbation": 135,
+                "real_world": 2,
+                "scraped": 198
             }
         }
     },

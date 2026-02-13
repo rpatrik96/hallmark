@@ -449,6 +449,153 @@ class TestUncertainPredictions:
         assert ece <= 1.0
 
 
+class TestAUROC:
+    def test_auroc_perfect_predictions(self):
+        from hallmark.evaluation.metrics import auroc
+
+        entries = [
+            _entry("v1", "VALID"),
+            _entry("v2", "VALID"),
+            _entry("h1", "HALLUCINATED"),
+            _entry("h2", "HALLUCINATED"),
+        ]
+        preds = {
+            "v1": _pred("v1", "VALID", confidence=0.95),
+            "v2": _pred("v2", "VALID", confidence=0.95),
+            "h1": _pred("h1", "HALLUCINATED", confidence=0.95),
+            "h2": _pred("h2", "HALLUCINATED", confidence=0.95),
+        }
+        score = auroc(entries, preds)
+        assert score is not None
+        assert score >= 0.95  # Should be near 1.0 for perfect predictions
+
+    def test_auroc_random_predictions(self):
+        from hallmark.evaluation.metrics import auroc
+
+        entries = [
+            _entry("v1", "VALID"),
+            _entry("v2", "VALID"),
+            _entry("h1", "HALLUCINATED"),
+            _entry("h2", "HALLUCINATED"),
+        ]
+        # Random scores around 0.5
+        preds = {
+            "v1": _pred("v1", "VALID", confidence=0.5),
+            "v2": _pred("v2", "HALLUCINATED", confidence=0.5),
+            "h1": _pred("h1", "VALID", confidence=0.5),
+            "h2": _pred("h2", "HALLUCINATED", confidence=0.5),
+        }
+        score = auroc(entries, preds)
+        assert score is not None
+        # Random predictions should give AUROC around 0.5
+        assert 0.3 <= score <= 0.7
+
+    def test_auroc_no_positive_class(self):
+        from hallmark.evaluation.metrics import auroc
+
+        entries = [_entry("v1", "VALID"), _entry("v2", "VALID")]
+        preds = {
+            "v1": _pred("v1", "VALID", confidence=0.9),
+            "v2": _pred("v2", "VALID", confidence=0.9),
+        }
+        score = auroc(entries, preds)
+        assert score is None  # Cannot compute AUROC with only one class
+
+    def test_auroc_missing_predictions(self):
+        from hallmark.evaluation.metrics import auroc
+
+        entries = [
+            _entry("v1", "VALID"),
+            _entry("h1", "HALLUCINATED"),
+        ]
+        # Only predict one entry
+        preds = {"h1": _pred("h1", "HALLUCINATED", confidence=0.9)}
+        score = auroc(entries, preds)
+        assert score is not None
+        # Missing prediction treated as neutral (0.5 confidence)
+        assert 0.0 <= score <= 1.0
+
+
+class TestAUPRC:
+    def test_auprc_perfect_predictions(self):
+        from hallmark.evaluation.metrics import auprc
+
+        entries = [
+            _entry("v1", "VALID"),
+            _entry("v2", "VALID"),
+            _entry("h1", "HALLUCINATED"),
+            _entry("h2", "HALLUCINATED"),
+        ]
+        preds = {
+            "v1": _pred("v1", "VALID", confidence=0.95),
+            "v2": _pred("v2", "VALID", confidence=0.95),
+            "h1": _pred("h1", "HALLUCINATED", confidence=0.95),
+            "h2": _pred("h2", "HALLUCINATED", confidence=0.95),
+        }
+        score = auprc(entries, preds)
+        assert score is not None
+        assert score >= 0.95  # Should be near 1.0 for perfect predictions
+
+    def test_auprc_random_predictions(self):
+        from hallmark.evaluation.metrics import auprc
+
+        entries = [
+            _entry("v1", "VALID"),
+            _entry("v2", "VALID"),
+            _entry("h1", "HALLUCINATED"),
+            _entry("h2", "HALLUCINATED"),
+        ]
+        # Random predictions
+        preds = {
+            "v1": _pred("v1", "VALID", confidence=0.5),
+            "v2": _pred("v2", "HALLUCINATED", confidence=0.5),
+            "h1": _pred("h1", "VALID", confidence=0.5),
+            "h2": _pred("h2", "HALLUCINATED", confidence=0.5),
+        }
+        score = auprc(entries, preds)
+        assert score is not None
+        # Base rate is 0.5 (2 hallucinated of 4 total)
+        # Random predictions should give AUPRC close to base rate
+        assert 0.3 <= score <= 0.7
+
+    def test_auprc_no_positive_examples(self):
+        from hallmark.evaluation.metrics import auprc
+
+        entries = [_entry("v1", "VALID"), _entry("v2", "VALID")]
+        preds = {
+            "v1": _pred("v1", "VALID", confidence=0.9),
+            "v2": _pred("v2", "VALID", confidence=0.9),
+        }
+        score = auprc(entries, preds)
+        assert score is None  # Cannot compute AUPRC with no positive examples
+
+
+class TestAUROCandAUPRCInEvaluate:
+    def test_auroc_auprc_in_evaluate(self):
+        entries = [
+            _entry("v1", "VALID"),
+            _entry("v2", "VALID"),
+            _entry("h1", "HALLUCINATED", tier=1),
+            _entry("h2", "HALLUCINATED", tier=2),
+        ]
+        preds = [
+            _pred("v1", "VALID", confidence=0.9),
+            _pred("v2", "VALID", confidence=0.9),
+            _pred("h1", "HALLUCINATED", confidence=0.9),
+            _pred("h2", "HALLUCINATED", confidence=0.9),
+        ]
+        result = evaluate(entries, preds, tool_name="test", split_name="dev")
+
+        # Check that AUROC and AUPRC are computed and stored
+        assert result.auroc is not None
+        assert result.auprc is not None
+        assert 0.0 <= result.auroc <= 1.0
+        assert 0.0 <= result.auprc <= 1.0
+        # Perfect predictions should give high scores
+        assert result.auroc >= 0.8
+        assert result.auprc >= 0.8
+
+
 class TestEvaluate:
     def test_full_evaluation(self):
         entries = [

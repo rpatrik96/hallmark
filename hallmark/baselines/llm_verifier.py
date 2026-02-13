@@ -41,7 +41,7 @@ Respond with JSON only:
 
 def verify_with_openai(
     entries: list[BenchmarkEntry],
-    model: str = "gpt-4o",
+    model: str = "gpt-5.1",
     api_key: str | None = None,
 ) -> list[Prediction]:
     """Verify entries using OpenAI API."""

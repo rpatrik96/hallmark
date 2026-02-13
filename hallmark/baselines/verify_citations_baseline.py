@@ -27,6 +27,7 @@ import time
 from pathlib import Path
 
 from hallmark.baselines.common import entries_to_bib, fallback_predictions
+from hallmark.baselines.prescreening import merge_with_predictions, prescreen_entries
 from hallmark.dataset.schema import BenchmarkEntry, Prediction
 
 logger = logging.getLogger(__name__)
@@ -71,12 +72,24 @@ def strip_ansi_codes(text: str) -> str:
 def run_verify_citations(
     entries: list[BenchmarkEntry],
     timeout: float = 600.0,
+    skip_prescreening: bool = False,
 ) -> list[Prediction]:
     """Run verify-citations on a list of entries and return predictions.
 
     Writes entries to a temp .bib file, runs verify-citations CLI,
     and parses the color-coded terminal output into Prediction objects.
+
+    Pre-screening (DOI check, year bounds, author heuristics) runs before
+    verify-citations to catch obvious hallucinations early, then results are merged.
+
+    Args:
+        entries: Benchmark entries to verify.
+        timeout: Timeout in seconds (default: 600).
+        skip_prescreening: Skip pre-screening checks (default: False).
     """
+    # Run pre-screening before verify-citations to catch obvious hallucinations
+    prescreen_results = prescreen_entries(entries) if not skip_prescreening else {}
+
     predictions = []
     start_time = time.time()
     timed_out = False
@@ -171,6 +184,10 @@ def run_verify_citations(
                     api_calls=0 if timed_out else len(API_SOURCES),
                 )
             )
+
+    # Merge pre-screening results with tool predictions (unless skipped)
+    if not skip_prescreening:
+        predictions = merge_with_predictions(entries, predictions, prescreen_results)
 
     return predictions
 

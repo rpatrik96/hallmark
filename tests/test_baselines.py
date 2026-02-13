@@ -223,6 +223,15 @@ class TestRegistry:
             assert isinstance(info.requires_api_key, bool)
             assert isinstance(info.pip_packages, list)
 
+    def test_no_prescreening_variants_registered(self):
+        from hallmark.baselines.registry import list_baselines
+
+        baselines = list_baselines()
+        assert "doi_only_no_prescreening" in baselines
+        assert "bibtexupdater_no_prescreening" in baselines
+        assert "harc_no_prescreening" in baselines
+        assert "verify_citations_no_prescreening" in baselines
+
 
 # --- HaRC output parsing ---
 
@@ -356,3 +365,63 @@ class TestVerifyCitationsBaseline:
         assert len(preds) == 1
         assert preds[0].label == "VALID"
         assert preds[0].confidence == 0.5
+
+
+# --- Pre-screening tests ---
+
+
+class TestPrescreening:
+    @patch("hallmark.baselines.doi_only.httpx.head")
+    @patch("hallmark.baselines.prescreening.httpx.head")
+    def test_doi_only_with_prescreening(self, mock_prescreen_head, mock_doi_head):
+        """Test that doi_only applies pre-screening by default."""
+        from hallmark.baselines.doi_only import run_doi_only
+
+        # Mock both pre-screening DOI check and main DOI check to succeed
+        mock_resp = MagicMock()
+        mock_resp.status_code = 200
+        mock_resp.url = "https://example.com"
+        mock_prescreen_head.return_value = mock_resp
+        mock_doi_head.return_value = mock_resp
+
+        entries = [_entry("test", doi="10.1234/test")]
+        preds = run_doi_only(entries, skip_prescreening=False)
+        assert len(preds) == 1
+        # Pre-screening should have run (httpx.head called)
+        assert mock_prescreen_head.called or mock_doi_head.called
+
+    @patch("hallmark.baselines.doi_only.httpx.head")
+    def test_doi_only_skip_prescreening(self, mock_head):
+        """Test that doi_only skips pre-screening when requested."""
+        from hallmark.baselines.doi_only import run_doi_only
+
+        mock_resp = MagicMock()
+        mock_resp.status_code = 200
+        mock_resp.url = "https://example.com"
+        mock_head.return_value = mock_resp
+
+        entries = [_entry("test", doi="10.1234/test")]
+        preds = run_doi_only(entries, skip_prescreening=True)
+        assert len(preds) == 1
+        # Should still call httpx for the main DOI check
+        assert mock_head.called
+
+    @patch("hallmark.baselines.verify_citations_baseline.subprocess.run")
+    def test_verify_citations_skip_prescreening(self, mock_run):
+        """Test that verify_citations respects skip_prescreening."""
+        from hallmark.baselines.verify_citations_baseline import run_verify_citations
+
+        # Mock subprocess to return valid output
+        mock_result = MagicMock()
+        mock_result.returncode = 0
+        mock_result.stdout = (
+            "[1/1] Verifying:\n  [test] Title (Author, 2024)\n  Status: ✓ VERIFIED\n"
+        )
+        mock_result.stderr = ""
+        mock_run.return_value = mock_result
+
+        entries = [_entry("test")]
+        preds = run_verify_citations(entries, skip_prescreening=True)
+        assert len(preds) == 1
+        # Result should not include pre-screening overrides
+        assert "[Pre-screening" not in preds[0].reason

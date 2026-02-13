@@ -132,6 +132,7 @@ def run_harc(
     batch_size: int = 20,
     batch_timeout: float = 600.0,
     total_timeout: float = 600.0,
+    skip_prescreening: bool = False,
     **_kw: object,
 ) -> list[Prediction]:
     """Run HaRC verification on benchmark entries via the harcx CLI.
@@ -139,6 +140,9 @@ def run_harc(
     Processes entries in batches to collect partial results on timeout.
     Each batch has its own timeout; completed batches are preserved even
     if later batches time out.
+
+    Pre-screening (DOI check, year bounds, author heuristics) runs before
+    harcx to catch obvious hallucinations early, then results are merged.
 
     Args:
         entries: Benchmark entries to verify.
@@ -148,6 +152,7 @@ def run_harc(
         batch_size: Entries per batch (default: 20).
         batch_timeout: Timeout per batch in seconds (default: 600).
         total_timeout: Total wall-clock limit across all batches (default: 600).
+        skip_prescreening: Skip pre-screening checks (default: False).
 
     Returns:
         List of Predictions.
@@ -155,7 +160,7 @@ def run_harc(
     # Run pre-screening before harcx to catch obvious hallucinations
     from hallmark.baselines.prescreening import prescreen_entries
 
-    prescreen_results = prescreen_entries(entries)
+    prescreen_results = prescreen_entries(entries) if not skip_prescreening else {}
 
     harcx_bin = shutil.which("harcx")
     if harcx_bin is None:
@@ -272,9 +277,10 @@ def run_harc(
                 )
             )
 
-    # Merge pre-screening results with tool predictions
+    # Merge pre-screening results with tool predictions (unless skipped)
     from hallmark.baselines.prescreening import merge_with_predictions
 
-    predictions = merge_with_predictions(entries, predictions, prescreen_results)
+    if not skip_prescreening:
+        predictions = merge_with_predictions(entries, predictions, prescreen_results)
 
     return predictions

@@ -33,19 +33,7 @@ Each entry receives one of eight status codes: \emph{verified}, \emph{not\_found
 \subsection{Deployment modes}
 \label{sec:deployment}
 
-The tool supports three deployment scenarios relevant to venue adoption:
-\begin{itemize}
-    \item \textbf{CI/CD integration}: A \texttt{-{}-strict} flag exits with a nonzero code when hallucinated entries are detected, enabling integration into GitHub Actions workflows that gate paper submission on passing reference checks.
-    \item \textbf{Pre-commit hook}: Authors can add \texttt{bibtex-check} as a pre-commit hook that validates \texttt{.bib} files on every commit, catching fabricated references before they enter the manuscript.
-    \item \textbf{Batch processing}: For venue-scale deployment, the tool processes multiple files with concurrent workers (default: 8), on-disk caching, and per-service rate limiting, enabling validation of hundreds of submissions without API throttling.
-\end{itemize}
-
-The tool is pip-installable (\texttt{pip install bibtex-updater}), requires no GPU or LLM API keys, and is released under the MIT license.
-
-\subsection{Deployment recommendations}
-\label{sec:deployment_rec}
-
-For venue-scale deployment, we recommend a two-stage workflow: (1)~run \texttt{bibtex-updater} at default settings to flag suspicious citations, then (2)~manual review of high-confidence flags (confidence $\geq 0.7$, estimated precision 0.95 on the dev set).
-Entries with confidence between 0.5 and 0.7 can be batch-reviewed or deferred to area chairs.
-At NeurIPS scale (approximately 10,000 submissions, approximately 50 references each), this requires approximately 45 hours single-threaded or under 6 hours with 8 concurrent workers and flags approximately 2.7\% of valid citations as false positives---manageable with batch review.
-Configurable confidence thresholds let organizers trade off recall against review burden.
+The tool supports three deployment scenarios: CI/CD integration (\texttt{-{}-strict} flag exits with nonzero code on detection, gating submission workflows), pre-commit hooks (validates \texttt{.bib} files on every commit), and batch processing (concurrent workers with rate limiting for venue-scale use).
+For venue-scale deployment, we recommend a two-stage workflow: run \texttt{bibtex-updater} to flag suspicious citations, then manual review of high-confidence flags (confidence $\geq 0.7$, estimated precision 0.95).
+At NeurIPS scale (approximately 10,000 submissions, approximately 50 references each), this requires under 6 hours with 8 workers.
+The tool is pip-installable, requires no GPU or LLM API keys, and is MIT-licensed.

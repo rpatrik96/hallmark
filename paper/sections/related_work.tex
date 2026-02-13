@@ -4,9 +4,11 @@
 \paragraph{Citation hallucination in the LLM era.}
 Large language models routinely fabricate bibliographic references when generating academic text~\citep{alkaissi2023,agrawal2024}.
 The scale became apparent through systematic audits: \citet{ghostcite2026} developed the CiteVerifier framework and analyzed 2.2 million citations across 56,000 papers, identifying 604 with likely hallucinated references and revealing a ``verification gap'' where both authors and reviewers fail to check citations adequately.
-\citet{hallucitation2026} focused on ACL/NAACL/EMNLP and found a rapid increase in 2025, with over 100 affected main-conference papers.
+\citet{hallucitation2026} (arXiv:2601.18724) is the closest prior work to \textsc{Hallmark}, focusing on ACL/NAACL/EMNLP and finding a rapid increase in 2025, with over 100 affected main-conference papers.
 \citet{mysterious2026} observed a sharp rise from zero cases in 2021 to consistent problems across HPC venues by 2025.
+
 Commercial tools like GPTZero's hallucination detector~\citep{gptzero2025} and academic projects like HaRC~\citep{harc2024} and verify-citations~\citep{verifycitations2025} address detection, but each targets different hallucination types and uses different evaluation protocols, making comparison impossible without a shared benchmark.
+RefChecker~\citep{refchecker2024} provides automated reference verification for academic manuscripts, while citation databases like OpenAlex and Scite offer structured citation data and verification capabilities.
 Commercial plagiarism detection services (e.g., Turnitin, iThenticate) focus on textual similarity rather than citation metadata verification and were therefore excluded from our evaluation.
 Critically, none of these tools are designed for venue-scale deployment: they lack CI/CD integration, batch processing, and the throughput needed to screen hundreds of submissions.
 \texttt{bibtex-updater}~\citep{bibtexupdater} addresses this gap with a multi-source verification pipeline designed for integration into publication workflows (\cref{sec:tool}).
@@ -17,11 +19,12 @@ Citation verification presents unique challenges: entries have structured fields
 No existing benchmark captures these properties.
 
 \paragraph{Benchmark design principles.}
-\textsc{Hallmark} synthesizes design principles from four influential benchmarks.
+\textsc{Hallmark} synthesizes design principles from influential benchmarks and methodology work.
 From HumanEval~\citep{humaneval}, we adopt multi-criteria sub-tests: each entry is evaluated on six independent checks rather than a single binary label, enabling fine-grained failure analysis.
 From SWE-bench~\citep{swebench}, we incorporate temporal segmentation to detect and measure contamination effects.
 From LiveCodeBench~\citep{livecodebench2024}, we design for continuous updates---new entries can be added without invalidating prior results.
 From ONEBench~\citep{onebench2024}, we adopt sample-level atomic evaluation and the Plackett-Luce ranking model for handling incomplete data, where not all tools have been evaluated on all entries.
+Our data collection methodology follows principles outlined by \citet{bowman2021data} for benchmark construction and quality control.
 \cref{tab:design} summarizes these design choices.
 
 \begin{table}[t]

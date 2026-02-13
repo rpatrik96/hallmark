@@ -11,6 +11,7 @@ import time
 
 import httpx
 
+from hallmark.baselines.prescreening import merge_with_predictions, prescreen_entries
 from hallmark.dataset.schema import BenchmarkEntry, Prediction
 
 logger = logging.getLogger(__name__)
@@ -44,8 +45,21 @@ def check_doi(doi: str, timeout: float = 10.0) -> tuple[bool, str]:
 def run_doi_only(
     entries: list[BenchmarkEntry],
     timeout_per_doi: float = 10.0,
+    skip_prescreening: bool = False,
 ) -> list[Prediction]:
-    """Run DOI-only verification on all entries."""
+    """Run DOI-only verification on all entries.
+
+    Pre-screening (DOI check, year bounds, author heuristics) runs before
+    DOI resolution to catch obvious hallucinations early, then results are merged.
+
+    Args:
+        entries: Benchmark entries to verify.
+        timeout_per_doi: Timeout per DOI resolution request (default: 10.0).
+        skip_prescreening: Skip pre-screening checks (default: False).
+    """
+    # Run pre-screening before DOI checks to catch obvious hallucinations
+    prescreen_results = prescreen_entries(entries) if not skip_prescreening else {}
+
     predictions = []
 
     for entry in entries:
@@ -80,5 +94,9 @@ def run_doi_only(
                 api_calls=1,
             )
         )
+
+    # Merge pre-screening results with tool predictions (unless skipped)
+    if not skip_prescreening:
+        predictions = merge_with_predictions(entries, predictions, prescreen_results)
 
     return predictions

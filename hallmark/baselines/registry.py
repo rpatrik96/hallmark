@@ -160,6 +160,20 @@ def _register_builtins() -> None:
         )
     )
 
+    # --- DOI-only (no pre-screening) ---
+    def _run_doi_only_no_prescreening(entries: list[BenchmarkEntry], **kw: Any) -> list[Prediction]:
+        from hallmark.baselines.doi_only import run_doi_only
+
+        return run_doi_only(entries, skip_prescreening=True, **kw)
+
+    register(
+        BaselineInfo(
+            name="doi_only_no_prescreening",
+            description="DOI resolution check without pre-screening layer (ablation baseline)",
+            runner=_run_doi_only_no_prescreening,
+        )
+    )
+
     # --- bibtex-updater ---
     def _run_bibtexupdater(entries: list[BenchmarkEntry], **kw: Any) -> list[Prediction]:
         from hallmark.baselines.bibtexupdater import run_bibtex_check
@@ -207,6 +221,21 @@ def _register_builtins() -> None:
         )
     )
 
+    # --- HaRC (no pre-screening) ---
+    def _run_harc_no_prescreening(entries: list[BenchmarkEntry], **kw: Any) -> list[Prediction]:
+        from hallmark.baselines.harc import run_harc
+
+        return run_harc(entries, skip_prescreening=True, **kw)
+
+    register(
+        BaselineInfo(
+            name="harc_no_prescreening",
+            description="HaRC without pre-screening layer (ablation baseline)",
+            runner=_run_harc_no_prescreening,
+            cli_commands=["harcx"],
+        )
+    )
+
     # --- verify-citations ---
     def _run_verify_citations(entries: list[BenchmarkEntry], **kw: Any) -> list[Prediction]:
         from hallmark.baselines.verify_citations_baseline import run_verify_citations
@@ -218,6 +247,23 @@ def _register_builtins() -> None:
             name="verify_citations",
             description="verify-citations: arXiv, ACL, S2, DBLP, Google Scholar, DuckDuckGo",
             runner=_run_verify_citations,
+            cli_commands=["verify-citations"],
+        )
+    )
+
+    # --- verify-citations (no pre-screening) ---
+    def _run_verify_citations_no_prescreening(
+        entries: list[BenchmarkEntry], **kw: Any
+    ) -> list[Prediction]:
+        from hallmark.baselines.verify_citations_baseline import run_verify_citations
+
+        return run_verify_citations(entries, skip_prescreening=True, **kw)
+
+    register(
+        BaselineInfo(
+            name="verify_citations_no_prescreening",
+            description="verify-citations without pre-screening layer (ablation baseline)",
+            runner=_run_verify_citations_no_prescreening,
             cli_commands=["verify-citations"],
         )
     )
