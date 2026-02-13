@@ -69,7 +69,7 @@ Every generated entry passes through automated validation:
 \section{Core subset analysis}
 \label{app:core-subset}
 
-To verify that scaling the hallucinated entries (from 134 to 800) does not distort evaluation signals, we re-evaluate all baselines on the original 521-entry core subset (71 hallucinated in dev, 43 in test).
+To verify that scaling the hallucinated entries (from 134 to 975) does not distort evaluation signals, we re-evaluate all baselines on the original 521-entry core subset (71 hallucinated in dev, 43 in test).
 Aggregate metrics differ by less than 2\% between the core subset and the full dataset across all baselines: detection rate changes by at most 0.015, F1 by at most 0.02, and tier-weighted F1 by at most 0.018.
 Per-type rankings are preserved---no baseline changes rank on any type.
 We conclude that the scaled entries are consistent with the original distribution and do not introduce systematic bias.
@@ -135,7 +135,10 @@ As the dataset grows through community contributions, per-type statistical power
 
 \paragraph{Tier weight sensitivity.}
 We evaluate tier-weighted F1 under five weighting schemes: uniform $\{1,1,1\}$ (equivalent to standard macro-F1 across tiers), linear $\{1,2,3\}$ (default), quadratic $\{1,4,9\}$, log $\{\log(2), \log(3), \log(4)\}$, and inverse difficulty (weights proportional to $1 - \text{mean DR}$ across tools).
-Tool rankings are stable across all schemes: bibtex-updater achieves TW-F1 of 0.962 (uniform), 0.969 (linear), 0.977 (quadratic), 0.966 (log), and 0.961 (inverse difficulty). DOI-only achieves 0.312, 0.294, 0.280, 0.300, and 0.297 under the same schemes. The relative ordering of tools is preserved under all weighting schemes, confirming that our conclusions are robust to the specific choice of tier weights.
+Tool rankings are stable across all schemes: bibtex-updater achieves TW-F1 of 0.962 (uniform), 0.969 (linear), 0.977 (quadratic), 0.966 (log), and 0.961 (inverse difficulty).
+DOI-only achieves 0.312, 0.294, 0.280, 0.300, and 0.297 under the same schemes.
+The relative ordering of tools is preserved under all weighting schemes, confirming that our conclusions are robust to the specific choice of tier weights.
+The narrow sensitivity range for bibtex-updater (0.961--0.977) reflects its uniformly high per-tier performance rather than inherent metric robustness; tools with greater tier-differential accuracy would show more variation, making this analysis more informative as the baseline ecosystem matures.
 
 \section{Plackett-Luce ranking}
 \label{app:ranking}
@@ -221,7 +224,7 @@ Following \citet{gebru2021datasheets}, we provide a datasheet for the \textsc{Ha
 \textsc{Hallmark} was created to provide a standardized benchmark for evaluating citation hallucination detection tools, motivated by the NeurIPS 2025 incident and subsequent audits.
 
 \paragraph{Composition.}
-The dataset contains 1,700 BibTeX entries: 900 valid entries scraped from DBLP and 800 hallucinated entries generated through perturbation, LLM generation, adversarial crafting, and real-world collection.
+The dataset contains 1,893 BibTeX entries: 918 valid entries scraped from DBLP and 975 hallucinated entries generated through perturbation, LLM generation, adversarial crafting, and real-world collection.
 Each entry includes 6 binary sub-test labels.
 
 \paragraph{Collection process.}

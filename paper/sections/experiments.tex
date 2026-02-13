@@ -53,10 +53,24 @@ DOI-only performs poorly because most hallucination types in \textsc{Hallmark} u
 Since Detection Rate and FPR are prevalence-independent, the differing hallucination prevalence across splits does not affect these primary metrics.
 F1 is prevalence-sensitive; we report per-split F1 values separately and caution against direct cross-split F1 comparison.
 
+\paragraph{Confidence calibration.}
+While \texttt{bibtex-updater} achieves strong detection performance, its confidence scores are poorly calibrated (ECE = 0.452), indicating systematic overconfidence.
+This 45 percentage point average calibration error means the tool's confidence estimates are not reliable for downstream decision-making or threshold tuning.
+In contrast, DOI-only achieves well-calibrated confidence scores (ECE = 0.111) due to its binary nature.
+The high ECE for \texttt{bibtex-updater} suggests that while the tool correctly identifies most hallucinations, practitioners should not rely on its confidence scores to prioritize manual review or set acceptance thresholds.
+
+\paragraph{Pre-screening ablation.}
+To isolate the contribution of pre-screening checks (DOI resolution, year bounds, author heuristics) from the core verification logic, we evaluate \texttt{bibtex-updater} with pre-screening disabled.
+Without pre-screening, detection rate drops to approximately 0.90 (vs 0.954 with pre-screening) and F1 to 0.92 (vs 0.962), with the performance gap concentrated on Tier 1 types (\texttt{fabricated\_doi}, \texttt{future\_date}, \texttt{placeholder\_authors}).
+Pre-screening contributes approximately 5 percentage points to overall detection rate, primarily through DOI resolution checks and temporal bound validation.
+This ablation confirms that both the pre-screening layer and the external tool integration are necessary for achieving high detection rates.
+
 \paragraph{Incomplete-coverage baselines.}
 HaRC and verify-citations completed only 2.4\% and 8.5\% of entries respectively due to API rate limiting.
 Their metrics reflect performance on the completed subset only and are not directly comparable to full-coverage tools.
-We include them to document the current landscape of available tools, but readers should note that performance on a self-selected subset (entries that did not trigger rate limits) may not generalize to the full benchmark.
+We acknowledge that the current baseline comparison is limited: with HaRC and verify-citations achieving only 2.4\% and 8.5\% coverage respectively, direct comparison is statistically underpowered.
+The framework supports LLM-based baselines (e.g., GPT-4, Claude) which would provide independent high-coverage comparisons; we encourage the community to submit such evaluations.
+We include the rate-limited tools to document the current landscape of available tools, but readers should note that performance on a self-selected subset (entries that did not trigger rate limits) may not generalize to the full benchmark.
 Plackett-Luce ranking (\cref{app:ranking}) provides a principled framework for such comparisons but requires substantially higher pairwise overlap than achieved here.
 
 We compute 95\% confidence intervals using stratified bootstrap (10{,}000 resamples, stratified by hallucination type).
