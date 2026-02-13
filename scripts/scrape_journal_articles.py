@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
 import ssl
 import sys
 import time
@@ -42,43 +43,60 @@ def fetch_dblp_journal(
     base_url = "https://dblp.org/search/publ/api"
     entries = []
 
-    # Query format: venue:JMLR year:2021..2023
-    query = f"venue:{journal_name} year:{start_year}..{end_year}"
-    params = {
-        "q": query,
-        "format": "json",
-        "h": str(num_entries),  # Number of hits
+    # Use DBLP stream query for precise venue matching
+    # Maps short names to DBLP stream IDs
+    stream_map: dict[str, str] = {
+        "JMLR": "journals/jmlr",
+        "TMLR": "journals/tmlr",
+        "Mach. Learn.": "journals/ml",
     }
-
-    url = f"{base_url}?{urllib.parse.urlencode(params)}"
+    stream_id = stream_map.get(journal_name, "")
 
     print(
         f"Fetching {num_entries} entries from {journal_name} ({start_year}-{end_year})...",
         file=sys.stderr,
     )
 
-    try:
-        req = urllib.request.Request(url)
-        req.add_header("User-Agent", "HALLMARK-Benchmark/1.0 (mailto:research@example.com)")
+    # DBLP doesn't support year ranges — query each year individually
+    per_year = max(1, num_entries // (end_year - start_year + 1))
+    for year in range(start_year, end_year + 1):
+        if stream_id:
+            query = f"stream:{stream_id}: year:{year}"
+        else:
+            query = f"venue:{journal_name} year:{year}"
 
-        with urllib.request.urlopen(req, timeout=30, context=_SSL_CTX) as response:
-            data = json.loads(response.read().decode())
+        url = f"{base_url}?q={urllib.parse.quote(query, safe='/.')}&format=json&h={per_year}"
 
-        if "result" in data and "hits" in data["result"]:
-            hits = data["result"]["hits"].get("hit", [])
-            for hit in hits:
-                if "info" in hit:
-                    entries.append(hit["info"])
+        try:
+            req = urllib.request.Request(url)
+            req.add_header(
+                "User-Agent",
+                "HALLMARK-Benchmark/1.0 (mailto:research@example.com)",
+            )
 
-        print(f"  → Fetched {len(entries)} entries", file=sys.stderr)
+            with urllib.request.urlopen(req, timeout=30, context=_SSL_CTX) as response:
+                data = json.loads(response.read().decode())
 
-    except urllib.error.HTTPError as e:
-        print(f"  ✗ HTTP error {e.code}: {e.reason}", file=sys.stderr)
-    except urllib.error.URLError as e:
-        print(f"  ✗ URL error: {e.reason}", file=sys.stderr)
-    except Exception as e:
-        print(f"  ✗ Unexpected error: {e}", file=sys.stderr)
+            year_count = 0
+            if "result" in data and "hits" in data["result"]:
+                hits = data["result"]["hits"].get("hit", [])
+                for hit in hits:
+                    if "info" in hit:
+                        entries.append(hit["info"])
+                        year_count += 1
 
+            print(f"  → {year}: {year_count} entries", file=sys.stderr)
+
+        except urllib.error.HTTPError as e:
+            print(f"  ✗ {year}: HTTP error {e.code}: {e.reason}", file=sys.stderr)
+        except urllib.error.URLError as e:
+            print(f"  ✗ {year}: URL error: {e.reason}", file=sys.stderr)
+        except Exception as e:
+            print(f"  ✗ {year}: Unexpected error: {e}", file=sys.stderr)
+
+        time.sleep(0.5)
+
+    print(f"  → Total: {len(entries)} entries", file=sys.stderr)
     return entries
 
 
@@ -98,10 +116,11 @@ def convert_to_benchmark_entry(dblp_entry: dict[str, Any], seq_id: int) -> dict[
         authors_raw = [authors_raw]
     authors = []
     for author in authors_raw:
-        if isinstance(author, dict):
-            authors.append(author.get("text", ""))
-        else:
-            authors.append(str(author))
+        name = author.get("text", "") if isinstance(author, dict) else str(author)
+        # Strip DBLP disambiguation suffixes (e.g., "Alekh Agarwal 0002")
+
+        name = re.sub(r"\s+\d{4}$", "", name)
+        authors.append(name)
     author_str = " and ".join(authors) if authors else "Unknown Author"
 
     # Extract venue (journal name)

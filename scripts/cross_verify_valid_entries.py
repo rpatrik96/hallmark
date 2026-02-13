@@ -184,13 +184,20 @@ def verify_entry(entry: dict[str, Any], rate_limit: float) -> dict[str, Any]:
     Returns:
         Verification result dict
     """
-    bibtex = entry.get("bibtex", "")
     bibtex_key = entry.get("bibtex_key", "")
+    fields = entry.get("fields", {})
 
-    # Extract fields
-    title = extract_bibtex_field(bibtex, "title")
-    author = extract_bibtex_field(bibtex, "author")
-    doi = extract_bibtex_field(bibtex, "doi")
+    # Extract fields directly from entry (or fall back to BibTeX parsing)
+    title = fields.get("title", "")
+    author = fields.get("author", "")
+    doi = fields.get("doi", "")
+
+    # Fall back to BibTeX string parsing if fields are empty
+    if not title:
+        bibtex = entry.get("bibtex", entry.get("raw_bibtex", ""))
+        title = extract_bibtex_field(bibtex, "title")
+        author = extract_bibtex_field(bibtex, "author")
+        doi = extract_bibtex_field(bibtex, "doi")
 
     result = {
         "bibtex_key": bibtex_key,
