@@ -190,11 +190,7 @@ def _mean_confidence(
     mean_hall = sum(hall_confidences) / len(hall_confidences) if hall_confidences else 0.0
     mean_valid = sum(valid_confidences) / len(valid_confidences) if valid_confidences else 0.0
 
-    # Weight by number of strategies agreeing
-    hall_score = mean_hall * len(hall_confidences)
-    valid_score = mean_valid * len(valid_confidences)
-
-    is_hallucinated = hall_score > valid_score
+    is_hallucinated = mean_hall > mean_valid
     confidence = max(mean_hall, mean_valid)
 
     return Prediction(
