@@ -2,10 +2,10 @@
 Citation hallucination---where language models generate plausible but fabricated references---poses a growing threat to scientific integrity.
 The NeurIPS 2025 incident, in which 53 accepted papers contained fabricated citations, and subsequent large-scale audits finding hundreds of affected publications across major venues, underscore the urgency of automated citation metadata verification.
 Yet no standardized benchmark exists to compare citation verification tools.
-We introduce \textsc{Hallmark} (\textbf{Hall}ucination bench\textbf{mark}), a benchmark for evaluating citation metadata verification systems, comprising 2,207 BibTeX entries spanning 11 empirically-grounded hallucination types organized into three difficulty tiers, plus 3 stress-test types for forward-looking evaluation.
+We introduce \textsc{Hallmark} (\textbf{Hall}ucination bench\textbf{mark}), a benchmark for evaluating citation metadata verification systems, comprising 2,565 BibTeX entries spanning 14 hallucination types organized into three difficulty tiers.
 Each entry undergoes six sub-tests (binary or not-applicable) inspired by HumanEval's multi-criteria evaluation, enabling fine-grained diagnostic analysis beyond binary detection.
 \textsc{Hallmark} provides tier-weighted metrics that reward detection of hard hallucinations, expected calibration error for confidence assessment, and a Plackett-Luce ranking system that handles incomplete evaluations.
-We validate the benchmark by evaluating three independent tools, revealing that no independent tool detects more than 23\% of hallucinations, with systematic blind spots on venue-level and semantic hallucinations.
+We validate the benchmark by evaluating four independent tools, revealing a stark capability gap: API-based tools detect at most 26\% of hallucinations due to rate limiting and metadata coverage gaps, while a zero-shot LLM verifier (GPT-5.1) achieves 80\% detection rate---demonstrating that language models can identify the very hallucinations they produce.
 The benchmark, evaluation infrastructure, and all data are open-source, pip-installable, and designed for community adoption.
 Code and data: \url{https://github.com/anonymous/hallmark}.
 \end{abstract}

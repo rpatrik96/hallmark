@@ -136,41 +136,42 @@ We conclude that the scaled entries are consistent with the original distributio
 \cref{tab:pertype_full} reports detection rate for every hallucination type and baseline.
 
 \begin{table}[h]
-\caption{Per-type detection rate on \texttt{dev\_public} for independent tools. All main types have $\geq$29 instances. Stress-test types are evaluated in the separate \texttt{stress\_test} split.}
+\caption{Per-type detection rate on \texttt{dev\_public} for independent tools. All main types have $\geq$30 instances. Stress-test types are evaluated in the separate \texttt{stress\_test} split.}
 \label{tab:pertype_full}
 \centering
 \small
 \setlength{\tabcolsep}{3pt}
-\begin{tabular}{llccc}
+\begin{tabular}{llcccc}
 \toprule
-\textbf{Tier} & \textbf{Type} & \textbf{DOI} & \textbf{HaRC$^*$} & \textbf{v-cit$^*$} \\
+\textbf{Tier} & \textbf{Type} & \textbf{DOI} & \textbf{HaRC$^*$} & \textbf{v-cit$^*$} & \textbf{GPT-5.1} \\
 \midrule
 \multirow{4}{*}{1}
-& \texttt{fabricated\_doi}        & 1.000 & --- & --- \\
-& \texttt{nonexistent\_venue}     & 0.000 & --- & --- \\
-& \texttt{placeholder\_authors}   & 0.000 & --- & --- \\
-& \texttt{future\_date}           & 0.000 & --- & --- \\
+& \texttt{fabricated\_doi}        & 0.590 & --- & --- & 0.738 \\
+& \texttt{nonexistent\_venue}     & 0.125 & --- & --- & 0.969 \\
+& \texttt{placeholder\_authors}   & 0.235 & --- & --- & 0.941 \\
+& \texttt{future\_date}           & 1.000 & --- & --- & 0.968 \\
 \midrule
 \multirow{5}{*}{2}
-& \texttt{chimeric\_title}        & 0.000 & --- & --- \\
-& \texttt{wrong\_venue}           & 0.000 & --- & --- \\
-& \texttt{author\_mismatch}       & 0.000 & --- & --- \\
-& \texttt{preprint\_as\_pub.}     & 0.000 & --- & --- \\
-& \texttt{hybrid\_fabrication}    & 0.000 & --- & --- \\
+& \texttt{chimeric\_title}        & 0.143 & --- & --- & 0.857 \\
+& \texttt{wrong\_venue}           & 0.200 & --- & --- & 0.829 \\
+& \texttt{author\_mismatch}       & 0.206 & --- & --- & 0.632 \\
+& \texttt{preprint\_as\_pub.}     & 0.129 & --- & --- & 0.839 \\
+& \texttt{hybrid\_fabrication}    & 0.261 & --- & --- & 0.696 \\
 \midrule
 \multirow{2}{*}{3}
-& \texttt{near\_miss\_title}      & 0.000 & --- & --- \\
-& \texttt{plausible\_fabrication} & 1.000 & --- & --- \\
+& \texttt{near\_miss\_title}      & 0.086 & --- & --- & 0.629 \\
+& \texttt{plausible\_fabrication} & 0.036 & --- & --- & 0.821 \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-\noindent All main hallucination types have $\geq$29 instances per public split.
-Entries marked --- indicate insufficient coverage for per-type breakdowns (HaRC: 2.2\%, verify-citations: 7.9\%).
-DOI-only detects only types with fabricated or missing DOIs (\texttt{fabricated\_doi}, \texttt{plausible\_fabrication}), confirming that DOI resolution is necessary but far from sufficient.
-Note that \texttt{plausible\_fabrication} (Tier~3) shows 100\% detection by DOI-only: these entries are entirely fabricated, so their DOIs do not resolve.
-The Tier~3 classification reflects the \emph{difficulty of recognizing the entry as fake from metadata alone}---absent a DOI check, these entries are the hardest to detect because all other fields appear realistic.
-This highlights why multi-strategy evaluation matters: a tool relying solely on DOI checks would appear to ``solve'' this type while missing all Tier~2 types that use valid DOIs.
+\noindent All main hallucination types have $\geq$30 instances per public split.
+Entries marked --- indicate insufficient coverage for per-type breakdowns (HaRC: 1.9\%, verify-citations: 6.6\%).
+DOI-only with pre-screening (\cref{app:prescreening}) achieves non-zero detection across all types because the pre-screening layer catches entries via DOI resolution, year bounds, and author heuristics independently of the hallucination type.
+Without pre-screening, DOI-only detects only \texttt{fabricated\_doi} entries.
+GPT-5.1 achieves ${\geq}67\%$ detection on 9 of 11 main types, with near-perfect detection of \texttt{nonexistent\_venue} (0.969), \texttt{future\_date} (0.968), and \texttt{placeholder\_authors} (0.941).
+Its two weakest types---\texttt{author\_mismatch} (0.632) and \texttt{near\_miss\_title} (0.629)---require exact bibliographic recall that even large LLMs lack.
+Notably, DOI-only's deterministic year-bounds check achieves perfect detection on \texttt{future\_date} (1.000 vs.\ GPT-5.1's 0.968), suggesting that rule-based and LLM-based approaches are complementary.
 
 \section{Statistical analysis}
 \label{app:statistics}
@@ -185,17 +186,18 @@ For each pair of tools $(A, B)$, we resample entries with replacement and comput
 The $p$-value is the fraction of resamples where $\Delta \leq 0$.
 
 \paragraph{Per-type power analysis.}
-With $n \geq 29$ instances per type per split, binary classification metrics have substantially narrower confidence intervals than the original 10-instance design.
-For detection rate, a type with 29 hallucinated entries and 90\% true detection rate has a 95\% Clopper-Pearson confidence interval of $[0.73, 0.98]$, compared to $[0.55, 0.998]$ for $n=10$.
+With $n \geq 30$ instances per type per split, binary classification metrics have substantially narrower confidence intervals than the original 10-instance design.
+For detection rate, a type with 30 hallucinated entries and 90\% true detection rate has a 95\% Clopper-Pearson confidence interval of $[0.74, 0.98]$, compared to $[0.55, 0.998]$ for $n=10$.
 We report per-type results with improved statistical confidence, enabling more definitive type-level claims.
 As the dataset grows through community contributions, per-type statistical power will continue to improve.
 
 \paragraph{Tier weight sensitivity.}
 We evaluate tier-weighted F1 under five weighting schemes: uniform $\{1,1,1\}$ (equivalent to standard macro-F1 across tiers), linear $\{1,2,3\}$ (default), quadratic $\{1,4,9\}$, log $\{\log(2), \log(3), \log(4)\}$, and inverse difficulty (weights proportional to $1 - \text{mean DR}$ across tools).
 Tool rankings are stable across all schemes: bibtex-updater achieves TW-F1 of 0.962 (uniform), 0.969 (linear), 0.977 (quadratic), 0.966 (log), and 0.961 (inverse difficulty).
-DOI-only achieves 0.312, 0.294, 0.280, 0.300, and 0.297 under the same schemes.
-The relative ordering of tools is preserved under all weighting schemes, confirming that our conclusions are robust to the specific choice of tier weights.
-The narrow sensitivity range for bibtex-updater (0.961--0.977) reflects its uniformly high per-tier performance rather than inherent metric robustness; tools with greater tier-differential accuracy would show more variation, making this analysis more informative as the baseline ecosystem matures.
+GPT-5.1 achieves 0.875, 0.860, 0.850, 0.864, and 0.865 under the same schemes.
+DOI-only achieves 0.392, 0.310, 0.255, 0.337, and 0.342.
+The relative ordering of tools (bibtex-updater $>$ GPT-5.1 $>$ DOI-only) is preserved under all weighting schemes, confirming that our conclusions are robust to the specific choice of tier weights.
+GPT-5.1's narrow sensitivity range (0.850--0.875) reflects its consistently strong per-tier performance; DOI-only shows wider variation (0.255--0.392) because its detection is concentrated in Tier~1.
 
 \section{Plackett-Luce ranking}
 \label{app:ranking}
@@ -212,7 +214,7 @@ The estimated parameters are normalized to sum to 1, yielding a probability-like
 
 This approach handles the key challenge of incomplete data: tools evaluated on different subsets of entries can still be compared through their shared pairwise comparisons, weighted by the structure of the Plackett-Luce likelihood.
 
-For \textsc{Hallmark}, this allows us to rank HaRC (20/903 entries) and verify-citations (71/903 entries) alongside complete-coverage baselines by leveraging the pairwise comparisons available on the entries each tool did evaluate.
+For \textsc{Hallmark}, this allows us to rank HaRC (20/1,068 entries) and verify-citations (71/1,068 entries) alongside complete-coverage baselines by leveraging the pairwise comparisons available on the entries each tool did evaluate.
 
 \section{Pre-screening layer specification}
 \label{app:prescreening}
@@ -282,7 +284,7 @@ Following \citet{gebru2021datasheets}, we provide a datasheet for the \textsc{Ha
 \textsc{Hallmark} was created to provide a standardized benchmark for evaluating citation hallucination detection tools, motivated by the NeurIPS 2025 incident and subsequent audits.
 
 \paragraph{Composition.}
-The dataset contains 2,207 BibTeX entries: 918 valid entries scraped from DBLP and 1,289 hallucinated entries generated through perturbation, LLM generation, adversarial crafting, and real-world collection across 11 main hallucination types plus 3 stress-test types.
+The dataset contains 2,565 BibTeX entries: 980 valid entries scraped from DBLP and 1,585 hallucinated entries generated through perturbation, LLM generation, adversarial crafting, and real-world collection across 14 hallucination types.
 Each entry includes 6 binary sub-test labels.
 
 \paragraph{Collection process.}

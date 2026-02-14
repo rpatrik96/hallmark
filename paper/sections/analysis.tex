@@ -5,20 +5,21 @@
 \label{sec:prescreening}
 \textsc{Hallmark} includes an optional pre-screening layer---DOI format validation, year-range bounds checking, and author-name heuristics---that runs before invoking external tools.
 This is benchmark infrastructure available to \emph{all} baselines, not a tool-specific feature.
-Pre-screening provides incremental lift (${\sim}5$pp on Tier~1 types) by catching obvious formatting issues before external API calls.
+Pre-screening provides incremental lift (${\sim}5$pp overall, ${\sim}18$pp on Tier~1) by catching obvious formatting issues before external API calls.
 We report results both with and without pre-screening to maintain transparency about which detections come from the tool versus benchmark infrastructure.
 
 \paragraph{Calibration.}
 \label{sec:calibration}
-DOI-only achieves the lowest ECE (0.111) among independent tools.
+GPT-5.1 achieves the lowest ECE (0.107), followed by DOI-only (0.143).
 HaRC (0.361) and verify-citations (0.317) show weaker calibration, with confidence scores poorly reflecting actual accuracy.
 Confidence calibration is critical for venue deployment, where reviewers need to trust flagged entries without manual verification---a tool reporting 80\% confidence regardless of correctness provides no actionable signal to a program committee.
 
 \paragraph{Cost--accuracy tradeoff.}
 \label{sec:cost}
 \cref{fig:cost} plots detection rate against API cost per entry.
-DOI-only is cheapest (1 API call) but achieves only 22.3\% detection rate.
-HaRC and verify-citations query multiple APIs but are bottlenecked by rate limiting, completing only 2.2\% and 7.9\% of entries respectively---making them impractical for venue-scale deployment.
+DOI-only is cheapest (1 API call) but achieves only 25.6\% detection rate.
+HaRC and verify-citations query multiple APIs but are bottlenecked by rate limiting, completing only 1.9\% and 6.6\% of entries respectively---making them impractical for venue-scale deployment.
+GPT-5.1 achieves $3{\times}$ the detection rate of DOI-only at full coverage, though at higher per-entry cost (\$0.21/entry).
 This cost--accuracy tradeoff highlights the need for tools that balance comprehensive verification with practical throughput (see \cref{app:codesign} for bibtex-updater's cost analysis).
 
 \begin{figure}[t]
@@ -38,7 +39,7 @@ These results support using perturbation entries as controlled diagnostic tests 
 
 \paragraph{Failure modes and improvement targets.}
 \label{sec:failure}
-No independent tool detects venue-level hallucinations (\texttt{preprint\_as\_published}, \texttt{wrong\_venue}) reliably.
-Current bibliographic APIs do not reliably distinguish ``published at venue~X'' from ``available on arXiv,'' nor expose structured venue-to-paper mappings.
-These gaps represent concrete improvement targets for both tool developers and database maintainers.
-\textsc{Hallmark}'s per-type analysis makes these gaps visible and measurable, guiding development and advocacy for richer bibliographic APIs.
+API-based tools fail entirely on venue-level hallucinations (\texttt{preprint\_as\_published}, \texttt{wrong\_venue}) because bibliographic APIs do not reliably distinguish ``published at venue~X'' from ``available on arXiv.''
+GPT-5.1 handles these types well (84\% and 83\% respectively) using parametric knowledge, but struggles with subtle perturbations: \texttt{author\_mismatch} (63\%) and \texttt{near\_miss\_title} (63\%) require exact bibliographic recall that even large LLMs lack.
+These per-type gaps provide concrete targets for both tool developers (richer API metadata) and LLM-based approaches (retrieval-augmented verification).
+\textsc{Hallmark}'s fine-grained analysis makes these gaps visible and measurable.

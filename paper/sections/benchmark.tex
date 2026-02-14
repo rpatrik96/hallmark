@@ -65,7 +65,7 @@ The dataset contains two classes of entries: \emph{valid} references scraped fro
 \paragraph{Valid entries.}
 We scraped BibTeX records from DBLP~\citep{dblp} for papers published at major ML venues (NeurIPS, ICML, ICLR, AAAI, CVPR) between 2021 and 2023.
 Each entry was verified by confirming DOI resolution, title existence in at least two databases, and author-venue consistency.
-We retained 918 valid entries across all splits.
+We retained 980 valid entries across all splits.
 
 \paragraph{Hallucinated entries.}
 We generated hallucinated entries using four methods:
@@ -82,7 +82,7 @@ Generation-method stratification enables practitioners to assess tool performanc
 Verification is primarily algorithmic: perturbation-generated entries are validated by automated checks against DBLP and CrossRef (DOI resolution, title search, author matching), achieving $>$98\% agreement with ground truth labels.
 LLM-generated entries undergo additional automated filtering (title similarity $\geq 85\%$ and author Jaccard $\geq 0.5$ against bibliographic databases) to exclude entries that match real papers.
 Real-world and adversarial entries receive manual review to confirm hallucination status and type assignment.
-With $\geq 29$ instances per main type per public split, per-type 95\% Clopper-Pearson confidence intervals have width $\leq 0.25$ at detection rates near 0 or 1 (e.g., $[0.73, 0.98]$ at DR $= 0.90$, $n = 29$), providing meaningful per-type comparisons.
+With $\geq 30$ instances per main type per public split, per-type 95\% Clopper-Pearson confidence intervals have width $\leq 0.24$ at detection rates near 0 or 1 (e.g., $[0.74, 0.98]$ at DR $= 0.90$, $n = 30$), providing meaningful per-type comparisons.
 The design prioritizes \emph{coverage}---ensuring all 11 main types have sufficient instances for per-type analysis---over volume.
 
 \paragraph{Quality control.}
@@ -92,7 +92,7 @@ To prevent trivial shortcuts, we strip the \texttt{url} field from all entries: 
 Contributed entries pass through a validation pipeline that enforces the schema constraints programmatically before inclusion.
 
 \paragraph{Scaling for statistical power.}
-To ensure per-type statistical validity, we scaled the hallucinated portion so that every main type has at least 29 instances per main split.
+To ensure per-type statistical validity, we scaled the hallucinated portion so that every main type has at least 30 instances per main split.
 New entries were generated deterministically (seed-controlled) using the same perturbation generators as the original entries.
 
 \paragraph{Type distribution.}
@@ -103,7 +103,7 @@ The evaluation API also supports \emph{generation-method stratification}, breaki
 This enables practitioners to assess whether a tool detects template-based perturbations versus genuinely novel hallucinations---a critical distinction for real-world deployment.
 
 \begin{table}[t]
-\caption{Dataset statistics by split. Tier distribution refers to hallucinated entries only. Main splits cover all 11 main types with $n \geq 29$ per type; stress-test types are evaluated in a separate split.}
+\caption{Dataset statistics by split. Tier distribution refers to hallucinated entries only. All main splits cover all 14 hallucination types with $n \geq 30$ per type; the stress-test split provides additional evaluation depth for three types.}
 \label{tab:stats}
 \centering
 \small
@@ -111,12 +111,12 @@ This enables practitioners to assess whether a tool detects template-based pertu
 \toprule
 \textbf{Split} & \textbf{Valid} & \textbf{Halluc.} & \textbf{Total} & \textbf{Tier 1} & \textbf{Tier 2} & \textbf{Tier 3} & \textbf{Types} \\
 \midrule
-\texttt{dev\_public}   & 450 & 453 & 903 & 146 & 196 & 111 & 11 \\
-\texttt{test\_public}  & 270 & 363 & 633 & 142 & 154 & 67 & 11 \\
+\texttt{dev\_public}   & 486 & 582 & 1,068 & 158 & 275 & 149 & 14 \\
+\texttt{test\_public}  & 294 & 546 & 840 & 150 & 258 & 138 & 14 \\
 \texttt{stress\_test}  & 0 & 202 & 202 & --- & 140 & 62 & 3 \\
-\texttt{test\_hidden}  & 198 & 271 & 469 & 83 & 125 & 63 & 14 \\
+\texttt{test\_hidden}  & 200 & 255 & 455 & 68 & 117 & 70 & 14 \\
 \midrule
-\textbf{Total}         & 918 & 1,289 & 2,207 & 371 & 615 & 303 & 14 \\
+\textbf{Total}         & 980 & 1,585 & 2,565 & 376 & 790 & 419 & 14 \\
 \bottomrule
 \end{tabular}
 \end{table}

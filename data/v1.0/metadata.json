@@ -1,260 +1,128 @@
 {
-  "name": "HALLMARK",
-  "version": "1.0",
-  "description": "Citation hallucination detection benchmark",
-  "created": "2026-02-09",
-  "license": "MIT",
-  "splits": {
-    "dev_public": {
-      "file": "dev_public.jsonl",
-      "total": 903,
-      "valid": 450,
-      "hallucinated": 453,
-      "tier_distribution": {
-        "1": 146,
-        "2": 196,
-        "3": 111
-      },
-      "type_distribution": {
-        "chimeric_title": 40,
-        "fabricated_doi": 50,
-        "future_date": 29,
-        "hybrid_fabrication": 45,
-        "near_miss_title": 45,
-        "nonexistent_venue": 32,
-        "placeholder_authors": 35,
-        "plausible_fabrication": 66,
-        "preprint_as_published": 33,
-        "swapped_authors": 38,
-        "wrong_venue": 40
-      },
-      "generation_method_distribution": {
-        "adversarial": 67,
-        "llm_generated": 72,
-        "perturbation": 286,
-        "real_world": 28,
-        "scraped": 450
-      }
-    },
-    "test_public": {
-      "file": "test_public.jsonl",
-      "total": 633,
-      "valid": 270,
-      "hallucinated": 363,
-      "tier_distribution": {
-        "1": 142,
-        "2": 154,
-        "3": 67
-      },
-      "type_distribution": {
-        "chimeric_title": 30,
-        "fabricated_doi": 45,
-        "future_date": 33,
-        "hybrid_fabrication": 34,
-        "near_miss_title": 30,
-        "nonexistent_venue": 32,
-        "placeholder_authors": 32,
-        "plausible_fabrication": 37,
-        "preprint_as_published": 30,
-        "swapped_authors": 30,
-        "wrong_venue": 30
-      },
-      "generation_method_distribution": {
-        "adversarial": 36,
-        "llm_generated": 44,
-        "perturbation": 256,
-        "real_world": 27,
-        "scraped": 270
-      }
-    },
-    "test_hidden": {
-      "file": "test_hidden.jsonl",
-      "total": 469,
-      "valid": 198,
-      "hallucinated": 271,
-      "tier_distribution": {
-        "1": 83,
-        "2": 125,
-        "3": 63
-      },
-      "type_distribution": {
-        "chimeric_title": 16,
-        "fabricated_doi": 35,
-        "future_date": 15,
-        "hybrid_fabrication": 24,
-        "merged_citation": 18,
-        "near_miss_title": 18,
-        "nonexistent_venue": 16,
-        "partial_author_list": 18,
-        "placeholder_authors": 17,
-        "plausible_fabrication": 30,
-        "preprint_as_published": 15,
-        "swapped_authors": 18,
-        "arxiv_version_mismatch": 15,
-        "wrong_venue": 16
-      },
-      "generation_method_distribution": {
-        "adversarial": 37,
-        "llm_generated": 46,
-        "perturbation": 171,
-        "real_world": 17,
-        "scraped": 198
-      }
-    },
-    "stress_test": {
-      "file": "stress_test.jsonl",
-      "total": 202,
-      "valid": 0,
-      "hallucinated": 202,
-      "tier_distribution": {
-        "2": 140,
-        "3": 62
-      },
-      "type_distribution": {
-        "arxiv_version_mismatch": 62,
-        "merged_citation": 70,
-        "partial_author_list": 70
-      },
-      "generation_method_distribution": {
-        "perturbation": 202
-      }
+    "version": "1.0",
+    "build_date": "2026-02-13",
+    "seed": 8042,
+    "total_entries": 2565,
+    "splits": {
+        "dev_public": {
+            "file": "dev_public.jsonl",
+            "total": 1068,
+            "valid": 486,
+            "hallucinated": 582,
+            "tier_distribution": {
+                "1": 158,
+                "2": 275,
+                "3": 149
+            },
+            "type_distribution": {
+                "arxiv_version_mismatch": 30,
+                "chimeric_title": 35,
+                "fabricated_doi": 61,
+                "future_date": 31,
+                "hybrid_fabrication": 46,
+                "merged_citation": 30,
+                "near_miss_title": 35,
+                "nonexistent_venue": 32,
+                "partial_author_list": 30,
+                "placeholder_authors": 34,
+                "plausible_fabrication": 84,
+                "preprint_as_published": 31,
+                "swapped_authors": 68,
+                "wrong_venue": 35
+            },
+            "generation_methods": {
+                "adversarial": 60,
+                "llm_generated": 114,
+                "perturbation": 360,
+                "real_world": 48,
+                "scraped": 486
+            }
+        },
+        "test_public": {
+            "file": "test_public.jsonl",
+            "total": 840,
+            "valid": 294,
+            "hallucinated": 546,
+            "tier_distribution": {
+                "1": 150,
+                "2": 258,
+                "3": 138
+            },
+            "type_distribution": {
+                "arxiv_version_mismatch": 30,
+                "chimeric_title": 33,
+                "fabricated_doi": 56,
+                "future_date": 30,
+                "hybrid_fabrication": 42,
+                "merged_citation": 30,
+                "near_miss_title": 34,
+                "nonexistent_venue": 31,
+                "partial_author_list": 30,
+                "placeholder_authors": 33,
+                "plausible_fabrication": 74,
+                "preprint_as_published": 30,
+                "swapped_authors": 60,
+                "wrong_venue": 33
+            },
+            "generation_methods": {
+                "adversarial": 60,
+                "llm_generated": 92,
+                "perturbation": 360,
+                "real_world": 34,
+                "scraped": 294
+            }
+        },
+        "test_hidden": {
+            "file": "test_hidden.jsonl",
+            "total": 455,
+            "valid": 200,
+            "hallucinated": 255,
+            "tier_distribution": {
+                "1": 68,
+                "2": 117,
+                "3": 70
+            },
+            "type_distribution": {
+                "arxiv_version_mismatch": 15,
+                "chimeric_title": 15,
+                "fabricated_doi": 23,
+                "future_date": 15,
+                "hybrid_fabrication": 15,
+                "merged_citation": 15,
+                "near_miss_title": 15,
+                "nonexistent_venue": 15,
+                "partial_author_list": 15,
+                "placeholder_authors": 15,
+                "plausible_fabrication": 40,
+                "preprint_as_published": 15,
+                "swapped_authors": 27,
+                "wrong_venue": 15
+            },
+            "generation_methods": {
+                "adversarial": 7,
+                "llm_generated": 77,
+                "perturbation": 143,
+                "real_world": 28,
+                "scraped": 200
+            }
+        },
+        "stress_test": {
+            "file": "stress_test.jsonl",
+            "total": 202,
+            "valid": 0,
+            "hallucinated": 202,
+            "tier_distribution": {
+                "2": 140,
+                "3": 62
+            },
+            "type_distribution": {
+                "arxiv_version_mismatch": 62,
+                "merged_citation": 70,
+                "partial_author_list": 70
+            },
+            "generation_methods": {
+                "perturbation": 202
+            }
+        }
     }
-  },
-  "hallucination_tier_distribution": {
-    "tier_1_easy": 0.288,
-    "tier_2_medium": 0.477,
-    "tier_3_hard": 0.235,
-    "_note": "Actual proportions across all 1,289 hallucinated entries (371/615/303)"
-  },
-  "temporal_segments": {
-    "valid_range": {
-      "start": "2021-01-01",
-      "end": "2023-12-31"
-    },
-    "future_date": {
-      "start": "2027-01-01",
-      "end": "2036-12-31"
-    }
-  },
-  "venues": [
-    "NeurIPS",
-    "ICML",
-    "ICLR",
-    "AAAI",
-    "CVPR"
-  ],
-  "hallucination_types": {
-    "tier_1": [
-      "fabricated_doi",
-      "nonexistent_venue",
-      "placeholder_authors",
-      "future_date"
-    ],
-    "tier_2": [
-      "chimeric_title",
-      "wrong_venue",
-      "swapped_authors",
-      "preprint_as_published",
-      "hybrid_fabrication",
-      "merged_citation",
-      "partial_author_list"
-    ],
-    "tier_3": [
-      "near_miss_title",
-      "plausible_fabrication",
-      "arxiv_version_mismatch"
-    ]
-  },
-  "subtests": [
-    "doi_resolves",
-    "title_exists",
-    "authors_match",
-    "venue_real",
-    "fields_complete",
-    "cross_db_agreement"
-  ],
-  "benchmarks_inspired_by": {
-    "HumanEval": "Multi-criteria per sample, detect@k metric",
-    "SWE-bench": "Contamination awareness",
-    "LiveCodeBench": "Temporal segmentation, continuous updates",
-    "ONEBench": "Sample-level atomic evaluation, ever-expanding pool, heterogeneous aggregation"
-  },
-  "type_counts_per_split": {
-    "dev_public": {
-      "chimeric_title": 40,
-      "fabricated_doi": 50,
-      "future_date": 29,
-      "hybrid_fabrication": 45,
-      "near_miss_title": 45,
-      "nonexistent_venue": 32,
-      "placeholder_authors": 35,
-      "plausible_fabrication": 66,
-      "preprint_as_published": 33,
-      "swapped_authors": 38,
-      "wrong_venue": 40
-    },
-    "test_public": {
-      "chimeric_title": 30,
-      "fabricated_doi": 45,
-      "future_date": 33,
-      "hybrid_fabrication": 34,
-      "near_miss_title": 30,
-      "nonexistent_venue": 32,
-      "placeholder_authors": 32,
-      "plausible_fabrication": 37,
-      "preprint_as_published": 30,
-      "swapped_authors": 30,
-      "wrong_venue": 30
-    },
-    "stress_test": {
-      "arxiv_version_mismatch": 62,
-      "merged_citation": 70,
-      "partial_author_list": 70
-    }
-  },
-  "doi_percentages_per_type": {
-    "dev_public": {
-      "chimeric_title": 60.0,
-      "fabricated_doi": 100.0,
-      "future_date": 31.0,
-      "hybrid_fabrication": 55.6,
-      "near_miss_title": 60.0,
-      "nonexistent_venue": 37.5,
-      "placeholder_authors": 37.1,
-      "plausible_fabrication": 21.2,
-      "preprint_as_published": 45.5,
-      "swapped_authors": 50.0,
-      "wrong_venue": 42.5
-    },
-    "test_public": {
-      "chimeric_title": 63.3,
-      "fabricated_doi": 100.0,
-      "future_date": 39.4,
-      "hybrid_fabrication": 58.8,
-      "near_miss_title": 60.0,
-      "nonexistent_venue": 31.2,
-      "placeholder_authors": 31.2,
-      "plausible_fabrication": 21.6,
-      "preprint_as_published": 40.0,
-      "swapped_authors": 40.0,
-      "wrong_venue": 43.3
-    }
-  },
-  "source_distribution": {
-    "_note": "Source provenance of entries. generation_method_distribution counts by method; source_distribution counts by origin including stress-test entries before split extraction.",
-    "dev_public": {
-      "dblp": 450,
-      "perturbation": 286,
-      "adversarial": 67,
-      "llm_generated": 72,
-      "gptzero_neurips2025": 28
-    },
-    "test_public": {
-      "dblp": 270,
-      "perturbation": 256,
-      "llm_generated": 44,
-      "adversarial": 36,
-      "gptzero_neurips2025": 27
-    }
-  }
 }

@@ -143,7 +143,7 @@ class OllamaBackend(LLMBackend):
         ).encode()
         req = urllib.request.Request(url, data=payload, method="POST")
         req.add_header("Content-Type", "application/json")
-        with urllib.request.urlopen(req, timeout=120) as r:
+        with urllib.request.urlopen(req, timeout=600) as r:
             data = json_mod.loads(r.read().decode())
         return data.get("response", "").strip()
 

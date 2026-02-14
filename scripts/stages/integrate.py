@@ -25,9 +25,8 @@ FAKE_REALWORLD_KEYS = {
     "realworld_hybrid_fabrication",
 }
 
-# Hallucination types where cross_db_agreement should be True
-# (mislabeled in some LLM-generated entries)
-CROSS_DB_TRUE_TYPES = {"wrong_venue", "preprint_as_published", "arxiv_version_mismatch"}
+# NOTE: cross_db_agreement is now set correctly by generators and
+# classify_hallucination(). No post-hoc fixup needed.
 
 
 def _split_entries_stratified(
@@ -95,17 +94,8 @@ def _filter_fake_realworld(entries: list[BenchmarkEntry]) -> list[BenchmarkEntry
 
 
 def _fix_cross_db_agreement(entries: list[BenchmarkEntry]) -> int:
-    """Fix cross_db_agreement for types where title+authors are real."""
-    fixed = 0
-    for e in entries:
-        if (
-            e.label == "HALLUCINATED"
-            and e.hallucination_type in CROSS_DB_TRUE_TYPES
-            and e.subtests.get("cross_db_agreement") is False
-        ):
-            e.subtests["cross_db_agreement"] = True
-            fixed += 1
-    return fixed
+    """No-op: cross_db_agreement is now set correctly by generators."""
+    return 0
 
 
 def stage_integrate_external(

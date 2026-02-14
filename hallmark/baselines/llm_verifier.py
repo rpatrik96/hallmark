@@ -64,7 +64,7 @@ def verify_with_openai(
                 model=model,
                 messages=[{"role": "user", "content": prompt}],
                 temperature=0.0,
-                max_tokens=256,
+                max_completion_tokens=256,
             )
             content = response.choices[0].message.content.strip()
             pred = _parse_llm_response(content, entry.bibtex_key)

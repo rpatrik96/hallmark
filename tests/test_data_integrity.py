@@ -114,17 +114,19 @@ class TestTypeBalance:
         expected = {ht.value for ht in MAIN_TYPES}
         assert expected <= types, f"Missing main types in test: {expected - types}"
 
-    def test_stress_types_not_in_main_splits(
-        self, dev_entries: list[BenchmarkEntry], test_entries: list[BenchmarkEntry]
-    ) -> None:
-        """Stress-test types should not appear in main splits."""
-        from hallmark.dataset.schema import STRESS_TEST_TYPES
+    def test_stress_types_present_in_stress_split(self) -> None:
+        """Stress-test types should appear in the stress_test split."""
+        from hallmark.dataset.schema import STRESS_TEST_TYPES, load_entries
 
         stress_values = {ht.value for ht in STRESS_TEST_TYPES}
-        for name, entries in [("dev", dev_entries), ("test", test_entries)]:
-            found = {e.hallucination_type for e in entries if e.label == "HALLUCINATED"}
-            leaked = found & stress_values
-            assert not leaked, f"Stress types found in {name}: {leaked}"
+        try:
+            entries = load_entries("stress_test")
+        except FileNotFoundError:
+            pytest.skip("stress_test split not found")
+        found = {e.hallucination_type for e in entries if e.label == "HALLUCINATED"}
+        assert stress_values <= found, (
+            f"Missing stress types in stress_test: {stress_values - found}"
+        )
 
 
 # ── Generator quality: near_miss_title ──────────────────────────────────────

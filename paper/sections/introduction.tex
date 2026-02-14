@@ -16,8 +16,8 @@ Claim verification requires full-text analysis and semantic understanding of pap
 
 We address this gap with four contributions:
 \begin{enumerate}
-    \item \textbf{A hallucination taxonomy} of 11 empirically-grounded types organized into three difficulty tiers (Easy, Medium, Hard), plus 3 stress-test types for forward-looking evaluation, capturing the full spectrum from obviously fake DOIs to subtly plausible fabrications (\cref{sec:taxonomy}).
-    \item \textbf{A benchmark dataset} of 2,207 BibTeX entries with six binary sub-tests per entry, enabling multi-criteria evaluation inspired by HumanEval~\citep{humaneval} (\cref{sec:dataset}).
+    \item \textbf{A hallucination taxonomy} of 14 types organized into three difficulty tiers (Easy, Medium, Hard), capturing the full spectrum from obviously fake DOIs to subtly plausible fabrications (\cref{sec:taxonomy}).
+    \item \textbf{A benchmark dataset} of 2,565 BibTeX entries with six binary sub-tests per entry, enabling multi-criteria evaluation inspired by HumanEval~\citep{humaneval} (\cref{sec:dataset}).
     \item \textbf{An evaluation protocol} with tier-weighted F1 (rewarding detection of harder hallucinations), expected calibration error (measuring confidence accuracy), and Plackett-Luce ranking~\citep{luce1959,plackett1975} for comparing tools with incomplete coverage (\cref{sec:evaluation}).
     \item \textbf{Open infrastructure}: a pip-installable Python package with a baseline registry, CI-integrated evaluation pipeline, and a community contribution system inspired by ONEBench~\citep{onebench2024} (\cref{sec:experiments}).
 \end{enumerate}
@@ -37,11 +37,11 @@ HalluCitation~\citep{hallucitation2026} & 100{+} papers & 3 & \ding{55} & \ding{
 Mysterious Citations~\citep{mysterious2026} & HPC venues & --- & \ding{55} & \ding{55} & \ding{55} \\
 \midrule
 \multicolumn{6}{l}{\emph{Citation verification benchmarks}} \\
-\textsc{Hallmark} (ours) & 2,207 & 11{+}3 & 6 & \ding{51} & \ding{51} \\
+\textsc{Hallmark} (ours) & 2,565 & 14 & 6 & \ding{51} & \ding{51} \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-We evaluate three independent tools (i.e., not co-developed with the benchmark) on \textsc{Hallmark}---a DOI-only baseline, HaRC, and verify-citations---revealing that no independent tool detects more than 23\% of hallucinations, with systematic blind spots on venue-level and semantic hallucinations requiring metadata cross-referencing.
+We evaluate four independent tools on \textsc{Hallmark}---a DOI-only baseline, HaRC, verify-citations, and a zero-shot LLM verifier (GPT-5.1)---revealing a stark capability gap: API-based tools detect at most 26\% of hallucinations due to rate limiting and metadata coverage gaps, while GPT-5.1 achieves an 80\% detection rate, demonstrating that language models can identify the very hallucinations they produce.
 We additionally evaluate bibtex-updater, a tool co-developed by the authors, reporting results separately in \cref{app:codesign} to maintain transparency.
 These results demonstrate the value of a structured benchmark for identifying actionable improvement targets.

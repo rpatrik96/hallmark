@@ -47,6 +47,21 @@ plt.rcParams.update(
 # Colorblind-safe palette (IBM Design Library)
 COLORS = ["#648FFF", "#785EF0", "#DC267F", "#FE6100", "#FFB000"]
 
+# Display names for tools in figures
+DISPLAY_NAMES = {
+    "doi_only": "DOI-only",
+    "harc": "HaRC",
+    "verify_citations": "verify-citations",
+    "llm_openai": "GPT-5.1",
+    "bibtexupdater": "bibtex-updater",
+    "ensemble": "Ensemble",
+    "doi_presence_heuristic": "DOI-heuristic",
+}
+
+
+def _display_name(tool_name: str) -> str:
+    return DISPLAY_NAMES.get(tool_name, tool_name)
+
 
 def load_results(results_dir: Path) -> list[dict]:
     """Load all evaluation result JSONs."""
@@ -61,7 +76,7 @@ def fig_tier_detection_rates(results: list[dict], output_dir: Path) -> None:
     """Bar chart: detection rate per tier, grouped by tool."""
     fig, ax = plt.subplots(figsize=(6, 3.5))
 
-    tools = [r["tool_name"] for r in results]
+    tools = [_display_name(r["tool_name"]) for r in results]
     tiers = [1, 2, 3]
     tier_labels = ["Tier 1\n(Easy)", "Tier 2\n(Medium)", "Tier 3\n(Hard)"]
 
@@ -80,7 +95,7 @@ def fig_tier_detection_rates(results: list[dict], output_dir: Path) -> None:
             x + offset,
             rates,
             width * 0.9,
-            label=result["tool_name"],
+            label=_display_name(result["tool_name"]),
             color=COLORS[i % len(COLORS)],
             edgecolor="white",
             linewidth=0.5,
@@ -129,7 +144,7 @@ def fig_per_type_heatmap(results: list[dict], output_dir: Path) -> None:
         logger.warning("No per-type metrics found")
         return
 
-    tools = [r["tool_name"] for r in results]
+    tools = [_display_name(r["tool_name"]) for r in results]
     matrix = np.zeros((len(tools), len(types)))
 
     for i, result in enumerate(results):
@@ -182,7 +197,7 @@ def fig_cost_accuracy(results: list[dict], output_dir: Path) -> None:
             zorder=3,
         )
         ax.annotate(
-            result["tool_name"],
+            _display_name(result["tool_name"]),
             (cost, f1),
             textcoords="offset points",
             xytext=(8, 4),
@@ -210,7 +225,7 @@ def fig_overall_comparison(results: list[dict], output_dir: Path) -> None:
 
     fig, ax = plt.subplots(figsize=(7, 3.5))
 
-    tools = [r["tool_name"] for r in results]
+    tools = [_display_name(r["tool_name"]) for r in results]
     metrics = ["detection_rate", "f1_hallucination", "tier_weighted_f1"]
     metric_labels = ["Detection Rate", "F1", "Tier-weighted F1"]
 
@@ -259,6 +274,16 @@ def main() -> None:
     parser = argparse.ArgumentParser(description="Generate evaluation figures")
     parser.add_argument("--results-dir", type=str, default="results")
     parser.add_argument("--output-dir", type=str, default="figures")
+    parser.add_argument(
+        "--tools",
+        type=str,
+        help="Comma-separated list of tool names to include (default: all)",
+    )
+    parser.add_argument(
+        "--split",
+        type=str,
+        help="Only include results from this split (e.g., dev_public)",
+    )
     parser.add_argument("-v", "--verbose", action="store_true")
     args = parser.parse_args()
 
@@ -275,6 +300,12 @@ def main() -> None:
     if not results:
         logger.error(f"No results found in {results_dir}")
         return
+
+    if args.tools:
+        tool_set = {t.strip() for t in args.tools.split(",")}
+        results = [r for r in results if r.get("tool_name") in tool_set]
+    if args.split:
+        results = [r for r in results if r.get("split_name") == args.split]
 
     logger.info(f"Loaded {len(results)} evaluation results")
 

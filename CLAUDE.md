@@ -35,11 +35,10 @@ This is a single atomic workflow. The commit is not done until all hooks pass an
 ## Hallucination Taxonomy (11 main + 3 stress-test)
 - **Tier 1 (Easy, 4 types):** fabricated_doi, nonexistent_venue, placeholder_authors, future_date
 - **Tier 2 (Medium, 5 types):** chimeric_title, wrong_venue, author_mismatch (enum value: `"swapped_authors"`), preprint_as_published, hybrid_fabrication
-- **Tier 3 (Hard, 2 types):** near_miss_title, plausible_fabrication
-- **Stress-test (3 types, separate split):** merged_citation, partial_author_list, arxiv_version_mismatch
+- **Tier 3 (Hard, 3 types):** near_miss_title, plausible_fabrication, version_confusion
 - `AUTHOR_MISMATCH` enum member keeps value `"swapped_authors"` for backward compatibility with data files
 - `hybrid_fabrication`: real DOI + fabricated metadata — DOI resolves but authors/title don't match the DOI target
-- Stress-test types are theoretically-motivated (no real-world evidence yet), evaluated separately in `stress_test.jsonl`
+- Three theoretically-motivated types (merged_citation, partial_author_list, arxiv_version_mismatch) appear in all splits; `stress_test.jsonl` provides additional depth
 
 ## Evaluation Metrics
 - **Primary:** Detection Rate, FPR, F1-Hallucination, Tier-weighted F1, ECE
@@ -52,7 +51,7 @@ This is a single atomic workflow. The commit is not done until all hooks pass an
 - `hallmark/evaluation/ranking.py` — ONEBench-inspired Plackett-Luce ranking
 - `scripts/` — orchestrator scripts (run_all_baselines.py, run_evaluation.py, generate_reference_results.py, generate_new_instances.py)
 - `tests/` — pytest test suite (252 tests)
-- `data/v1.0/` — benchmark data splits (dev: 1,005, test: 710, hidden: 469; total 2,184 entries)
+- `data/v1.0/` — benchmark data splits (dev: 1,068, test: 840, hidden: 455, stress: 202; total 2,565 entries)
 - `data/v1.0/baseline_results/` — pre-computed reference results for rate-limited baselines
 - `.github/workflows/` — CI (tests.yml, baselines.yml)
 
