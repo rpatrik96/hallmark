@@ -28,17 +28,18 @@ def stage_scrape_valid(
     conferences: list[str] | None = None,
     years: list[int] | None = None,
     rng: random.Random | None = None,
+    include_arxiv: bool = True,
 ) -> list[BenchmarkEntry]:
-    """Scrape valid entries from DBLP/Semantic Scholar.
+    """Scrape valid entries from DBLP/Semantic Scholar and optionally arXiv.
 
     Requires network access. Falls back to cached data if scraping fails.
     """
-    from hallmark.dataset.scraper import ScraperConfig, scrape_proceedings
+    from hallmark.dataset.scraper import ScraperConfig, scrape_arxiv_recent, scrape_proceedings
 
     conferences = conferences or ["NeurIPS", "ICML", "ICLR"]
     years = years or [2021, 2022, 2023]
 
-    config = ScraperConfig(venues=conferences, years=years)
+    config = ScraperConfig(venues=conferences, years=years, include_arxiv=include_arxiv)
     entries = scrape_proceedings(config)
 
     # Set source field for scraped entries
@@ -46,6 +47,15 @@ def stage_scrape_valid(
         entry.source = "dblp"
 
     logger.info("Scraped %d valid entries from %d conferences", len(entries), len(conferences))
+
+    # Optionally scrape recent arXiv entries
+    if include_arxiv:
+        arxiv_entries = scrape_arxiv_recent(config=config)
+        for entry in arxiv_entries:
+            entry.source = "arxiv"
+        entries.extend(arxiv_entries)
+        logger.info("Added %d arXiv entries (total: %d)", len(arxiv_entries), len(entries))
+
     return entries
 
 

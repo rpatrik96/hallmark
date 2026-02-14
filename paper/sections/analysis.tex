@@ -37,6 +37,15 @@ The three divergent types (\texttt{near\_miss\_title}, \texttt{plausible\_fabric
 Title length and year distributions match across all types.
 These results support using perturbation entries as controlled diagnostic tests while motivating continued expansion of the real-world sample.
 
+\paragraph{Temporal robustness.}
+\label{sec:temporal_robustness}
+To stress-test GPT-5.1 on papers beyond its likely training cutoff, we construct a 60-entry probe set (30 valid entries scraped from arXiv 2026 and DBLP 2024--2025, plus 30 hallucinated variants across all tiers).
+The false positive rate explodes from 17.1\% on the 2021--2023 baseline to 63.3\% on recent papers---a $3.7{\times}$ increase---while detection rate inflates to 96.7\% (from 79.7\%).
+This asymmetry reveals that GPT-5.1 defaults to \texttt{HALLUCINATED} when it cannot confirm a paper from parametric memory, achieving near-perfect detection at the cost of flagging the majority of genuine recent publications.
+ECE doubles (0.107 $\to$ 0.238), confirming degraded calibration.
+Tier~1--2 hallucinations remain perfectly detected; the precision collapse is driven entirely by false positives on valid entries.
+These results motivate including recent papers in the benchmark to expose temporal bias (\cref{app:temporal}).
+
 \paragraph{Failure modes and improvement targets.}
 \label{sec:failure}
 API-based tools fail entirely on venue-level hallucinations (\texttt{preprint\_as\_published}, \texttt{wrong\_venue}) because bibliographic APIs do not reliably distinguish ``published at venue~X'' from ``available on arXiv.''

@@ -65,6 +65,18 @@ CROSSREF_API_BASE = "https://api.crossref.org/works"
 S2_API_BASE = "https://api.semanticscholar.org/graph/v1"
 
 
+ARXIV_API_BASE = "https://export.arxiv.org/api/query"
+
+# Default arXiv ML categories
+ARXIV_ML_CATEGORIES = [
+    "cs.LG",
+    "cs.CL",
+    "cs.CV",
+    "cs.AI",
+    "stat.ML",
+]
+
+
 @dataclass
 class ScraperConfig:
     """Configuration for the proceedings scraper."""
@@ -77,6 +89,10 @@ class ScraperConfig:
     verify_against_crossref: bool = True
     verify_against_s2: bool = True
     user_agent: str = "HALLMARK/0.1.0 (https://github.com/rpatrik96/hallmark)"
+    include_arxiv: bool = True  # Scrape arXiv preprints
+    arxiv_categories: list[str] | None = None  # Default: ARXIV_ML_CATEGORIES
+    adaptive_years: bool = True  # Auto-compute year range from current date
+    lookback_years: int = 3  # How many years back to scrape
 
 
 def scrape_dblp_venue(
@@ -88,9 +104,12 @@ def scrape_dblp_venue(
     """Scrape entries from a DBLP venue for a given year.
 
     Returns raw DBLP hit records.
+    Uses ``stream:<venue_key>: year:<year>`` query format which works
+    reliably for recent years (the older ``venue:<key>/<year>`` format
+    returns 0 results for 2024+).
     """
     config = config or ScraperConfig()
-    query = f"venue:{venue_key}/{year}"
+    query = f"stream:{venue_key}: year:{year}"
 
     params: dict[str, str | int] = {
         "q": query,
@@ -242,16 +261,158 @@ def verify_entry_s2(entry: BenchmarkEntry, config: ScraperConfig | None = None) 
     return False
 
 
+def scrape_arxiv_recent(
+    categories: list[str] | None = None,
+    max_results: int = 50,
+    config: ScraperConfig | None = None,
+) -> list[BenchmarkEntry]:
+    """Scrape recent papers from arXiv ML categories.
+
+    Fetches papers published in [current_year - 1, current_year] and converts
+    them to BenchmarkEntry format with ``source_conference="arXiv"``.
+
+    Parameters
+    ----------
+    categories:
+        arXiv category codes to query. Defaults to ``ARXIV_ML_CATEGORIES``.
+    max_results:
+        Maximum number of entries to return.
+    config:
+        Scraper configuration (uses timeout and user_agent).
+    """
+    import xml.etree.ElementTree as ET
+
+    config = config or ScraperConfig()
+    cats = categories or config.arxiv_categories or ARXIV_ML_CATEGORIES
+    today = date.today()
+    today_str = today.isoformat()
+    current_year = today.year
+    valid_years = {str(current_year), str(current_year - 1)}
+
+    all_entries: list[BenchmarkEntry] = []
+    seen_titles: set[str] = set()
+
+    for cat in cats:
+        if len(all_entries) >= max_results:
+            break
+
+        params: dict[str, str | int] = {
+            "search_query": f"cat:{cat}",
+            "sortBy": "submittedDate",
+            "sortOrder": "descending",
+            "start": 0,
+            "max_results": 30,
+        }
+
+        with httpx.Client(timeout=config.timeout) as client:
+            resp = _request_with_retry(
+                client,
+                "GET",
+                ARXIV_API_BASE,
+                params=params,
+                headers={"User-Agent": config.user_agent},
+            )
+        if resp is None:
+            logger.warning("arXiv query failed for %s", cat)
+            continue
+
+        # Parse Atom XML
+        ns = {"atom": "http://www.w3.org/2005/Atom"}
+        root = ET.fromstring(resp.text)
+
+        for entry_el in root.findall("atom:entry", ns):
+            if len(all_entries) >= max_results:
+                break
+
+            title_el = entry_el.find("atom:title", ns)
+            if title_el is None or title_el.text is None:
+                continue
+            title = " ".join(title_el.text.strip().split())
+
+            if title.lower() in seen_titles:
+                continue
+            seen_titles.add(title.lower())
+
+            # Filter to recent years only
+            pub_el = entry_el.find("atom:published", ns)
+            if pub_el is None or pub_el.text is None:
+                continue
+            pub_date = pub_el.text[:10]
+            pub_year = pub_date[:4]
+            if pub_year not in valid_years:
+                continue
+
+            # Parse authors
+            authors = []
+            for author_el in entry_el.findall("atom:author", ns):
+                name_el = author_el.find("atom:name", ns)
+                if name_el is not None and name_el.text:
+                    authors.append(name_el.text.strip())
+            author_str = " and ".join(authors)
+
+            # Extract arXiv ID
+            id_el = entry_el.find("atom:id", ns)
+            arxiv_url = id_el.text.strip() if id_el is not None and id_el.text else ""
+            arxiv_id = arxiv_url.split("/abs/")[-1] if "/abs/" in arxiv_url else ""
+
+            first_author_last = authors[0].split()[-1] if authors else "unknown"
+            first_word = title.split()[0].lower() if title else "untitled"
+            bibtex_key = f"{first_author_last}{pub_year}{first_word}"
+
+            fields: dict[str, str] = {
+                "title": title,
+                "author": author_str,
+                "year": pub_year,
+            }
+            if arxiv_id:
+                fields["doi"] = f"10.48550/arXiv.{arxiv_id}"
+                fields["url"] = arxiv_url
+
+            # Primary category tag
+            for cat_el in entry_el.findall("atom:category", ns):
+                term = cat_el.get("term", "")
+                if term.startswith(("cs.", "stat.")):
+                    fields["note"] = f"arXiv preprint, {term}"
+                    break
+
+            entry = BenchmarkEntry(
+                bibtex_key=bibtex_key,
+                bibtex_type="misc",
+                fields=fields,
+                label="VALID",
+                explanation=f"Valid arXiv preprint ({pub_year})",
+                generation_method=GenerationMethod.SCRAPED.value,
+                source_conference="arXiv",
+                publication_date=pub_date,
+                added_to_benchmark=today_str,
+                subtests={**VALID_SUBTESTS, "doi_resolves": bool(arxiv_id)},
+            )
+            all_entries.append(entry)
+
+        # Rate-limit: 3s between arXiv queries (ToS compliance)
+        time.sleep(3.0)
+
+    logger.info("Scraped %d arXiv entries (years %s)", len(all_entries), valid_years)
+    return all_entries[:max_results]
+
+
 def scrape_proceedings(
     config: ScraperConfig | None = None,
 ) -> list[BenchmarkEntry]:
     """Scrape valid entries from conference proceedings.
 
     Main entry point for dataset construction.
+    When ``config.adaptive_years`` is True, the year range is computed
+    automatically from the current date and ``config.lookback_years``.
     """
     config = config or ScraperConfig()
     venues = config.venues or list(DBLP_VENUE_KEYS.keys())
-    years = config.years or list(range(2020, 2026))
+
+    if config.adaptive_years and config.years is None:
+        current_year = date.today().year
+        years = list(range(current_year - config.lookback_years, current_year + 1))
+    else:
+        years = config.years or list(range(2020, 2026))
     today = date.today().isoformat()
 
     all_entries: list[BenchmarkEntry] = []

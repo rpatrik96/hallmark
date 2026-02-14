@@ -17,7 +17,7 @@ Claim verification requires full-text analysis and semantic understanding of pap
 We address this gap with four contributions:
 \begin{enumerate}
     \item \textbf{A hallucination taxonomy} of 14 types organized into three difficulty tiers (Easy, Medium, Hard), capturing the full spectrum from obviously fake DOIs to subtly plausible fabrications (\cref{sec:taxonomy}).
-    \item \textbf{A benchmark dataset} of 2,565 BibTeX entries with six binary sub-tests per entry, enabling multi-criteria evaluation inspired by HumanEval~\citep{humaneval} (\cref{sec:dataset}).
+    \item \textbf{A benchmark dataset} of 2,560 BibTeX entries with six binary sub-tests per entry, enabling multi-criteria evaluation inspired by HumanEval~\citep{humaneval} (\cref{sec:dataset}).
     \item \textbf{An evaluation protocol} with tier-weighted F1 (rewarding detection of harder hallucinations), expected calibration error (measuring confidence accuracy), and Plackett-Luce ranking~\citep{luce1959,plackett1975} for comparing tools with incomplete coverage (\cref{sec:evaluation}).
     \item \textbf{Open infrastructure}: a pip-installable Python package with a baseline registry, CI-integrated evaluation pipeline, and a community contribution system inspired by ONEBench~\citep{onebench2024} (\cref{sec:experiments}).
 \end{enumerate}
@@ -37,7 +37,7 @@ HalluCitation~\citep{hallucitation2026} & 100{+} papers & 3 & \ding{55} & \ding{
 Mysterious Citations~\citep{mysterious2026} & HPC venues & --- & \ding{55} & \ding{55} & \ding{55} \\
 \midrule
 \multicolumn{6}{l}{\emph{Citation verification benchmarks}} \\
-\textsc{Hallmark} (ours) & 2,565 & 14 & 6 & \ding{51} & \ding{51} \\
+\textsc{Hallmark} (ours) & 2,560 & 14 & 6 & \ding{51} & \ding{51} \\
 \bottomrule
 \end{tabular}
 \end{table}

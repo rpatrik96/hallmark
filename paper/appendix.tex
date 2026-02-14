@@ -250,10 +250,59 @@ CI validates these reference results by checksum rather than re-running the tool
 \section{Temporal analysis}
 \label{app:temporal}
 
+\paragraph{Baseline temporal consistency.}
 We assign entries to three temporal segments: pre-2023 (papers published before January 2023), 2023--2024, and 2025+.
 For bibtex-updater, detection rates are consistent across segments ($\pm$2\%), indicating robust performance across publication periods.
 DOI-only shows a slight improvement on newer entries, likely because recent papers more consistently include DOIs.
 Tools relying on static databases may degrade on newer entries as coverage lags, while live-API tools maintain consistent performance.
+
+\paragraph{GPT-5.1 temporal probe.}
+To test whether LLM-based verifiers degrade on papers beyond their training cutoff, we construct a 60-entry temporal probe set: 30~valid entries scraped from arXiv (2026 submissions) and DBLP (2024--2025 conference proceedings), plus 30~hallucinated variants generated across all three difficulty tiers using the standard perturbation pipeline.
+We then evaluate GPT-5.1 on this probe and compare against its performance on the full benchmark (2021--2023 valid entries).
+
+\cref{tab:temporal_probe} shows the results.
+The false positive rate increases $3.7{\times}$---from 17.1\% on the baseline dataset to 63.3\% on recent papers---while the detection rate inflates from 79.7\% to 96.7\%.
+This pattern is consistent with a model that defaults to \texttt{HALLUCINATED} when it cannot confirm a reference from parametric memory: it catches nearly all actual hallucinations but simultaneously flags 19 of 30 genuine recent papers.
+ECE doubles from 0.107 to 0.238, indicating that the model's confidence scores become poorly calibrated on out-of-distribution temporal inputs.
+
+Importantly, the degradation is asymmetric across tiers.
+Tier~1 (fabricated DOIs, nonexistent venues) and Tier~2 (wrong venues, swapped authors) hallucinations are detected at 100\%, matching or exceeding baseline performance---these types contain structural anomalies that do not require temporal knowledge.
+Tier~3 detection drops only slightly (90\% vs.\ baseline), suggesting that subtle perturbations remain detectable even for recent papers.
+The precision collapse is driven entirely by false positives on \emph{valid} entries, not by missed hallucinations.
+
+\begin{table}[h]
+\centering
+\caption{GPT-5.1 temporal robustness: full-dataset baseline (2021--2023 valid entries) vs.\ temporal probe (2024--2026 valid entries). The probe reveals a $3.7{\times}$ FPR increase driven by the model's inability to confirm recent publications.}
+\label{tab:temporal_probe}
+\small
+\begin{tabular}{lcc}
+\toprule
+\textbf{Metric} & \textbf{Baseline} & \textbf{Temporal probe} \\
+\midrule
+Detection Rate      & 79.7\% & 96.7\% \\
+False Positive Rate & 17.1\% & 63.3\% \\
+F1 (Hallucination)  & 0.822  & 0.744  \\
+ECE                 & 0.107  & 0.238  \\
+\midrule
+Tier~1 DR           & 93.3\% & 100\%  \\
+Tier~2 DR           & 78.8\% & 100\%  \\
+Tier~3 DR           & 63.8\% & 90.0\% \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+These findings have two implications.
+First, \textbf{temporal coverage matters}: benchmarks using only older valid entries will overestimate LLM-based verifier precision, because the model can confirm those papers from training data.
+Second, \textbf{the failure mode is predictable}: LLMs treat unfamiliar papers as suspicious, making false positive rate the key metric to monitor as training cutoffs shift.
+The generation pipeline now supports adaptive temporal scraping (\texttt{scrape\_arxiv\_recent()}) to keep the benchmark's valid entries current with the research literature.
+\cref{fig:temporal} visualizes the temporal degradation pattern.
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.65\linewidth]{figures/temporal_robustness.pdf}
+\caption{GPT-5.1 temporal robustness: detection rate and false positive rate on 2021--2023 baseline entries vs.\ 2024--2026 temporal probe entries. The $3.7{\times}$ FPR increase reflects the model's tendency to flag unfamiliar recent papers as hallucinated.}
+\label{fig:temporal}
+\end{figure}
 
 \section{Infrastructure documentation}
 \label{app:infrastructure}
@@ -284,7 +333,7 @@ Following \citet{gebru2021datasheets}, we provide a datasheet for the \textsc{Ha
 \textsc{Hallmark} was created to provide a standardized benchmark for evaluating citation hallucination detection tools, motivated by the NeurIPS 2025 incident and subsequent audits.
 
 \paragraph{Composition.}
-The dataset contains 2,565 BibTeX entries: 980 valid entries scraped from DBLP and 1,585 hallucinated entries generated through perturbation, LLM generation, adversarial crafting, and real-world collection across 14 hallucination types.
+The dataset contains 2,560 BibTeX entries: 980 valid entries scraped from DBLP and arXiv and 1,580 hallucinated entries generated through perturbation, LLM generation, adversarial crafting, and real-world collection across 14 hallucination types.
 Each entry includes 6 binary sub-test labels.
 
 \paragraph{Collection process.}

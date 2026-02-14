@@ -127,6 +127,11 @@ def parse_args() -> argparse.Namespace:
         "--skip-scrape", action="store_true", help="Load cached valid entries instead of scraping"
     )
     parser.add_argument(
+        "--skip-arxiv",
+        action="store_true",
+        help="Skip arXiv scraping even when scraping is enabled",
+    )
+    parser.add_argument(
         "--skip-llm", action="store_true", help="Load cached LLM entries instead of generating"
     )
     parser.add_argument(
@@ -198,6 +203,7 @@ def main() -> None:
     else:
         valid_entries = stage_scrape_valid(
             rng=None,  # uses default
+            include_arxiv=not args.skip_arxiv,
         )
 
     # Load journal articles as additional valid entries

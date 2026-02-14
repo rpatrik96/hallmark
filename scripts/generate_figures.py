@@ -64,11 +64,14 @@ def _display_name(tool_name: str) -> str:
 
 
 def load_results(results_dir: Path) -> list[dict]:
-    """Load all evaluation result JSONs."""
+    """Load all evaluation result JSONs (skips non-evaluation files)."""
     results = []
     for path in sorted(results_dir.glob("*.json")):
         with open(path) as f:
-            results.append(json.load(f))
+            data = json.load(f)
+        # Only include standard evaluation results (must have tool_name at top level)
+        if "tool_name" in data:
+            results.append(data)
     return results
 
 
@@ -270,6 +273,93 @@ def fig_overall_comparison(results: list[dict], output_dir: Path) -> None:
     logger.info(f"Saved {path}")
 
 
+def fig_temporal_robustness(results_dir: Path, output_dir: Path) -> None:
+    """Grouped bar chart: DR and FPR by temporal segment for GPT-5.1."""
+    probe_path = results_dir / "temporal_probe.json"
+    if not probe_path.exists():
+        logger.warning("temporal_probe.json not found, skipping temporal figure")
+        return
+
+    with open(probe_path) as f:
+        data = json.load(f)
+
+    probe = data.get("probe_metrics", {})
+    baseline = data.get("full_baseline", {})
+
+    # Metrics for baseline (2021-2023) vs probe (2024-2026)
+    segments = ["2021\u20132023\n(baseline)", "2024\u20132026\n(probe)"]
+    dr_values = [
+        baseline.get("detection_rate", 0),
+        probe.get("detection_rate", 0),
+    ]
+    fpr_values = [
+        baseline.get("false_positive_rate", 0),
+        probe.get("false_positive_rate", 0),
+    ]
+
+    fig, ax = plt.subplots(figsize=(6, 3.5))
+    x = np.arange(len(segments))
+    width = 0.3
+
+    bars_dr = ax.bar(
+        x - width / 2,
+        dr_values,
+        width,
+        label="Detection Rate",
+        color=COLORS[0],
+        edgecolor="white",
+        linewidth=0.5,
+    )
+    bars_fpr = ax.bar(
+        x + width / 2,
+        fpr_values,
+        width,
+        label="False Positive Rate",
+        color=COLORS[2],
+        edgecolor="white",
+        linewidth=0.5,
+    )
+
+    # Value labels
+    for bars in [bars_dr, bars_fpr]:
+        for bar in bars:
+            height = bar.get_height()
+            if height > 0:
+                ax.text(
+                    bar.get_x() + bar.get_width() / 2,
+                    height + 0.02,
+                    f"{height:.1%}",
+                    ha="center",
+                    va="bottom",
+                    fontsize=8,
+                )
+
+    ax.set_ylabel("Metric Value")
+    ax.set_title("GPT-5.1 Temporal Robustness")
+    ax.set_xticks(x)
+    ax.set_xticklabels(segments)
+    ax.set_ylim(0, 1.15)
+    ax.legend(loc="upper left")
+    ax.spines["top"].set_visible(False)
+    ax.spines["right"].set_visible(False)
+
+    # Annotation for the FPR explosion
+    ax.annotate(
+        f"{fpr_values[1] / max(fpr_values[0], 1e-9):.1f}\u00d7",
+        xy=(1 + width / 2, fpr_values[1]),
+        xytext=(1.35, fpr_values[1] - 0.1),
+        fontsize=9,
+        fontweight="bold",
+        color=COLORS[2],
+        arrowprops={"arrowstyle": "->", "color": COLORS[2], "lw": 1.2},
+    )
+
+    path = output_dir / "temporal_robustness.pdf"
+    fig.savefig(path)
+    plt.close(fig)
+    logger.info(f"Saved {path}")
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description="Generate evaluation figures")
     parser.add_argument("--results-dir", type=str, default="results")
@@ -313,8 +403,9 @@ def main() -> None:
     fig_per_type_heatmap(results, output_dir)
     fig_cost_accuracy(results, output_dir)
     fig_overall_comparison(results, output_dir)
+    fig_temporal_robustness(results_dir, output_dir)
 
-    print(f"\nGenerated {4} figures in {output_dir}/")
+    print(f"\nGenerated 5 figures in {output_dir}/")
 
 
 if __name__ == "__main__":
