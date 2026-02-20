@@ -50,7 +50,7 @@ This is a single atomic workflow. The commit is not done until all hooks pass an
 - `hallmark/baselines/registry.py` — central baseline registry (discovery, availability, dispatch)
 - `hallmark/evaluation/ranking.py` — ONEBench-inspired Plackett-Luce ranking
 - `scripts/` — orchestrator scripts (run_all_baselines.py, run_evaluation.py, generate_reference_results.py, generate_new_instances.py)
-- `tests/` — pytest test suite (252 tests)
+- `tests/` — pytest test suite (269 tests)
 - `data/v1.0/` — benchmark data splits (dev: 1,068, test: 837, hidden: 453, stress: 202; total 2,560 entries)
 - `data/v1.0/baseline_results/` — pre-computed reference results for rate-limited baselines
 - `.github/workflows/` — CI (tests.yml, baselines.yml)
@@ -71,6 +71,14 @@ Any user of the tool would benefit from these.
 - Pre-screening results should be reported transparently (reason strings include `[Pre-screening override]`)
 - When reporting results in the paper, clearly attribute which detections come from the tool vs. pre-screening
 - The DOI check and year validation are candidates for upstreaming to bibtex-updater (see plan)
+
+## LLM Baselines (OpenAI, Anthropic, OpenRouter)
+- `llm_openai` — GPT-5.1 via `OPENAI_API_KEY`
+- `llm_anthropic` — Claude Sonnet 4.5 via `ANTHROPIC_API_KEY`
+- `llm_openrouter_{deepseek_r1,deepseek_v3,qwen,mistral}` — via `OPENROUTER_API_KEY` (uses `openai` SDK with custom `base_url`)
+- Model configs live in `OPENROUTER_MODELS` dict in `hallmark/baselines/llm_verifier.py`
+- `_verify_with_openai_compatible()` is the shared helper for all OpenAI-SDK-based providers
+- Generation script: `scripts/generate_llm_hallucinations.py --backend openrouter --model deepseek/deepseek-r1`
 
 ## Key Conventions
 - Optional dependencies (choix, harcx, openai, anthropic) use lazy imports

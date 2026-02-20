@@ -23,8 +23,8 @@ HALLMARK draws on best practices from established benchmarks:
 - **2,184 annotated entries**: 918 valid (from DBLP) + 1,266 hallucinated with ground truth
 - **6 sub-tests per entry**: DOI resolution, title matching, author consistency, venue verification, field completeness, cross-database agreement
 - **Evaluation metrics**: Detection Rate, F1, tier-weighted F1, detect@k, ECE
-- **Built-in baselines**: DOI-only, bibtex-updater, LLM-based, ensemble, HaRC, CiteVerifier, hallucinator, verify-citations
-- **Baseline registry**: Central discovery, availability checking, and dispatch for all baselines
+- **Built-in baselines**: DOI-only, bibtex-updater, LLM-based (OpenAI, Anthropic, OpenRouter), ensemble, HaRC, CiteVerifier, hallucinator, verify-citations
+- **Baseline registry**: Central discovery, availability checking, and dispatch for all baselines (20+ variants)
 - **Plackett-Luce ranking**: ONEBench-inspired ranking that handles incomplete evaluation data
 - **Automated execution**: Orchestrator script and CI workflow for batch baseline evaluation
 - **Temporal analysis**: Contamination detection via pre/post-cutoff comparison
@@ -194,6 +194,17 @@ HALLMARK also wraps several external citation verification tools as baselines:
 | **hallucinator** | [hallucinator](https://github.com/gianlucasb/hallucinator) | CrossRef, arXiv, DBLP, Semantic Scholar, ACL Anthology, PubMed, OpenAlex | Clone repo |
 | **verify-citations** | [verify-citations](https://pypi.org/project/verify-citations/) | arXiv, ACL Anthology, Semantic Scholar, DBLP, Google Scholar, DuckDuckGo | `pip install verify-citations` |
 
+### LLM Baselines
+
+| Baseline | Model | Provider | API Key Env Var |
+|----------|-------|----------|----------------|
+| `llm_openai` | GPT-5.1 | OpenAI | `OPENAI_API_KEY` |
+| `llm_anthropic` | Claude Sonnet 4.5 | Anthropic | `ANTHROPIC_API_KEY` |
+| `llm_openrouter_deepseek_r1` | DeepSeek R1 | OpenRouter | `OPENROUTER_API_KEY` |
+| `llm_openrouter_deepseek_v3` | DeepSeek V3.2 | OpenRouter | `OPENROUTER_API_KEY` |
+| `llm_openrouter_qwen` | Qwen 3 235B | OpenRouter | `OPENROUTER_API_KEY` |
+| `llm_openrouter_mistral` | Mistral Large | OpenRouter | `OPENROUTER_API_KEY` |
+
 ```python
 # Use the baseline registry to discover and run any baseline
 from hallmark.baselines.registry import list_baselines, check_available, run_baseline
@@ -294,7 +305,7 @@ hallmark/
 ├── hallmark/                  # Python package
 │   ├── dataset/               # Schema, loader, scraper, generator
 │   ├── evaluation/            # Metrics, subtests, aggregator, temporal, ranking
-│   ├── baselines/             # Registry + 9 baselines (DOI-only, bibtex-updater, LLM×2, ensemble, HaRC, CiteVerifier, hallucinator, verify-citations)
+│   ├── baselines/             # Registry + baselines (DOI-only, bibtex-updater, LLM×6, ensemble, HaRC, CiteVerifier, hallucinator, verify-citations)
 │   │   └── registry.py        # Central baseline discovery, availability, dispatch
 │   ├── contribution/          # Pool manager, entry validation
 │   └── cli.py                 # Command-line interface
@@ -307,7 +318,7 @@ hallmark/
 ├── .github/workflows/
 │   ├── tests.yml              # CI: test suite across Python versions
 │   └── baselines.yml          # CI: weekly free baseline evaluation
-├── tests/                     # Test suite (256 tests)
+├── tests/                     # Test suite (269 tests)
 ├── figures/                   # Evaluation figures
 └── examples/                  # Usage examples
 ```
