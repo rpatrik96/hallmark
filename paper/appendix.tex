@@ -214,7 +214,7 @@ The estimated parameters are normalized to sum to 1, yielding a probability-like
 
 This approach handles the key challenge of incomplete data: tools evaluated on different subsets of entries can still be compared through their shared pairwise comparisons, weighted by the structure of the Plackett-Luce likelihood.
 
-For \textsc{Hallmark}, this allows us to rank HaRC (20/1,068 entries) and verify-citations (71/1,068 entries) alongside complete-coverage baselines by leveraging the pairwise comparisons available on the entries each tool did evaluate.
+For \textsc{Hallmark}, this allows us to rank HaRC (20/1,063 entries) and verify-citations (71/1,063 entries) alongside complete-coverage baselines by leveraging the pairwise comparisons available on the entries each tool did evaluate.
 
 \section{Pre-screening layer specification}
 \label{app:prescreening}
@@ -333,7 +333,7 @@ Following \citet{gebru2021datasheets}, we provide a datasheet for the \textsc{Ha
 \textsc{Hallmark} was created to provide a standardized benchmark for evaluating citation hallucination detection tools, motivated by the NeurIPS 2025 incident and subsequent audits.
 
 \paragraph{Composition.}
-The dataset contains 2,560 BibTeX entries: 980 valid entries scraped from DBLP and arXiv and 1,580 hallucinated entries generated through perturbation, LLM generation, adversarial crafting, and real-world collection across 14 hallucination types.
+The dataset contains 2,554 BibTeX entries: 980 valid entries scraped from DBLP and arXiv and 1,574 hallucinated entries generated through perturbation, LLM generation, adversarial crafting, and real-world collection across 14 hallucination types.
 Each entry includes 6 binary sub-test labels.
 
 \paragraph{Collection process.}

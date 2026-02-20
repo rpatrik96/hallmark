@@ -311,10 +311,56 @@ DEFAULT_MODELS: dict[str, str] = {
 }
 
 
+def _title_jaccard(title_a: str, title_b: str) -> float:
+    """Word-level Jaccard similarity between two titles."""
+    words_a = set(title_a.lower().split())
+    words_b = set(title_b.lower().split())
+    if not words_a or not words_b:
+        return 0.0
+    return len(words_a & words_b) / len(words_a | words_b)
+
+
+def _extract_lastnames(author_str: str) -> set[str]:
+    """Extract last names from a BibTeX-style author string.
+
+    Handles both "Last, First" and "First Last" formats.
+    """
+    names: set[str] = set()
+    for part in author_str.split(" and "):
+        part = part.strip()
+        if not part:
+            continue
+        if "," in part:
+            # "Last, First" format
+            names.add(part.split(",")[0].strip().lower())
+        else:
+            # "First Last" format — last token is the last name
+            tokens = part.split()
+            if tokens:
+                names.add(tokens[-1].strip().lower())
+    return names
+
+
+def _authors_match_fuzzy(bib_authors: str, cr_authors: list[dict]) -> bool:
+    """Fuzzy author match using Jaccard similarity on last names.
+
+    Returns True if >= 50% of last names overlap between the BibTeX
+    author string and the CrossRef author list.
+    """
+    bib_lastnames = _extract_lastnames(bib_authors)
+    cr_lastnames = {a.get("family", "").lower() for a in cr_authors if a.get("family")}
+    if not bib_lastnames or not cr_lastnames:
+        return False
+    overlap = len(bib_lastnames & cr_lastnames) / len(bib_lastnames | cr_lastnames)
+    return overlap >= 0.5
+
+
 def verify_title_in_crossref(title: str) -> dict | None:
     """Verify if a title exists in CrossRef API.
 
-    Returns the best match if found, None otherwise.
+    Returns the best match if found and title similarity > 0.5,
+    None otherwise. This prevents misclassification from CrossRef
+    returning unrelated papers for fuzzy title queries.
     """
     time.sleep(RATE_LIMIT_DELAY)
     try:
@@ -323,9 +369,10 @@ def verify_title_in_crossref(title: str) -> dict | None:
         response.raise_for_status()
         data = response.json()
 
-        if data["message"]["items"]:
-            # Return first result (best match)
-            return data["message"]["items"][0]
+        for item in data["message"]["items"]:
+            cr_title = item.get("title", [""])[0] if item.get("title") else ""
+            if _title_jaccard(title, cr_title) > 0.5:
+                return item
         return None
     except Exception as e:
         logger.warning(f"CrossRef API error for '{title[:50]}...': {e}")
@@ -493,8 +540,9 @@ def classify_hallucination(entry_dict: dict, crossref_data: dict | None) -> tupl
 
     cr_doi = crossref_data.get("DOI", "")
 
-    # Check for author mismatch
-    if cr_authors_str and authors.lower() != cr_authors_str.lower():
+    # Check for author mismatch using fuzzy last-name matching
+    cr_author_list = crossref_data.get("author", [])
+    if cr_author_list and not _authors_match_fuzzy(authors, cr_author_list):
         subtests["authors_match"] = False
         if doi and doi.lower() == cr_doi.lower():
             subtests["doi_resolves"] = True
@@ -506,15 +554,21 @@ def classify_hallucination(entry_dict: dict, crossref_data: dict | None) -> tupl
 
     subtests["authors_match"] = True
 
-    # Check for wrong venue
-    if cr_venue and venue.lower() != cr_venue.lower():
-        if doi and doi.lower() == cr_doi.lower():
-            subtests["doi_resolves"] = True
-        return (
-            HallucinationType.WRONG_VENUE.value,
-            f"Venue doesn't match CrossRef: '{venue}' vs '{cr_venue}'",
-            subtests,
-        )
+    # Check for wrong venue (use substring matching since venue names vary)
+    if cr_venue and venue:
+        venue_lower = venue.lower()
+        cr_venue_lower = cr_venue.lower()
+        # Check if neither is a substring of the other (accounts for abbreviations)
+        if venue_lower not in cr_venue_lower and cr_venue_lower not in venue_lower:
+            venue_jaccard = _title_jaccard(venue, cr_venue)
+            if venue_jaccard < 0.3:
+                if doi and doi.lower() == cr_doi.lower():
+                    subtests["doi_resolves"] = True
+                return (
+                    HallucinationType.WRONG_VENUE.value,
+                    f"Venue doesn't match CrossRef: '{venue}' vs '{cr_venue}'",
+                    subtests,
+                )
 
     # Check for near-miss title (similar but not exact)
     if cr_title and title.lower() != cr_title.lower():

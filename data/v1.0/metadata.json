@@ -1,38 +1,38 @@
 {
     "version": "1.0",
-    "build_date": "2026-02-14",
+    "build_date": "2026-02-20",
     "seed": 8042,
-    "total_entries": 2560,
+    "total_entries": 2554,
     "splits": {
         "dev_public": {
             "file": "dev_public.jsonl",
-            "total": 1068,
+            "total": 1063,
             "valid": 486,
-            "hallucinated": 582,
+            "hallucinated": 577,
             "tier_distribution": {
-                "1": 158,
-                "2": 275,
-                "3": 149
+                "1": 156,
+                "2": 274,
+                "3": 147
             },
             "type_distribution": {
                 "arxiv_version_mismatch": 30,
                 "chimeric_title": 35,
-                "fabricated_doi": 61,
-                "future_date": 31,
+                "fabricated_doi": 60,
+                "future_date": 30,
                 "hybrid_fabrication": 46,
                 "merged_citation": 30,
                 "near_miss_title": 35,
                 "nonexistent_venue": 32,
                 "partial_author_list": 30,
                 "placeholder_authors": 34,
-                "plausible_fabrication": 84,
+                "plausible_fabrication": 82,
                 "preprint_as_published": 31,
-                "swapped_authors": 68,
+                "swapped_authors": 67,
                 "wrong_venue": 35
             },
             "generation_methods": {
                 "adversarial": 60,
-                "llm_generated": 114,
+                "llm_generated": 109,
                 "perturbation": 360,
                 "real_world": 48,
                 "scraped": 486
@@ -40,12 +40,12 @@
         },
         "test_public": {
             "file": "test_public.jsonl",
-            "total": 837,
+            "total": 836,
             "valid": 294,
-            "hallucinated": 543,
+            "hallucinated": 542,
             "tier_distribution": {
                 "1": 150,
-                "2": 258,
+                "2": 257,
                 "3": 135
             },
             "type_distribution": {
@@ -61,12 +61,12 @@
                 "placeholder_authors": 33,
                 "plausible_fabrication": 74,
                 "preprint_as_published": 30,
-                "swapped_authors": 60,
+                "swapped_authors": 59,
                 "wrong_venue": 33
             },
             "generation_methods": {
                 "adversarial": 60,
-                "llm_generated": 92,
+                "llm_generated": 91,
                 "perturbation": 357,
                 "real_world": 34,
                 "scraped": 294

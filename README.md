@@ -20,7 +20,7 @@ HALLMARK draws on best practices from established benchmarks:
 ## Features
 
 - **Hallucination taxonomy**: 14 types across 3 difficulty tiers (Easy / Medium / Hard)
-- **2,184 annotated entries**: 918 valid (from DBLP) + 1,266 hallucinated with ground truth
+- **2,554 annotated entries**: 980 valid (from DBLP) + 1,574 hallucinated with ground truth
 - **6 sub-tests per entry**: DOI resolution, title matching, author consistency, venue verification, field completeness, cross-database agreement
 - **Evaluation metrics**: Detection Rate, F1, tier-weighted F1, detect@k, ECE
 - **Built-in baselines**: DOI-only, bibtex-updater, LLM-based (OpenAI, Anthropic, OpenRouter), ensemble, HaRC, CiteVerifier, hallucinator, verify-citations
@@ -124,11 +124,12 @@ hallmark leaderboard --results-dir results/
 
 | Split | Valid | Hallucinated | Total | Purpose |
 |-------|-------|-------------|-------|---------|
-| `dev_public` | 450 | 555 | 1,005 | Development and tuning |
-| `test_public` | 270 | 440 | 710 | Public leaderboard |
-| `test_hidden` | 198 | 271 | 469 | Anti-gaming evaluation |
+| `dev_public` | 486 | 577 | 1,063 | Development and tuning |
+| `test_public` | 294 | 542 | 836 | Public leaderboard |
+| `test_hidden` | 200 | 253 | 453 | Anti-gaming evaluation |
+| `stress_test` | 0 | 202 | 202 | Stress-test types depth |
 
-Tier distribution per split: ~29% Tier 1, ~45% Tier 2, ~25% Tier 3 (hallucinated entries).
+Tier distribution per split: ~27% Tier 1, ~47% Tier 2, ~26% Tier 3 (hallucinated entries).
 
 ### Data Format
 
@@ -171,17 +172,14 @@ Each entry is a JSON object in JSONL format:
 | **ECE** | Expected Calibration Error — measures confidence calibration quality |
 | **detect@k** | Fraction detected using k verification strategies (analogous to pass@k) |
 
-## Baseline Results (dev_public, 1,005 entries)
+## Baseline Results (dev_public, 1,063 entries)
 
 | Baseline | Detection Rate | F1 | Tier-weighted F1 | FPR | ECE |
 |----------|:---:|:---:|:---:|:---:|:---:|
-| bibtex-updater | 0.954 | 0.962 | 0.969 | 0.024 | 0.452 |
-| Ensemble (doi+btx) | 0.208 | 0.342 | 0.296 | 0.007 | 0.289 |
 | HaRC* | 0.155 | 0.268 | 0.188 | 0.000 | 0.361 |
-| DOI-only | 0.223 | 0.312 | 0.294 | 0.178 | 0.111 |
-| verify-citations* | 0.042 | 0.071 | 0.062 | 0.024 | 0.317 |
+| bibtex-updater | 0.124 | 0.220 | 0.131 | 0.000 | 0.018 |
 
-*\*Partial evaluation due to API rate limiting (HaRC: 20/840, verify-citations: 71/840 entries completed).*
+*\*Partial evaluation due to API rate limiting (HaRC: 521/1,063 entries completed).*
 
 ### External Tool Baselines
 

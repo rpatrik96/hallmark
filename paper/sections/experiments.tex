@@ -16,11 +16,11 @@ This baseline tests the lower bound of what simple metadata checks can achieve.
 \paragraph{HaRC.}
 The Hallucinated Reference Checker~\citep{harc2024} queries Semantic Scholar, DBLP, Google Scholar, and Open Library.
 It uses a multi-stage pipeline: DOI lookup, title search, author verification, and venue cross-check.
-Due to Semantic Scholar API rate limiting, HaRC completed evaluation on only 20 of 1,068 dev entries (1.9\%) within our timeout budget.
+Due to Semantic Scholar API rate limiting, HaRC completed evaluation on only 20 of 1,063 dev entries (1.9\%) within our timeout budget.
 
 \paragraph{verify-citations.}
 A pip-installable tool~\citep{verifycitations2025} that queries arXiv, ACL Anthology, Semantic Scholar, DBLP, Google Scholar, and DuckDuckGo.
-Like HaRC, it was rate-limited and completed 71 of 1,068 entries (6.6\%).
+Like HaRC, it was rate-limited and completed 71 of 1,063 entries (6.7\%).
 
 \subsection{Main results}
 \label{sec:main_results}

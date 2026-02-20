@@ -1,7 +1,7 @@
 \section{Limitations}
 \label{sec:limitations}
 
-At 2,560 entries (1,580 hallucinated, with at least 30 instances per type per public split), the dataset provides statistical power per type but remains small relative to the full diversity of possible citation hallucinations.
+At 2,554 entries (1,574 hallucinated, with at least 30 instances per type per public split), the dataset provides statistical power per type but remains small relative to the full diversity of possible citation hallucinations.
 With $\geq$30 instances per type per split, per-type 95\% Clopper-Pearson confidence intervals have width $\leq 0.24$ at detection rates near 0 or 1 (e.g., DR $= 0.90$ with $n=30$ yields CI $[0.74, 0.98]$); at DR $= 0.50$ the width increases to $\approx 0.37$.
 A two-proportion $z$-test with $n=30$ per type achieves 80\% power to detect a detection rate difference of $\geq 0.20$ between tools ($\alpha = 0.05$, two-sided).
 Hallucination prevalence differs across main splits (54.5\% in dev, 65.0\% in test, 56.0\% in hidden) due to the constraint that each of 14 types requires $\geq 30$ instances per main split.
