@@ -38,11 +38,14 @@ Evaluation Protocol:
 
 from __future__ import annotations
 
+import logging
 from collections import defaultdict
 from collections.abc import Callable
 from dataclasses import dataclass
 
 from hallmark.dataset.schema import BenchmarkEntry, EvaluationResult, Prediction
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -273,8 +276,22 @@ def per_tier_metrics(
 def per_type_metrics(
     entries: list[BenchmarkEntry],
     predictions: dict[str, Prediction],
+    compute_ci: bool = False,
 ) -> dict[str, dict[str, float]]:
-    """Compute metrics broken down by hallucination type."""
+    """Compute metrics broken down by hallucination type.
+
+    Args:
+        entries: Benchmark entries.
+        predictions: Tool's predictions.
+        compute_ci: If True, add Wilson score 95% CI keys ``dr_ci_lower`` and
+            ``dr_ci_upper`` for detection rate per type. CI is only meaningful
+            for hallucinated types (n > 0); valid entries get 0.0/0.0.
+
+    Returns:
+        Dict mapping hallucination type to metrics dict. When ``compute_ci``
+        is True, each inner dict also contains ``dr_ci_lower`` and
+        ``dr_ci_upper``.
+    """
     type_entries: dict[str, list[BenchmarkEntry]] = defaultdict(list)
     for entry in entries:
         h_type = entry.hallucination_type or "valid"
@@ -283,12 +300,28 @@ def per_type_metrics(
     result = {}
     for h_type, type_e in sorted(type_entries.items()):
         cm = build_confusion_matrix(type_e, predictions)
-        result[h_type] = {
+        metrics: dict[str, float] = {
             "detection_rate": cm.detection_rate,
             "false_positive_rate": cm.false_positive_rate,
             "f1": cm.f1,
             "count": len(type_e),
         }
+        if compute_ci:
+            z = 1.96  # 95% CI
+            n = cm.tp + cm.fn  # hallucinated entries for this type
+            p = cm.detection_rate
+            if n > 0:
+                denom = 1 + z**2 / n
+                centre = (p + z**2 / (2 * n)) / denom
+                half = z * (p * (1 - p) / n + z**2 / (4 * n**2)) ** 0.5 / denom
+                ci_lower = max(0.0, centre - half)
+                ci_upper = min(1.0, centre + half)
+            else:
+                ci_lower = 0.0
+                ci_upper = 0.0
+            metrics["dr_ci_lower"] = ci_lower
+            metrics["dr_ci_upper"] = ci_upper
+        result[h_type] = metrics
     return result
 
 
@@ -1029,6 +1062,51 @@ def equivalence_test(
     return (is_equivalent, observed_diff, p_tost)
 
 
+def apply_multiple_comparison_correction(
+    p_values: dict[str, float],
+    method: str = "holm",
+) -> dict[str, float]:
+    """Apply multiple comparison correction to a family of p-values.
+
+    When comparing tools across multiple hallucination types or tiers,
+    the family-wise error rate inflates beyond the nominal alpha. This
+    function adjusts p-values to control the false discovery rate.
+
+    Args:
+        p_values: Dict mapping comparison label to raw p-value.
+        method: Correction method. "holm" (Holm-Bonferroni, recommended)
+            or "bonferroni" (more conservative).
+
+    Returns:
+        Dict mapping comparison label to adjusted p-value.
+
+    Example:
+        >>> raw = {"type_a": 0.03, "type_b": 0.01, "type_c": 0.08}
+        >>> apply_multiple_comparison_correction(raw)
+        {'type_b': 0.03, 'type_a': 0.06, 'type_c': 0.08}
+    """
+    if not p_values:
+        return {}
+
+    items = sorted(p_values.items(), key=lambda x: x[1])
+    n = len(items)
+    adjusted: dict[str, float] = {}
+
+    if method == "bonferroni":
+        for label, p in items:
+            adjusted[label] = min(1.0, p * n)
+    elif method == "holm":
+        max_so_far = 0.0
+        for rank, (label, p) in enumerate(items):
+            adj = min(1.0, p * (n - rank))
+            max_so_far = max(max_so_far, adj)
+            adjusted[label] = max_so_far
+    else:
+        raise ValueError(f"Unknown correction method: {method!r}. Use 'holm' or 'bonferroni'.")
+
+    return adjusted
+
+
 def evaluate(
     entries: list[BenchmarkEntry],
     predictions: list[Prediction],
@@ -1077,6 +1155,13 @@ def evaluate(
     num_hallucinated = sum(1 for e in entries if e.label == "HALLUCINATED")
     num_valid = sum(1 for e in entries if e.label == "VALID")
     num_uncertain = sum(1 for p in predictions if p.label == "UNCERTAIN")
+
+    if num_valid == 0:
+        logger.warning(
+            "Split contains zero valid entries. FPR is undefined and "
+            "tier-weighted F1 reduces to weighted recall only. "
+            "Metrics should be interpreted as recall-only diagnostics."
+        )
 
     # Compute bootstrap CIs if requested
     detection_rate_ci = None

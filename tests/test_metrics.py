@@ -7,6 +7,7 @@ import pytest
 from hallmark.dataset.schema import BenchmarkEntry, Prediction
 from hallmark.evaluation.metrics import (
     ConfusionMatrix,
+    apply_multiple_comparison_correction,
     build_confusion_matrix,
     cost_efficiency,
     detect_at_k,
@@ -196,6 +197,83 @@ class TestPerTypeMetrics:
         result = per_type_metrics(entries, preds)
         assert result["fabricated_doi"]["detection_rate"] == 1.0
         assert result["near_miss_title"]["detection_rate"] == 0.0
+
+
+class TestPerTypeMetricsWilsonCI:
+    def _make_entries_preds(self, n: int, dr: float, h_type: str = "fabricated_doi"):
+        """Create n hallucinated entries with detection rate dr."""
+        n_detected = round(n * dr)
+        entries = [_entry(f"h{i}", "HALLUCINATED", h_type=h_type) for i in range(n)]
+        preds = {}
+        for i in range(n):
+            label = "HALLUCINATED" if i < n_detected else "VALID"
+            preds[f"h{i}"] = _pred(f"h{i}", label)
+        return entries, preds
+
+    def test_ci_keys_present_when_compute_ci_true(self):
+        entries, preds = self._make_entries_preds(20, 0.6)
+        result = per_type_metrics(entries, preds, compute_ci=True)
+        assert "dr_ci_lower" in result["fabricated_doi"]
+        assert "dr_ci_upper" in result["fabricated_doi"]
+
+    def test_ci_keys_absent_when_compute_ci_false(self):
+        """Default (compute_ci=False) must not add CI keys — backward compat."""
+        entries, preds = self._make_entries_preds(20, 0.6)
+        result = per_type_metrics(entries, preds)
+        assert "dr_ci_lower" not in result["fabricated_doi"]
+        assert "dr_ci_upper" not in result["fabricated_doi"]
+
+    def test_ci_brackets_detection_rate(self):
+        """CI lower <= DR <= CI upper for every type."""
+        entries, preds = self._make_entries_preds(30, 0.7, h_type="near_miss_title")
+        result = per_type_metrics(entries, preds, compute_ci=True)
+        dr = result["near_miss_title"]["detection_rate"]
+        lo = result["near_miss_title"]["dr_ci_lower"]
+        hi = result["near_miss_title"]["dr_ci_upper"]
+        assert lo <= dr <= hi
+
+    def test_ci_bounds_in_unit_interval(self):
+        entries, preds = self._make_entries_preds(30, 0.5)
+        result = per_type_metrics(entries, preds, compute_ci=True)
+        lo = result["fabricated_doi"]["dr_ci_lower"]
+        hi = result["fabricated_doi"]["dr_ci_upper"]
+        assert 0.0 <= lo <= 1.0
+        assert 0.0 <= hi <= 1.0
+
+    def test_ci_width_reasonable_n30_dr05(self):
+        """For n=30, DR=0.5, Wilson 95% CI width should be ~0.30-0.40."""
+        entries, preds = self._make_entries_preds(30, 0.5)
+        result = per_type_metrics(entries, preds, compute_ci=True)
+        width = result["fabricated_doi"]["dr_ci_upper"] - result["fabricated_doi"]["dr_ci_lower"]
+        assert 0.28 <= width <= 0.42
+
+    def test_ci_zero_for_valid_type_group(self):
+        """Valid entries (h_type=None) have n=0 → CI should be (0.0, 0.0)."""
+        entries = [_entry("v1", "VALID"), _entry("v2", "VALID")]
+        preds = {"v1": _pred("v1", "VALID"), "v2": _pred("v2", "VALID")}
+        result = per_type_metrics(entries, preds, compute_ci=True)
+        assert result["valid"]["dr_ci_lower"] == 0.0
+        assert result["valid"]["dr_ci_upper"] == 0.0
+
+    def test_ci_multiple_types(self):
+        """CI keys are added for every type when compute_ci=True."""
+        entries = [
+            _entry("h1", "HALLUCINATED", h_type="fabricated_doi"),
+            _entry("h2", "HALLUCINATED", h_type="fabricated_doi"),
+            _entry("h3", "HALLUCINATED", h_type="near_miss_title"),
+            _entry("v1", "VALID"),
+        ]
+        preds = {
+            "h1": _pred("h1", "HALLUCINATED"),
+            "h2": _pred("h2", "VALID"),
+            "h3": _pred("h3", "HALLUCINATED"),
+            "v1": _pred("v1", "VALID"),
+        }
+        result = per_type_metrics(entries, preds, compute_ci=True)
+        for type_key in result:
+            assert "dr_ci_lower" in result[type_key], f"missing dr_ci_lower for {type_key}"
+            assert "dr_ci_upper" in result[type_key], f"missing dr_ci_upper for {type_key}"
+            assert result[type_key]["dr_ci_lower"] <= result[type_key]["dr_ci_upper"]
 
 
 class TestCostEfficiency:
@@ -912,3 +990,122 @@ class TestPrescreeningAblation:
         sig = inspect.signature(run_bibtex_check)
         assert "skip_prescreening" in sig.parameters
         assert sig.parameters["skip_prescreening"].default is False
+
+
+class TestMultipleComparisonCorrection:
+    """Tests for apply_multiple_comparison_correction()."""
+
+    def test_bonferroni_multiplies_by_n(self):
+        raw = {"a": 0.01, "b": 0.04, "c": 0.10}
+        result = apply_multiple_comparison_correction(raw, method="bonferroni")
+        assert result["a"] == pytest.approx(0.03)
+        assert result["b"] == pytest.approx(0.12)
+        assert result["c"] == pytest.approx(0.30)
+
+    def test_bonferroni_caps_at_one(self):
+        raw = {"a": 0.5, "b": 0.8}
+        result = apply_multiple_comparison_correction(raw, method="bonferroni")
+        assert result["a"] == pytest.approx(1.0)
+        assert result["b"] == pytest.approx(1.0)
+
+    def test_holm_step_down_logic(self):
+        # Sorted order: type_b (0.01), type_a (0.03), type_c (0.08)
+        # rank 0: adj = min(1, 0.01 * 3) = 0.03; max_so_far = 0.03
+        # rank 1: adj = min(1, 0.03 * 2) = 0.06; max_so_far = 0.06
+        # rank 2: adj = min(1, 0.08 * 1) = 0.08; max_so_far = 0.08
+        raw = {"type_a": 0.03, "type_b": 0.01, "type_c": 0.08}
+        result = apply_multiple_comparison_correction(raw, method="holm")
+        assert result["type_b"] == pytest.approx(0.03)
+        assert result["type_a"] == pytest.approx(0.06)
+        assert result["type_c"] == pytest.approx(0.08)
+
+    def test_holm_monotone_enforcement(self):
+        # When a later (larger) raw p-value would produce a smaller adjusted value,
+        # Holm enforces monotonicity via max_so_far.
+        # raw: x=0.001, y=0.002, z=0.003  n=3
+        # rank 0: 0.001*3=0.003; rank 1: 0.002*2=0.004; rank 2: 0.003*1=0.003 → capped to 0.004
+        raw = {"x": 0.001, "y": 0.002, "z": 0.003}
+        result = apply_multiple_comparison_correction(raw, method="holm")
+        assert result["x"] == pytest.approx(0.003)
+        assert result["y"] == pytest.approx(0.004)
+        assert result["z"] == pytest.approx(0.004)  # monotone enforcement
+
+    def test_empty_dict_returns_empty(self):
+        assert apply_multiple_comparison_correction({}) == {}
+        assert apply_multiple_comparison_correction({}, method="bonferroni") == {}
+
+    def test_invalid_method_raises(self):
+        with pytest.raises(ValueError, match="Unknown correction method"):
+            apply_multiple_comparison_correction({"a": 0.05}, method="fdr_bh")
+
+    def test_adjusted_ge_raw(self):
+        raw = {"t1": 0.01, "t2": 0.03, "t3": 0.05, "t4": 0.10}
+        for method in ("holm", "bonferroni"):
+            result = apply_multiple_comparison_correction(raw, method=method)
+            for label, p in raw.items():
+                assert result[label] >= p, f"{method}: {label} adjusted < raw"
+
+    def test_single_p_value_both_methods_equal(self):
+        raw = {"only": 0.04}
+        holm = apply_multiple_comparison_correction(raw, method="holm")
+        bonf = apply_multiple_comparison_correction(raw, method="bonferroni")
+        # Both multiply by n=1, so adjusted == raw
+        assert holm["only"] == pytest.approx(0.04)
+        assert bonf["only"] == pytest.approx(0.04)
+        assert holm["only"] == pytest.approx(bonf["only"])
+
+
+class TestZeroValidEntriesWarning:
+    """evaluate() with zero valid entries: FPR undefined guard and warning."""
+
+    def _all_hallucinated_entries(self):
+        return [
+            _entry("h1", "HALLUCINATED", tier=1, h_type="fabricated_doi"),
+            _entry("h2", "HALLUCINATED", tier=2, h_type="chimeric_title"),
+            _entry("h3", "HALLUCINATED", tier=3, h_type="near_miss_title"),
+        ]
+
+    def test_runs_without_error(self):
+        entries = self._all_hallucinated_entries()
+        preds = [
+            _pred("h1", "HALLUCINATED"),
+            _pred("h2", "HALLUCINATED"),
+            _pred("h3", "VALID"),
+        ]
+        result = evaluate(entries, preds, tool_name="test", split_name="dev")
+        assert result.num_valid == 0
+        assert result.num_hallucinated == 3
+
+    def test_fpr_is_zero_when_no_valid_entries(self):
+        """ConfusionMatrix.false_positive_rate returns 0.0 when FP+TN == 0."""
+        entries = self._all_hallucinated_entries()
+        preds = [
+            _pred("h1", "HALLUCINATED"),
+            _pred("h2", "HALLUCINATED"),
+            _pred("h3", "HALLUCINATED"),
+        ]
+        result = evaluate(entries, preds, tool_name="test", split_name="dev")
+        assert result.false_positive_rate == 0.0
+
+    def test_detection_rate_and_f1_valid(self):
+        """Metrics other than FPR should still be meaningful."""
+        entries = self._all_hallucinated_entries()
+        preds = [
+            _pred("h1", "HALLUCINATED"),
+            _pred("h2", "HALLUCINATED"),
+            _pred("h3", "VALID"),
+        ]
+        result = evaluate(entries, preds, tool_name="test", split_name="dev")
+        assert result.detection_rate == pytest.approx(2 / 3)
+        assert 0.0 <= result.f1_hallucination <= 1.0
+        assert 0.0 <= result.tier_weighted_f1 <= 1.0
+
+    def test_warning_emitted(self, caplog):
+        """logger.warning should fire when num_valid == 0."""
+        import logging
+
+        entries = self._all_hallucinated_entries()
+        preds = [_pred("h1", "HALLUCINATED"), _pred("h2", "VALID"), _pred("h3", "VALID")]
+        with caplog.at_level(logging.WARNING, logger="hallmark.evaluation.metrics"):
+            evaluate(entries, preds, tool_name="test", split_name="dev")
+        assert any("zero valid entries" in record.message for record in caplog.records)
