@@ -44,6 +44,7 @@ OPENROUTER_MODELS: dict[str, str] = {
     "deepseek-v3": "deepseek/deepseek-v3.2",
     "qwen": "qwen/qwen3-235b-a22b-2507",
     "mistral": "mistralai/mistral-large-2512",
+    "gemini-flash": "google/gemini-2.5-flash",
 }
 
 

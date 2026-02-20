@@ -204,6 +204,7 @@ HALLMARK also wraps several external citation verification tools as baselines:
 | `llm_openrouter_deepseek_v3` | DeepSeek V3.2 | OpenRouter | `OPENROUTER_API_KEY` |
 | `llm_openrouter_qwen` | Qwen 3 235B | OpenRouter | `OPENROUTER_API_KEY` |
 | `llm_openrouter_mistral` | Mistral Large | OpenRouter | `OPENROUTER_API_KEY` |
+| `llm_openrouter_gemini_flash` | Gemini 2.5 Flash | OpenRouter | `OPENROUTER_API_KEY` |
 
 ```python
 # Use the baseline registry to discover and run any baseline

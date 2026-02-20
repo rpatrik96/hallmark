@@ -175,6 +175,7 @@ class TestRegistry:
         assert "llm_openrouter_deepseek_v3" in names
         assert "llm_openrouter_qwen" in names
         assert "llm_openrouter_mistral" in names
+        assert "llm_openrouter_gemini_flash" in names
 
     def test_list_baselines_free_only(self):
         from hallmark.baselines.registry import list_baselines
@@ -188,6 +189,7 @@ class TestRegistry:
         assert "llm_openrouter_deepseek_v3" not in free
         assert "llm_openrouter_qwen" not in free
         assert "llm_openrouter_mistral" not in free
+        assert "llm_openrouter_gemini_flash" not in free
 
     def test_check_available_doi_only(self):
         from hallmark.baselines.registry import check_available
@@ -242,6 +244,7 @@ class TestRegistry:
             "llm_openrouter_deepseek_v3",
             "llm_openrouter_qwen",
             "llm_openrouter_mistral",
+            "llm_openrouter_gemini_flash",
         ]:
             info = reg[name]
             assert info.requires_api_key is True
