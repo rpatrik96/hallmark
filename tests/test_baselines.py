@@ -3,6 +3,8 @@
 import json
 from unittest.mock import MagicMock, patch
 
+import pytest
+
 from hallmark.baselines.doi_only import check_doi
 from hallmark.baselines.ensemble import EnsembleConfig, ensemble_predict
 from hallmark.baselines.llm_verifier import _parse_llm_response
@@ -391,6 +393,9 @@ class TestVerifyCitationsBaseline:
 
 
 # --- LLM OpenRouter ---
+
+
+openai = pytest.importorskip("openai")
 
 
 class TestLLMOpenRouter:
