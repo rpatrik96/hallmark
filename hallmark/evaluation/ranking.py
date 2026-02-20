@@ -19,16 +19,19 @@ evaluation), the Plackett-Luce model enables fair ranking by:
 1. **Pairwise Comparisons**: For each benchmark entry, compare tools that both have
    predictions for that entry. Tools are not penalized for missing entries.
 
-2. **Correctness Scoring**: Each prediction receives a score:
-   - 1.0 if label matches ground truth, 0.0 otherwise
-   - For hallucinated entries: score weighted by confidence (rewards confident correct
-     predictions, penalizes overconfident incorrect ones)
+2. **Correctness Scoring**: Each prediction receives a confidence-weighted score:
+   - correct: score = confidence (rewards correct + high confidence)
+   - incorrect: score = 1 - confidence (partial credit for calibrated uncertainty)
+   - Applies uniformly to all entry types (HALLUCINATED and VALID)
    - UNCERTAIN predictions treated as VALID (conservative, per evaluation protocol)
 
 3. **ILSR Ranking**: Iterative Luce Spectral Ranking aggregates pairwise comparisons
    into global tool rankings, accounting for varying coverage and difficulty.
 
-4. **Fallback**: If choix is unavailable or pairwise data is insufficient, falls back
+4. **Tie-breaking**: Exact ties use deterministic hash-based random assignment so
+   that all entry-pair comparisons contribute to the pairwise count.
+
+5. **Fallback**: If choix is unavailable or pairwise data is insufficient, falls back
    to mean-score ranking on covered entries.
 
 Usage:
@@ -51,6 +54,7 @@ References:
 from __future__ import annotations
 
 import csv
+import hashlib
 import logging
 from pathlib import Path
 
@@ -65,11 +69,12 @@ def build_results_matrix(
 ) -> tuple[list[str], list[str], list[list[float | None]]]:
     """Build entries x tools matrix of correctness scores.
 
-    For each entry-tool pair, computes a correctness score:
-    - 1.0 if prediction matches ground truth label
-    - 0.0 if prediction does not match
-    - For hallucinated entries, weight by confidence (correctness * confidence)
+    For each entry-tool pair, computes a confidence-weighted correctness score:
+    - correct: score = confidence (rewards correct + high confidence)
+    - incorrect: score = 1 - confidence (partial credit for calibrated uncertainty)
     - None if tool has no prediction for this entry
+
+    Scoring is symmetric across all entry types (HALLUCINATED and VALID).
 
     Args:
         entries: List of benchmark entries with ground truth labels
@@ -108,18 +113,10 @@ def build_results_matrix(
             # Treat UNCERTAIN as VALID (per evaluation protocol)
             pred_label = "VALID" if pred.label == "UNCERTAIN" else pred.label
 
-            # Compute correctness
+            # Confidence-weighted scoring (symmetric across all entry types):
+            # correct: reward high confidence; incorrect: reward low confidence
             is_correct = pred_label == entry.label
-            correctness = 1.0 if is_correct else 0.0
-
-            # Weight hallucinated entries by confidence
-            # (Penalize overconfident incorrect predictions)
-            if entry.label == "HALLUCINATED":
-                # Correct: reward by confidence; incorrect: partial credit for low confidence
-                score = pred.confidence if is_correct else 1.0 - pred.confidence
-            else:
-                # For valid entries, simple correctness
-                score = correctness
+            score = pred.confidence if is_correct else 1.0 - pred.confidence
 
             row.append(score)
 
@@ -139,6 +136,9 @@ def rank_tools_plackett_luce(
     Converts the results matrix into pairwise comparisons and estimates tool
     parameters using iterative Luce spectral ranking (ILSR). Handles sparse and
     incomplete data gracefully.
+
+    Tied scores use deterministic hash-based tie-breaking so all entry-pair
+    comparisons contribute to the pairwise count.
 
     Falls back to mean-score ranking if choix is not installed.
 
@@ -168,7 +168,7 @@ def rank_tools_plackett_luce(
     # For each entry, compare each pair of tools that have predictions
     comparisons: list[tuple[int, int]] = []
 
-    for row in matrix:
+    for entry_key, row in zip(entry_keys, matrix, strict=True):
         # Find tools with predictions for this entry
         available_tools = [(idx, score) for idx, score in enumerate(row) if score is not None]
 
@@ -181,15 +181,24 @@ def rank_tools_plackett_luce(
                 idx_i, score_i = available_tools[i]
                 idx_j, score_j = available_tools[j]
 
-                # Winner is the tool with higher score
-                # Add epsilon for tie-breaking
+                tool_a = tool_names[idx_i]
+                tool_b = tool_names[idx_j]
+
                 if score_i > score_j + 1e-9:
                     # Tool i wins
                     comparisons.append((idx_i, idx_j))
                 elif score_j > score_i + 1e-9:
                     # Tool j wins
                     comparisons.append((idx_j, idx_i))
-                # Skip exact ties
+                else:
+                    # Exact tie: deterministic hash-based random assignment.
+                    # On average carries no information (50/50) but preserves
+                    # the pairwise comparison count for all entry types.
+                    tie_seed = hashlib.sha256(f"{entry_key}:{tool_a}:{tool_b}".encode()).digest()[0]
+                    if tie_seed % 2 == 0:
+                        comparisons.append((idx_i, idx_j))
+                    else:
+                        comparisons.append((idx_j, idx_i))
 
     if not comparisons:
         logger.warning("No pairwise comparisons available. Falling back to mean-score ranking.")

@@ -61,17 +61,19 @@ class TestBuildResultsMatrix:
         t1_idx = names.index("tool1")
         assert matrix[1][t1_idx] is None
 
-    def test_correct_valid_prediction_scores_1(self):
+    def test_correct_valid_prediction_scores_confidence(self):
         entries = [BenchmarkEntry(**_entry("a", "VALID"))]
         tool_preds = {"t": [_pred("a", "VALID", 0.9)]}
         _, _, matrix = build_results_matrix(entries, tool_preds)
-        assert matrix[0][0] == 1.0
+        # Symmetric scoring: correct → confidence
+        assert matrix[0][0] == pytest.approx(0.9)
 
-    def test_incorrect_valid_prediction_scores_0(self):
+    def test_incorrect_valid_prediction_scores_1_minus_confidence(self):
         entries = [BenchmarkEntry(**_entry("a", "VALID"))]
         tool_preds = {"t": [_pred("a", "HALLUCINATED", 0.9)]}
         _, _, matrix = build_results_matrix(entries, tool_preds)
-        assert matrix[0][0] == 0.0
+        # Symmetric scoring: incorrect → 1 - confidence
+        assert matrix[0][0] == pytest.approx(0.1)
 
     def test_correct_hallucinated_weighted_by_confidence(self):
         entries = [BenchmarkEntry(**_entry("a", "HALLUCINATED", 1, "fabricated_doi"))]

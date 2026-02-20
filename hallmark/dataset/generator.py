@@ -21,6 +21,31 @@ from hallmark.dataset.schema import (
     HallucinationType,
 )
 
+# Provably fictional DOI prefixes (99990+, 88880+, 77770+, 66660+ ranges are unregistered).
+# Do NOT include any real registrant prefixes (e.g. 10.48550 is arXiv, 10.1145 is ACM).
+FAKE_DOI_PREFIXES = [
+    "10.99990",
+    "10.99991",
+    "10.99992",
+    "10.99993",
+    "10.99994",
+    "10.99995",
+    "10.99996",
+    "10.99997",
+    "10.99998",
+    "10.99999",
+    "10.88880",
+    "10.88881",
+    "10.88882",
+    "10.88883",
+    "10.77770",
+    "10.77771",
+    "10.77772",
+    "10.77773",
+    "10.66660",
+    "10.66661",
+]
+
 
 def generate_fabricated_doi(
     entry: BenchmarkEntry, rng: random.Random | None = None
@@ -28,30 +53,7 @@ def generate_fabricated_doi(
     """Tier 1: Replace DOI with a non-resolving fabricated DOI."""
     rng = rng or random.Random()
     new_entry = _clone_entry(entry)
-    fake_prefix = rng.choice(
-        [
-            "10.9999",
-            "10.8888",
-            "10.7777",
-            "10.6666",
-            "10.5432",
-            "10.1234",
-            "10.4321",
-            "10.3141",
-            "10.2718",
-            "10.1618",
-            "10.48550",
-            "10.32614",
-            "10.15439",
-            "10.21033",
-            "10.60715",
-            "10.47281",
-            "10.93105",
-            "10.82004",
-            "10.55910",
-            "10.71336",
-        ]
-    )
+    fake_prefix = rng.choice(FAKE_DOI_PREFIXES)
     # Vary suffix patterns to avoid a single learnable format
     suffix_style = rng.choice(["path", "id", "year_id", "conf_id"])
     if suffix_style == "path":
@@ -714,7 +716,20 @@ def generate_near_miss_title(
     _expansions = {v.lower(): k for k, v in _abbreviations.items()}
 
     new_title = title
-    if len(words) >= 3:
+    if len(words) < 3:
+        # Short titles: all normal strategies require >=3 words.
+        # Guarantee a change by appending or replacing with a plausible ML word.
+        _fallback_words = ["Revisited", "Improved", "Extended", "Revisited", "Unified"]
+        fallback = rng.choice(_fallback_words)
+        if len(words) == 0:
+            new_title = fallback
+        elif len(words) == 1:
+            # Replace the single word to ensure the title actually changes
+            new_title = f"{words[0]} {fallback}"
+        else:
+            # 2 words: replace the last word with the fallback
+            new_title = f"{words[0]} {fallback}"
+    elif len(words) >= 3:
         # Choose a mutation strategy (no "swap" -- it breaks grammar)
         strategy = rng.choice(
             ["synonym", "plural", "synonym", "spelling", "abbreviation", "hyphen"]
@@ -1161,7 +1176,8 @@ def generate_plausible_fabrication(
     # Remove DOI (fabricated paper won't have one)
     new_entry.fields.pop("doi", None)
 
-    has_identifier = bool(new_entry.fields.get("doi") or new_entry.fields.get("url"))
+    # DOI was just removed above; URL is stripped by _clone_entry — so no identifier exists.
+    has_identifier = False
     new_entry.label = "HALLUCINATED"
     new_entry.hallucination_type = HallucinationType.PLAUSIBLE_FABRICATION.value
     new_entry.difficulty_tier = DifficultyTier.HARD.value
@@ -1404,7 +1420,13 @@ def generate_hybrid_fabrication(
                 words[idx] = swap_words[word_lower]
             elif rng.random() < 0.5:
                 words[idx] = rng.choice(["Enhanced", "Improved", "Advanced", "Novel", "Efficient"])
-        new_entry.fields["title"] = " ".join(words)
+        modified_title = " ".join(words)
+        # Guarantee the title actually changed; the swap dict is small and the
+        # per-attempt fallback fires with p=0.5, so (0.5)^num_swaps ≈ 12.5% chance
+        # of zero modification without this guard.
+        if modified_title == title:
+            modified_title = "Improved " + title
+        new_entry.fields["title"] = modified_title
 
     new_entry.label = "HALLUCINATED"
     new_entry.hallucination_type = HallucinationType.HYBRID_FABRICATION.value

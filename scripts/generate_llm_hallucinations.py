@@ -53,7 +53,10 @@ logger = logging.getLogger(__name__)
 
 # CrossRef API configuration
 CROSSREF_API = "https://api.crossref.org/works"
-CROSSREF_HEADERS = {"User-Agent": "HALLMARK-Generator/1.0 (mailto:patrik.reizinger@gmail.com)"}
+CROSSREF_HEADERS = {
+    "User-Agent": "HALLMARK-Benchmark/1.0",
+    "mailto": os.environ.get("CROSSREF_EMAIL", "hallmark-benchmark@example.com"),
+}
 RATE_LIMIT_DELAY = 1.0  # seconds between requests
 
 # SSL context for macOS
@@ -406,13 +409,31 @@ def parse_bibtex_entry(bibtex_str: str) -> dict | None:
         entry_type = match.group(1).lower()
         key = match.group(2).strip()
 
-        # Extract fields
-        fields = {}
-        field_pattern = r"(\w+)\s*=\s*[{\"](.*?)[}\"](?:,|\s*\})"
-        for match in re.finditer(field_pattern, bibtex_str, re.DOTALL):
-            field_name = match.group(1).lower()
-            field_value = match.group(2).strip()
-            fields[field_name] = field_value
+        # Extract fields using a brace-counting parser to handle nested braces
+        # e.g. title = {A {Transformer} Model} would be truncated by a naive regex
+        fields: dict[str, str] = {}
+        field_pattern = re.compile(r"(\w+)\s*=\s*")
+        for fm in field_pattern.finditer(bibtex_str):
+            field_name = fm.group(1).lower()
+            start = fm.end()
+            if start >= len(bibtex_str):
+                continue
+            delim = bibtex_str[start]
+            if delim == "{":
+                depth = 1
+                i = start + 1
+                while i < len(bibtex_str) and depth > 0:
+                    if bibtex_str[i] == "{":
+                        depth += 1
+                    elif bibtex_str[i] == "}":
+                        depth -= 1
+                    i += 1
+                if depth == 0:
+                    fields[field_name] = bibtex_str[start + 1 : i - 1].strip()
+            elif delim == '"':
+                end = bibtex_str.find('"', start + 1)
+                if end != -1:
+                    fields[field_name] = bibtex_str[start + 1 : end].strip()
 
         return {"type": entry_type, "key": key, "fields": fields}
     except Exception as e:

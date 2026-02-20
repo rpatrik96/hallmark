@@ -86,7 +86,7 @@ class TestLLMVerifierParsing:
 
     def test_parse_invalid_json(self):
         pred = _parse_llm_response("not json at all", "test_key")
-        assert pred.label == "VALID"  # Fallback
+        assert pred.label == "UNCERTAIN"  # Fallback on parse error
         assert pred.confidence == 0.5
 
     def test_clamp_confidence(self):
@@ -97,7 +97,65 @@ class TestLLMVerifierParsing:
     def test_invalid_label_fallback(self):
         content = json.dumps({"label": "MAYBE", "confidence": 0.5})
         pred = _parse_llm_response(content, "test_key")
+        assert pred.label == "UNCERTAIN"
+
+    def test_parse_failure_returns_uncertain(self):
+        """Issue 4 + 5: Parse failure must return UNCERTAIN, not VALID."""
+        pred = _parse_llm_response("{broken json{{", "test_key")
+        assert pred.label == "UNCERTAIN"
+        assert pred.confidence == 0.5
+        assert "[Error fallback]" in pred.reason
+
+    def test_multi_code_block_parses_json_block(self):
+        """Issue 5: Response with text block before JSON block — must find JSON block."""
+        content = (
+            "```text\n"
+            "Here is my analysis of the citation.\n"
+            "```\n"
+            "```json\n"
+            '{"label": "HALLUCINATED", "confidence": 0.92, "reason": "author mismatch"}\n'
+            "```"
+        )
+        pred = _parse_llm_response(content, "test_key")
+        assert pred.label == "HALLUCINATED"
+        assert pred.confidence == 0.92
+        assert "author mismatch" in pred.reason
+
+    def test_single_code_block_regression(self):
+        """Regression: single fenced JSON block must still parse correctly."""
+        content = '```json\n{"label": "VALID", "confidence": 0.88, "reason": "looks real"}\n```'
+        pred = _parse_llm_response(content, "test_key")
         assert pred.label == "VALID"
+        assert pred.confidence == 0.88
+
+    def test_api_error_returns_uncertain(self):
+        """Issue 4: API errors must produce UNCERTAIN, not VALID."""
+        from unittest.mock import MagicMock, patch
+
+        entries = [_entry("api_err_key")]
+
+        with (
+            patch("hallmark.baselines.llm_verifier._parse_llm_response") as _mock_parse,
+            patch("openai.OpenAI") as mock_cls,
+        ):
+            mock_client = MagicMock()
+            mock_cls.return_value = mock_client
+            mock_client.chat.completions.create.side_effect = RuntimeError("network timeout")
+
+            from hallmark.baselines.llm_verifier import _verify_with_openai_compatible
+
+            preds = _verify_with_openai_compatible(
+                entries,
+                model="gpt-5.1",
+                api_key="sk-test",
+                base_url=None,
+                source_prefix="openai",
+            )
+
+        assert len(preds) == 1
+        assert preds[0].label == "UNCERTAIN"
+        assert preds[0].confidence == 0.5
+        assert "[Error fallback]" in preds[0].reason
 
 
 # --- Ensemble ---

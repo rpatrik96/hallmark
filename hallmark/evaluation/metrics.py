@@ -125,6 +125,18 @@ def tier_weighted_f1(
 
     Each hallucinated entry contributes to F1 proportionally to its tier weight.
     UNCERTAIN predictions are treated as VALID (conservative).
+
+    FP weighting note:
+    - False positives (valid entries incorrectly flagged) are always weighted at 1.0,
+      regardless of the tier_weights scheme. This is intentional: valid entries have
+      no difficulty tier, so there is no principled basis for tier-weighting them.
+    - Consequence: precision is independent of tier weighting; only recall is
+      tier-weighted. This differs from standard macro-weighted F1, where both
+      precision and recall are uniformly weighted across classes.
+    - Use `tier_weight_sensitivity` to assess how robust TW-F1 scores are to
+      different weighting schemes.
+
+    Entries with difficulty_tier=None are assigned to tier 1 (the default tier).
     """
     if tier_weights is None:
         tier_weights = {1: 1.0, 2: 2.0, 3: 3.0}
@@ -163,17 +175,21 @@ def tier_weighted_f1(
     return 2 * precision * recall / (precision + recall)
 
 
-def detect_at_k(
+def union_recall_at_k(
     entries: list[BenchmarkEntry],
     predictions_per_strategy: list[dict[str, Prediction]],
     k: int | None = None,
 ) -> dict[int, float]:
-    """Compute detect@k: fraction of hallucinations detected using k strategies.
+    """Compute the fraction of hallucinations detected by the union of the first k strategies.
 
-    Analogous to HumanEval's pass@k. A hallucination is "detected" if ANY of the
-    first k strategies flags it.
-
+    A hallucination is "detected" if ANY of the first k strategies flags it as HALLUCINATED.
     UNCERTAIN predictions are treated as VALID (conservative, not counted as detections).
+
+    Note on naming: this metric is sometimes called detect@k, but that name is misleading
+    because it implies an analogy with HumanEval's pass@k. HumanEval's pass@k uses an
+    unbiased stochastic estimator (sampling without replacement from n attempts); this metric
+    is deterministic and order-dependent — results change if you reorder the strategy list.
+    Use this function directly when you want the deterministic union-recall formulation.
 
     Args:
         entries: Benchmark entries.
@@ -207,6 +223,30 @@ def detect_at_k(
     return results
 
 
+def detect_at_k(
+    entries: list[BenchmarkEntry],
+    predictions_per_strategy: list[dict[str, Prediction]],
+    k: int | None = None,
+) -> dict[int, float]:
+    """Deprecated alias for `union_recall_at_k`.
+
+    Computes the fraction of hallucinations detected by the union of the first k strategies.
+    Unlike HumanEval's pass@k (which uses an unbiased stochastic estimator), this metric
+    is deterministic and order-dependent.
+
+    Use `union_recall_at_k` directly for new code.
+
+    Args:
+        entries: Benchmark entries.
+        predictions_per_strategy: List of prediction dicts, one per verification strategy.
+        k: If provided, compute only for this k. Otherwise compute for k=1..len(strategies).
+
+    Returns:
+        Dict mapping k -> fraction of hallucinations detected by at least one of k strategies.
+    """
+    return union_recall_at_k(entries, predictions_per_strategy, k)
+
+
 def per_tier_metrics(
     entries: list[BenchmarkEntry],
     predictions: dict[str, Prediction],
@@ -214,7 +254,7 @@ def per_tier_metrics(
     """Compute metrics broken down by difficulty tier."""
     tier_entries: dict[int, list[BenchmarkEntry]] = defaultdict(list)
     for entry in entries:
-        tier = entry.difficulty_tier or 0
+        tier = entry.difficulty_tier or 1
         tier_entries[tier].append(entry)
 
     result = {}
@@ -294,6 +334,7 @@ def expected_calibration_error(
     entries: list[BenchmarkEntry],
     predictions: dict[str, Prediction],
     n_bins: int = 10,
+    adaptive: bool = False,
 ) -> float:
     """Compute Expected Calibration Error (ECE).
 
@@ -304,6 +345,17 @@ def expected_calibration_error(
     predicting HALLUCINATED with confidence 0.9 claims 90% certainty.
 
     UNCERTAIN predictions are treated as VALID with the reported confidence.
+
+    Args:
+        entries: Benchmark entries (ground truth).
+        predictions: Tool's predictions.
+        n_bins: Number of bins for calibration estimation.
+        adaptive: If True, use equal-frequency (quantile) binning — sort predictions
+            by confidence and split into n_bins equal-sized groups. This avoids
+            pathological empty-bin behaviour for deterministic tools that concentrate
+            all predictions in 2 bins (e.g., confidence in {0.0, 1.0}). If False
+            (default), use fixed equal-width bins [0, 1/n_bins), [1/n_bins, 2/n_bins),
+            … for backward compatibility.
     """
     if not predictions:
         return 0.0
@@ -323,22 +375,44 @@ def expected_calibration_error(
     if not pairs:
         return 0.0
 
-    # Create bins
-    bins: list[list[tuple[float, bool]]] = [[] for _ in range(n_bins)]
-    for conf, correct in pairs:
-        bin_idx = min(int(conf * n_bins), n_bins - 1)
-        bins[bin_idx].append((conf, correct))
-
-    # Compute ECE
     ece = 0.0
     total = len(pairs)
-    for bin_data in bins:
-        if not bin_data:
-            continue
-        bin_size = len(bin_data)
-        avg_conf = sum(conf for conf, _ in bin_data) / bin_size
-        accuracy = sum(1 for _, correct in bin_data if correct) / bin_size
-        ece += (bin_size / total) * abs(accuracy - avg_conf)
+
+    if adaptive:
+        # Equal-frequency (quantile) binning: sort by confidence and split evenly
+        sorted_pairs = sorted(pairs, key=lambda x: x[0])
+        bin_size_base = total // n_bins
+        remainder = total % n_bins
+        bins_adaptive: list[list[tuple[float, bool]]] = []
+        start = 0
+        for i in range(n_bins):
+            # Distribute remainder among the first `remainder` bins
+            end = start + bin_size_base + (1 if i < remainder else 0)
+            if start < total:
+                bins_adaptive.append(sorted_pairs[start:end])
+            start = end
+
+        for bin_data in bins_adaptive:
+            if not bin_data:
+                continue
+            bin_size = len(bin_data)
+            avg_conf = sum(conf for conf, _ in bin_data) / bin_size
+            accuracy = sum(1 for _, correct in bin_data if correct) / bin_size
+            ece += (bin_size / total) * abs(accuracy - avg_conf)
+    else:
+        # Fixed equal-width bins (default, backward compatible)
+        bins: list[list[tuple[float, bool]]] = [[] for _ in range(n_bins)]
+        for conf, correct in pairs:
+            bin_idx = min(int(conf * n_bins), n_bins - 1)
+            bins[bin_idx].append((conf, correct))
+
+        for bin_data in bins:
+            if not bin_data:
+                continue
+            bin_size = len(bin_data)
+            avg_conf = sum(conf for conf, _ in bin_data) / bin_size
+            accuracy = sum(1 for _, correct in bin_data if correct) / bin_size
+            ece += (bin_size / total) * abs(accuracy - avg_conf)
 
     return ece
 

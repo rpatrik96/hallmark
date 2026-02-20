@@ -89,9 +89,9 @@ def _verify_with_openai_compatible(
             logger.warning(f"{source_prefix} API error for {entry.bibtex_key}: {e}")
             pred = Prediction(
                 bibtex_key=entry.bibtex_key,
-                label="VALID",
+                label="UNCERTAIN",
                 confidence=0.5,
-                reason=f"API error: {e}",
+                reason=f"[Error fallback] API error: {e}",
             )
 
         pred.wall_clock_seconds = time.time() - start
@@ -166,9 +166,9 @@ def verify_with_anthropic(
             logger.warning(f"Anthropic API error for {entry.bibtex_key}: {e}")
             pred = Prediction(
                 bibtex_key=entry.bibtex_key,
-                label="VALID",
+                label="UNCERTAIN",
                 confidence=0.5,
-                reason=f"API error: {e}",
+                reason=f"[Error fallback] API error: {e}",
             )
 
         pred.wall_clock_seconds = time.time() - start
@@ -181,19 +181,47 @@ def verify_with_anthropic(
 
 def _parse_llm_response(content: str, bibtex_key: str) -> Prediction:
     """Parse LLM JSON response into a Prediction."""
-    # Try to extract JSON from response
-    try:
-        # Handle markdown code blocks
-        if "```" in content:
-            content = content.split("```")[1]
-            if content.startswith("json"):
-                content = content[4:]
-            content = content.strip()
+    original_content = content
 
-        data = json.loads(content)
-        label = data.get("label", "VALID").upper()
+    def _try_parse(text: str) -> dict | None:
+        text = text.strip()
+        try:
+            data = json.loads(text)
+            if isinstance(data, dict) and "label" in data:
+                return data
+        except (json.JSONDecodeError, ValueError):
+            pass
+        return None
+
+    # Try bare JSON first (no fences)
+    if "```" not in content:
+        data = _try_parse(content)
+    else:
+        # Iterate over all fenced blocks (odd-indexed after split on ```)
+        data = None
+        blocks = content.split("```")
+        for i in range(1, len(blocks), 2):
+            block = blocks[i]
+            # Strip language identifier (e.g., "json\n" or "JSON\n")
+            if block.lower().startswith("json"):
+                block = block[4:]
+            data = _try_parse(block)
+            if data is not None:
+                break
+
+    if data is None:
+        logger.warning(f"Failed to parse LLM response for {bibtex_key}")
+        return Prediction(
+            bibtex_key=bibtex_key,
+            label="UNCERTAIN",
+            confidence=0.5,
+            reason=f"[Error fallback] Parse error: {original_content[:100]}",
+        )
+
+    try:
+        label = data.get("label", "UNCERTAIN").upper()
         if label not in ("VALID", "HALLUCINATED"):
-            label = "VALID"
+            label = "UNCERTAIN"
 
         confidence = float(data.get("confidence", 0.5))
         confidence = max(0.0, min(1.0, confidence))
@@ -204,11 +232,11 @@ def _parse_llm_response(content: str, bibtex_key: str) -> Prediction:
             confidence=confidence,
             reason=data.get("reason", ""),
         )
-    except (json.JSONDecodeError, ValueError, IndexError) as e:
-        logger.warning(f"Failed to parse LLM response for {bibtex_key}: {e}")
+    except (ValueError, TypeError) as e:
+        logger.warning(f"Failed to extract fields from LLM response for {bibtex_key}: {e}")
         return Prediction(
             bibtex_key=bibtex_key,
-            label="VALID",
+            label="UNCERTAIN",
             confidence=0.5,
-            reason=f"Parse error: {content[:100]}",
+            reason=f"[Error fallback] Parse error: {original_content[:100]}",
         )
