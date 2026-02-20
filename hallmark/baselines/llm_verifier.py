@@ -9,6 +9,7 @@ from __future__ import annotations
 import json
 import logging
 import time
+from typing import Any
 
 from hallmark.baselines.common import fallback_predictions
 from hallmark.dataset.schema import BenchmarkEntry, Prediction
@@ -38,20 +39,35 @@ Respond with JSON only:
     "reason": "brief explanation"
 }}"""
 
+OPENROUTER_MODELS: dict[str, str] = {
+    "deepseek-r1": "deepseek/deepseek-r1",
+    "deepseek-v3": "deepseek/deepseek-v3.2",
+    "qwen": "qwen/qwen3-235b-a22b-2507",
+    "mistral": "mistralai/mistral-large-2512",
+}
 
-def verify_with_openai(
+
+def _verify_with_openai_compatible(
     entries: list[BenchmarkEntry],
-    model: str = "gpt-5.1",
-    api_key: str | None = None,
+    model: str,
+    api_key: str | None,
+    base_url: str | None,
+    source_prefix: str,
+    **kwargs: Any,
 ) -> list[Prediction]:
-    """Verify entries using OpenAI API."""
+    """Shared verification loop for OpenAI-SDK-compatible providers."""
     try:
         import openai
     except ImportError:
         logger.error("openai package not installed. Install with: pip install openai")
         return fallback_predictions(entries, reason="LLM baseline unavailable")
 
-    client = openai.OpenAI(api_key=api_key) if api_key else openai.OpenAI()
+    client_kwargs: dict[str, Any] = {}
+    if api_key:
+        client_kwargs["api_key"] = api_key
+    if base_url:
+        client_kwargs["base_url"] = base_url
+    client = openai.OpenAI(**client_kwargs)
     predictions = []
 
     for entry in entries:
@@ -69,7 +85,7 @@ def verify_with_openai(
             content = response.choices[0].message.content.strip()
             pred = _parse_llm_response(content, entry.bibtex_key)
         except Exception as e:
-            logger.warning(f"OpenAI API error for {entry.bibtex_key}: {e}")
+            logger.warning(f"{source_prefix} API error for {entry.bibtex_key}: {e}")
             pred = Prediction(
                 bibtex_key=entry.bibtex_key,
                 label="VALID",
@@ -79,10 +95,42 @@ def verify_with_openai(
 
         pred.wall_clock_seconds = time.time() - start
         pred.api_calls = 1
-        pred.api_sources_queried = [f"openai/{model}"]
+        pred.api_sources_queried = [f"{source_prefix}/{model}"]
         predictions.append(pred)
 
     return predictions
+
+
+def verify_with_openai(
+    entries: list[BenchmarkEntry],
+    model: str = "gpt-5.1",
+    api_key: str | None = None,
+    **kwargs: Any,
+) -> list[Prediction]:
+    """Verify entries using OpenAI API."""
+    return _verify_with_openai_compatible(
+        entries,
+        model=model,
+        api_key=api_key,
+        base_url=None,
+        source_prefix="openai",
+    )
+
+
+def verify_with_openrouter(
+    entries: list[BenchmarkEntry],
+    model: str = "deepseek/deepseek-r1",
+    api_key: str | None = None,
+    **kwargs: Any,
+) -> list[Prediction]:
+    """Verify entries using OpenRouter API (100+ models via OpenAI-compatible endpoint)."""
+    return _verify_with_openai_compatible(
+        entries,
+        model=model,
+        api_key=api_key,
+        base_url="https://openrouter.ai/api/v1",
+        source_prefix="openrouter",
+    )
 
 
 def verify_with_anthropic(

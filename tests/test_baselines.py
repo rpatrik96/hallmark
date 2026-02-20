@@ -169,6 +169,10 @@ class TestRegistry:
         assert "llm_openai" in names
         assert "llm_anthropic" in names
         assert "ensemble" in names
+        assert "llm_openrouter_deepseek_r1" in names
+        assert "llm_openrouter_deepseek_v3" in names
+        assert "llm_openrouter_qwen" in names
+        assert "llm_openrouter_mistral" in names
 
     def test_list_baselines_free_only(self):
         from hallmark.baselines.registry import list_baselines
@@ -178,6 +182,10 @@ class TestRegistry:
         assert "ensemble" in free
         assert "llm_openai" not in free
         assert "llm_anthropic" not in free
+        assert "llm_openrouter_deepseek_r1" not in free
+        assert "llm_openrouter_deepseek_v3" not in free
+        assert "llm_openrouter_qwen" not in free
+        assert "llm_openrouter_mistral" not in free
 
     def test_check_available_doi_only(self):
         from hallmark.baselines.registry import check_available
@@ -222,6 +230,21 @@ class TestRegistry:
             assert isinstance(info.is_free, bool)
             assert isinstance(info.requires_api_key, bool)
             assert isinstance(info.pip_packages, list)
+
+    def test_openrouter_baselines_info(self):
+        from hallmark.baselines.registry import get_registry
+
+        reg = get_registry()
+        for name in [
+            "llm_openrouter_deepseek_r1",
+            "llm_openrouter_deepseek_v3",
+            "llm_openrouter_qwen",
+            "llm_openrouter_mistral",
+        ]:
+            info = reg[name]
+            assert info.requires_api_key is True
+            assert info.is_free is False
+            assert "openai" in info.pip_packages
 
     def test_no_prescreening_variants_registered(self):
         from hallmark.baselines.registry import list_baselines
@@ -365,6 +388,40 @@ class TestVerifyCitationsBaseline:
         assert len(preds) == 1
         assert preds[0].label == "VALID"
         assert preds[0].confidence == 0.5
+
+
+# --- LLM OpenRouter ---
+
+
+class TestLLMOpenRouter:
+    @patch("openai.OpenAI")
+    def test_verify_with_openrouter_uses_correct_base_url(self, mock_openai_cls):
+        """Verify that OpenRouter uses the correct base_url and model."""
+        from hallmark.baselines.llm_verifier import verify_with_openrouter
+
+        # Mock the client and response
+        mock_client = MagicMock()
+        mock_openai_cls.return_value = mock_client
+
+        mock_choice = MagicMock()
+        mock_choice.message.content = json.dumps(
+            {"label": "HALLUCINATED", "confidence": 0.9, "reason": "fake"}
+        )
+        mock_response = MagicMock()
+        mock_response.choices = [mock_choice]
+        mock_client.chat.completions.create.return_value = mock_response
+
+        entries = [_entry("test_or")]
+        preds = verify_with_openrouter(entries, model="deepseek/deepseek-r1", api_key="sk-test")
+
+        # Check OpenAI client was created with OpenRouter base_url
+        mock_openai_cls.assert_called_once_with(
+            api_key="sk-test", base_url="https://openrouter.ai/api/v1"
+        )
+
+        assert len(preds) == 1
+        assert preds[0].label == "HALLUCINATED"
+        assert preds[0].api_sources_queried == ["openrouter/deepseek/deepseek-r1"]
 
 
 # --- Pre-screening tests ---

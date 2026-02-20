@@ -316,6 +316,33 @@ def _register_builtins() -> None:
         )
     )
 
+    # --- LLM: OpenRouter (per-model baselines) ---
+    from hallmark.baselines.llm_verifier import OPENROUTER_MODELS
+
+    for friendly_name, model_id in OPENROUTER_MODELS.items():
+        baseline_name = f"llm_openrouter_{friendly_name.replace('-', '_')}"
+
+        def _make_openrouter_runner(
+            mid: str,
+        ) -> Callable[..., list[Prediction]]:
+            def _run(entries: list[BenchmarkEntry], **kw: Any) -> list[Prediction]:
+                from hallmark.baselines.llm_verifier import verify_with_openrouter
+
+                return verify_with_openrouter(entries, model=mid, **kw)
+
+            return _run
+
+        register(
+            BaselineInfo(
+                name=baseline_name,
+                description=f"OpenRouter citation verification ({model_id})",
+                runner=_make_openrouter_runner(model_id),
+                pip_packages=["openai"],
+                requires_api_key=True,
+                is_free=False,
+            )
+        )
+
     # --- Ensemble ---
     def _run_ensemble(entries: list[BenchmarkEntry], **kw: Any) -> list[Prediction]:
         from hallmark.baselines.ensemble import ensemble_predict

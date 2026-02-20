@@ -7,6 +7,9 @@ Supported backends:
 - anthropic: Anthropic API (Claude 3.5/4)
 - mistral: Mistral API (Mistral Large, etc.)
 - gemini: Google Gemini API (Gemini Pro, etc.)
+- openrouter: OpenRouter API (100+ models via OpenAI-compatible endpoint)
+  Model presets: deepseek-r1, deepseek-v3, qwen, mistral
+  Usage: --backend openrouter --model deepseek/deepseek-r1
 
 Two strategies:
 1. Naive bibliography: Ask LLM to write bibliographies on topics, verify against CrossRef
@@ -251,12 +254,49 @@ class GeminiBackend(LLMBackend):
         return parts[0].get("text", "").strip() if parts else ""
 
 
+class OpenRouterBackend(LLMBackend):
+    """OpenRouter API backend (100+ models via OpenAI-compatible endpoint)."""
+
+    name = "openrouter"
+
+    def __init__(self, model: str = "deepseek/deepseek-r1") -> None:
+        self.model = model
+        api_key = os.environ.get("OPENROUTER_API_KEY")
+        if not api_key:
+            raise RuntimeError(
+                "OPENROUTER_API_KEY not set. Get your key at "
+                "https://openrouter.ai/keys then: "
+                "export OPENROUTER_API_KEY='sk-or-...'"
+            )
+        import openai
+
+        self.client = openai.OpenAI(api_key=api_key, base_url="https://openrouter.ai/api/v1")
+
+    def generate(self, prompt: str, temperature: float = 0.7, max_tokens: int = 2048) -> str:
+        response = self.client.chat.completions.create(
+            model=self.model,
+            messages=[{"role": "user", "content": prompt}],
+            temperature=temperature,
+            max_completion_tokens=max_tokens,
+        )
+        return response.choices[0].message.content.strip()
+
+
+OPENROUTER_MODEL_PRESETS: dict[str, str] = {
+    "deepseek-r1": "deepseek/deepseek-r1",
+    "deepseek-v3": "deepseek/deepseek-v3.2",
+    "qwen": "qwen/qwen3-235b-a22b-2507",
+    "mistral": "mistralai/mistral-large-2512",
+}
+
+
 BACKENDS: dict[str, type[LLMBackend]] = {
     "openai": OpenAIBackend,
     "ollama": OllamaBackend,
     "anthropic": AnthropicBackend,
     "mistral": MistralBackend,
     "gemini": GeminiBackend,
+    "openrouter": OpenRouterBackend,
 }
 
 # Default models per backend
@@ -266,6 +306,7 @@ DEFAULT_MODELS: dict[str, str] = {
     "anthropic": "claude-sonnet-4-5-20250929",
     "mistral": "mistral-large-latest",
     "gemini": "gemini-2.0-flash",
+    "openrouter": "deepseek/deepseek-r1",
 }
 
 
