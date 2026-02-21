@@ -86,6 +86,7 @@ class SparseEvaluation:
 def aggregate_scores(
     sparse_eval: SparseEvaluation,
     method: str = "mean_of_means",
+    seed: int = 42,
 ) -> list[ToolScore]:
     """Aggregate sparse evaluation results into tool rankings.
 
@@ -96,18 +97,25 @@ def aggregate_scores(
           More robust to selection bias.
         - "entry_mean": For each entry, compute mean subtest score, then
           average across entries. Simple and interpretable.
+
+    Args:
+        sparse_eval: Sparse evaluation matrix.
+        method: Aggregation method (see above).
+        seed: Random seed for bootstrap CI reproducibility.
     """
+    if np is None:
+        raise ImportError("numpy is required for score aggregation: pip install numpy")
     if method == "mean_of_means":
-        return _aggregate_mean_of_means(sparse_eval)
+        return _aggregate_mean_of_means(sparse_eval, seed=seed)
     elif method == "pairwise":
         return _aggregate_pairwise(sparse_eval)
     elif method == "entry_mean":
-        return _aggregate_entry_mean(sparse_eval)
+        return _aggregate_entry_mean(sparse_eval, seed=seed)
     else:
         raise ValueError(f"Unknown aggregation method: {method}")
 
 
-def _aggregate_mean_of_means(sparse_eval: SparseEvaluation) -> list[ToolScore]:
+def _aggregate_mean_of_means(sparse_eval: SparseEvaluation, seed: int = 42) -> list[ToolScore]:
     """Mean-of-means aggregation: average across subtests, then across entries."""
     results = []
 
@@ -128,7 +136,7 @@ def _aggregate_mean_of_means(sparse_eval: SparseEvaluation) -> list[ToolScore]:
 
         if subtest_means:
             overall = sum(subtest_means.values()) / len(subtest_means)
-            ci = _bootstrap_ci(list(subtest_means.values()))
+            ci = _bootstrap_ci(list(subtest_means.values()), seed=seed)
         else:
             overall = 0.0
             ci = (0.0, 0.0)
@@ -207,7 +215,7 @@ def _aggregate_pairwise(sparse_eval: SparseEvaluation) -> list[ToolScore]:
     return results
 
 
-def _aggregate_entry_mean(sparse_eval: SparseEvaluation) -> list[ToolScore]:
+def _aggregate_entry_mean(sparse_eval: SparseEvaluation, seed: int = 42) -> list[ToolScore]:
     """Entry-mean aggregation: average subtests per entry, then average entries."""
     results = []
 
@@ -228,7 +236,7 @@ def _aggregate_entry_mean(sparse_eval: SparseEvaluation) -> list[ToolScore]:
 
         if entry_scores:
             overall = sum(entry_scores) / len(entry_scores)
-            ci = _bootstrap_ci(entry_scores)
+            ci = _bootstrap_ci(entry_scores, seed=seed)
         else:
             overall = 0.0
             ci = (0.0, 0.0)
@@ -253,16 +261,19 @@ def _bootstrap_ci(
     values: list[float],
     n_bootstrap: int = 10_000,
     confidence: float = 0.95,
+    seed: int = 42,
 ) -> tuple[float, float]:
-    """Compute bootstrap confidence interval."""
-    if np is None:
-        raise ImportError("numpy is required for bootstrap CIs: pip install numpy")
+    """Compute bootstrap confidence interval.
+
+    numpy availability is checked at the aggregate_scores entry point;
+    callers of this private function are guaranteed np is not None.
+    """
     if len(values) < 2:
         mean = values[0] if values else 0.0
         return (mean, mean)
 
     arr = np.array(values)
-    rng = np.random.default_rng(42)
+    rng = np.random.default_rng(seed)
     bootstrap_means = []
 
     for _ in range(n_bootstrap):

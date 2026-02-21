@@ -25,7 +25,25 @@ class TemporalSegment:
         return self.start <= d <= self.end
 
 
-# Default temporal segments
+def default_segments() -> list[TemporalSegment]:
+    """Return temporal segments computed relative to the current date.
+
+    - historical: 2015-01-01 through end of (current_year - 2)
+    - recent:     start of (current_year - 1) through end of current_year
+    - future:     start of (current_year + 1) through end of (current_year + 5)
+
+    Prefer this over the module-level DEFAULT_SEGMENTS constant, which is
+    frozen at import time and becomes stale as years pass.
+    """
+    today = date.today()
+    return [
+        TemporalSegment("historical", date(2015, 1, 1), date(today.year - 2, 12, 31)),
+        TemporalSegment("recent", date(today.year - 1, 1, 1), date(today.year, 12, 31)),
+        TemporalSegment("future", date(today.year + 1, 1, 1), date(today.year + 5, 12, 31)),
+    ]
+
+
+# Deprecated: frozen at import time; use default_segments() for date-relative segments.
 DEFAULT_SEGMENTS = [
     TemporalSegment("historical", date(2015, 1, 1), date(2023, 12, 31)),
     TemporalSegment("recent", date(2024, 1, 1), date(2025, 12, 31)),
@@ -61,7 +79,7 @@ def segment_entries(
 ) -> dict[str, list[BenchmarkEntry]]:
     """Split entries into temporal segments based on publication_date."""
     if segments is None:
-        segments = DEFAULT_SEGMENTS
+        segments = default_segments()
 
     result: dict[str, list[BenchmarkEntry]] = {s.name: [] for s in segments}
     result["unknown"] = []

@@ -33,22 +33,45 @@ HALLMARK draws on best practices from established benchmarks:
 ## Installation
 
 ```bash
-pip install hallmark
-
-# With baseline dependencies
-pip install hallmark[baselines]
-
-# With ranking support (Plackett-Luce model)
-pip install hallmark[ranking]
-
-# All optional dependencies
-pip install hallmark[all]
-
-# Development install (recommended: use uv)
+# Recommended: clone and install in development mode
 git clone https://github.com/rpatrik96/hallmark.git
 cd hallmark
 uv pip install -e ".[dev]"
+
+# With LLM baseline SDKs (openai, anthropic)
+uv pip install -e ".[baselines]"
+
+# With ranking support (Plackett-Luce model via choix)
+uv pip install -e ".[ranking]"
+
+# All optional dependencies
+uv pip install -e ".[all]"
 ```
+
+> **Note**: `pip install hallmark` is not yet published to PyPI. Use the clone + install path above.
+
+### Baseline Installation Guide
+
+The `[baselines]` extra installs only the LLM SDKs (`openai`, `anthropic`). External CLI tools require separate installation due to a `bibtexparser` 1.x dependency conflict:
+
+```bash
+# HaRC
+pipx install harcx
+
+# bibtex-updater
+pipx install bibtex-updater
+
+# verify-citations
+pipx install verify-citations
+
+# CiteVerifier (GhostCite) — clone required
+git clone https://github.com/NKU-AOSP-Lab/CiteVerifier
+
+# hallucinator — clone required
+git clone https://github.com/gianlucasb/hallucinator
+```
+
+Using `pipx` isolates each tool's `bibtexparser` 1.x from your project environment.
 
 ## Quick Start
 
@@ -86,6 +109,48 @@ python scripts/run_all_baselines.py --baselines free --skip-unavailable
 ```bash
 hallmark leaderboard --results-dir results/
 ```
+
+See [`examples/`](examples/) for full walkthroughs, including [writing a custom baseline](examples/03_custom_baseline.py) and [per-type analysis](examples/02_per_type_analysis.py).
+
+## Evaluate Your Tool
+
+To evaluate any external tool against HALLMARK, produce a JSONL file with one prediction per line and run:
+
+```bash
+hallmark evaluate --predictions my_preds.jsonl --split dev_public
+```
+
+Each prediction must include:
+
+```json
+{
+  "bibtex_key": "a3f9c2b1...",
+  "label": "HALLUCINATED",
+  "confidence": 0.87,
+  "reason": "DOI does not resolve",
+  "subtest_results": {"doi_resolves": false},
+  "api_sources_queried": ["crossref"],
+  "wall_clock_seconds": 1.2,
+  "api_calls": 1
+}
+```
+
+> **bibtex_key format**: Keys in the benchmark are hex hashes (e.g., `a3f9c2b1d4e7...`), not human-readable keys like `vaswani2017attention`. Your predictions **must** use the exact keys from the loaded entries — use `entry.bibtex_key` when iterating over `load_split()` results.
+
+See [`examples/03_custom_baseline.py`](examples/03_custom_baseline.py) for a complete end-to-end example.
+
+### Prediction Fields
+
+| Field | Required | Affects |
+|-------|----------|---------|
+| `bibtex_key` | Yes | Entry matching |
+| `label` | Yes | All metrics |
+| `confidence` | Yes | ECE, AUROC, AUPRC |
+| `reason` | No | Diagnose output |
+| `subtest_results` | No | Subtest accuracy |
+| `api_sources_queried` | No | Source-stratified metrics |
+| `wall_clock_seconds` | No | Cost efficiency |
+| `api_calls` | No | Mean API calls |
 
 ## Hallucination Taxonomy
 
@@ -131,13 +196,26 @@ hallmark leaderboard --results-dir results/
 
 Tier distribution per split: ~27% Tier 1, ~47% Tier 2, ~26% Tier 3 (hallucinated entries).
 
+### Subtest Definitions
+
+| Subtest | Definition |
+|---------|------------|
+| `doi_resolves` | DOI returns HTTP 200 from doi.org (redirects count as resolved) |
+| `title_exists` | Title found in Semantic Scholar or DBLP via exact or fuzzy match (threshold 0.9) |
+| `authors_match` | Author last names match the record retrieved via DOI or title lookup |
+| `venue_correct` | The venue/journal is correct for this specific paper (not just "a real venue") |
+| `fields_complete` | All standard BibTeX fields for this entry type are present and non-empty |
+| `cross_db_agreement` | Metadata from DOI resolution matches metadata from title/author search in DBLP/S2 |
+
 ### Data Format
 
 Each entry is a JSON object in JSONL format:
 
+> **bibtex_key format**: Keys are hex hashes (e.g., `a3f9c2b1d4e7...`), not human-readable keys. When writing predictions, always use `entry.bibtex_key` directly — do not construct keys manually.
+
 ```json
 {
-  "bibtex_key": "vaswani2017attention",
+  "bibtex_key": "a3f9c2b1d4e76f85",
   "bibtex_type": "inproceedings",
   "fields": {
     "title": "Attention Is All You Need",
@@ -226,23 +304,6 @@ See also:
 - [HalluCitation paper](https://arxiv.org/abs/2601.18724) — analysis of ~300 hallucinated papers in ACL conferences
 - [GPTZero Hallucination Detector](https://gptzero.me/hallucination-detector) — commercial API for citation verification
 
-## Custom Predictions Format
-
-To evaluate your own tool, produce a JSONL file with one prediction per line:
-
-```json
-{
-  "bibtex_key": "vaswani2017attention",
-  "label": "VALID",
-  "confidence": 0.95,
-  "reason": "DOI resolves, title found in DBLP"
-}
-```
-
-Then run:
-```bash
-hallmark evaluate --split dev_public --predictions predictions.jsonl --tool-name my-tool --output results/my_tool.json
-```
 
 ## Python API
 

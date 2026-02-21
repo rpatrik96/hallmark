@@ -17,7 +17,7 @@ from hallmark.dataset.schema import BenchmarkEntry, Prediction
 logger = logging.getLogger(__name__)
 
 
-def check_doi(doi: str, timeout: float = 10.0) -> tuple[bool, str]:
+def check_doi(doi: str, timeout: float = 10.0) -> tuple[bool | None, str]:
     """Check if a DOI resolves."""
     if not doi:
         return True, "No DOI to check"
@@ -46,7 +46,7 @@ def check_doi(doi: str, timeout: float = 10.0) -> tuple[bool, str]:
         else:
             return False, f"DOI returned HTTP {resp.status_code}"
     except (httpx.TimeoutException, httpx.ConnectError) as e:
-        return True, f"Network error (assuming valid): {e}"
+        return None, f"Network error (unresolved): {e}"
 
 
 def run_doi_only(
@@ -89,18 +89,33 @@ def run_doi_only(
         resolves, detail = check_doi(doi, timeout_per_doi)
         elapsed = time.time() - start
 
-        predictions.append(
-            Prediction(
-                bibtex_key=entry.bibtex_key,
-                label="VALID" if resolves else "HALLUCINATED",
-                confidence=0.85 if resolves else 0.75,
-                reason=detail,
-                subtest_results={"doi_resolves": resolves},
-                api_sources_queried=["doi.org"],
-                wall_clock_seconds=elapsed,
-                api_calls=1,
+        if resolves is None:
+            # Indeterminate: network error — treat as VALID with low confidence
+            predictions.append(
+                Prediction(
+                    bibtex_key=entry.bibtex_key,
+                    label="VALID",
+                    confidence=0.5,
+                    reason=f"network_error | {detail}",
+                    subtest_results={"doi_resolves": None},
+                    api_sources_queried=["doi.org"],
+                    wall_clock_seconds=elapsed,
+                    api_calls=1,
+                )
             )
-        )
+        else:
+            predictions.append(
+                Prediction(
+                    bibtex_key=entry.bibtex_key,
+                    label="VALID" if resolves else "HALLUCINATED",
+                    confidence=0.85 if resolves else 0.75,
+                    reason=detail,
+                    subtest_results={"doi_resolves": resolves},
+                    api_sources_queried=["doi.org"],
+                    wall_clock_seconds=elapsed,
+                    api_calls=1,
+                )
+            )
 
     # Merge pre-screening results with tool predictions (unless skipped)
     if not skip_prescreening:

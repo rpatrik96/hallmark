@@ -6,6 +6,8 @@ from collections.abc import Callable
 
 from hallmark.dataset.schema import BenchmarkEntry, Prediction
 
+BothVariantsResult = dict[str, list[Prediction]]
+
 
 def fallback_predictions(
     entries: list[BenchmarkEntry],
@@ -83,3 +85,59 @@ def run_with_prescreening(
         predictions = merge_with_predictions(entries, predictions, prescreen_results)
 
     return predictions
+
+
+def run_baseline_both_variants(
+    entries: list[BenchmarkEntry],
+    baseline_runner: Callable[[list[BenchmarkEntry]], list[Prediction]],
+) -> BothVariantsResult:
+    """Run a baseline with and without pre-screening for fair comparison reporting.
+
+    Runs the baseline twice — once without pre-screening (tool only) and once
+    with pre-screening applied — and returns both result sets. Predictions are
+    tagged via their ``source`` field: ``"tool"`` for pure-tool results and
+    ``"prescreening"`` / ``"prescreening_override"`` where pre-screening
+    changed the outcome.
+
+    Args:
+        entries: Benchmark entries to verify.
+        baseline_runner: Callable that accepts a list of entries and returns
+            predictions **without** any pre-screening. Typically the raw
+            ``run_<baseline>`` function called with ``skip_prescreening=True``.
+
+    Returns:
+        Dict with keys ``"without_prescreening"`` and ``"with_prescreening"``,
+        each mapping to a list of ``Prediction`` objects (one per entry).
+    """
+    from hallmark.baselines.prescreening import merge_with_predictions, prescreen_entries
+
+    # Run tool without pre-screening
+    without = baseline_runner(entries)
+
+    # Tag all tool-only predictions explicitly
+    from dataclasses import replace as _replace
+
+    without_tagged = [_replace(p, source="tool") for p in without]
+
+    # Backfill missing entries for the without-prescreening variant
+    predicted_keys = {p.bibtex_key for p in without_tagged}
+    for entry in entries:
+        if entry.bibtex_key not in predicted_keys:
+            without_tagged.append(
+                Prediction(
+                    bibtex_key=entry.bibtex_key,
+                    label="VALID",
+                    confidence=0.5,
+                    reason="Entry not in tool output",
+                    source="tool",
+                )
+            )
+
+    # Run pre-screening and merge with the tool predictions
+    prescreen_results = prescreen_entries(entries)
+    with_prescreening = merge_with_predictions(entries, list(without_tagged), prescreen_results)
+
+    return {
+        "without_prescreening": without_tagged,
+        "with_prescreening": with_prescreening,
+    }

@@ -89,7 +89,8 @@ def run_cite_verifier(
         json.dump(refs, infile)
         input_path = infile.name
 
-    output_path = tempfile.mktemp(suffix=".json")
+    with tempfile.NamedTemporaryFile(suffix=".json", delete=False) as outfile:
+        output_path = outfile.name
 
     start = time.time()
     try:

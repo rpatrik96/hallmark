@@ -265,6 +265,40 @@ class TestEvaluationResult:
         assert result.ece is None
 
 
+class TestLabelValidation:
+    def test_invalid_entry_label_raises(self):
+        with pytest.raises(ValueError, match="Invalid BenchmarkEntry label"):
+            BenchmarkEntry(
+                bibtex_key="test_invalid",
+                bibtex_type="article",
+                fields={"title": "Test", "author": "A", "year": "2024"},
+                label="INVALID",
+            )
+
+    def test_invalid_prediction_label_raises(self):
+        with pytest.raises(ValueError, match="Invalid Prediction label"):
+            Prediction(bibtex_key="test_invalid", label="INVALID", confidence=0.5)
+
+    def test_valid_entry_labels_accepted(self):
+        for label in ("VALID", "HALLUCINATED"):
+            kwargs: dict = {
+                "bibtex_key": f"test_{label}",
+                "bibtex_type": "article",
+                "fields": {"title": "T", "author": "A", "year": "2024"},
+                "label": label,
+            }
+            if label == "HALLUCINATED":
+                kwargs["hallucination_type"] = "fabricated_doi"
+                kwargs["difficulty_tier"] = 1
+            entry = BenchmarkEntry(**kwargs)
+            assert entry.label == label
+
+    def test_valid_prediction_labels_accepted(self):
+        for label in ("VALID", "HALLUCINATED", "UNCERTAIN"):
+            pred = Prediction(bibtex_key="test", label=label, confidence=0.5)
+            assert pred.label == label
+
+
 class TestBackwardCompatibility:
     def test_swapped_authors_value_still_works(self):
         # Ensure old entries with hallucination_type="swapped_authors" still work

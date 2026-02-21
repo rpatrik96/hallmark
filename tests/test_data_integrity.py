@@ -25,6 +25,7 @@ DATA_DIR = Path("data/v1.0")
 DEV_PATH = DATA_DIR / "dev_public.jsonl"
 TEST_PATH = DATA_DIR / "test_public.jsonl"
 MIN_PER_TYPE = 10
+_PUBLIC_SPLITS = ["dev_public", "test_public"]
 
 
 @pytest.fixture(scope="module")
@@ -342,3 +343,25 @@ class TestSchemaValidation:
                 assert len(e.subtests) == 6, (
                     f"{e.bibtex_key}: has {len(e.subtests)} subtests, expected 6"
                 )
+
+
+# ── Cross-split key disjointness ─────────────────────────────────────────────
+
+
+class TestCrossSplitKeyDisjointness:
+    def test_no_bibtex_key_overlap_across_splits(self) -> None:
+        """Verify bibtex_keys are disjoint across all public splits."""
+        split_paths = {
+            "dev_public": DATA_DIR / "dev_public.jsonl",
+            "test_public": DATA_DIR / "test_public.jsonl",
+        }
+        all_keys: dict[str, str] = {}
+        for split_name, path in split_paths.items():
+            entries = load_entries(path)
+            for e in entries:
+                if e.bibtex_key in all_keys:
+                    pytest.fail(
+                        f"Key {e.bibtex_key!r} appears in both "
+                        f"{all_keys[e.bibtex_key]!r} and {split_name!r}"
+                    )
+                all_keys[e.bibtex_key] = split_name

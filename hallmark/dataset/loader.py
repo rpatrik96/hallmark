@@ -120,19 +120,41 @@ def filter_by_type(
     return [e for e in entries if e.hallucination_type == hallucination_type or e.label == "VALID"]
 
 
+def _normalize_date(d: str) -> str:
+    """Normalize partial ISO dates to full YYYY-MM-DD for lexicographic comparison.
+
+    Assumes well-formed input (digits only in each part). The string comparison
+    is valid only after this normalization; do not compare raw partial dates.
+    """
+    parts = d.split("-")
+    if len(parts) == 1:  # "2024" -> "2024-01-01"
+        return f"{parts[0]}-01-01"
+    if len(parts) == 2:  # "2024-01" -> "2024-01-01"
+        return f"{parts[0]}-{parts[1]:>02}-01"
+    return d
+
+
 def filter_by_date_range(
     entries: list[BenchmarkEntry],
     start_date: str | None = None,
     end_date: str | None = None,
 ) -> list[BenchmarkEntry]:
-    """Filter entries by publication date range (ISO format YYYY-MM-DD)."""
+    """Filter entries by publication date range.
+
+    Accepts full or partial ISO dates (YYYY, YYYY-MM, YYYY-MM-DD) for both
+    entry dates and filter bounds. Partial dates are normalized to YYYY-MM-DD
+    before comparison so lexicographic ordering is correct.
+    """
+    norm_start = _normalize_date(start_date) if start_date else None
+    norm_end = _normalize_date(end_date) if end_date else None
     result = []
     for e in entries:
         if not e.publication_date:
             continue
-        if start_date and e.publication_date < start_date:
+        norm_entry = _normalize_date(e.publication_date)
+        if norm_start and norm_entry < norm_start:
             continue
-        if end_date and e.publication_date > end_date:
+        if norm_end and norm_entry > norm_end:
             continue
         result.append(e)
     return result

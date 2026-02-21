@@ -106,8 +106,14 @@ def check_doi_resolves(entry: BenchmarkEntry) -> PreScreenResult:
         )
 
 
-def check_year_bounds(entry: BenchmarkEntry) -> PreScreenResult:
+def check_year_bounds(entry: BenchmarkEntry, reference_year: int | None = None) -> PreScreenResult:
     """Check if publication year is within plausible bounds.
+
+    Args:
+        entry: Benchmark entry to check.
+        reference_year: Year to use as the upper bound for "future" detection.
+            When None, defaults to the current calendar year. Pass an explicit
+            value for reproducible evaluation runs.
 
     Returns:
         HALLUCINATED (0.95) if year is in the future
@@ -136,7 +142,11 @@ def check_year_bounds(entry: BenchmarkEntry) -> PreScreenResult:
 
     import datetime
 
-    current_year = datetime.datetime.now(tz=datetime.timezone.utc).year
+    current_year = (
+        reference_year
+        if reference_year is not None
+        else datetime.datetime.now(tz=datetime.timezone.utc).year
+    )
 
     if year > current_year:
         return PreScreenResult(
@@ -241,7 +251,7 @@ def check_author_heuristics(entry: BenchmarkEntry) -> PreScreenResult:
     )
 
 
-# Registry of all checks
+# Registry of all checks (excluding check_year_bounds which takes an extra arg)
 ALL_CHECKS: list[Callable[[BenchmarkEntry], PreScreenResult]] = [
     check_doi_resolves,
     check_year_bounds,
@@ -249,8 +259,15 @@ ALL_CHECKS: list[Callable[[BenchmarkEntry], PreScreenResult]] = [
 ]
 
 
-def prescreen_entry(entry: BenchmarkEntry) -> list[PreScreenResult]:
+def prescreen_entry(
+    entry: BenchmarkEntry, reference_year: int | None = None
+) -> list[PreScreenResult]:
     """Run all pre-screening checks on a single entry.
+
+    Args:
+        entry: Benchmark entry to check.
+        reference_year: Optional year for reproducible year-bound checks.
+            When None, uses the current calendar year.
 
     Returns:
         List of results, one per check.
@@ -258,7 +275,10 @@ def prescreen_entry(entry: BenchmarkEntry) -> list[PreScreenResult]:
     results = []
     for check_fn in ALL_CHECKS:
         try:
-            result = check_fn(entry)
+            if check_fn is check_year_bounds:
+                result = check_year_bounds(entry, reference_year=reference_year)
+            else:
+                result = check_fn(entry)
             results.append(result)
         except Exception as e:
             logger.error(f"Check {check_fn.__name__} failed for {entry.bibtex_key}: {e}")
@@ -273,15 +293,22 @@ def prescreen_entry(entry: BenchmarkEntry) -> list[PreScreenResult]:
     return results
 
 
-def prescreen_entries(entries: list[BenchmarkEntry]) -> dict[str, list[PreScreenResult]]:
+def prescreen_entries(
+    entries: list[BenchmarkEntry], reference_year: int | None = None
+) -> dict[str, list[PreScreenResult]]:
     """Run pre-screening on all entries.
+
+    Args:
+        entries: Benchmark entries to check.
+        reference_year: Optional year for reproducible year-bound checks.
+            When None, uses the current calendar year.
 
     Returns:
         Dictionary mapping bibtex_key to list of PreScreenResults.
     """
     results = {}
     for entry in entries:
-        results[entry.bibtex_key] = prescreen_entry(entry)
+        results[entry.bibtex_key] = prescreen_entry(entry, reference_year=reference_year)
     return results
 
 

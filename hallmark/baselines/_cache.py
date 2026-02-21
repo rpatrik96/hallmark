@@ -7,8 +7,8 @@ backoff retry to handle transient network errors gracefully.
 
 from __future__ import annotations
 
-import fcntl
 import hashlib
+import importlib.util
 import logging
 import shelve
 import time
@@ -16,11 +16,19 @@ from collections.abc import Callable
 from pathlib import Path
 from typing import Any, TypeVar
 
+_HAS_FCNTL: bool = importlib.util.find_spec("fcntl") is not None
+
 logger = logging.getLogger(__name__)
 
 T = TypeVar("T")
 
 _DEFAULT_CACHE_DIR = Path.home() / ".cache" / "hallmark"
+
+# Sentinel object used to distinguish "key absent" from a cached falsy value.
+_MISSING: object = object()
+
+# Emit the no-fcntl warning at most once per process.
+_fcntl_warning_emitted: bool = False
 
 
 def _cache_dir() -> Path:
@@ -35,27 +43,56 @@ def content_hash(data: str) -> str:
 
 
 def _locked_shelve_read(db_path: str, key: str) -> Any:
-    """Read from shelve with a shared (read) file lock."""
+    """Read from shelve with a shared (read) file lock.
+
+    Returns ``_MISSING`` when the key is absent so that callers can
+    distinguish a missing entry from a cached falsy value (``None``,
+    ``False``, ``0``, ``""``).
+    """
+    global _fcntl_warning_emitted
     lock_path = db_path + ".lock"
-    with open(lock_path, "a") as lock_file:
-        fcntl.flock(lock_file, fcntl.LOCK_SH)
-        try:
-            with shelve.open(db_path) as db:
-                return db.get(key)
-        finally:
-            fcntl.flock(lock_file, fcntl.LOCK_UN)
+    if _HAS_FCNTL:
+        import fcntl as _fcntl
+
+        with open(lock_path, "a") as lock_file:
+            _fcntl.flock(lock_file, _fcntl.LOCK_SH)
+            try:
+                with shelve.open(db_path) as db:
+                    return db.get(key, _MISSING)
+            finally:
+                _fcntl.flock(lock_file, _fcntl.LOCK_UN)
+    else:
+        if not _fcntl_warning_emitted:
+            logger.warning(
+                "fcntl not available on this platform; concurrent cache access is not protected"
+            )
+            _fcntl_warning_emitted = True
+        with shelve.open(db_path) as db:
+            return db.get(key, _MISSING)
 
 
 def _locked_shelve_write(db_path: str, key: str, value: Any) -> None:
     """Write to shelve with an exclusive (write) file lock."""
+    global _fcntl_warning_emitted
     lock_path = db_path + ".lock"
-    with open(lock_path, "a") as lock_file:
-        fcntl.flock(lock_file, fcntl.LOCK_EX)
-        try:
-            with shelve.open(db_path) as db:
-                db[key] = value
-        finally:
-            fcntl.flock(lock_file, fcntl.LOCK_UN)
+    if _HAS_FCNTL:
+        import fcntl as _fcntl
+
+        with open(lock_path, "a") as lock_file:
+            _fcntl.flock(lock_file, _fcntl.LOCK_EX)
+            try:
+                with shelve.open(db_path) as db:
+                    db[key] = value
+            finally:
+                _fcntl.flock(lock_file, _fcntl.LOCK_UN)
+    else:
+        if not _fcntl_warning_emitted:
+            logger.warning(
+                "fcntl not available on this platform; concurrent cache access is not protected"
+            )
+            _fcntl_warning_emitted = True
+        with shelve.open(db_path) as db:
+            db[key] = value
 
 
 def cached_call(
@@ -79,7 +116,7 @@ def cached_call(
     db_path = str(d / namespace)
 
     cached = _locked_shelve_read(db_path, key)
-    if cached is not None:
+    if cached is not _MISSING:
         logger.debug("Cache hit: %s/%s", namespace, key[:12])
         return cached  # type: ignore[return-value,no-any-return]
 
@@ -141,7 +178,7 @@ def clear_cache(namespace: str, cache_dir: Path | None = None) -> None:
     """Remove all cached entries for *namespace*."""
     d = cache_dir or _cache_dir()
     db_path = d / namespace
-    for suffix in ("", ".db", ".dir", ".bak", ".dat"):
+    for suffix in ("", ".db", ".dir", ".bak", ".dat", ".lock"):
         p = db_path.with_suffix(suffix) if suffix else db_path
         if p.exists():
             p.unlink()

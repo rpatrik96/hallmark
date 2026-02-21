@@ -126,7 +126,8 @@ def run_hallucinator(
     with tempfile.NamedTemporaryFile(suffix=".pdf", delete=False) as f:
         pdf_path = f.name
 
-    output_path = tempfile.mktemp(suffix=".txt")
+    with tempfile.NamedTemporaryFile(suffix=".txt", delete=False) as outfile:
+        output_path = outfile.name
 
     try:
         _create_minimal_pdf(entries, pdf_path)

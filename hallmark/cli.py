@@ -15,14 +15,14 @@ import logging
 import sys
 from pathlib import Path
 
-from hallmark.dataset.loader import get_statistics, load_split
+from hallmark.dataset.loader import filter_by_tier, filter_by_type, get_statistics, load_split
 from hallmark.dataset.schema import (
     BenchmarkEntry,
     Prediction,
     load_entries,
     load_predictions,
 )
-from hallmark.evaluation.metrics import evaluate
+from hallmark.evaluation.metrics import build_confusion_matrix, evaluate
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -62,9 +62,7 @@ def main(argv: list[str] | None = None) -> int:
         default=0,
         help="Max entries to evaluate (0 = all). Selects a stratified sample preserving hallucination ratio.",
     )
-    eval_parser.add_argument(
-        "--tool-name", default="unknown", help="Name of the tool being evaluated"
-    )
+    eval_parser.add_argument("--tool-name", default=None, help="Name of the tool being evaluated")
     eval_parser.add_argument(
         "--detailed",
         action="store_true",
@@ -75,6 +73,20 @@ def main(argv: list[str] | None = None) -> int:
         action="store_true",
         default=False,
         help="Compute bootstrap confidence intervals (requires numpy)",
+    )
+    eval_parser.add_argument(
+        "--filter-tier",
+        type=int,
+        choices=[1, 2, 3],
+        default=None,
+        help="Filter entries to a specific difficulty tier (1, 2, or 3)",
+    )
+    eval_parser.add_argument(
+        "--filter-type",
+        type=str,
+        default=None,
+        metavar="TYPE",
+        help='Filter entries to a specific hallucination type (e.g., "fabricated_doi")',
     )
 
     # --- contribute ---
@@ -110,6 +122,12 @@ def main(argv: list[str] | None = None) -> int:
         "--results-dir",
         type=str,
         help="Directory containing evaluation result JSONs",
+    )
+    lb_parser.add_argument(
+        "--sort-by",
+        default="f1",
+        choices=["f1", "mcc", "tw_f1", "detection_rate", "ece"],
+        help="Metric to sort leaderboard by (default: f1)",
     )
 
     # --- list-baselines ---
@@ -231,6 +249,15 @@ def _cmd_evaluate(args: argparse.Namespace) -> int:
 
     logging.info(f"Loaded {len(entries)} entries from {args.split}")
 
+    # Apply tier/type filters before sampling
+    if args.filter_tier is not None:
+        entries = filter_by_tier(entries, args.filter_tier)
+        logging.info(f"Filtered to tier {args.filter_tier}: {len(entries)} entries remaining")
+
+    if args.filter_type is not None:
+        entries = filter_by_type(entries, args.filter_type)
+        logging.info(f"Filtered to type '{args.filter_type}': {len(entries)} entries remaining")
+
     # Subsample if requested (stratified by label)
     if args.max_entries and 0 < args.max_entries < len(entries):
         entries = _stratified_sample(entries, args.max_entries)
@@ -238,17 +265,25 @@ def _cmd_evaluate(args: argparse.Namespace) -> int:
 
     # Get predictions
     predictions: list[Prediction]
-    tool_name = args.tool_name
+    tool_name: str = args.tool_name or "unknown"
 
     if args.predictions:
         predictions = load_predictions(args.predictions)
         logging.info(f"Loaded {len(predictions)} predictions from {args.predictions}")
+        # Infer tool name from filename if not explicitly provided
+        if args.tool_name is None:
+            tool_name = Path(args.predictions).stem
     elif args.baseline:
         predictions = _run_baseline(args.baseline, entries)
         tool_name = args.baseline
     else:
         logging.error("Provide --predictions or --baseline")
         return 1
+
+    # Filter predictions to match filtered entries
+    if args.filter_tier is not None or args.filter_type is not None:
+        entry_keys = {e.bibtex_key for e in entries}
+        predictions = [p for p in predictions if p.bibtex_key in entry_keys]
 
     # Evaluate
     result = evaluate(
@@ -269,6 +304,15 @@ def _cmd_evaluate(args: argparse.Namespace) -> int:
     print(f"  Valid:            {result.num_valid}")
     if result.num_uncertain > 0:
         print(f"  Uncertain:        {result.num_uncertain}")
+
+    # Confusion matrix
+    pred_map = {p.bibtex_key: p for p in predictions}
+    cm = build_confusion_matrix(entries, pred_map)
+    print(f"{'─' * 60}")
+    print("  Confusion Matrix:")
+    print(f"    TP: {cm.tp:<6} FP: {cm.fp}")
+    print(f"    FN: {cm.fn:<6} TN: {cm.tn}")
+
     print(f"{'─' * 60}")
     print(f"  Detection Rate:   {result.detection_rate:.3f}")
     if result.detection_rate_ci:
@@ -299,6 +343,10 @@ def _cmd_evaluate(args: argparse.Namespace) -> int:
         print(f"  ECE:              {result.ece:.3f}")
         if result.ece_ci:
             print(f"    95% CI: [{result.ece_ci[0]:.3f}, {result.ece_ci[1]:.3f}]")
+    if result.auroc is not None:
+        print(f"  AUROC:            {result.auroc:.3f}")
+    if result.auprc is not None:
+        print(f"  AUPRC:            {result.auprc:.3f}")
     if result.cost_efficiency:
         print(f"  Entries/sec:      {result.cost_efficiency:.1f}")
     if result.mean_api_calls:
@@ -328,7 +376,6 @@ def _cmd_evaluate(args: argparse.Namespace) -> int:
         # Compute and display subtest accuracy
         from hallmark.evaluation.metrics import subtest_accuracy_table
 
-        pred_map = {p.bibtex_key: p for p in predictions}
         subtest_acc = subtest_accuracy_table(entries, pred_map)
         if subtest_acc:
             print(f"{'─' * 60}")
@@ -412,6 +459,16 @@ def _cmd_stats(args: argparse.Namespace) -> int:
     return 0
 
 
+# Mapping from --sort-by choices to result dict field names
+_LEADERBOARD_SORT_FIELDS: dict[str, str] = {
+    "f1": "f1_hallucination",
+    "mcc": "mcc",
+    "tw_f1": "tier_weighted_f1",
+    "detection_rate": "detection_rate",
+    "ece": "ece",
+}
+
+
 def _cmd_leaderboard(args: argparse.Namespace) -> int:
     """Show leaderboard from saved evaluation results."""
     results_dir = Path(args.results_dir) if args.results_dir else Path("results")
@@ -431,11 +488,14 @@ def _cmd_leaderboard(args: argparse.Namespace) -> int:
         print("No evaluation results found.")
         return 0
 
-    # Sort by F1
-    results.sort(key=lambda r: r.get("f1_hallucination", 0), reverse=True)
+    # Sort by selected metric
+    sort_field = _LEADERBOARD_SORT_FIELDS.get(args.sort_by, "f1_hallucination")
+    # For ECE lower is better; for all others higher is better
+    reverse = args.sort_by != "ece"
+    results.sort(key=lambda r: r.get(sort_field) or 0, reverse=reverse)
 
     print(f"\n{'=' * 70}")
-    print(f"  HALLMARK Leaderboard: {args.split}")
+    print(f"  HALLMARK Leaderboard: {args.split}  (sorted by {args.sort_by})")
     print(f"{'=' * 70}")
     print(f"  {'Rank':<6}{'Tool':<25}{'F1':<8}{'DR':<8}{'FPR':<8}{'TW-F1':<8}{'MCC':<8}")
     print(f"  {'─' * 70}")

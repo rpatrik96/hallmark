@@ -25,7 +25,7 @@ Hallucinated entries must:
 
 **Tier 2 (Medium):** `chimeric_title`, `wrong_venue`, `author_mismatch` (covers swapped and fabricated authors), `preprint_as_published`, `hybrid_fabrication`
 
-**Tier 3 (Hard):** `near_miss_title`, `plausible_fabrication`, `retracted_paper`, `arxiv_version_mismatch`
+**Tier 3 (Hard):** `near_miss_title`, `plausible_fabrication`, `arxiv_version_mismatch`
 
 ## How to Contribute
 
@@ -64,7 +64,24 @@ Or open a pull request adding your entries to `data/pool/contributions/`.
 - Maintainers verify hallucinated entries are genuinely undetectable at claimed difficulty tier
 - Accepted entries are added to the validated pool and may appear in future benchmark versions
 
-## Contributing Baselines
+## Adding a New Hallucination Type
+
+Adding a new type requires changes in 7 locations:
+
+1. **Enum member**: Add to `HallucinationType` in `hallmark/dataset/schema.py`
+2. **Tier mapping**: Add to `HALLUCINATION_TIER_MAP` in the same file
+3. **Stress-test flag** (if applicable): Add to `STRESS_TEST_TYPES`
+4. **Generator function**: Create in `hallmark/dataset/generators/tier{N}.py` following the signature pattern:
+   ```python
+   def generate_your_type(entry: BenchmarkEntry, rng: Random) -> BenchmarkEntry:
+   ```
+5. **Generator exports**: Add to `hallmark/dataset/generators/__init__.py`
+6. **Batch dispatcher**: Add dispatch logic in `hallmark/dataset/generators/batch.py`
+7. **Tests**: Add generation tests in `tests/test_generator.py`
+
+See `generate_fabricated_doi` in `tier1.py` for the simplest example.
+
+## Adding a New Baseline
 
 New baselines are registered via the central registry in `hallmark/baselines/registry.py`. To add a baseline:
 
@@ -74,6 +91,24 @@ New baselines are registered via the central registry in `hallmark/baselines/reg
 4. If the baseline is free (no API key), add it to the CI matrix in `.github/workflows/baselines.yml`
 
 See existing baselines (e.g., `verify_citations_baseline.py`) for reference.
+
+### Pre-screening Integration
+
+HALLMARK applies a pre-screening layer (DOI resolution, year bounds, author heuristics) before external tools. For fair comparison, your baseline should integrate pre-screening using the provided helper:
+
+```python
+from hallmark.baselines.common import run_with_prescreening
+
+def run_my_tool(entries, **kwargs):
+    return run_with_prescreening(
+        entries=entries,
+        tool_fn=_my_tool_core,  # your actual tool logic
+        tool_name="my_tool",
+        **kwargs,
+    )
+```
+
+Results are reported both with and without pre-screening for transparency.
 
 ## Development Setup
 

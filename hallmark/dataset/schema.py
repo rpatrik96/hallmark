@@ -95,7 +95,7 @@ SUBTEST_NAMES = [
     "doi_resolves",
     "title_exists",
     "authors_match",
-    "venue_real",
+    "venue_correct",
     "fields_complete",
     "cross_db_agreement",
 ]
@@ -106,7 +106,7 @@ VALID_SUBTESTS: dict[str, bool | None] = {
     "doi_resolves": True,
     "title_exists": True,
     "authors_match": True,
-    "venue_real": True,
+    "venue_correct": True,
     "fields_complete": True,
     "cross_db_agreement": True,
 }
@@ -118,6 +118,12 @@ class BenchmarkEntry:
 
     Each entry is an atomic test unit with ground truth annotations
     and per-field sub-test labels (HumanEval-inspired multi-criteria).
+
+    Note on ``difficulty_tier``: VALID entries have ``difficulty_tier=None``
+    because difficulty is only meaningful for hallucinated entries. Code that
+    computes per-tier metrics (e.g. ``per_tier_metrics`` in evaluation) assigns
+    VALID entries to tier 1 by default so they contribute to every tier's
+    false-positive rate calculation.
     """
 
     # BibTeX content
@@ -148,6 +154,10 @@ class BenchmarkEntry:
 
     def __post_init__(self) -> None:
         """Validate entry after creation."""
+        if self.label not in ("VALID", "HALLUCINATED"):
+            raise ValueError(
+                f"Invalid BenchmarkEntry label: {self.label!r}. Must be 'VALID' or 'HALLUCINATED'."
+            )
         if self.label == "HALLUCINATED":
             if self.hallucination_type is None:
                 raise ValueError("Hallucinated entries must have a hallucination_type")
@@ -187,7 +197,20 @@ class BenchmarkEntry:
     @classmethod
     def from_dict(cls, data: dict) -> BenchmarkEntry:
         """Deserialize from dictionary, ignoring unknown fields."""
+        data = dict(data)  # shallow copy to avoid mutating caller's dict
+        # Backward compatibility: rename venue_real -> venue_correct
+        if "venue_real" in data and "venue_correct" not in data:
+            data["venue_correct"] = data.pop("venue_real")
+        elif "venue_real" in data:
+            del data["venue_real"]
+        # Normalize: VALID entries must not carry a hallucination_type
+        if data.get("label") == "VALID":
+            data.pop("hallucination_type", None)
+            data.pop("difficulty_tier", None)
         known = {f.name for f in fields(cls)}
+        unknown = set(data.keys()) - known
+        if unknown:
+            logger.debug("Ignoring unknown fields in %s: %s", cls.__name__, unknown)
         return cls(**{k: v for k, v in data.items() if k in known})
 
     @classmethod
@@ -231,6 +254,11 @@ class Prediction:
     source: str | None = None  # "tool", "prescreening", "prescreening_override", or None
 
     def __post_init__(self) -> None:
+        _VALID_LABELS = {"VALID", "HALLUCINATED", "UNCERTAIN"}
+        if self.label not in _VALID_LABELS:
+            raise ValueError(
+                f"Invalid Prediction label: {self.label!r}. Must be one of {_VALID_LABELS}."
+            )
         if not 0.0 <= self.confidence <= 1.0:
             raise ValueError(f"Confidence must be in [0, 1], got {self.confidence}")
 
@@ -320,6 +348,9 @@ class EvaluationResult:
         if "union_recall_at_k" in data and data["union_recall_at_k"] is not None:
             data["union_recall_at_k"] = {int(k): v for k, v in data["union_recall_at_k"].items()}
         known = {f.name for f in fields(cls)}
+        unknown = set(data.keys()) - known
+        if unknown:
+            logger.debug("Ignoring unknown fields in %s: %s", cls.__name__, unknown)
         data = {k: v for k, v in data.items() if k in known}
         return cls(**data)
 
@@ -361,11 +392,9 @@ def load_entries(path: str | Path) -> list[BenchmarkEntry]:
             duplicates.append(entry.bibtex_key)
         seen_keys.add(entry.bibtex_key)
     if duplicates:
-        logger.warning(
-            "Duplicate bibtex_key(s) found in %s: %s. "
-            "Later entries will shadow earlier ones in dict conversions.",
-            path,
-            duplicates[:5],
+        raise ValueError(
+            f"Duplicate bibtex_key(s) found in {path}: {duplicates[:10]}. "
+            "Fix the data file before loading."
         )
     return entries
 

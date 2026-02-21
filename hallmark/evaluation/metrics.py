@@ -809,7 +809,7 @@ def stratified_bootstrap_ci(
     except ImportError as e:
         raise ImportError("numpy is required for bootstrap CIs: pip install numpy") from e
 
-    rng = np.random.RandomState(seed)
+    rng = np.random.default_rng(seed)
 
     # Group entries and predictions by hallucination type
     type_groups: dict[str, tuple[list[BenchmarkEntry], list[Prediction]]] = defaultdict(
@@ -904,7 +904,7 @@ def paired_bootstrap_test(
     except ImportError as e:
         raise ImportError("numpy is required for bootstrap tests: pip install numpy") from e
 
-    rng = np.random.RandomState(seed)
+    rng = np.random.default_rng(seed)
 
     # Compute observed difference
     metric_a = metric_fn(entries, predictions_a)
@@ -1039,6 +1039,7 @@ def equivalence_test(
     epsilon: float = 0.02,
     n_permutations: int = 10_000,
     seed: int = 42,
+    metric_fn: Callable[[list[BenchmarkEntry], dict[str, Prediction]], float] | None = None,
 ) -> tuple[bool, float, float]:
     """TOST-based equivalence test for dataset scaling validation.
 
@@ -1059,6 +1060,9 @@ def equivalence_test(
         epsilon: Equivalence margin (default 0.02 = 2 percentage points).
         n_permutations: Number of permutation resamples.
         seed: Random seed for reproducibility.
+        metric_fn: Function (entries, pred_map) -> float. Defaults to F1
+            (consistent with ``paired_bootstrap_test``). The pred_map argument
+            is a dict keyed by bibtex_key, matching ``build_confusion_matrix``.
 
     Returns:
         Tuple (is_equivalent, observed_diff, p_tost).
@@ -1071,15 +1075,19 @@ def equivalence_test(
     except ImportError as e:
         raise ImportError("numpy is required for equivalence tests: pip install numpy") from e
 
-    rng = np.random.RandomState(seed)
+    rng = np.random.default_rng(seed)
 
     # Build prediction map
     pred_map = {p.bibtex_key: p for p in predictions}
 
-    # Compute observed difference (using F1 as default metric)
-    cm_a = build_confusion_matrix(entries_a, pred_map)
-    cm_b = build_confusion_matrix(entries_b, pred_map)
-    observed_diff = cm_a.f1 - cm_b.f1
+    # Default metric: F1 on the HALLUCINATED class
+    if metric_fn is None:
+
+        def metric_fn(ents: list[BenchmarkEntry], pmap: dict[str, Prediction]) -> float:
+            return build_confusion_matrix(ents, pmap).f1
+
+    # Compute observed difference
+    observed_diff = metric_fn(entries_a, pred_map) - metric_fn(entries_b, pred_map)
 
     # Permutation test: shuffle entry assignment to groups, predictions stay
     # mapped by bibtex_key. The null hypothesis is that group assignment
@@ -1097,9 +1105,9 @@ def equivalence_test(
 
         # Use the shared pred_map — predictions are looked up by bibtex_key
         if perm_entries_a and perm_entries_b:
-            cm_perm_a = build_confusion_matrix(perm_entries_a, pred_map)
-            cm_perm_b = build_confusion_matrix(perm_entries_b, pred_map)
-            permuted_diffs.append(cm_perm_a.f1 - cm_perm_b.f1)
+            permuted_diffs.append(
+                metric_fn(perm_entries_a, pred_map) - metric_fn(perm_entries_b, pred_map)
+            )
 
     # TOST: Two One-Sided Tests
     # The permutation distribution is centered at 0 (null of no difference).
@@ -1381,9 +1389,9 @@ def evaluate(
 
         fpr_ci = stratified_bootstrap_ci(entries, predictions, fpr_metric, n_bootstrap=10_000)
 
-        # ECE CI
+        # ECE CI — must match point estimate: adaptive=True
         def ece_metric(ents: list[BenchmarkEntry], preds: list[Prediction]) -> float:
-            return expected_calibration_error(ents, {p.bibtex_key: p for p in preds})
+            return expected_calibration_error(ents, {p.bibtex_key: p for p in preds}, adaptive=True)
 
         ece_ci = stratified_bootstrap_ci(entries, predictions, ece_metric, n_bootstrap=10_000)
 
