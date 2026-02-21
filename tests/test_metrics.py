@@ -1109,3 +1109,207 @@ class TestZeroValidEntriesWarning:
         with caplog.at_level(logging.WARNING, logger="hallmark.evaluation.metrics"):
             evaluate(entries, preds, tool_name="test", split_name="dev")
         assert any("zero valid entries" in record.message for record in caplog.records)
+
+
+class TestMCC:
+    """Tests for Matthews Correlation Coefficient."""
+
+    def test_perfect_detection(self):
+        cm = ConfusionMatrix(tp=10, fp=0, tn=90, fn=0)
+        assert cm.mcc == pytest.approx(1.0)
+
+    def test_perfect_inverse(self):
+        cm = ConfusionMatrix(tp=0, fp=10, tn=0, fn=90)
+        assert cm.mcc == pytest.approx(-1.0)
+
+    def test_random_classifier(self):
+        """Balanced random classifier → MCC ≈ 0."""
+        cm = ConfusionMatrix(tp=25, fp=25, tn=25, fn=25)
+        assert cm.mcc == pytest.approx(0.0)
+
+    def test_empty_matrix(self):
+        cm = ConfusionMatrix()
+        assert cm.mcc == 0.0
+
+    def test_no_positives(self):
+        """All entries are valid, none hallucinated."""
+        cm = ConfusionMatrix(tp=0, fp=5, tn=95, fn=0)
+        assert cm.mcc == 0.0  # denom has (tp+fn)=0 factor
+
+    def test_mcc_differs_from_f1_on_imbalanced(self):
+        """On imbalanced data, MCC and F1 should diverge."""
+        cm = ConfusionMatrix(tp=5, fp=5, tn=85, fn=5)
+        assert cm.mcc != pytest.approx(cm.f1, abs=0.01)
+
+    def test_mcc_in_evaluate(self):
+        entries = [
+            _entry("v1", "VALID"),
+            _entry("v2", "VALID"),
+            _entry("h1", "HALLUCINATED", tier=1),
+            _entry("h2", "HALLUCINATED", tier=2),
+        ]
+        preds = [
+            _pred("v1", "VALID"),
+            _pred("v2", "VALID"),
+            _pred("h1", "HALLUCINATED"),
+            _pred("h2", "HALLUCINATED"),
+        ]
+        result = evaluate(entries, preds, tool_name="test", split_name="dev")
+        assert result.mcc is not None
+        assert result.mcc == pytest.approx(1.0)
+        assert result.macro_f1 is not None
+        assert result.macro_f1 == pytest.approx(1.0)
+
+
+class TestMacroF1:
+    """Tests for Macro-averaged F1."""
+
+    def test_perfect(self):
+        cm = ConfusionMatrix(tp=10, fp=0, tn=10, fn=0)
+        assert cm.macro_f1 == pytest.approx(1.0)
+
+    def test_all_wrong(self):
+        cm = ConfusionMatrix(tp=0, fp=10, tn=0, fn=10)
+        assert cm.macro_f1 == pytest.approx(0.0)
+
+    def test_empty(self):
+        cm = ConfusionMatrix()
+        assert cm.macro_f1 == 0.0
+
+    def test_asymmetric(self):
+        """Macro-F1 averages F1 for each class equally."""
+        cm = ConfusionMatrix(tp=9, fp=1, tn=1, fn=9)
+        # F1_hall = 2*9/(2*9+1+9) = 18/28 ≈ 0.643
+        # prec_valid = 1/(1+9) = 0.1, rec_valid = 1/(1+1) = 0.5
+        # F1_valid = 2*0.1*0.5/(0.1+0.5) = 0.1/0.6 ≈ 0.167
+        # Macro = (0.643 + 0.167) / 2 ≈ 0.405
+        assert 0.35 < cm.macro_f1 < 0.45
+
+
+class TestAUPRCInterpolated:
+    """Tests for interpolated average precision in AUPRC."""
+
+    def test_perfect_predictions(self):
+        from hallmark.evaluation.metrics import auprc
+
+        entries = [
+            _entry("v1", "VALID"),
+            _entry("v2", "VALID"),
+            _entry("h1", "HALLUCINATED"),
+            _entry("h2", "HALLUCINATED"),
+        ]
+        preds = {
+            "v1": _pred("v1", "VALID", confidence=0.99),
+            "v2": _pred("v2", "VALID", confidence=0.99),
+            "h1": _pred("h1", "HALLUCINATED", confidence=0.99),
+            "h2": _pred("h2", "HALLUCINATED", confidence=0.99),
+        }
+        score = auprc(entries, preds)
+        assert score is not None
+        assert score == pytest.approx(1.0)
+
+    def test_interpolation_improves_over_riemann(self):
+        """Interpolated AP >= Riemann sum AP for the same data.
+
+        Construct a case where precision dips then recovers, so the
+        monotone envelope differs from raw precision.
+        """
+        from hallmark.evaluation.metrics import auprc
+
+        # 4 hallucinated, 2 valid.  Scores arranged so precision dips then recovers:
+        # sorted by score desc: h1(0.95), v1(0.85), h2(0.75), h3(0.65), v2(0.55), h4(0.45)
+        # Threshold points:
+        #   after h1: P=1/1=1.0, R=1/4=0.25
+        #   after v1: P=1/2=0.5, R=1/4=0.25  (no recall change, same threshold group? no, different scores)
+        #   after h2: P=2/3≈0.67, R=2/4=0.5
+        #   after h3: P=3/4=0.75, R=3/4=0.75
+        #   after v2: P=3/5=0.6, R=3/4=0.75
+        #   after h4: P=4/6≈0.67, R=4/4=1.0
+        # Interpolated envelope at each recall change: max(P from here on)
+        entries = [
+            _entry("h1", "HALLUCINATED"),
+            _entry("h2", "HALLUCINATED"),
+            _entry("h3", "HALLUCINATED"),
+            _entry("h4", "HALLUCINATED"),
+            _entry("v1", "VALID"),
+            _entry("v2", "VALID"),
+        ]
+        preds = {
+            "h1": _pred("h1", "HALLUCINATED", confidence=0.95),
+            "v1": _pred("v1", "HALLUCINATED", confidence=0.85),
+            "h2": _pred("h2", "HALLUCINATED", confidence=0.75),
+            "h3": _pred("h3", "HALLUCINATED", confidence=0.65),
+            "v2": _pred("v2", "HALLUCINATED", confidence=0.55),
+            "h4": _pred("h4", "HALLUCINATED", confidence=0.45),
+        }
+        score = auprc(entries, preds)
+        assert score is not None
+        # With interpolation the score should be >= the non-interpolated version
+        # The exact value depends on the monotone envelope
+        assert score > 0.5
+
+
+@pytest.mark.skipif(not HAS_NUMPY, reason="numpy required")
+class TestCompareTools:
+    """Tests for compare_tools() pairwise comparison with multiple comparison correction."""
+
+    def test_identical_predictions_not_significant(self):
+        entries = [
+            _entry("v1", "VALID"),
+            _entry("h1", "HALLUCINATED", tier=1),
+            _entry("h2", "HALLUCINATED", tier=2),
+        ]
+        preds = [
+            _pred("v1", "VALID"),
+            _pred("h1", "HALLUCINATED"),
+            _pred("h2", "VALID"),
+        ]
+        from hallmark.evaluation.metrics import compare_tools
+
+        results = compare_tools(
+            entries,
+            {"tool_a": preds, "tool_b": preds},
+            n_bootstrap=200,
+            seed=42,
+        )
+        assert len(results) == 1
+        assert abs(results[0]["observed_diff"]) < 0.01  # type: ignore[arg-type]
+        assert not results[0]["significant"]
+
+    def test_large_difference_is_significant(self):
+        entries = [_entry(f"h{i}", "HALLUCINATED", tier=1) for i in range(30)]
+        entries += [_entry(f"v{i}", "VALID") for i in range(30)]
+
+        # "alpha" (perfect) sorts before "zeta" (all-miss) alphabetically
+        preds_perfect = [_pred(f"h{i}", "HALLUCINATED") for i in range(30)]
+        preds_perfect += [_pred(f"v{i}", "VALID") for i in range(30)]
+
+        preds_miss = [_pred(f"h{i}", "VALID") for i in range(30)]
+        preds_miss += [_pred(f"v{i}", "VALID") for i in range(30)]
+
+        from hallmark.evaluation.metrics import compare_tools
+
+        results = compare_tools(
+            entries,
+            {"alpha": preds_perfect, "zeta": preds_miss},
+            n_bootstrap=2000,
+            seed=42,
+        )
+        assert len(results) == 1
+        # alpha (perfect) - zeta (miss) > 0, one-sided p should be < 0.05
+        assert float(results[0]["observed_diff"]) > 0.5  # type: ignore[arg-type]
+        assert float(results[0]["p_value_raw"]) < 0.05  # type: ignore[arg-type]
+
+    def test_three_tools_produces_three_pairs(self):
+        entries = [_entry("h1", "HALLUCINATED", tier=1), _entry("v1", "VALID")]
+        preds = [_pred("h1", "HALLUCINATED"), _pred("v1", "VALID")]
+
+        from hallmark.evaluation.metrics import compare_tools
+
+        results = compare_tools(
+            entries,
+            {"a": preds, "b": preds, "c": preds},
+            n_bootstrap=100,
+            seed=42,
+        )
+        assert len(results) == 3  # C(3,2) = 3

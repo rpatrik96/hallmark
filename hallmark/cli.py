@@ -247,9 +247,16 @@ def _cmd_evaluate(args: argparse.Namespace) -> int:
         print(f"  Uncertain:        {result.num_uncertain}")
     print(f"{'─' * 60}")
     print(f"  Detection Rate:   {result.detection_rate:.3f}")
-    print(f"  False Pos. Rate:  {result.false_positive_rate:.3f}")
+    fpr_str = (
+        f"{result.false_positive_rate:.3f}" if result.false_positive_rate is not None else "N/A"
+    )
+    print(f"  False Pos. Rate:  {fpr_str}")
     print(f"  F1 (Halluc.):     {result.f1_hallucination:.3f}")
     print(f"  Tier-weighted F1: {result.tier_weighted_f1:.3f}")
+    if result.mcc is not None:
+        print(f"  MCC:              {result.mcc:.3f}")
+    if result.macro_f1 is not None:
+        print(f"  Macro-F1:         {result.macro_f1:.3f}")
     if result.ece is not None:
         print(f"  ECE:              {result.ece:.3f}")
     if result.cost_efficiency:
@@ -390,16 +397,21 @@ def _cmd_leaderboard(args: argparse.Namespace) -> int:
     print(f"\n{'=' * 70}")
     print(f"  HALLMARK Leaderboard: {args.split}")
     print(f"{'=' * 70}")
-    print(f"  {'Rank':<6}{'Tool':<25}{'F1':<8}{'DR':<8}{'FPR':<8}{'TW-F1':<8}")
-    print(f"  {'─' * 62}")
+    print(f"  {'Rank':<6}{'Tool':<25}{'F1':<8}{'DR':<8}{'FPR':<8}{'TW-F1':<8}{'MCC':<8}")
+    print(f"  {'─' * 70}")
 
     for i, r in enumerate(results, 1):
+        fpr_val = r.get("false_positive_rate")
+        fpr_str = f"{fpr_val:<8.3f}" if fpr_val is not None else "N/A     "
+        mcc_val = r.get("mcc")
+        mcc_str = f"{mcc_val:<8.3f}" if mcc_val is not None else "N/A     "
         print(
             f"  {i:<6}{r.get('tool_name', '?'):<25}"
             f"{r.get('f1_hallucination', 0):<8.3f}"
             f"{r.get('detection_rate', 0):<8.3f}"
-            f"{r.get('false_positive_rate', 0):<8.3f}"
+            f"{fpr_str}"
             f"{r.get('tier_weighted_f1', 0):<8.3f}"
+            f"{mcc_str}"
         )
 
     print(f"{'=' * 70}\n")

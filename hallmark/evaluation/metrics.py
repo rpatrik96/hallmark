@@ -82,6 +82,39 @@ class ConfusionMatrix:
         denom = self.fp + self.tn
         return self.fp / denom if denom > 0 else 0.0
 
+    @property
+    def mcc(self) -> float:
+        """Matthews Correlation Coefficient — prevalence-invariant metric.
+
+        MCC is insensitive to class imbalance, making it suitable for
+        cross-split comparisons where hallucination prevalence differs
+        (e.g., dev_public=54.3% vs test_public=64.8%).
+        """
+        denom_sq = (
+            (self.tp + self.fp) * (self.tp + self.fn) * (self.tn + self.fp) * (self.tn + self.fn)
+        )
+        if denom_sq == 0:
+            return 0.0
+        return float((self.tp * self.tn - self.fp * self.fn) / denom_sq**0.5)
+
+    @property
+    def macro_f1(self) -> float:
+        """Macro-averaged F1 across both classes (HALLUCINATED and VALID).
+
+        Averages the per-class F1 scores, giving equal weight to both classes
+        regardless of their prevalence.
+        """
+        f1_hall = self.f1
+        # F1 for VALID class (treating VALID as positive)
+        prec_valid = self.tn / (self.tn + self.fn) if (self.tn + self.fn) > 0 else 0.0
+        rec_valid = self.tn / (self.tn + self.fp) if (self.tn + self.fp) > 0 else 0.0
+        f1_valid = (
+            2 * prec_valid * rec_valid / (prec_valid + rec_valid)
+            if (prec_valid + rec_valid) > 0
+            else 0.0
+        )
+        return (f1_hall + f1_valid) / 2
+
 
 def build_confusion_matrix(
     entries: list[BenchmarkEntry],
@@ -194,9 +227,14 @@ def union_recall_at_k(
     is deterministic and order-dependent — results change if you reorder the strategy list.
     Use this function directly when you want the deterministic union-recall formulation.
 
+    Canonical ordering: strategies should be sorted by **ascending cost** (cheapest first)
+    so that the union-recall curve shows the cost-effective frontier. When strategies have
+    equal cost, order alphabetically for reproducibility.
+
     Args:
         entries: Benchmark entries.
         predictions_per_strategy: List of prediction dicts, one per verification strategy.
+            Must be ordered by ascending cost (see above).
         k: If provided, compute only for this k. Otherwise compute for k=1..len(strategies).
 
     Returns:
@@ -574,11 +612,12 @@ def auprc(entries: list[BenchmarkEntry], predictions: dict[str, Prediction]) -> 
     pairs.sort(key=lambda x: x[0], reverse=True)
 
     # Walk through sorted list computing precision/recall at each threshold
-    # For PR curve, we compute area using the points we actually visit
     tp = 0
     fp = 0
-    area = 0.0
     prev_recall = 0.0
+
+    # Collect (recall, precision) points at each threshold change
+    pr_points: list[tuple[float, float]] = []
 
     for i, (score, label) in enumerate(pairs):
         if label == 1:
@@ -586,21 +625,29 @@ def auprc(entries: list[BenchmarkEntry], predictions: dict[str, Prediction]) -> 
         else:
             fp += 1
 
-        # At each threshold change, compute area increment
-        # Check if this is the last point or score changes
         is_last = i == len(pairs) - 1
         score_changes = is_last or pairs[i + 1][0] != score
 
         if score_changes:
             recall = tp / num_positive
             precision = tp / (tp + fp) if (tp + fp) > 0 else 0.0
+            pr_points.append((recall, precision))
 
-            # Right-hand Riemann sum approximation of AUPRC.
-            # Note: this differs from sklearn's interpolated average_precision_score.
-            # We use this simpler method for transparency; differences are typically <0.01.
-            area += precision * (recall - prev_recall)
+    if not pr_points:
+        return None
 
-            prev_recall = recall
+    # Interpolated average precision: monotone precision envelope then integrate.
+    # Walk right-to-left to enforce precision_interp[i] = max(precision[i:])
+    interp_precisions = [p for _, p in pr_points]
+    for i in range(len(interp_precisions) - 2, -1, -1):
+        interp_precisions[i] = max(interp_precisions[i], interp_precisions[i + 1])
+
+    # Integrate using interpolated precision at each recall change
+    area = 0.0
+    prev_recall = 0.0
+    for idx, (recall, _) in enumerate(pr_points):
+        area += interp_precisions[idx] * (recall - prev_recall)
+        prev_recall = recall
 
     return area
 
@@ -1140,6 +1187,80 @@ def apply_multiple_comparison_correction(
     return adjusted
 
 
+def compare_tools(
+    entries: list[BenchmarkEntry],
+    tool_predictions: dict[str, list[Prediction]],
+    metric_fn: Callable[[list[BenchmarkEntry], list[Prediction]], float] | None = None,
+    correction_method: str = "holm",
+    n_bootstrap: int = 10_000,
+    seed: int = 42,
+) -> list[dict[str, object]]:
+    """Run pairwise paired bootstrap tests across all tool pairs with multiple comparison correction.
+
+    For C(n,2) tool pairs, runs ``paired_bootstrap_test`` and then applies
+    ``apply_multiple_comparison_correction`` to the collected p-values.
+
+    Args:
+        entries: Benchmark entries (ground truth).
+        tool_predictions: Dict mapping tool_name -> list of Predictions.
+        metric_fn: Metric function for comparison. Defaults to F1.
+        correction_method: Correction method for ``apply_multiple_comparison_correction``.
+        n_bootstrap: Number of bootstrap resamples per pair.
+        seed: Random seed for reproducibility.
+
+    Returns:
+        List of dicts with keys: tool_a, tool_b, observed_diff, p_value_raw,
+        p_value_adjusted, effect_size, significant.
+    """
+    if metric_fn is None:
+
+        def metric_fn(ents: list[BenchmarkEntry], preds: list[Prediction]) -> float:
+            cm_inner = build_confusion_matrix(ents, {p.bibtex_key: p for p in preds})
+            return cm_inner.f1
+
+    tool_names = sorted(tool_predictions.keys())
+    if len(tool_names) < 2:
+        return []
+
+    # Run pairwise tests
+    raw_results: list[dict[str, object]] = []
+    raw_p_values: dict[str, float] = {}
+
+    for i in range(len(tool_names)):
+        for j in range(i + 1, len(tool_names)):
+            name_a, name_b = tool_names[i], tool_names[j]
+            preds_a = tool_predictions[name_a]
+            preds_b = tool_predictions[name_b]
+
+            obs_diff, p_value, effect_size = paired_bootstrap_test(
+                entries, preds_a, preds_b, metric_fn, n_bootstrap=n_bootstrap, seed=seed
+            )
+
+            pair_key = f"{name_a}_vs_{name_b}"
+            raw_p_values[pair_key] = p_value
+            raw_results.append(
+                {
+                    "tool_a": name_a,
+                    "tool_b": name_b,
+                    "observed_diff": obs_diff,
+                    "p_value_raw": p_value,
+                    "effect_size": effect_size,
+                    "_pair_key": pair_key,
+                }
+            )
+
+    # Apply multiple comparison correction
+    adjusted = apply_multiple_comparison_correction(raw_p_values, method=correction_method)
+
+    for result in raw_results:
+        pair_key = str(result["_pair_key"])
+        result["p_value_adjusted"] = adjusted[pair_key]
+        result["significant"] = adjusted[pair_key] < 0.05
+        del result["_pair_key"]
+
+    return raw_results
+
+
 def evaluate(
     entries: list[BenchmarkEntry],
     predictions: list[Prediction],
@@ -1204,6 +1325,7 @@ def evaluate(
     tier_weighted_f1_ci = None
     fpr_ci = None
     ece_ci = None
+    mcc_ci = None
 
     if compute_ci:
         # Detection Rate CI
@@ -1245,6 +1367,13 @@ def evaluate(
 
         ece_ci = stratified_bootstrap_ci(entries, predictions, ece_metric, n_bootstrap=10_000)
 
+        # MCC CI
+        def mcc_metric(ents: list[BenchmarkEntry], preds: list[Prediction]) -> float:
+            cm_boot = build_confusion_matrix(ents, {p.bibtex_key: p for p in preds})
+            return cm_boot.mcc
+
+        mcc_ci = stratified_bootstrap_ci(entries, predictions, mcc_metric, n_bootstrap=10_000)
+
     return EvaluationResult(
         tool_name=tool_name,
         split_name=split_name,
@@ -1255,6 +1384,8 @@ def evaluate(
         false_positive_rate=fpr,
         f1_hallucination=cm.f1,
         tier_weighted_f1=tw_f1,
+        mcc=cm.mcc,
+        macro_f1=cm.macro_f1,
         union_recall_at_k=dat_k,
         cost_efficiency=cost.get("entries_per_second"),
         mean_api_calls=cost.get("mean_api_calls"),
@@ -1269,4 +1400,5 @@ def evaluate(
         tier_weighted_f1_ci=tier_weighted_f1_ci,
         fpr_ci=fpr_ci,
         ece_ci=ece_ci,
+        mcc_ci=mcc_ci,
     )

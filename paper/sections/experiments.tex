@@ -32,15 +32,15 @@ Like HaRC, it was rate-limited and completed 71 of 1,063 entries (6.7\%).
 \label{tab:results}
 \centering
 \small
-\begin{tabular}{lcccccc}
+\begin{tabular}{lccccccc}
 \toprule
-\textbf{Tool} & \textbf{DR $\uparrow$} & \textbf{FPR $\downarrow$} & \textbf{F1 $\uparrow$} & \textbf{TW-F1 $\uparrow$} & \textbf{ECE $\downarrow$} & \textbf{Cov.} \\
+\textbf{Tool} & \textbf{DR $\uparrow$} & \textbf{FPR $\downarrow$} & \textbf{F1 $\uparrow$} & \textbf{MCC $\uparrow$} & \textbf{TW-F1 $\uparrow$} & \textbf{ECE $\downarrow$} & \textbf{Cov.} \\
 \midrule
-DOI-only            & 0.256          & 0.195          & 0.361          & 0.314          & 0.143 & 1.00 \\
-HaRC$^*$            & 0.155          & \textbf{0.000} & 0.268          & 0.188          & 0.361          & 0.02 \\
-verify-citations$^*$& 0.042          & 0.024          & 0.071          & 0.062          & 0.317          & 0.07 \\
+DOI-only            & 0.256          & 0.195          & 0.361          & 0.093          & 0.314          & 0.143 & 1.00 \\
+HaRC$^*$            & 0.155          & \textbf{0.000} & 0.268          & 0.234          & 0.188          & 0.361          & 0.02 \\
+verify-citations$^*$& 0.042          & 0.024          & 0.071          & 0.032          & 0.062          & 0.317          & 0.07 \\
 \midrule
-GPT-5.1 (zero-shot) & \textbf{0.797} & 0.171          & \textbf{0.822} & \textbf{0.846} & \textbf{0.107} & 1.00 \\
+GPT-5.1 (zero-shot) & \textbf{0.797} & 0.171          & \textbf{0.822} & \textbf{0.636} & \textbf{0.846} & \textbf{0.107} & 1.00 \\
 \bottomrule
 \end{tabular}
 \end{table}

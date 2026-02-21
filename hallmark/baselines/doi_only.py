@@ -33,7 +33,14 @@ def check_doi(doi: str, timeout: float = 10.0) -> tuple[bool, str]:
 
     url = f"https://doi.org/{doi}"
     try:
-        resp = httpx.head(url, follow_redirects=True, timeout=timeout)
+        from hallmark.baselines._cache import retry_with_backoff
+
+        resp = retry_with_backoff(
+            lambda: httpx.head(url, follow_redirects=True, timeout=timeout),
+            max_retries=2,
+            base_delay=1.0,
+            exceptions=(httpx.TimeoutException, httpx.ConnectError),
+        )
         if resp.status_code == 200:
             return True, f"DOI resolves -> {resp.url}"
         else:

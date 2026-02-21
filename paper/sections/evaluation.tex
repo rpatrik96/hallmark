@@ -22,6 +22,11 @@ Formally, for entries $\{e_i\}$ with tier weights $w_i \in \{1,2,3\}$, predictio
 \end{align}
 where H denotes the hallucinated class, and TW-F1 is their harmonic mean.\footnote{Valid entries carry no difficulty tier, so false positives (valid entries predicted as hallucinated) contribute uniform weight 1.0 in the TW-Precision denominator regardless of their tier.}
 
+\textbf{Matthews Correlation Coefficient (MCC)}~\citep{matthews1975} provides a prevalence-invariant summary of binary classification quality.
+Unlike F1, MCC uses all four confusion matrix cells and remains informative even when class ratios shift: MCC $= 1$ indicates perfect prediction, $0$ random, and $-1$ total disagreement.
+This is important for \textsc{Hallmark} because class ratios differ across splits (dev: 54.3\% hallucinated, test: 64.8\%), making cross-split F1 comparisons unreliable.
+We report MCC alongside F1 for all evaluations.
+
 \textbf{Expected Calibration Error (ECE)}~\citep{naeini2015} measures how well a tool's confidence scores reflect its actual accuracy.
 We partition predictions into $B=10$ equal-width confidence bins and compute:
 \begin{equation}
@@ -32,6 +37,7 @@ Well-calibrated tools have ECE $\approx 0$; in practice, ECE $< 0.05$ indicates 
 
 \paragraph{Diagnostic metrics.}
 \textbf{detect@$k$} is the fraction of hallucinations detected by at least one of $k$ verification strategies (union recall at $k$).
+Tools are ordered by ascending cost (API calls per entry), so detect@$k$ measures detection when adding the $k$-th cheapest tool to the ensemble.
 Unlike HumanEval's pass@$k$~\citep{humaneval}, which uses an unbiased stochastic estimator over random subsets of $n$ samples, detect@$k$ is deterministic and order-dependent: it evaluates a fixed, ordered set of $k$ strategies rather than estimating the probability that at least one random draw succeeds.
 \textbf{Per-tier and per-type breakdowns} reveal which categories each tool handles well or poorly.
 \textbf{Source-stratified metrics} disaggregate performance by which bibliographic APIs a tool queried, revealing API-specific blind spots.
@@ -55,3 +61,8 @@ We also report a simpler mean-score ranking as a baseline comparison.
 New baselines register via a decorator pattern, specifying their dependencies and whether they require API keys.
 A CI workflow runs all free baselines weekly on the dev split, ensuring results remain reproducible as APIs evolve.
 Rate-limited baselines use pre-computed reference results validated by checksum, enabling CI to verify consistency without re-running expensive API calls.
+
+\paragraph{Stress-test evaluation.}
+The \texttt{stress\_test} split contains only hallucinated entries (202 entries, 100\% hallucinated).
+Because no valid entries exist, FPR is undefined and F1 reduces to a function of recall alone.
+We report only Detection Rate for this split; F1 and FPR are omitted.

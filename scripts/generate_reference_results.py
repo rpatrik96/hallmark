@@ -33,6 +33,29 @@ logger = logging.getLogger(__name__)
 DEFAULT_RESULTS_DIR = Path("data/v1.0/baseline_results")
 
 
+def _get_hallmark_version() -> str:
+    """Get installed hallmark version, or 'unknown' if not installed."""
+    try:
+        from importlib.metadata import version
+
+        return version("hallmark")
+    except Exception:
+        return "unknown"
+
+
+def _get_environment_metadata() -> dict[str, str]:
+    """Collect environment metadata for manifest reproducibility."""
+    import datetime
+    import platform
+
+    return {
+        "python_version": platform.python_version(),
+        "platform": platform.platform(),
+        "timestamp": datetime.datetime.now(datetime.timezone.utc).isoformat(),
+        "hallmark_version": _get_hallmark_version(),
+    }
+
+
 def generate(
     baselines: list[str],
     split: str = "dev_public",
@@ -91,6 +114,9 @@ def generate(
             "num_entries": result.num_entries,
             "f1_hallucination": result.f1_hallucination,
         }
+
+    # Add environment metadata for reproducibility
+    manifest["environment"] = _get_environment_metadata()
 
     # Write updated manifest
     manifest_path.write_text(json.dumps(manifest, indent=2) + "\n")

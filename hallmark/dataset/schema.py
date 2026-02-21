@@ -208,6 +208,13 @@ class Prediction:
     """A tool's prediction for a single benchmark entry.
 
     Tools produce these when evaluating BibTeX entries.
+
+    The ``confidence`` field represents P(predicted label is correct):
+    a tool predicting HALLUCINATED with confidence 0.9 claims 90%
+    certainty that the entry is hallucinated. Equivalently, a VALID
+    prediction with confidence 0.8 claims 80% certainty the entry is
+    valid. This convention is used consistently across ECE computation,
+    AUROC scoring, and calibration analysis.
     """
 
     bibtex_key: str
@@ -257,6 +264,10 @@ class EvaluationResult:
     f1_hallucination: float  # F1 on HALLUCINATED class
     tier_weighted_f1: float  # F1 weighted by difficulty tier
 
+    # Prevalence-invariant metrics
+    mcc: float | None = None  # Matthews Correlation Coefficient
+    macro_f1: float | None = None  # Macro-averaged F1 across both classes
+
     # Secondary metrics
     union_recall_at_k: dict[int, float] = field(default_factory=dict)  # k -> fraction detected
     temporal_robustness: float | None = None
@@ -273,6 +284,7 @@ class EvaluationResult:
     tier_weighted_f1_ci: tuple[float, float] | None = None
     fpr_ci: tuple[float, float] | None = None
     ece_ci: tuple[float, float] | None = None
+    mcc_ci: tuple[float, float] | None = None
 
     # Per-tier breakdown
     per_tier_metrics: dict[int, dict[str, float]] = field(default_factory=dict)

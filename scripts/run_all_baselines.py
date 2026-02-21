@@ -85,6 +85,12 @@ def parse_args() -> argparse.Namespace:
         help="Override data directory",
     )
     parser.add_argument(
+        "--n-runs",
+        type=int,
+        default=1,
+        help="Run each baseline N times and report mean/std of metrics (default: 1)",
+    )
+    parser.add_argument(
         "-v",
         "--verbose",
         action="store_true",
@@ -178,6 +184,7 @@ def run_single_baseline(
             "detection_rate": result.detection_rate,
             "false_positive_rate": result.false_positive_rate,
             "tier_weighted_f1": result.tier_weighted_f1,
+            "mcc": result.mcc,
             "predictions": predictions,
         }
 
@@ -203,25 +210,31 @@ def print_leaderboard(results: list[dict[str, Any]]) -> None:
     print("\n" + "=" * 80)
     print("HALLMARK BASELINE LEADERBOARD")
     print("=" * 80)
-    print(f"{'Rank':<6} {'Baseline':<25} {'F1':<8} {'DR':<8} {'FPR':<8} {'TW-F1':<8}")
-    print("-" * 80)
+    print(f"{'Rank':<6} {'Baseline':<25} {'F1':<8} {'DR':<8} {'FPR':<8} {'TW-F1':<8} {'MCC':<8}")
+    print("-" * 88)
 
     for rank, result in enumerate(sorted_results, start=1):
+        fpr_val = result.get("false_positive_rate")
+        fpr_str = f"{fpr_val:<8.3f}" if fpr_val is not None else "N/A     "
+        mcc_val = result.get("mcc")
+        mcc_str = f"{mcc_val:<8.3f}" if mcc_val is not None else "N/A     "
         print(
             f"{rank:<6} "
             f"{result['name']:<25} "
             f"{result['f1_hallucination']:<8.3f} "
             f"{result['detection_rate']:<8.3f} "
-            f"{result['false_positive_rate']:<8.3f} "
-            f"{result['tier_weighted_f1']:<8.3f}"
+            f"{fpr_str} "
+            f"{result['tier_weighted_f1']:<8.3f} "
+            f"{mcc_str}"
         )
 
-    print("=" * 80)
+    print("=" * 88)
     print(
         "Metrics: F1 = F1-Hallucination, DR = Detection Rate, "
-        "FPR = False Positive Rate, TW-F1 = Tier-Weighted F1"
+        "FPR = False Positive Rate, TW-F1 = Tier-Weighted F1, "
+        "MCC = Matthews Correlation Coefficient"
     )
-    print("=" * 80 + "\n")
+    print("=" * 88 + "\n")
 
 
 def save_results_matrix_if_available(
@@ -241,7 +254,7 @@ def save_results_matrix_if_available(
     try:
         from hallmark.evaluation.ranking import (
             build_results_matrix,
-            rank_tools,
+            rank_tools_plackett_luce,
             save_results_matrix,
         )
 
@@ -256,11 +269,22 @@ def save_results_matrix_if_available(
         save_results_matrix(entry_keys, tool_names, matrix_data, str(matrix_file))
         logger.info(f"Saved results matrix to {matrix_file}")
 
-        # Rank tools
-        rankings = rank_tools(entries, tool_predictions)
-        logger.info("Tool rankings:")
-        for rank, (tool, score) in enumerate(rankings, start=1):
-            logger.info(f"  {rank}. {tool}: {score:.3f}")
+        # Rank tools with CIs
+        ranked_with_ci = rank_tools_plackett_luce(
+            entry_keys, tool_names, matrix_data, compute_ci=True
+        )
+        ranked, score_cis = ranked_with_ci
+
+        print("\n" + "=" * 88)
+        print("PLACKETT-LUCE RANKINGS")
+        print("=" * 88)
+        print(f"{'Rank':<6} {'Tool':<25} {'Score':<10} {'95% CI':<20}")
+        print("-" * 88)
+        for rank, (tool, score) in enumerate(ranked, start=1):
+            ci = score_cis.get(tool)
+            ci_str = f"[{ci[0]:.4f}, {ci[1]:.4f}]" if ci else "N/A"
+            print(f"{rank:<6} {tool:<25} {score:<10.4f} {ci_str:<20}")
+        print("=" * 88 + "\n")
 
     except ImportError:
         logger.debug("Ranking module not available, skipping matrix generation")
@@ -321,11 +345,90 @@ def main() -> None:
             if result is not None:
                 results.append(result)
 
+    # Multi-run variance reporting
+    if args.n_runs > 1 and results:
+        logger.info(f"Running {args.n_runs - 1} additional runs for variance estimation...")
+        from collections import defaultdict
+
+        run_metrics: dict[str, list[dict[str, float]]] = defaultdict(list)
+        # Collect metrics from first run
+        for r in results:
+            run_metrics[r["name"]].append(
+                {
+                    "f1": r["f1_hallucination"],
+                    "dr": r["detection_rate"],
+                    "mcc": r.get("mcc", 0.0) or 0.0,
+                }
+            )
+        # Additional runs
+        for run_idx in range(1, args.n_runs):
+            logger.info(f"  Run {run_idx + 1}/{args.n_runs}...")
+            for name in baselines:
+                try:
+                    preds = run_baseline(name, entries)
+                    res = evaluate(entries, preds, tool_name=name, split_name=args.split)
+                    run_metrics[name].append(
+                        {
+                            "f1": res.f1_hallucination,
+                            "dr": res.detection_rate,
+                            "mcc": res.mcc or 0.0,
+                        }
+                    )
+                except Exception as exc:
+                    logger.warning(f"  Run {run_idx + 1} failed for {name}: {exc}")
+
+        # Print variance table
+        import statistics
+
+        print("\n" + "=" * 88)
+        print("CROSS-RUN VARIANCE (mean +/- std)")
+        print("=" * 88)
+        print(f"{'Baseline':<25} {'F1':>14} {'DR':>14} {'MCC':>14}")
+        print("-" * 88)
+        for name in sorted(run_metrics):
+            metrics_list = run_metrics[name]
+            if len(metrics_list) < 2:
+                continue
+            f1s = [m["f1"] for m in metrics_list]
+            drs = [m["dr"] for m in metrics_list]
+            mccs = [m["mcc"] for m in metrics_list]
+            print(
+                f"{name:<25} "
+                f"{statistics.mean(f1s):.3f}+/-{statistics.stdev(f1s):.3f}  "
+                f"{statistics.mean(drs):.3f}+/-{statistics.stdev(drs):.3f}  "
+                f"{statistics.mean(mccs):.3f}+/-{statistics.stdev(mccs):.3f}"
+            )
+        print("=" * 88 + "\n")
+
     # Print leaderboard
     if results:
         print_leaderboard(results)
 
-        # Try to build results matrix
+        # Pairwise tool comparison with multiple comparison correction
+        if len(results) >= 2:
+            try:
+                from hallmark.evaluation.metrics import compare_tools as compare_tools_fn
+
+                tool_preds = {r["name"]: r["predictions"] for r in results}
+                comparisons = compare_tools_fn(entries, tool_preds, n_bootstrap=1000, seed=42)
+                if comparisons:
+                    print("\n" + "=" * 88)
+                    print("PAIRWISE TOOL COMPARISONS (F1, Holm-corrected)")
+                    print("=" * 88)
+                    print(f"{'Tool A':<20} {'Tool B':<20} {'Diff':>8} {'p-adj':>8} {'Sig':>5}")
+                    print("-" * 88)
+                    for c in comparisons:
+                        sig_str = "*" if c["significant"] else ""
+                        print(
+                            f"{c['tool_a']:<20} {c['tool_b']:<20} "
+                            f"{c['observed_diff']:>+8.3f} "
+                            f"{c['p_value_adjusted']:>8.3f} {sig_str:>5}"
+                        )
+                    print("=" * 88 + "\n")
+            except Exception as exc:
+                logger.debug(f"Pairwise comparison skipped: {exc}")
+
+        # Try to build results matrix and PL ranking with CIs
         save_results_matrix_if_available(entries, results, args.split, args.output_dir)
 
         logger.info(f"Successfully completed {len(results)}/{len(baselines)} baselines")

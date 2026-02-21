@@ -45,13 +45,16 @@ scraping = [
     "beautifulsoup4>=4.12",
     "lxml>=4.9",
 ]
+analysis = [
+    "scikit-learn>=1.0",
+]
 dev = [
     "pytest>=7.0",
     "pytest-cov>=4.0",
     "ruff>=0.4",
     "mypy>=1.0",
 ]
-all = ["hallmark[baselines,ranking,scraping,dev]"]
+all = ["hallmark[baselines,ranking,scraping,analysis,dev]"]
 # NOTE: bibtex-updater and harcx require bibtexparser 1.x which conflicts
 # with hallmark's bibtexparser>=2.0. Install them in isolation:
 #   pipx install bibtex-updater

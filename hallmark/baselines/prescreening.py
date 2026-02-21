@@ -67,7 +67,14 @@ def check_doi_resolves(entry: BenchmarkEntry) -> PreScreenResult:
     url = f"https://doi.org/{normalized_doi}"
 
     try:
-        response = httpx.head(url, timeout=10.0, follow_redirects=True)
+        from hallmark.baselines._cache import retry_with_backoff
+
+        response = retry_with_backoff(
+            lambda: httpx.head(url, timeout=10.0, follow_redirects=True),
+            max_retries=2,
+            base_delay=1.0,
+            exceptions=(httpx.RequestError, httpx.TimeoutException),
+        )
         if response.status_code == 200:
             return PreScreenResult(
                 label="VALID",

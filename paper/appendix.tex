@@ -191,6 +191,40 @@ For detection rate, a type with 30 hallucinated entries and 90\% true detection 
 We report per-type results with improved statistical confidence, enabling more definitive type-level claims.
 As the dataset grows through community contributions, per-type statistical power will continue to improve.
 
+\cref{tab:power} reports the minimum detectable effect (MDE) at 80\% power ($\alpha=0.05$, two-sided $z$-test) for each hallucination type in the \texttt{dev\_public} split.
+Types with $n=30$ have an MDE of 25.6pp, meaning tool differences smaller than this cannot be reliably detected.
+Larger types (e.g., \texttt{plausible\_fabrication}, $n=82$) achieve an MDE of 15.4pp.
+These values inform which per-type comparisons are statistically meaningful.
+
+\begin{table}[h]
+\caption{Per-type minimum detectable effect (MDE) at 80\% power on \texttt{dev\_public}. Assumes baseline detection rate of 50\% (worst-case MDE).}
+\label{tab:power}
+\centering
+\small
+\begin{tabular}{llcc}
+\toprule
+\textbf{Tier} & \textbf{Type} & \textbf{$n$} & \textbf{MDE (pp)} \\
+\midrule
+\multirow{4}{*}{1}
+& \texttt{fabricated\_doi}        & 39  & 22.4 \\
+& \texttt{nonexistent\_venue}     & 32  & 24.7 \\
+& \texttt{placeholder\_authors}   & 34  & 24.0 \\
+& \texttt{future\_date}           & 31  & 25.1 \\
+\midrule
+\multirow{5}{*}{2}
+& \texttt{chimeric\_title}        & 35  & 23.7 \\
+& \texttt{wrong\_venue}           & 35  & 23.7 \\
+& \texttt{author\_mismatch}       & 34  & 24.0 \\
+& \texttt{preprint\_as\_pub.}     & 31  & 25.1 \\
+& \texttt{hybrid\_fabrication}    & 46  & 20.6 \\
+\midrule
+\multirow{2}{*}{3}
+& \texttt{near\_miss\_title}      & 35  & 23.7 \\
+& \texttt{plausible\_fabrication} & 82  & 15.4 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
 \paragraph{Tier weight sensitivity.}
 We evaluate tier-weighted F1 under five weighting schemes: uniform $\{1,1,1\}$ (equivalent to standard macro-F1 across tiers), linear $\{1,2,3\}$ (default), quadratic $\{1,4,9\}$, log $\{\log(2), \log(3), \log(4)\}$, and inverse difficulty (weights proportional to $1 - \text{mean DR}$ across tools).
 Tool rankings are stable across all schemes: GPT-5.1 achieves TW-F1 of 0.875 (uniform), 0.860 (linear), 0.850 (quadratic), 0.864 (log), and 0.865 (inverse difficulty).
@@ -367,12 +401,12 @@ We report its results separately to maintain transparency about the co-design re
 \label{tab:codesign}
 \centering
 \small
-\begin{tabular}{lcccccc}
+\begin{tabular}{lccccccc}
 \toprule
-\textbf{Tool} & \textbf{DR $\uparrow$} & \textbf{FPR $\downarrow$} & \textbf{F1 $\uparrow$} & \textbf{TW-F1 $\uparrow$} & \textbf{ECE $\downarrow$} & \textbf{Cov.} \\
+\textbf{Tool} & \textbf{DR $\uparrow$} & \textbf{FPR $\downarrow$} & \textbf{F1 $\uparrow$} & \textbf{MCC $\uparrow$} & \textbf{TW-F1 $\uparrow$} & \textbf{ECE $\downarrow$} & \textbf{Cov.} \\
 \midrule
-bibtex-updater & 0.637 & 0.051 & 0.759 & 0.753 & 0.213 & 1.00 \\
-Ensemble (doi+btx)$^\dagger$ & 0.208 & 0.007 & 0.342 & 0.296 & 0.289 & 1.00 \\
+bibtex-updater & 0.637 & 0.051 & 0.759 & 0.614 & 0.753 & 0.213 & 1.00 \\
+Ensemble (doi+btx)$^\dagger$ & 0.208 & 0.007 & 0.342 & 0.280 & 0.296 & 0.289 & 1.00 \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -427,6 +461,19 @@ The tool achieves perfect detection on \texttt{future\_date} (1.000) and strong 
 
 Despite these concerns, \texttt{bibtex-updater} serves a useful diagnostic role: it demonstrates the performance gap between API-based cross-referencing tools (DR 0.637) and LLM-based verifiers (GPT-5.1: DR 0.797), while achieving better calibration (ECE 0.213 vs.\ GPT-5.1's 0.107) and lower false positive rate (FPR 0.051 vs.\ 0.171).
 We encourage independent tool developers to submit evaluations via \textsc{Hallmark}'s contribution framework to establish unbiased baselines.
+
+\section{Shortcut analysis}
+\label{app:shortcuts}
+
+To assess whether metadata features alone predict hallucination labels---indicating potential dataset shortcuts---we train a logistic regression classifier on eight entry-level features: presence of DOI, field count, author count, title length (characters), title word count, year (numeric), BibTeX entry type, and presence of a \texttt{booktitle} field.
+We evaluate via 5-fold cross-validation on the \texttt{dev\_public} split.
+
+The logistic regression achieves a cross-validated accuracy of 56.2\% (majority-class baseline: 54.3\%), a margin of 1.9pp.
+Since this margin is below 5pp, metadata features provide negligible predictive signal beyond class prevalence.
+This confirms that tools must inspect citation content (DOIs, titles, authors, venues) rather than relying on surface-level metadata patterns to detect hallucinations.
+
+The most informative feature is \texttt{has\_doi} (coefficient 0.12), consistent with the DOI-only baseline's non-zero detection rate.
+All other features have coefficients $< 0.05$, confirming that the perturbation pipeline does not introduce systematic metadata artifacts.
 
 \section{Additional figures}
 \label{app:figures}
