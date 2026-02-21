@@ -491,6 +491,24 @@ def _register_builtins() -> None:
         )
     )
 
+    # --- Venue oracle (diagnostic baseline) ---
+    def _run_venue_oracle(entries: list[BlindEntry], **kw: Any) -> list[Prediction]:
+        from hallmark.baselines.degenerate import venue_oracle_baseline
+
+        return venue_oracle_baseline(entries, **kw)
+
+    register(
+        BaselineInfo(
+            name="venue_oracle",
+            description=(
+                "Venue-oracle (diagnostic — exploits venue distribution bias). "
+                "NOT a legitimate detector: flags entries whose venue is absent from VALID data."
+            ),
+            runner=_run_venue_oracle,
+            confidence_type="binary",
+        )
+    )
+
     # --- Ensemble ---
     def _run_ensemble(entries: list[BlindEntry], **kw: Any) -> list[Prediction]:
         from hallmark.baselines.ensemble import ensemble_predict

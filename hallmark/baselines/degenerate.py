@@ -58,3 +58,51 @@ def always_valid_baseline(
         )
         for entry in entries
     ]
+
+
+# The 8 venues that appear in VALID entries in the v1.0 dataset.
+# A venue oracle flags anything outside this set as HALLUCINATED.
+VALID_VENUE_SET: frozenset[str] = frozenset(
+    {
+        # Conferences
+        "NeurIPS",
+        "ICML",
+        "ICLR",
+        "AAAI",
+        "CVPR",
+        # Journals
+        "J. Mach. Learn. Res.",
+        "Mach. Learn.",
+        "Trans. Mach. Learn. Res.",
+    }
+)
+
+
+def venue_oracle_baseline(
+    entries: list[BlindEntry],
+    valid_venues: frozenset[str] | None = None,
+) -> list[Prediction]:
+    """Venue-oracle baseline: predict HALLUCINATED if venue is not in the known valid set.
+
+    This is a diagnostic baseline that quantifies venue distribution bias in the
+    benchmark. Entries whose booktitle/journal appears in the valid venue set are
+    predicted VALID; all others are predicted HALLUCINATED with confidence=1.0.
+    Entries with no venue field are predicted VALID (conservative default).
+
+    NOT a legitimate detector — exploits dataset construction artifacts.
+    """
+    venues = valid_venues if valid_venues is not None else VALID_VENUE_SET
+    predictions = []
+    for entry in entries:
+        # Check booktitle first (inproceedings), then journal (article)
+        venue = entry.fields.get("booktitle") or entry.fields.get("journal") or ""
+        # No venue field → conservative default: predict VALID
+        is_known = (not venue) or (venue in venues)
+        predictions.append(
+            Prediction(
+                bibtex_key=entry.bibtex_key,
+                label="VALID" if is_known else "HALLUCINATED",
+                confidence=1.0,
+            )
+        )
+    return predictions

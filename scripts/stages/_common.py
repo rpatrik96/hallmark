@@ -18,7 +18,7 @@ from hallmark.dataset.generator import (
     generate_wrong_venue,
     is_preprint_source,
 )
-from hallmark.dataset.generators._pools import CHIMERIC_TITLE_TEMPLATES, REAL_VENUES
+from hallmark.dataset.generators._pools import CHIMERIC_TITLE_TEMPLATES, VALID_VENUES
 from hallmark.dataset.generators._registry import get_generator, get_generator_func
 from hallmark.dataset.generators.tier1 import _current_reference_year
 from hallmark.dataset.schema import BenchmarkEntry, HallucinationType
@@ -81,7 +81,7 @@ def generate_for_type(
     # Types that need a venue candidate (different from current source venue)
     def _pick_venue() -> str:
         current = source.venue
-        candidates = [v for v in REAL_VENUES if v != current]
+        candidates = [v for v in VALID_VENUES if v != current]
         return rng.choice(candidates)
 
     # Assemble kwargs based on what the generator's extra_args declare,
@@ -104,7 +104,7 @@ def generate_for_type(
     elif hall_type == HallucinationType.PREPRINT_AS_PUBLISHED:
         preprint_sources = [e for e in valid_entries if is_preprint_source(e)]
         effective_source = rng.choice(preprint_sources) if preprint_sources else source
-        entry = generate_preprint_as_published(effective_source, rng.choice(REAL_VENUES), rng)
+        entry = generate_preprint_as_published(effective_source, rng.choice(VALID_VENUES), rng)
 
     elif hall_type == HallucinationType.MERGED_CITATION:
         donor_b = rng.choice(valid_entries)

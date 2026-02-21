@@ -5,7 +5,7 @@ from collections.abc import Callable
 
 from hallmark.dataset.schema import BenchmarkEntry
 
-from ._pools import ML_BUZZWORD_WORDS, REAL_VENUES
+from ._pools import ML_BUZZWORD_WORDS, VALID_VENUES
 from .tier1 import (
     generate_fabricated_doi,
     generate_future_date,
@@ -74,7 +74,7 @@ def generate_tier2_batch(
         )
 
         if method == "wrong_venue":
-            wrong_v = rng.choice(REAL_VENUES)
+            wrong_v = rng.choice(VALID_VENUES)
             results.append(generate_wrong_venue(source, wrong_v, rng=rng))
         elif method == "swapped_authors":
             donor = rng.choice(valid_entries)
@@ -82,7 +82,7 @@ def generate_tier2_batch(
                 donor = rng.choice(valid_entries)
             results.append(generate_swapped_authors(source, donor, rng))
         elif method == "preprint_as_published":
-            fake_v = rng.choice(REAL_VENUES)
+            fake_v = rng.choice(VALID_VENUES)
             results.append(generate_preprint_as_published(source, fake_v, rng))
         elif method == "chimeric_title":
             buzzword = rng.choice(ML_BUZZWORD_WORDS)

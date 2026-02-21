@@ -36,7 +36,17 @@ def stage_scrape_valid(
     """
     from hallmark.dataset.scraper import ScraperConfig, scrape_arxiv_recent, scrape_proceedings
 
-    conferences = conferences or ["NeurIPS", "ICML", "ICLR"]
+    conferences = conferences or [
+        "NeurIPS",
+        "ICML",
+        "ICLR",
+        "AAAI",
+        "CVPR",
+        "ACL",
+        "EMNLP",
+        "AISTATS",
+        "NAACL",
+    ]
     years = years or [2021, 2022, 2023]
 
     config = ScraperConfig(venues=conferences, years=years, include_arxiv=include_arxiv)

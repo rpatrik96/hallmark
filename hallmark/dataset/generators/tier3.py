@@ -24,7 +24,7 @@ from ._pools import (
     PLAUSIBLE_NOUNS,
     PLAUSIBLE_PROPERTIES,
     PLAUSIBLE_SETTINGS,
-    REAL_VENUES,
+    VALID_VENUES,
 )
 from ._registry import register_generator
 
@@ -267,9 +267,9 @@ def generate_plausible_fabrication(
     authors = [f"{first_pool[i]} {last_pool[i]}" for i in range(n_authors)]
     new_entry.fields["author"] = " and ".join(authors)
 
-    # Keep a real prestigious venue (import from _pools for consistency)
+    # Use a venue from the valid set to avoid venue-oracle detectability
     # Always use booktitle (normalized to inproceedings per P0.2)
-    new_entry.fields["booktitle"] = rng.choice(REAL_VENUES)
+    new_entry.fields["booktitle"] = rng.choice(VALID_VENUES)
     new_entry.fields.pop("journal", None)  # Remove journal if present
     new_entry.bibtex_type = "inproceedings"
 

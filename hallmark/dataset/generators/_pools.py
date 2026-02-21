@@ -20,6 +20,26 @@ REAL_VENUES = [
     "SIGIR",
 ]
 
+# Venues that appear in VALID entries. Used to constrain hallucination generation
+# so that hallucinated entries don't use venues absent from the valid set,
+# which would create a trivial venue-based classification shortcut.
+VALID_VENUES = [
+    # Top ML conferences (scraped from DBLP)
+    "NeurIPS",
+    "ICML",
+    "ICLR",
+    "AAAI",
+    "CVPR",
+    "ACL",
+    "EMNLP",
+    "AISTATS",
+    "NAACL",
+    # Journals
+    "J. Mach. Learn. Res.",
+    "Mach. Learn.",
+    "Trans. Mach. Learn. Res.",
+]
+
 # Single ML buzzwords used for simple chimeric title construction in batch.py.
 ML_BUZZWORD_WORDS = [
     "Attention",

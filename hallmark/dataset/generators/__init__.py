@@ -1,7 +1,13 @@
 from __future__ import annotations
 
 from ._helpers import _clone_entry, is_preprint_source
-from ._pools import CHIMERIC_TITLE_TEMPLATES, FAKE_DOI_PREFIXES, ML_BUZZWORD_WORDS, REAL_VENUES
+from ._pools import (
+    CHIMERIC_TITLE_TEMPLATES,
+    FAKE_DOI_PREFIXES,
+    ML_BUZZWORD_WORDS,
+    REAL_VENUES,
+    VALID_VENUES,
+)
 from ._registry import all_generators, get_generator, get_generator_func, register_generator
 from .batch import (
     TIER1_GENERATORS,
@@ -36,6 +42,7 @@ __all__ = [
     "ML_BUZZWORD_WORDS",
     "REAL_VENUES",
     "TIER1_GENERATORS",
+    "VALID_VENUES",
     "_clone_entry",
     "all_generators",
     "generate_arxiv_version_mismatch",

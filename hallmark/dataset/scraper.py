@@ -48,6 +48,7 @@ def _request_with_retry(
 
 # DBLP venue keys for major conferences
 DBLP_VENUE_KEYS = {
+    # Conferences
     "NeurIPS": "conf/nips",
     "ICML": "conf/icml",
     "ICLR": "conf/iclr",
@@ -58,6 +59,10 @@ DBLP_VENUE_KEYS = {
     "EMNLP": "conf/emnlp",
     "AISTATS": "conf/aistats",
     "NAACL": "conf/naacl",
+    # Journals
+    "JMLR": "journals/jmlr",
+    "MLJ": "journals/ml",
+    "TMLR": "journals/tmlr",
 }
 
 DBLP_API_BASE = "https://dblp.org/search/publ/api"
