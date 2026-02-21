@@ -397,6 +397,30 @@ def _register_builtins() -> None:
             )
         )
 
+    # --- Title-match oracle (diagnostic baseline) ---
+    # NOTE: This is NOT a legitimate detector.  It exploits label leakage by
+    # looking up dev-split VALID titles.  Register it here so it appears in
+    # the registry for transparency and paper reporting purposes.
+    def _run_title_oracle(entries: list[BlindEntry], **kw: Any) -> list[Prediction]:
+        from hallmark.baselines.title_oracle import run_title_oracle
+        from hallmark.dataset.loader import load_split
+
+        reference_pool = load_split("dev_public")
+        return run_title_oracle(entries, reference_pool, **kw)
+
+    register(
+        BaselineInfo(
+            name="title_oracle",
+            description=(
+                "Title-match oracle (diagnostic — exploits perturbation structure). "
+                "NOT a legitimate detector: uses dev VALID titles as a label look-up table."
+            ),
+            runner=_run_title_oracle,
+            confidence_type="binary",
+            # is_free=True (no API key, no extra packages)
+        )
+    )
+
     # --- Ensemble ---
     def _run_ensemble(entries: list[BlindEntry], **kw: Any) -> list[Prediction]:
         from hallmark.baselines.ensemble import ensemble_predict

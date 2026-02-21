@@ -3,12 +3,16 @@
 from unittest.mock import Mock, patch
 
 import httpx
+import pytest
 
 from hallmark.baselines.prescreening import (
+    PrescreeningBreakdown,
     PreScreenResult,
     check_author_heuristics,
     check_doi_resolves,
     check_year_bounds,
+    compute_prescreening_breakdown,
+    format_prescreening_breakdown,
     merge_with_predictions,
     prescreen_entry,
 )
@@ -477,3 +481,95 @@ class TestMergeWithPredictions:
         assert merged[0].label == "VALID"
         assert merged[0].confidence == 0.0
         assert "no tool prediction" in merged[0].reason.lower()
+
+
+class TestPrescreeningBreakdown:
+    """Tests for compute_prescreening_breakdown and format_prescreening_breakdown."""
+
+    def _make_pred(self, key: str, label: str, reason: str = "") -> Prediction:
+        return Prediction(bibtex_key=key, label=label, confidence=0.8, reason=reason)
+
+    def test_no_overrides(self):
+        """All tool-only predictions — override count is zero."""
+        preds = [
+            self._make_pred("a", "HALLUCINATED", "Tool detected issue"),
+            self._make_pred("b", "VALID", "Looks fine"),
+        ]
+        true_labels = {"a": "HALLUCINATED", "b": "VALID"}
+
+        bd = compute_prescreening_breakdown(preds, true_labels)
+
+        assert bd.override_count == 0
+        assert bd.tool_only_total == 2
+        assert bd.tool_only_correct == 2
+        assert bd.override_accuracy is None
+        assert bd.tool_only_accuracy == 1.0
+
+    def test_all_overrides_correct(self):
+        """All predictions are overrides and all are correct."""
+        preds = [
+            self._make_pred(
+                "a", "HALLUCINATED", "Tool ok | [Pre-screening override] Year in future"
+            ),
+            self._make_pred(
+                "b", "HALLUCINATED", "Tool ok | [Pre-screening override] Author placeholder"
+            ),
+        ]
+        true_labels = {"a": "HALLUCINATED", "b": "HALLUCINATED"}
+
+        bd = compute_prescreening_breakdown(preds, true_labels)
+
+        assert bd.override_count == 2
+        assert bd.override_correct == 2
+        assert bd.tool_only_total == 0
+        assert bd.override_accuracy == 1.0
+        assert bd.tool_only_accuracy is None
+
+    def test_mixed_overrides(self):
+        """One correct override, one wrong override, one correct tool-only prediction."""
+        preds = [
+            self._make_pred("a", "HALLUCINATED", "Tool ok | [Pre-screening override] DOI 404"),
+            self._make_pred("b", "HALLUCINATED", "Tool ok | [Pre-screening override] Year future"),
+            self._make_pred("c", "VALID", "Tool says valid"),
+        ]
+        true_labels = {"a": "HALLUCINATED", "b": "VALID", "c": "VALID"}
+
+        bd = compute_prescreening_breakdown(preds, true_labels)
+
+        assert bd.total == 3
+        assert bd.override_count == 2
+        assert bd.override_correct == 1
+        assert bd.tool_only_total == 1
+        assert bd.tool_only_correct == 1
+        assert bd.override_accuracy == pytest.approx(0.5)
+        assert bd.tool_only_accuracy == pytest.approx(1.0)
+
+    def test_format_output_contains_expected_lines(self):
+        """format_prescreening_breakdown produces the expected summary lines."""
+        bd = PrescreeningBreakdown(
+            total=100,
+            override_count=10,
+            override_correct=9,
+            tool_only_total=90,
+            tool_only_correct=81,
+        )
+        text = format_prescreening_breakdown(bd)
+
+        assert "Pre-screening breakdown" in text
+        assert "10/100" in text
+        assert "9/10" in text
+        assert "81/90" in text
+
+    def test_format_no_overrides(self):
+        """format_prescreening_breakdown says N/A when there are no overrides."""
+        bd = PrescreeningBreakdown(
+            total=50,
+            override_count=0,
+            override_correct=0,
+            tool_only_total=50,
+            tool_only_correct=45,
+        )
+        text = format_prescreening_breakdown(bd)
+
+        assert "N/A" in text
+        assert "45/50" in text

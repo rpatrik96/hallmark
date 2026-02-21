@@ -1500,3 +1500,216 @@ class TestCompareTools:
             seed=42,
         )
         assert len(results) == 3  # C(3,2) = 3
+
+
+class TestEvaluateStressTestSplit:
+    """evaluate() must handle splits with no valid entries (stress_test design)."""
+
+    def test_fpr_is_none_when_no_valid_entries(self):
+        """FPR must be None — not NaN or 0.0 — when all entries are HALLUCINATED."""
+        entries = [
+            _entry("h1", "HALLUCINATED", tier=1),
+            _entry("h2", "HALLUCINATED", tier=2),
+            _entry("h3", "HALLUCINATED", tier=3),
+        ]
+        predictions = [_pred(k, "HALLUCINATED") for k in ("h1", "h2", "h3")]
+        result = evaluate(entries, predictions, tool_name="test", split_name="stress_test")
+        assert result.false_positive_rate is None
+
+    def test_fpr_none_regardless_of_prediction_label(self):
+        """FPR is undefined regardless of whether the tool predicts VALID or HALLUCINATED."""
+        entries = [
+            _entry("h1", "HALLUCINATED", tier=1),
+            _entry("h2", "HALLUCINATED", tier=2),
+        ]
+        predictions = [_pred(k, "VALID") for k in ("h1", "h2")]
+        result = evaluate(entries, predictions, tool_name="test", split_name="stress_test")
+        assert result.false_positive_rate is None
+
+    def test_detection_rate_still_computed_correctly(self):
+        """Detection rate is meaningful even when all entries are HALLUCINATED."""
+        entries = [
+            _entry("h1", "HALLUCINATED", tier=1),
+            _entry("h2", "HALLUCINATED", tier=1),
+            _entry("h3", "HALLUCINATED", tier=1),
+            _entry("h4", "HALLUCINATED", tier=1),
+        ]
+        predictions = [
+            _pred("h1", "HALLUCINATED"),
+            _pred("h2", "HALLUCINATED"),
+            _pred("h3", "HALLUCINATED"),
+            _pred("h4", "VALID"),
+        ]
+        result = evaluate(entries, predictions, tool_name="test", split_name="stress_test")
+        assert result.detection_rate == pytest.approx(0.75)
+        assert result.num_valid == 0
+        assert result.num_hallucinated == 4
+        assert result.false_positive_rate is None
+
+    def test_n_valid_and_n_hallucinated_fields_present(self):
+        """EvaluationResult exposes num_valid and num_hallucinated for caller inspection."""
+        entries = [_entry(f"h{i}", "HALLUCINATED", tier=1) for i in range(5)]
+        predictions = [_pred(f"h{i}", "HALLUCINATED") for i in range(5)]
+        result = evaluate(entries, predictions, tool_name="test", split_name="stress_test")
+        assert result.num_valid == 0
+        assert result.num_hallucinated == 5
+
+
+def _entry_with_method(
+    key: str,
+    label: str,
+    generation_method: str,
+    tier: int | None = None,
+    h_type: str | None = None,
+) -> BenchmarkEntry:
+    """Helper to create a BenchmarkEntry with an explicit generation_method."""
+    kwargs: dict = {
+        "bibtex_key": key,
+        "bibtex_type": "article",
+        "fields": {"title": f"Paper {key}", "author": "Author", "year": "2024"},
+        "label": label,
+        "explanation": "test",
+        "generation_method": generation_method,
+    }
+    if label == "HALLUCINATED":
+        kwargs["hallucination_type"] = h_type or "fabricated_doi"
+        kwargs["difficulty_tier"] = tier or 1
+    return BenchmarkEntry(**kwargs)
+
+
+class TestPerGenerationMethodMetrics:
+    """Tests for per_generation_method_metrics()."""
+
+    def test_basic_breakdown(self):
+        from hallmark.evaluation.metrics import per_generation_method_metrics
+
+        entries = [
+            _entry_with_method("p1", "HALLUCINATED", "perturbation"),
+            _entry_with_method("p2", "HALLUCINATED", "perturbation"),
+            _entry_with_method("a1", "HALLUCINATED", "adversarial"),
+            _entry_with_method("s1", "VALID", "scraped"),
+        ]
+        preds = {
+            "p1": _pred("p1", "HALLUCINATED"),
+            "p2": _pred("p2", "VALID"),  # missed
+            "a1": _pred("a1", "VALID"),  # missed
+            "s1": _pred("s1", "VALID"),
+        }
+        result = per_generation_method_metrics(entries, preds)
+
+        assert set(result.keys()) == {"perturbation", "adversarial", "scraped"}
+        assert result["perturbation"]["n"] == 2
+        assert result["perturbation"]["detection_rate"] == pytest.approx(0.5)
+        assert result["adversarial"]["n"] == 1
+        assert result["adversarial"]["detection_rate"] == pytest.approx(0.0)
+        assert result["scraped"]["n"] == 1
+
+    def test_accepts_list_predictions(self):
+        """Function should accept a list of Prediction objects, not just a dict."""
+        from hallmark.evaluation.metrics import per_generation_method_metrics
+
+        entries = [
+            _entry_with_method("h1", "HALLUCINATED", "perturbation"),
+            _entry_with_method("v1", "VALID", "scraped"),
+        ]
+        preds_list = [
+            _pred("h1", "HALLUCINATED"),
+            _pred("v1", "VALID"),
+        ]
+        result = per_generation_method_metrics(entries, preds_list)
+        assert result["perturbation"]["detection_rate"] == pytest.approx(1.0)
+        assert result["scraped"]["n"] == 1
+
+    def test_n_key_present(self):
+        """Each group dict must have an 'n' key with the entry count."""
+        from hallmark.evaluation.metrics import per_generation_method_metrics
+
+        entries = [
+            _entry_with_method("h1", "HALLUCINATED", "llm_generated"),
+            _entry_with_method("h2", "HALLUCINATED", "llm_generated"),
+            _entry_with_method("h3", "HALLUCINATED", "adversarial"),
+        ]
+        preds = {
+            "h1": _pred("h1", "HALLUCINATED"),
+            "h2": _pred("h2", "HALLUCINATED"),
+            "h3": _pred("h3", "VALID"),
+        }
+        result = per_generation_method_metrics(entries, preds)
+        assert result["llm_generated"]["n"] == 2
+        assert result["adversarial"]["n"] == 1
+
+    def test_all_valid_method_detection_rate_zero(self):
+        """A group containing only VALID entries has DR=0 (no hallucinations to detect)."""
+        from hallmark.evaluation.metrics import per_generation_method_metrics
+
+        entries = [
+            _entry_with_method("s1", "VALID", "scraped"),
+            _entry_with_method("s2", "VALID", "scraped"),
+        ]
+        preds = {
+            "s1": _pred("s1", "VALID"),
+            "s2": _pred("s2", "VALID"),
+        }
+        result = per_generation_method_metrics(entries, preds)
+        assert result["scraped"]["detection_rate"] == pytest.approx(0.0)
+        assert result["scraped"]["false_positive_rate"] == pytest.approx(0.0)
+
+    def test_perfect_detection_per_method(self):
+        """When all hallucinations are detected, DR=1.0 per method."""
+        from hallmark.evaluation.metrics import per_generation_method_metrics
+
+        entries = [
+            _entry_with_method("p1", "HALLUCINATED", "perturbation"),
+            _entry_with_method("a1", "HALLUCINATED", "adversarial"),
+        ]
+        preds = {
+            "p1": _pred("p1", "HALLUCINATED"),
+            "a1": _pred("a1", "HALLUCINATED"),
+        }
+        result = per_generation_method_metrics(entries, preds)
+        assert result["perturbation"]["detection_rate"] == pytest.approx(1.0)
+        assert result["adversarial"]["detection_rate"] == pytest.approx(1.0)
+
+    def test_mixed_perturbation_vs_adversarial(self):
+        """Perturbation entries are easier → higher DR than adversarial ones."""
+        from hallmark.evaluation.metrics import per_generation_method_metrics
+
+        entries = [
+            _entry_with_method("p1", "HALLUCINATED", "perturbation"),
+            _entry_with_method("p2", "HALLUCINATED", "perturbation"),
+            _entry_with_method("p3", "HALLUCINATED", "perturbation"),
+            _entry_with_method("a1", "HALLUCINATED", "adversarial"),
+            _entry_with_method("a2", "HALLUCINATED", "adversarial"),
+            _entry_with_method("a3", "HALLUCINATED", "adversarial"),
+        ]
+        # Detect all perturbation, miss all adversarial
+        preds = {
+            "p1": _pred("p1", "HALLUCINATED"),
+            "p2": _pred("p2", "HALLUCINATED"),
+            "p3": _pred("p3", "HALLUCINATED"),
+            "a1": _pred("a1", "VALID"),
+            "a2": _pred("a2", "VALID"),
+            "a3": _pred("a3", "VALID"),
+        }
+        result = per_generation_method_metrics(entries, preds)
+        assert result["perturbation"]["detection_rate"] == pytest.approx(1.0)
+        assert result["adversarial"]["detection_rate"] == pytest.approx(0.0)
+        assert result["perturbation"]["detection_rate"] > result["adversarial"]["detection_rate"]
+
+    def test_unknown_method_fallback(self):
+        """Entries with generation_method=None fall into 'unknown' group."""
+        from hallmark.evaluation.metrics import per_generation_method_metrics
+
+        entry = BenchmarkEntry(
+            bibtex_key="u1",
+            bibtex_type="article",
+            fields={"title": "T", "author": "A", "year": "2024"},
+            label="HALLUCINATED",
+            hallucination_type="fabricated_doi",
+            difficulty_tier=1,
+            generation_method=None,  # type: ignore[arg-type]
+        )
+        preds = {"u1": _pred("u1", "HALLUCINATED")}
+        result = per_generation_method_metrics([entry], preds)
+        assert "unknown" in result
+        assert result["unknown"]["detection_rate"] == pytest.approx(1.0)

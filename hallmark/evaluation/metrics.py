@@ -396,22 +396,43 @@ def per_type_metrics(
 
 def per_generation_method_metrics(
     entries: list[BenchmarkEntry],
-    predictions: dict[str, Prediction],
-) -> dict[str, dict[str, float]]:
-    """Compute metrics broken down by generation method."""
+    predictions: dict[str, Prediction] | list[Prediction],
+) -> dict[str, dict[str, float | int]]:
+    """Compute metrics broken down by generation method.
+
+    Groups entries by their ``generation_method`` field (e.g. ``perturbation``,
+    ``llm_generated``, ``adversarial``, ``scraped``, ``real_world``) and
+    computes per-group detection rate, FPR, and F1.
+
+    VALID entries (``scraped`` / ``real_world``) have no hallucinations, so
+    their ``detection_rate`` and ``f1`` are 0.0 by definition; FPR reflects
+    how often the tool incorrectly flags them.
+
+    Args:
+        entries: Benchmark entries (ground truth).
+        predictions: Tool's predictions — either a dict keyed by bibtex_key
+            or a list of Prediction objects (converted internally).
+
+    Returns:
+        Dict mapping generation method string to a metrics dict with keys:
+        ``n`` (int), ``detection_rate``, ``false_positive_rate``, ``f1``.
+    """
+    if isinstance(predictions, list):
+        predictions = {p.bibtex_key: p for p in predictions}
+
     method_entries: dict[str, list[BenchmarkEntry]] = defaultdict(list)
     for entry in entries:
         method = entry.generation_method or "unknown"
         method_entries[method].append(entry)
 
-    result = {}
+    result: dict[str, dict[str, float | int]] = {}
     for method, method_e in sorted(method_entries.items()):
         cm = build_confusion_matrix(method_e, predictions)
         result[method] = {
+            "n": len(method_e),
             "detection_rate": cm.detection_rate,
             "false_positive_rate": cm.false_positive_rate,
             "f1": cm.f1,
-            "count": len(method_e),
         }
     return result
 
@@ -733,33 +754,13 @@ def source_stratified_metrics(
 
 def generation_method_stratified_metrics(
     entries: list[BenchmarkEntry],
-    predictions: dict[str, Prediction],
-) -> dict[str, dict[str, float]]:
-    """Compute detection metrics stratified by generation method.
+    predictions: dict[str, Prediction] | list[Prediction],
+) -> dict[str, dict[str, float | int]]:
+    """Deprecated alias for ``per_generation_method_metrics``.
 
-    Groups entries by generation_method (perturbation, llm_generated, real_world,
-    adversarial) and computes per-group detection rate, FPR, and F1.
-    Shows whether a tool detects templates vs. genuine hallucinations.
+    Use ``per_generation_method_metrics`` directly for new code.
     """
-    method_groups: dict[str, list[BenchmarkEntry]] = defaultdict(list)
-    for entry in entries:
-        method_groups[entry.generation_method].append(entry)
-
-    result = {}
-    for method, group_entries in sorted(method_groups.items()):
-        group_keys = {e.bibtex_key for e in group_entries}
-        group_preds = {k: v for k, v in predictions.items() if k in group_keys}
-        if not group_preds:
-            continue
-        cm = build_confusion_matrix(group_entries, group_preds)
-        result[method] = {
-            "detection_rate": cm.detection_rate,
-            "false_positive_rate": cm.false_positive_rate,
-            "f1": cm.f1,
-            "count": len(group_entries),
-        }
-
-    return result
+    return per_generation_method_metrics(entries, predictions)
 
 
 def subtest_accuracy_table(

@@ -22,7 +22,11 @@ from hallmark.dataset.schema import (
     load_entries,
     load_predictions,
 )
-from hallmark.evaluation.metrics import EvaluationResult, build_confusion_matrix, evaluate
+from hallmark.evaluation.metrics import (
+    EvaluationResult,
+    build_confusion_matrix,
+    evaluate,
+)
 
 _SPLIT_CHOICES = ["dev_public", "test_public", "test_hidden", "stress_test"]
 
@@ -132,6 +136,20 @@ def main(argv: list[str] | None = None) -> int:
         action="store_true",
         help="Require predictions for all entries; exit with error if any are missing",
     )
+    eval_parser.add_argument(
+        "--by-generation-method",
+        action="store_true",
+        help="Show per-generation-method metrics breakdown (perturbation, adversarial, etc.)",
+    )
+    eval_parser.add_argument(
+        "--prescreening-breakdown",
+        action="store_true",
+        default=False,
+        help=(
+            "After main metrics, show a breakdown of pre-screening overrides vs. "
+            "tool-only predictions (counts and per-group accuracy)"
+        ),
+    )
 
     # --- contribute ---
     contrib_parser = subparsers.add_parser(
@@ -178,6 +196,25 @@ def main(argv: list[str] | None = None) -> int:
         default="text",
         choices=["text", "csv", "latex"],
         help="Output format: text (default), csv, or latex",
+    )
+    lb_parser.add_argument(
+        "--cluster",
+        action="store_true",
+        default=False,
+        help=(
+            "Add significance cluster labels (A, B, C, ...) — tools sharing a letter are "
+            "not statistically distinguishable (paired bootstrap, p > 0.05). "
+            "Requires prediction JSONL files; see --predictions-dir."
+        ),
+    )
+    lb_parser.add_argument(
+        "--predictions-dir",
+        type=str,
+        default=None,
+        help=(
+            "Directory containing prediction JSONL files named <tool>_<split>.jsonl. "
+            "Defaults to --results-dir when --cluster is used."
+        ),
     )
 
     # --- list-baselines ---
@@ -389,6 +426,13 @@ def _cmd_evaluate(args: argparse.Namespace) -> int:
         print(f"  HALLMARK Evaluation: {result.tool_name}")
         print(f"  Split: {result.split_name}")
         print(f"{'=' * 60}")
+
+        # Stress-test split notice: all entries are hallucinated by design
+        if result.num_valid == 0 or result.split_name == "stress_test":
+            print("  Note: stress_test contains only hallucinated entries (no valid references).")
+            print("  FPR and specificity are undefined. Use detection rate as the primary metric.")
+            print(f"{'─' * 60}")
+
         prevalence = result.num_hallucinated / result.num_entries if result.num_entries else 0
         print(f"  Entries:          {result.num_entries}")
         print(f"  Hallucinated:     {result.num_hallucinated} ({prevalence:.1%})")
@@ -459,6 +503,29 @@ def _cmd_evaluate(args: argparse.Namespace) -> int:
                     f"F1={metrics['f1']:.3f} (n={metrics['count']:.0f})"
                 )
 
+        # Generation method breakdown
+        if args.by_generation_method:
+            from hallmark.evaluation.metrics import per_generation_method_metrics
+
+            gm_metrics = per_generation_method_metrics(entries, pred_map)
+            if gm_metrics:
+                print(f"{'─' * 60}")
+                print("  Generation method breakdown:")
+                print(f"    {'Method':<16} {'N':>5}  {'Det.Rate':>8}  {'F1':>6}")
+                print(f"    {'─' * 42}")
+                for method, m in sorted(gm_metrics.items()):
+                    n = int(m["n"])
+                    all_valid = all(
+                        e.label == "VALID" for e in entries if e.generation_method == method
+                    )
+                    if all_valid:
+                        dr_str = "       —"
+                        f1_str = "     —"
+                    else:
+                        dr_str = f"{m['detection_rate']:8.3f}"
+                        f1_str = f"{m['f1']:6.3f}"
+                    print(f"    {method:<16} {n:>5}  {dr_str}  {f1_str}")
+
         # Detailed output if requested
         if args.detailed:
             print(f"{'─' * 60}")
@@ -493,6 +560,19 @@ def _cmd_evaluate(args: argparse.Namespace) -> int:
                     acc = sub_metrics["accuracy"]
                     count = int(sub_metrics["count"])
                     print(f"    {subtest_name:<25} {acc:.3f} ({count} entries)")
+
+        # Pre-screening breakdown if requested
+        if args.prescreening_breakdown:
+            from hallmark.baselines.prescreening import (
+                compute_prescreening_breakdown,
+                format_prescreening_breakdown,
+            )
+
+            true_labels = {e.bibtex_key: e.label for e in entries}
+            breakdown = compute_prescreening_breakdown(predictions, true_labels)
+            print(f"{'─' * 60}")
+            for line in format_prescreening_breakdown(breakdown).splitlines():
+                print(f"  {line}")
 
         print(f"{'=' * 60}\n")
 
@@ -578,6 +658,73 @@ _LEADERBOARD_SORT_FIELDS: dict[str, str] = {
 }
 
 
+def _compute_significance_clusters(
+    tool_names: list[str],
+    entries: list[BenchmarkEntry],
+    tool_predictions: dict[str, list[Prediction]],
+) -> dict[str, str]:
+    """Assign cluster labels (A, B, C, ...) via greedy graph coloring.
+
+    Two tools share a cluster label when they are NOT significantly different
+    (p_adjusted > 0.05 after paired bootstrap with Holm-Bonferroni correction).
+
+    Tools are processed in rank order (the order of ``tool_names``).  Each tool
+    gets the lowest letter not already used by any tool it IS significantly
+    different from.
+
+    Returns a dict mapping tool_name -> cluster letter.
+    """
+    from hallmark.evaluation.metrics import compare_tools
+
+    comparisons = compare_tools(entries, tool_predictions)
+
+    # Build the set of significantly-different pairs for O(1) lookup
+    sig_pairs: set[frozenset[str]] = set()
+    for c in comparisons:
+        if c["significant"]:
+            sig_pairs.add(frozenset([str(c["tool_a"]), str(c["tool_b"])]))
+
+    alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+    cluster_labels: dict[str, str] = {}
+
+    for tool in tool_names:
+        # Collect letters already taken by tools this tool is significantly different from
+        blocked: set[str] = set()
+        for other, letter in cluster_labels.items():
+            if frozenset([tool, other]) in sig_pairs:
+                blocked.add(letter)
+        # Assign the first available letter
+        for letter in alphabet:
+            if letter not in blocked:
+                cluster_labels[tool] = letter
+                break
+
+    return cluster_labels
+
+
+def _load_predictions_for_clustering(
+    tool_names: list[str],
+    split: str,
+    predictions_dir: Path,
+) -> dict[str, list[Prediction]]:
+    """Load prediction JSONL files for a set of tools.
+
+    Looks for files named ``<tool>_<split>.jsonl`` inside ``predictions_dir``.
+    Logs a warning for any tool whose file is missing.
+    """
+    tool_predictions: dict[str, list[Prediction]] = {}
+    for tool in tool_names:
+        pred_file = predictions_dir / f"{tool}_{split}.jsonl"
+        if pred_file.exists():
+            tool_predictions[tool] = load_predictions(pred_file)
+        else:
+            logging.warning(
+                f"No predictions file found for '{tool}' at {pred_file}; "
+                "skipping this tool in significance clustering."
+            )
+    return tool_predictions
+
+
 def _cmd_leaderboard(args: argparse.Namespace) -> int:
     """Show leaderboard from saved evaluation results."""
     results_dir = Path(args.results_dir) if args.results_dir else Path("results")
@@ -603,66 +750,134 @@ def _cmd_leaderboard(args: argparse.Namespace) -> int:
     reverse = args.sort_by != "ece"
     results.sort(key=lambda r: r.get(sort_field) or 0, reverse=reverse)
 
+    # Significance clustering (opt-in via --cluster)
+    clusters: dict[str, str] = {}
+    if args.cluster:
+        predictions_dir = Path(args.predictions_dir) if args.predictions_dir else results_dir
+        if not predictions_dir.exists():
+            logging.error(f"Predictions directory not found: {predictions_dir}")
+            return 1
+
+        tool_names_ranked = [r.get("tool_name", "?") for r in results]
+        try:
+            entries = load_split(split=args.split)
+        except FileNotFoundError as e:
+            logging.error(f"Cannot load split for clustering: {e}")
+            return 1
+
+        tool_predictions = _load_predictions_for_clustering(
+            tool_names_ranked, args.split, predictions_dir
+        )
+        if len(tool_predictions) < 2:
+            logging.warning(
+                "Fewer than 2 tools have prediction files; significance clustering requires "
+                "at least 2. Skipping cluster column."
+            )
+        else:
+            clusterable = [t for t in tool_names_ranked if t in tool_predictions]
+            logging.info(
+                f"Running significance clustering on {len(clusterable)} tools "
+                f"({len(tool_predictions)} prediction files loaded)..."
+            )
+            clusters = _compute_significance_clusters(clusterable, entries, tool_predictions)
+
     output_format: str = args.format
 
     if output_format == "csv":
-        print("rank,tool,split,f1_hallucination,detection_rate,fpr,tier_weighted_f1,mcc,ece")
+        header = "rank,tool,split,f1_hallucination,detection_rate,fpr,tier_weighted_f1,mcc,ece"
+        if clusters:
+            header += ",cluster"
+        print(header)
         for i, r in enumerate(results, 1):
+            tool = r.get("tool_name", "?")
             fpr_val = r.get("false_positive_rate")
             fpr_str = f"{fpr_val:.3f}" if fpr_val is not None else ""
             mcc_val = r.get("mcc")
             mcc_str = f"{mcc_val:.3f}" if mcc_val is not None else ""
             ece_val = r.get("ece")
             ece_str = f"{ece_val:.3f}" if ece_val is not None else ""
-            print(
-                f"{i},{r.get('tool_name', '?')},{r.get('split_name', args.split)},"
+            row = (
+                f"{i},{tool},{r.get('split_name', args.split)},"
                 f"{r.get('f1_hallucination', 0):.3f},"
                 f"{r.get('detection_rate', 0):.3f},"
                 f"{fpr_str},{r.get('tier_weighted_f1', 0):.3f},{mcc_str},{ece_str}"
             )
+            if clusters:
+                row += f",{clusters.get(tool, '')}"
+            print(row)
     elif output_format == "latex":
-        print(r"\begin{tabular}{lrrrrrr}")
+        col_spec = "lrrrrrr" + ("r" if clusters else "")
+        print(r"\begin{tabular}{" + col_spec + r"}")
         print(r"\toprule")
-        print(r"Tool & F1 & DR & FPR & TW-F1 & MCC & ECE \\")
+        header_row = r"Tool & F1 & DR & FPR & TW-F1 & MCC & ECE"
+        if clusters:
+            header_row += r" & Cluster"
+        print(header_row + r" \\")
         print(r"\midrule")
         for r in results:
-            tool = r.get("tool_name", "?").replace("_", r"\_")
+            tool = r.get("tool_name", "?")
+            tool_tex = tool.replace("_", r"\_")
             fpr_val = r.get("false_positive_rate")
             fpr_str = f"{fpr_val:.3f}" if fpr_val is not None else "--"
             mcc_val = r.get("mcc")
             mcc_str = f"{mcc_val:.3f}" if mcc_val is not None else "--"
             ece_val = r.get("ece")
             ece_str = f"{ece_val:.3f}" if ece_val is not None else "--"
-            print(
-                f"{tool} & {r.get('f1_hallucination', 0):.3f} & "
+            row = (
+                f"{tool_tex} & {r.get('f1_hallucination', 0):.3f} & "
                 f"{r.get('detection_rate', 0):.3f} & {fpr_str} & "
-                f"{r.get('tier_weighted_f1', 0):.3f} & {mcc_str} & {ece_str} \\\\"
+                f"{r.get('tier_weighted_f1', 0):.3f} & {mcc_str} & {ece_str}"
             )
+            if clusters:
+                row += f" & {clusters.get(tool, '--')}"
+            print(row + r" \\")
         print(r"\bottomrule")
         print(r"\end{tabular}")
+        if clusters:
+            print(
+                r"% Tools sharing a cluster letter are not statistically distinguishable"
+                r" (paired bootstrap, p > 0.05, Holm-Bonferroni correction)."
+            )
     else:
-        print(f"\n{'=' * 70}")
+        width = 78 if clusters else 70
+        print(f"\n{'=' * width}")
         print(f"  HALLMARK Leaderboard: {args.split}  (sorted by {args.sort_by})")
         print("  NOTE: Use MCC for cross-split comparison (prevalence-invariant).")
-        print(f"{'=' * 70}")
-        print(f"  {'Rank':<6}{'Tool':<25}{'F1':<8}{'DR':<8}{'FPR':<8}{'TW-F1':<8}{'MCC':<8}")
-        print(f"  {'─' * 70}")
+        print(f"{'=' * width}")
+        if clusters:
+            print(
+                f"  {'Rank':<6}{'Tool':<25}{'F1':<8}{'DR':<8}{'FPR':<8}"
+                f"{'TW-F1':<8}{'MCC':<8}{'Cluster':<8}"
+            )
+        else:
+            print(f"  {'Rank':<6}{'Tool':<25}{'F1':<8}{'DR':<8}{'FPR':<8}{'TW-F1':<8}{'MCC':<8}")
+        print(f"  {'─' * (width - 2)}")
 
         for i, r in enumerate(results, 1):
+            tool = r.get("tool_name", "?")
             fpr_val = r.get("false_positive_rate")
             fpr_str = f"{fpr_val:<8.3f}" if fpr_val is not None else "N/A     "
             mcc_val = r.get("mcc")
             mcc_str = f"{mcc_val:<8.3f}" if mcc_val is not None else "N/A     "
-            print(
-                f"  {i:<6}{r.get('tool_name', '?'):<25}"
+            row = (
+                f"  {i:<6}{tool:<25}"
                 f"{r.get('f1_hallucination', 0):<8.3f}"
                 f"{r.get('detection_rate', 0):<8.3f}"
                 f"{fpr_str}"
                 f"{r.get('tier_weighted_f1', 0):<8.3f}"
                 f"{mcc_str}"
             )
+            if clusters:
+                row += f"{clusters.get(tool, ''):<8}"
+            print(row)
 
-        print(f"{'=' * 70}\n")
+        print(f"{'=' * width}")
+        if clusters:
+            print(
+                "  * Tools sharing a cluster letter are not statistically distinguishable"
+                " (paired bootstrap, p > 0.05, Holm-Bonferroni correction)."
+            )
+        print()
     return 0
 
 

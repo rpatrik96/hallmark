@@ -14,7 +14,7 @@ from __future__ import annotations
 
 import logging
 import re
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
 from dataclasses import dataclass, replace
 from typing import Literal
 
@@ -289,6 +289,114 @@ def prescreen_entry(entry: BlindEntry, reference_year: int | None = None) -> lis
                 )
             )
     return results
+
+
+@dataclass
+class PrescreeningBreakdown:
+    """Summary of how many predictions were influenced by pre-screening overrides.
+
+    An "override" is a prediction whose ``reason`` field contains the marker
+    ``"[Pre-screening override]"``, indicating that pre-screening changed the
+    outcome from the tool's raw prediction.
+    """
+
+    total: int
+    """Total number of predictions examined."""
+
+    override_count: int
+    """Number of predictions where pre-screening overrode the tool."""
+
+    override_correct: int
+    """Override predictions that matched the true label."""
+
+    tool_only_total: int
+    """Predictions not affected by a pre-screening override."""
+
+    tool_only_correct: int
+    """Tool-only predictions that matched the true label."""
+
+    @property
+    def override_accuracy(self) -> float | None:
+        """Fraction of overrides that were correct (None if no overrides)."""
+        if self.override_count == 0:
+            return None
+        return self.override_correct / self.override_count
+
+    @property
+    def tool_only_accuracy(self) -> float | None:
+        """Fraction of tool-only predictions that were correct (None if none)."""
+        if self.tool_only_total == 0:
+            return None
+        return self.tool_only_correct / self.tool_only_total
+
+
+_PRESCREENING_OVERRIDE_MARKER = "[Pre-screening override]"
+
+
+def compute_prescreening_breakdown(
+    predictions: list[Prediction],
+    true_labels: Mapping[str, str],
+) -> PrescreeningBreakdown:
+    """Compute a breakdown of pre-screening overrides vs. tool-only predictions.
+
+    Args:
+        predictions: Merged predictions (one per entry) from a prescreening-enabled run.
+        true_labels: Mapping of bibtex_key → true label string ("HALLUCINATED"/"VALID").
+
+    Returns:
+        PrescreeningBreakdown with counts and accuracy split by override/tool-only.
+    """
+    override_count = 0
+    override_correct = 0
+    tool_only_total = 0
+    tool_only_correct = 0
+
+    for pred in predictions:
+        true_label = true_labels.get(pred.bibtex_key)
+        is_correct = true_label is not None and pred.label == true_label
+        reason = pred.reason or ""
+
+        if _PRESCREENING_OVERRIDE_MARKER in reason:
+            override_count += 1
+            if is_correct:
+                override_correct += 1
+        else:
+            tool_only_total += 1
+            if is_correct:
+                tool_only_correct += 1
+
+    return PrescreeningBreakdown(
+        total=len(predictions),
+        override_count=override_count,
+        override_correct=override_correct,
+        tool_only_total=tool_only_total,
+        tool_only_correct=tool_only_correct,
+    )
+
+
+def format_prescreening_breakdown(breakdown: PrescreeningBreakdown) -> str:
+    """Return a human-readable multi-line summary of the breakdown."""
+    lines = ["Pre-screening breakdown:"]
+    pct = f"{breakdown.override_count / breakdown.total:.1%}" if breakdown.total > 0 else "N/A"
+    lines.append(f"  Prescreening overrides: {breakdown.override_count}/{breakdown.total} ({pct})")
+
+    if breakdown.override_accuracy is not None:
+        oa_pct = f"{breakdown.override_accuracy:.1%}"
+        lines.append(
+            f"  Override accuracy:      {breakdown.override_correct}/{breakdown.override_count} ({oa_pct})"
+        )
+    else:
+        lines.append("  Override accuracy:      N/A (no overrides)")
+
+    if breakdown.tool_only_accuracy is not None:
+        ta_pct = f"{breakdown.tool_only_accuracy:.1%}"
+        lines.append(
+            f"  Tool-only accuracy:     {breakdown.tool_only_correct}/{breakdown.tool_only_total} ({ta_pct})"
+        )
+    else:
+        lines.append("  Tool-only accuracy:     N/A")
+
+    return "\n".join(lines)
 
 
 def prescreen_entries(
