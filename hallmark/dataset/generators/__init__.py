@@ -6,6 +6,8 @@ from ._pools import (
     FAKE_DOI_PREFIXES,
     ML_BUZZWORD_WORDS,
     REAL_VENUES,
+    VALID_CONFERENCES,
+    VALID_JOURNALS,
     VALID_VENUES,
 )
 from ._registry import all_generators, get_generator, get_generator_func, register_generator
@@ -42,6 +44,8 @@ __all__ = [
     "ML_BUZZWORD_WORDS",
     "REAL_VENUES",
     "TIER1_GENERATORS",
+    "VALID_CONFERENCES",
+    "VALID_JOURNALS",
     "VALID_VENUES",
     "_clone_entry",
     "all_generators",

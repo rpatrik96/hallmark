@@ -24,11 +24,8 @@ from hallmark.dataset.schema import BlindEntry, Prediction
 
 logger = logging.getLogger(__name__)
 
-# Fallback reference year used only when no reference_year is passed and
-# datetime.now() is unavailable (should never occur in practice).
-# This should match the dataset build date of the current benchmark version.
-# For v1.0 the freeze date was 2026-02-13; the active year is derived
-# dynamically via datetime.datetime.now().year in check_year_bounds().
+# The benchmark reference year is pinned to the dataset freeze date.
+# Callers can override via the reference_year parameter.
 _BENCHMARK_REFERENCE_YEAR: int = 2026
 
 

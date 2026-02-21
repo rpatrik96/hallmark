@@ -40,6 +40,9 @@ VALID_VENUES = [
     "Trans. Mach. Learn. Res.",
 ]
 
+VALID_JOURNALS = ["J. Mach. Learn. Res.", "Mach. Learn.", "Trans. Mach. Learn. Res."]
+VALID_CONFERENCES = [v for v in VALID_VENUES if v not in set(VALID_JOURNALS)]
+
 # Single ML buzzwords used for simple chimeric title construction in batch.py.
 ML_BUZZWORD_WORDS = [
     "Attention",

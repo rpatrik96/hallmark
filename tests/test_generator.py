@@ -319,6 +319,59 @@ class TestBackwardCompatibility:
         assert entry.label == "HALLUCINATED"
 
 
+class TestGeneratePlausibleFabricationVariation:
+    def test_bibtex_type_variation(self):
+        """generate_plausible_fabrication produces both article and inproceedings over 200 seeds."""
+        types_seen: set[str] = set()
+        for seed in range(200):
+            entry = _make_base_entry()
+            rng = random.Random(seed)
+            result = generate_plausible_fabrication(entry, rng=rng)
+            types_seen.add(result.bibtex_type)
+            if len(types_seen) == 2:
+                break
+        assert "article" in types_seen, "Never produced bibtex_type='article'"
+        assert "inproceedings" in types_seen, "Never produced bibtex_type='inproceedings'"
+
+    def test_author_count_varies_2_to_7(self):
+        """Author count spans at least 3 to 5 across 100 seeds (true range 2-7)."""
+        counts: list[int] = []
+        for seed in range(100):
+            entry = _make_base_entry()
+            rng = random.Random(seed)
+            result = generate_plausible_fabrication(entry, rng=rng)
+            author_field = result.fields.get("author", "")
+            count = len(author_field.split(" and ")) if author_field else 0
+            counts.append(count)
+        assert min(counts) <= 3, f"Minimum author count {min(counts)} never reached <=3"
+        assert max(counts) >= 5, f"Maximum author count {max(counts)} never reached >=5"
+
+
+class TestGenerateNonexistentVenuePreservesBibtexType:
+    def test_article_source_preserved(self):
+        """generate_nonexistent_venue with bibtex_type='article' source keeps article type."""
+        from hallmark.dataset.generators.tier1 import generate_nonexistent_venue
+
+        entry = _make_base_entry()
+        entry.bibtex_type = "article"
+        entry.fields.pop("booktitle", None)
+        entry.fields["journal"] = "Nature Machine Intelligence"
+        result = generate_nonexistent_venue(entry)
+        assert result.bibtex_type == "article"
+        assert "journal" in result.fields
+        assert "booktitle" not in result.fields
+
+    def test_inproceedings_source_stays_inproceedings(self):
+        """generate_nonexistent_venue with inproceedings source uses inproceedings."""
+        from hallmark.dataset.generators.tier1 import generate_nonexistent_venue
+
+        entry = _make_base_entry()
+        assert entry.bibtex_type == "inproceedings"
+        result = generate_nonexistent_venue(entry)
+        assert result.bibtex_type == "inproceedings"
+        assert "booktitle" in result.fields
+
+
 class TestGeneratorRegistry:
     """Tests for the generator registry pattern."""
 

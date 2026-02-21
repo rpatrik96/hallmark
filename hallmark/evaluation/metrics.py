@@ -47,6 +47,7 @@ Evaluation Protocol:
 
 from __future__ import annotations
 
+import hashlib
 import logging
 from collections import defaultdict
 from collections.abc import Callable
@@ -1504,7 +1505,8 @@ def compare_tools(
             # resampling pattern. Without this, every pair uses identical
             # bootstrap samples (same seed), which, while not technically wrong
             # (pairs are independent), is statistically undesirable.
-            pair_seed = (seed + hash((name_a, name_b))) % (2**31)
+            pair_hash = int(hashlib.md5(f"{name_a},{name_b}".encode()).hexdigest(), 16)
+            pair_seed = (seed + pair_hash) % (2**31)
 
             obs_diff, p_value_two_sided, effect_size = paired_bootstrap_test(
                 entries,

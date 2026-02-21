@@ -75,10 +75,16 @@ def generate_nonexistent_venue(
     rng = rng or random.Random()
     new_entry = _clone_entry(entry)
     fake_venue = rng.choice(FAKE_VENUES)
-    # Always use booktitle (normalized to inproceedings per P0.2)
-    new_entry.fields["booktitle"] = fake_venue
-    new_entry.fields.pop("journal", None)  # Remove journal if present
-    new_entry.bibtex_type = "inproceedings"
+    if entry.bibtex_type == "article":
+        # Preserve article type; put the fake venue in journal field
+        new_entry.fields["journal"] = fake_venue
+        new_entry.fields.pop("booktitle", None)
+        new_entry.bibtex_type = "article"
+    else:
+        # Default: use booktitle (normalized to inproceedings per P0.2)
+        new_entry.fields["booktitle"] = fake_venue
+        new_entry.fields.pop("journal", None)
+        new_entry.bibtex_type = "inproceedings"
     new_entry.label = "HALLUCINATED"
     new_entry.hallucination_type = HallucinationType.NONEXISTENT_VENUE.value
     new_entry.difficulty_tier = DifficultyTier.EASY.value

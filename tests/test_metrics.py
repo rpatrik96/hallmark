@@ -1506,6 +1506,36 @@ class TestCompareTools:
         )
         assert len(results) == 3  # C(3,2) = 3
 
+    def test_deterministic_with_same_inputs(self):
+        """compare_tools called twice with identical inputs returns identical results (hash fix)."""
+        from hallmark.evaluation.metrics import compare_tools
+
+        entries = [
+            _entry("v1", "VALID"),
+            _entry("h1", "HALLUCINATED", tier=1),
+            _entry("h2", "HALLUCINATED", tier=2),
+        ]
+        preds_a = [
+            _pred("v1", "VALID"),
+            _pred("h1", "HALLUCINATED"),
+            _pred("h2", "VALID"),
+        ]
+        preds_b = [
+            _pred("v1", "VALID"),
+            _pred("h1", "VALID"),
+            _pred("h2", "HALLUCINATED"),
+        ]
+        tool_preds = {"tool_a": preds_a, "tool_b": preds_b}
+
+        results1 = compare_tools(entries, tool_preds, n_bootstrap=200, seed=99)
+        results2 = compare_tools(entries, tool_preds, n_bootstrap=200, seed=99)
+
+        assert len(results1) == len(results2) == 1
+        assert results1[0]["observed_diff"] == results2[0]["observed_diff"]
+        assert results1[0]["p_value_raw"] == results2[0]["p_value_raw"]
+        assert results1[0]["p_value_adjusted"] == results2[0]["p_value_adjusted"]
+        assert results1[0]["effect_size"] == results2[0]["effect_size"]
+
 
 class TestEvaluateStressTestSplit:
     """evaluate() must handle splits with no valid entries (stress_test design)."""

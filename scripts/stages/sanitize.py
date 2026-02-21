@@ -10,12 +10,13 @@ Applied transformations (in order):
 7. Fix cross_db_agreement for types with real title+authors
 8. Drop retracted_paper entries from all splits
 9. Remove fabricated real-world entries
+10. Relabel LLM-generated entries mislabeled as fabricated_doi -> plausible_fabrication
+11. Drop entries with author="Unknown" (unfixable data quality issue)
 
 Fixes NOT absorbed (unnecessary with clean generation):
 - fix_near_miss_titles.py — generator already produces correct mutations
 - fix_plausible_fabrication.py — scale_up generates with unique title pools
 - fix_retracted_papers.py — retracted_paper type dropped entirely
-- fix_mislabeled_llm_entries.py — filtered during stage 6 integration
 """
 
 from __future__ import annotations
@@ -24,7 +25,13 @@ import logging
 import random
 import re
 
-from hallmark.dataset.schema import BenchmarkEntry
+from hallmark.dataset.schema import (
+    EXPECTED_SUBTESTS,
+    BenchmarkEntry,
+    DifficultyTier,
+    GenerationMethod,
+    HallucinationType,
+)
 
 from ._common import FAKE_REALWORLD_KEYS
 
@@ -318,6 +325,37 @@ def _remove_fake_realworld(entries: list[BenchmarkEntry]) -> tuple[list[Benchmar
     return filtered, removed
 
 
+def _fix_mislabeled_llm_entries(entries: list[BenchmarkEntry]) -> int:
+    """Relabel LLM-generated entries incorrectly typed as fabricated_doi.
+
+    LLM-generated entries fabricate entire papers holistically, so they
+    should be classified as plausible_fabrication, not fabricated_doi.
+    """
+    fixed = 0
+    expected = dict(EXPECTED_SUBTESTS[HallucinationType.PLAUSIBLE_FABRICATION])
+    for entry in entries:
+        if (
+            entry.hallucination_type == HallucinationType.FABRICATED_DOI.value
+            and entry.generation_method == GenerationMethod.LLM_GENERATED.value
+        ):
+            entry.hallucination_type = HallucinationType.PLAUSIBLE_FABRICATION.value
+            entry.difficulty_tier = DifficultyTier.HARD.value
+            # Preserve per-entry dynamic values (doi_resolves, fields_complete)
+            # and only overwrite the type-defined subtest values.
+            for key, value in expected.items():
+                if value is not None:
+                    entry.subtests[key] = value
+            fixed += 1
+    return fixed
+
+
+def _drop_unknown_authors(entries: list[BenchmarkEntry]) -> tuple[list[BenchmarkEntry], int]:
+    """Drop entries with author='Unknown' (unfixable data quality issue)."""
+    filtered = [e for e in entries if e.fields.get("author", "").strip().lower() != "unknown"]
+    dropped = len(entries) - len(filtered)
+    return filtered, dropped
+
+
 def stage_sanitize(
     splits: dict[str, list[BenchmarkEntry]],
     seed: int,
@@ -381,6 +419,14 @@ def stage_sanitize(
         # 9. Remove fake real-world
         entries, n = _remove_fake_realworld(entries)
         total_fixes[f"{split_name}_fake_rw"] = n
+
+        # 10. Relabel LLM-generated entries mislabeled as fabricated_doi
+        n = _fix_mislabeled_llm_entries(entries)
+        total_fixes[f"{split_name}_mislabeled_llm"] = n
+
+        # 11. Drop entries with author="Unknown"
+        entries, n = _drop_unknown_authors(entries)
+        total_fixes[f"{split_name}_unknown_authors"] = n
 
         splits[split_name] = entries
 

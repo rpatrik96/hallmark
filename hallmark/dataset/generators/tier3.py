@@ -24,7 +24,8 @@ from ._pools import (
     PLAUSIBLE_NOUNS,
     PLAUSIBLE_PROPERTIES,
     PLAUSIBLE_SETTINGS,
-    VALID_VENUES,
+    VALID_CONFERENCES,
+    VALID_JOURNALS,
 )
 from ._registry import register_generator
 
@@ -258,8 +259,8 @@ def generate_plausible_fabrication(
     )
     new_entry.fields["title"] = title_template
 
-    # Generate 3-5 unique authors
-    n_authors = rng.randint(3, 5)
+    # Generate 2-7 unique authors (wider range matching real papers)
+    n_authors = rng.randint(2, 7)
     first_pool = list(PLAUSIBLE_FIRST_NAMES)
     last_pool = list(PLAUSIBLE_LAST_NAMES)
     rng.shuffle(first_pool)
@@ -267,11 +268,19 @@ def generate_plausible_fabrication(
     authors = [f"{first_pool[i]} {last_pool[i]}" for i in range(n_authors)]
     new_entry.fields["author"] = " and ".join(authors)
 
-    # Use a venue from the valid set to avoid venue-oracle detectability
-    # Always use booktitle (normalized to inproceedings per P0.2)
-    new_entry.fields["booktitle"] = rng.choice(VALID_VENUES)
-    new_entry.fields.pop("journal", None)  # Remove journal if present
-    new_entry.bibtex_type = "inproceedings"
+    # Use a venue from the valid set to avoid venue-oracle detectability.
+    # ~5% of the time generate as article to avoid bibtex_type leakage.
+    if rng.random() < 0.05:
+        new_entry.bibtex_type = "article"
+        new_entry.fields["journal"] = rng.choice(VALID_JOURNALS)
+        new_entry.fields.pop("booktitle", None)
+        # Add plausible volume/number
+        new_entry.fields["volume"] = str(rng.randint(1, 40))
+        new_entry.fields["number"] = str(rng.randint(1, 12))
+    else:
+        new_entry.bibtex_type = "inproceedings"
+        new_entry.fields["booktitle"] = rng.choice(VALID_CONFERENCES)
+        new_entry.fields.pop("journal", None)
 
     # Remove DOI (fabricated paper won't have one)
     new_entry.fields.pop("doi", None)
