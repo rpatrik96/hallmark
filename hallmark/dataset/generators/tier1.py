@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import datetime
 import random
 import string
 
@@ -13,8 +14,15 @@ from hallmark.dataset.schema import (
 from ._helpers import _clone_entry
 from ._pools import FAKE_AUTHORS, FAKE_DOI_PREFIXES, FAKE_VENUES
 
-# Pin to dataset build year for reproducibility across regeneration runs.
-_DATASET_REFERENCE_YEAR: int = 2025
+
+def _current_reference_year() -> int:
+    """Return the current year as the default reference for future-date generation.
+
+    New dataset versions should use the current year so that generated "future"
+    entries remain clearly in the future. For exact reproduction of a frozen
+    dataset (e.g., v1.0 built in 2025), pass ``reference_year=2025`` explicitly.
+    """
+    return datetime.datetime.now(tz=datetime.timezone.utc).year
 
 
 def generate_fabricated_doi(
@@ -115,11 +123,21 @@ def generate_placeholder_authors(
     return new_entry
 
 
-def generate_future_date(entry: BenchmarkEntry, rng: random.Random | None = None) -> BenchmarkEntry:
-    """Tier 1: Set publication year to the future."""
+def generate_future_date(
+    entry: BenchmarkEntry,
+    rng: random.Random | None = None,
+    reference_year: int | None = None,
+) -> BenchmarkEntry:
+    """Tier 1: Set publication year to the future.
+
+    Args:
+        reference_year: Base year for computing future dates. Defaults to the
+            current year. Pass explicitly (e.g., 2025) to reproduce a frozen dataset.
+    """
     rng = rng or random.Random()
     new_entry = _clone_entry(entry)
-    future_year = str(_DATASET_REFERENCE_YEAR + rng.randint(4, 10))
+    base_year = reference_year if reference_year is not None else _current_reference_year()
+    future_year = str(base_year + rng.randint(4, 10))
     new_entry.fields["year"] = future_year
     new_entry.label = "HALLUCINATED"
     new_entry.hallucination_type = HallucinationType.FUTURE_DATE.value

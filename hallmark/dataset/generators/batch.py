@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import random
+from collections.abc import Callable
 
 from hallmark.dataset.schema import BenchmarkEntry
 
@@ -25,7 +26,7 @@ from .tier3 import (
     generate_plausible_fabrication,
 )
 
-TIER1_GENERATORS = [
+TIER1_GENERATORS: list[Callable[..., BenchmarkEntry]] = [
     generate_fabricated_doi,
     generate_nonexistent_venue,
     generate_placeholder_authors,
