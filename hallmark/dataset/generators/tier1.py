@@ -5,6 +5,7 @@ import random
 import string
 
 from hallmark.dataset.schema import (
+    EXPECTED_SUBTESTS,
     BenchmarkEntry,
     DifficultyTier,
     GenerationMethod,
@@ -13,6 +14,7 @@ from hallmark.dataset.schema import (
 
 from ._helpers import _clone_entry
 from ._pools import FAKE_AUTHORS, FAKE_DOI_PREFIXES, FAKE_VENUES
+from ._registry import register_generator
 
 
 def _current_reference_year() -> int:
@@ -25,6 +27,7 @@ def _current_reference_year() -> int:
     return datetime.datetime.now(tz=datetime.timezone.utc).year
 
 
+@register_generator(HallucinationType.FABRICATED_DOI, description="Replace DOI with fabricated one")
 def generate_fabricated_doi(
     entry: BenchmarkEntry, rng: random.Random | None = None
 ) -> BenchmarkEntry:
@@ -54,18 +57,14 @@ def generate_fabricated_doi(
     new_entry.difficulty_tier = DifficultyTier.EASY.value
     new_entry.generation_method = GenerationMethod.PERTURBATION.value
     new_entry.explanation = f"DOI fabricated: {new_entry.fields['doi']} does not resolve"
-    new_entry.subtests = {
-        "doi_resolves": False,
-        "title_exists": True,
-        "authors_match": True,
-        "venue_correct": True,
-        "fields_complete": True,
-        "cross_db_agreement": False,
-    }
+    new_entry.subtests = dict(EXPECTED_SUBTESTS[HallucinationType.FABRICATED_DOI])
     new_entry.bibtex_key = f"fabricated_doi_{new_entry.bibtex_key}"
     return new_entry
 
 
+@register_generator(
+    HallucinationType.NONEXISTENT_VENUE, description="Replace venue with invented name"
+)
 def generate_nonexistent_venue(
     entry: BenchmarkEntry, rng: random.Random | None = None
 ) -> BenchmarkEntry:
@@ -86,18 +85,16 @@ def generate_nonexistent_venue(
     new_entry.generation_method = GenerationMethod.PERTURBATION.value
     new_entry.explanation = f"Venue fabricated: '{fake_venue}' does not exist"
     has_doi = bool(new_entry.fields.get("doi"))
-    new_entry.subtests = {
-        "doi_resolves": True if has_doi else None,
-        "title_exists": True,
-        "authors_match": True,
-        "venue_correct": False,
-        "fields_complete": True,
-        "cross_db_agreement": False,
-    }
+    subtests = dict(EXPECTED_SUBTESTS[HallucinationType.NONEXISTENT_VENUE])
+    subtests["doi_resolves"] = True if has_doi else None
+    new_entry.subtests = subtests
     new_entry.bibtex_key = f"fake_venue_{new_entry.bibtex_key}"
     return new_entry
 
 
+@register_generator(
+    HallucinationType.PLACEHOLDER_AUTHORS, description="Replace authors with generic/fake names"
+)
 def generate_placeholder_authors(
     entry: BenchmarkEntry, rng: random.Random | None = None
 ) -> BenchmarkEntry:
@@ -111,18 +108,18 @@ def generate_placeholder_authors(
     new_entry.generation_method = GenerationMethod.PERTURBATION.value
     new_entry.explanation = f"Authors are placeholders: {new_entry.fields['author']}"
     has_doi = bool(new_entry.fields.get("doi"))
-    new_entry.subtests = {
-        "doi_resolves": True if has_doi else None,
-        "title_exists": True,
-        "authors_match": False,
-        "venue_correct": True,
-        "fields_complete": True,
-        "cross_db_agreement": False,
-    }
+    subtests = dict(EXPECTED_SUBTESTS[HallucinationType.PLACEHOLDER_AUTHORS])
+    subtests["doi_resolves"] = True if has_doi else None
+    new_entry.subtests = subtests
     new_entry.bibtex_key = f"fake_authors_{new_entry.bibtex_key}"
     return new_entry
 
 
+@register_generator(
+    HallucinationType.FUTURE_DATE,
+    extra_args=("reference_year",),
+    description="Set publication year to the future",
+)
 def generate_future_date(
     entry: BenchmarkEntry,
     rng: random.Random | None = None,
@@ -145,13 +142,8 @@ def generate_future_date(
     new_entry.generation_method = GenerationMethod.PERTURBATION.value
     new_entry.explanation = f"Publication year {future_year} is in the future"
     has_doi = bool(new_entry.fields.get("doi"))
-    new_entry.subtests = {
-        "doi_resolves": True if has_doi else None,
-        "title_exists": True,
-        "authors_match": True,
-        "venue_correct": True,
-        "fields_complete": False,  # future year = malformed metadata
-        "cross_db_agreement": False,
-    }
+    subtests = dict(EXPECTED_SUBTESTS[HallucinationType.FUTURE_DATE])
+    subtests["doi_resolves"] = True if has_doi else None
+    new_entry.subtests = subtests
     new_entry.bibtex_key = f"future_{new_entry.bibtex_key}"
     return new_entry

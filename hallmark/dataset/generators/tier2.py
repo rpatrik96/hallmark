@@ -3,6 +3,7 @@ from __future__ import annotations
 import random
 
 from hallmark.dataset.schema import (
+    EXPECTED_SUBTESTS,
     BenchmarkEntry,
     DifficultyTier,
     GenerationMethod,
@@ -11,8 +12,14 @@ from hallmark.dataset.schema import (
 
 from ._helpers import _clone_entry
 from ._pools import HYBRID_FAKE_AUTHORS, HYBRID_SWAP_WORDS
+from ._registry import register_generator
 
 
+@register_generator(
+    HallucinationType.CHIMERIC_TITLE,
+    extra_args=("fake_title",),
+    description="Keep real author but replace title with a fabricated one",
+)
 def generate_chimeric_title(
     entry: BenchmarkEntry,
     fake_title: str,
@@ -27,18 +34,18 @@ def generate_chimeric_title(
     new_entry.generation_method = GenerationMethod.PERTURBATION.value
     new_entry.explanation = f"Title '{fake_title}' is fabricated; authors are real"
     has_doi = bool(new_entry.fields.get("doi"))
-    new_entry.subtests = {
-        "doi_resolves": True if has_doi else None,  # DOI still resolves to original paper
-        "title_exists": False,
-        "authors_match": True,
-        "venue_correct": True,
-        "fields_complete": True,
-        "cross_db_agreement": False,
-    }
+    subtests = dict(EXPECTED_SUBTESTS[HallucinationType.CHIMERIC_TITLE])
+    subtests["doi_resolves"] = True if has_doi else None  # DOI still resolves to original paper
+    new_entry.subtests = subtests
     new_entry.bibtex_key = f"chimeric_{new_entry.bibtex_key}"
     return new_entry
 
 
+@register_generator(
+    HallucinationType.WRONG_VENUE,
+    extra_args=("wrong_venue",),
+    description="Correct title/authors but wrong venue",
+)
 def generate_wrong_venue(
     entry: BenchmarkEntry,
     wrong_venue: str,
@@ -62,18 +69,18 @@ def generate_wrong_venue(
     new_entry.generation_method = GenerationMethod.PERTURBATION.value
     new_entry.explanation = f"Venue changed to '{wrong_venue}' (original was different)"
     has_doi = bool(new_entry.fields.get("doi"))
-    new_entry.subtests = {
-        "doi_resolves": True if has_doi else None,
-        "title_exists": True,
-        "authors_match": True,
-        "venue_correct": False,
-        "fields_complete": True,
-        "cross_db_agreement": False,  # venue mismatch causes cross-DB disagreement
-    }
+    subtests = dict(EXPECTED_SUBTESTS[HallucinationType.WRONG_VENUE])
+    subtests["doi_resolves"] = True if has_doi else None
+    new_entry.subtests = subtests
     new_entry.bibtex_key = f"wrong_venue_{new_entry.bibtex_key}"
     return new_entry
 
 
+@register_generator(
+    HallucinationType.AUTHOR_MISMATCH,
+    extra_args=("donor",),
+    description="Correct title but authors from a different paper",
+)
 def generate_swapped_authors(
     entry: BenchmarkEntry,
     donor_entry: BenchmarkEntry,
@@ -88,18 +95,18 @@ def generate_swapped_authors(
     new_entry.generation_method = GenerationMethod.PERTURBATION.value
     new_entry.explanation = f"Authors swapped from '{donor_entry.bibtex_key}'"
     has_doi = bool(new_entry.fields.get("doi"))
-    new_entry.subtests = {
-        "doi_resolves": True if has_doi else None,
-        "title_exists": True,
-        "authors_match": False,
-        "venue_correct": True,
-        "fields_complete": True,
-        "cross_db_agreement": False,
-    }
+    subtests = dict(EXPECTED_SUBTESTS[HallucinationType.AUTHOR_MISMATCH])
+    subtests["doi_resolves"] = True if has_doi else None
+    new_entry.subtests = subtests
     new_entry.bibtex_key = f"swapped_{new_entry.bibtex_key}"
     return new_entry
 
 
+@register_generator(
+    HallucinationType.PREPRINT_AS_PUBLISHED,
+    extra_args=("wrong_venue",),
+    description="arXiv preprint cited as if published at a venue",
+)
 def generate_preprint_as_published(
     entry: BenchmarkEntry,
     fake_venue: str,
@@ -128,18 +135,18 @@ def generate_preprint_as_published(
     new_entry.generation_method = GenerationMethod.PERTURBATION.value
     new_entry.explanation = f"Preprint falsely cited as published at '{fake_venue}'"
     has_doi = bool(new_entry.fields.get("doi"))
-    new_entry.subtests = {
-        "doi_resolves": True if has_doi else None,  # real paper DOI resolves; N/A if no DOI
-        "title_exists": True,
-        "authors_match": True,
-        "venue_correct": False,
-        "fields_complete": True,
-        "cross_db_agreement": False,  # fabricated venue causes cross-DB disagreement
-    }
+    subtests = dict(EXPECTED_SUBTESTS[HallucinationType.PREPRINT_AS_PUBLISHED])
+    subtests["doi_resolves"] = True if has_doi else None  # real paper DOI resolves; N/A if no DOI
+    new_entry.subtests = subtests
     new_entry.bibtex_key = f"preprint_pub_{new_entry.bibtex_key}"
     return new_entry
 
 
+@register_generator(
+    HallucinationType.MERGED_CITATION,
+    extra_args=("donor_b", "donor_c"),
+    description="Merge metadata from 2-3 real papers into one BibTeX entry",
+)
 def generate_merged_citation(
     entry_a: BenchmarkEntry,
     entry_b: BenchmarkEntry,
@@ -187,21 +194,17 @@ def generate_merged_citation(
         "Metadata merged from multiple real papers: "
         f"authors from '{entry_a.bibtex_key}', title from '{entry_b.bibtex_key}'"
     )
-    new_entry.subtests = {
-        "doi_resolves": entry_b.doi is not None,
-        "title_exists": True,
-        "authors_match": False,
-        # Venue comes from entry_c (or entry_a), not from entry_b whose title is used.
-        # The merged entry attributes entry_b's title to a different paper's venue, so
-        # the venue does not match what entry_b was actually published at.
-        "venue_correct": False,
-        "fields_complete": True,
-        "cross_db_agreement": False,
-    }
+    subtests = dict(EXPECTED_SUBTESTS[HallucinationType.MERGED_CITATION])
+    subtests["doi_resolves"] = entry_b.doi is not None
+    new_entry.subtests = subtests
     new_entry.bibtex_key = f"merged_{entry_b.bibtex_key}"
     return new_entry
 
 
+@register_generator(
+    HallucinationType.PARTIAL_AUTHOR_LIST,
+    description="Cite a real paper with a subset of its authors",
+)
 def generate_partial_author_list(
     entry: BenchmarkEntry,
     rng: random.Random | None = None,
@@ -250,18 +253,17 @@ def generate_partial_author_list(
         f"Partial author list: {len(authors)} authors reduced to "
         f"{len(new_entry.fields.get('author', '').split(' and '))}"
     )
-    new_entry.subtests = {
-        "doi_resolves": entry.doi is not None,
-        "title_exists": True,
-        "authors_match": False,  # partial list doesn't fully match
-        "venue_correct": True,
-        "fields_complete": True,
-        "cross_db_agreement": False,
-    }
+    subtests = dict(EXPECTED_SUBTESTS[HallucinationType.PARTIAL_AUTHOR_LIST])
+    subtests["doi_resolves"] = entry.doi is not None
+    new_entry.subtests = subtests
     new_entry.bibtex_key = f"partial_authors_{new_entry.bibtex_key}"
     return new_entry
 
 
+@register_generator(
+    HallucinationType.HYBRID_FABRICATION,
+    description="Keep real DOI but fabricate authors and slightly modify title",
+)
 def generate_hybrid_fabrication(
     entry: BenchmarkEntry, rng: random.Random | None = None
 ) -> BenchmarkEntry:
@@ -303,13 +305,8 @@ def generate_hybrid_fabrication(
     new_entry.generation_method = GenerationMethod.ADVERSARIAL.value
     new_entry.explanation = "Real DOI with fabricated authors and modified title"
     has_doi = bool(new_entry.fields.get("doi"))
-    new_entry.subtests = {
-        "doi_resolves": True if has_doi else None,
-        "title_exists": False,
-        "authors_match": False,
-        "venue_correct": True,
-        "fields_complete": True,
-        "cross_db_agreement": False,
-    }
+    subtests = dict(EXPECTED_SUBTESTS[HallucinationType.HYBRID_FABRICATION])
+    subtests["doi_resolves"] = True if has_doi else None
+    new_entry.subtests = subtests
     new_entry.bibtex_key = f"hybrid_{new_entry.bibtex_key}"
     return new_entry

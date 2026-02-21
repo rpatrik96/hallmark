@@ -2,6 +2,8 @@
 
 import random
 
+import pytest
+
 from hallmark.dataset.generator import (
     FAKE_DOI_PREFIXES,
     generate_arxiv_version_mismatch,
@@ -315,3 +317,47 @@ class TestBackwardCompatibility:
         )
         assert entry.hallucination_type == "swapped_authors"
         assert entry.label == "HALLUCINATED"
+
+
+class TestGeneratorRegistry:
+    """Tests for the generator registry pattern."""
+
+    def test_all_types_registered(self):
+        """Every HallucinationType has a registered generator."""
+        import hallmark.dataset.generators  # noqa: F401 — triggers all @register_generator decorators
+        from hallmark.dataset.generators._registry import all_generators
+        from hallmark.dataset.schema import HallucinationType
+
+        registered = all_generators()
+        for ht in HallucinationType:
+            assert ht in registered, f"{ht} not registered"
+
+    def test_get_generator_func_callable(self):
+        """get_generator_func returns a callable for every registered type."""
+        import hallmark.dataset.generators  # noqa: F401
+        from hallmark.dataset.generators._registry import get_generator_func
+        from hallmark.dataset.schema import HallucinationType
+
+        for ht in HallucinationType:
+            func = get_generator_func(ht)
+            assert callable(func), f"{ht} generator not callable"
+
+    def test_get_generator_invalid_raises(self):
+        """get_generator with an unregistered value raises ValueError."""
+        import hallmark.dataset.generators  # noqa: F401
+        from hallmark.dataset.generators._registry import get_generator
+
+        with pytest.raises(ValueError):
+            get_generator("nonexistent_type")  # type: ignore[arg-type]
+
+    def test_registry_spec_has_extra_args(self):
+        """Generators requiring extra args declare them in their spec."""
+        import hallmark.dataset.generators  # noqa: F401
+        from hallmark.dataset.generators._registry import get_generator
+        from hallmark.dataset.schema import HallucinationType
+
+        spec_chimeric = get_generator(HallucinationType.CHIMERIC_TITLE)
+        assert "fake_title" in spec_chimeric.extra_args
+
+        spec_author = get_generator(HallucinationType.AUTHOR_MISMATCH)
+        assert "donor" in spec_author.extra_args

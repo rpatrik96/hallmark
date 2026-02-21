@@ -1,5 +1,33 @@
 from __future__ import annotations
 
+# Real prestigious ML/AI venues — used by plausible_fabrication (tier3) and batch generators.
+REAL_VENUES = [
+    "NeurIPS",
+    "ICML",
+    "ICLR",
+    "AAAI",
+    "ACL",
+    "CVPR",
+    "ECCV",
+    "EMNLP",
+    "AISTATS",
+    "UAI",
+]
+
+# ML buzzwords for chimeric title generation in batch.py.
+ML_BUZZWORDS = [
+    "Attention",
+    "Transformer",
+    "Diffusion",
+    "Contrastive",
+    "Self-Supervised",
+    "Prompt",
+    "Retrieval-Augmented",
+    "Foundation Model",
+    "Chain-of-Thought",
+    "Mixture of Experts",
+]
+
 # Provably fictional DOI prefixes (99990+, 88880+, 77770+, 66660+ ranges are unregistered).
 # Do NOT include any real registrant prefixes (e.g. 10.48550 is arXiv, 10.1145 is ACM).
 FAKE_DOI_PREFIXES = [

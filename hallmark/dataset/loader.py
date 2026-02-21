@@ -72,10 +72,12 @@ def load_split(
     elif split in SPLIT_PATHS:
         path = data_dir / version / SPLIT_PATHS[split]
     else:
-        path = data_dir / version / f"{split}.jsonl"
+        raise ValueError(f"Unknown split '{split}'. Valid splits: {sorted(SPLIT_PATHS.keys())}")
 
     if not path.exists():
-        raise FileNotFoundError(f"Split file not found: {path}")
+        raise FileNotFoundError(
+            f"Split file not found: {path}. Valid splits are: {sorted(SPLIT_PATHS.keys())}"
+        )
 
     return load_entries(path)
 

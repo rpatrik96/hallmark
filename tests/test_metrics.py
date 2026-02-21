@@ -1721,6 +1721,61 @@ class TestPerGenerationMethodMetrics:
 
 
 @pytest.mark.skipif(not HAS_NUMPY, reason="numpy required")
+class TestECEReliability:
+    """ECE is set to None when confidence has ≤2 distinct values (degenerate)."""
+
+    def test_ece_none_for_binary_confidence(self):
+        """All predictions at identical confidence → ece=None."""
+        entries = [
+            _entry("h1", "HALLUCINATED", tier=1),
+            _entry("v1", "VALID"),
+        ]
+        preds = [
+            _pred("h1", "HALLUCINATED", confidence=1.0),
+            _pred("v1", "VALID", confidence=1.0),
+        ]
+        result = evaluate(entries, preds, tool_name="test", split_name="dev")
+        assert result.ece is None
+
+    def test_ece_computed_for_varied_confidence(self):
+        """Three distinct confidence values → ece is a float."""
+        entries = [
+            _entry("h1", "HALLUCINATED", tier=1),
+            _entry("h2", "HALLUCINATED", tier=2),
+            _entry("v1", "VALID"),
+        ]
+        preds = [
+            _pred("h1", "HALLUCINATED", confidence=0.9),
+            _pred("h2", "HALLUCINATED", confidence=0.7),
+            _pred("v1", "VALID", confidence=0.5),
+        ]
+        result = evaluate(entries, preds, tool_name="test", split_name="dev")
+        assert result.ece is not None
+        assert 0.0 <= result.ece <= 1.0
+
+
+class TestZeroOverlapError:
+    """evaluate() raises ValueError when no predictions match any entry key."""
+
+    def test_raises_on_zero_overlap(self):
+        """Predictions with entirely different keys → ValueError."""
+        entries = [_entry("h1", "HALLUCINATED", tier=1)]
+        preds = [_pred("other_key", "HALLUCINATED", confidence=0.9)]
+        with pytest.raises(ValueError, match="No predictions matched"):
+            evaluate(entries, preds, tool_name="test", split_name="dev")
+
+    def test_partial_overlap_does_not_raise(self):
+        """Partial overlap (some keys match) must not raise."""
+        entries = [
+            _entry("h1", "HALLUCINATED", tier=1),
+            _entry("v1", "VALID"),
+        ]
+        # Only predict one of the two entries — should be fine (conservative for missing)
+        preds = [_pred("h1", "HALLUCINATED", confidence=0.9)]
+        result = evaluate(entries, preds, tool_name="test", split_name="dev")
+        assert result.detection_rate == pytest.approx(1.0)
+
+
 class TestBootstrapCI:
     """Bootstrap CI integration test (F-18): evaluate() with compute_ci=True."""
 

@@ -1612,12 +1612,14 @@ def evaluate(
     entry_keys = {e.bibtex_key for e in entries}
     pred_keys = set(pred_map.keys())
     overlap = entry_keys & pred_keys
-    if len(overlap) == 0:
-        logger.warning(
-            "Zero key overlap between entries (%d) and predictions (%d). "
-            "Check that predictions match the correct split.",
-            len(entry_keys),
-            len(pred_keys),
+    if len(overlap) == 0 and pred_map:
+        entry_keys_sample = sorted(entry_keys)[:3]
+        pred_keys_sample = sorted(pred_keys)[:3]
+        raise ValueError(
+            f"No predictions matched any benchmark entries. "
+            f"Entry keys look like: {entry_keys_sample}... "
+            f"Prediction keys look like: {pred_keys_sample}... "
+            f"HALLMARK uses hex-hash bibtex_keys, not standard BibTeX keys."
         )
     elif len(overlap) < len(entry_keys) // 2:
         logger.warning(
@@ -1637,7 +1639,11 @@ def evaluate(
     tier_metrics = per_tier_metrics(entries, pred_map)
     type_metrics = per_type_metrics(entries, pred_map, compute_ci=compute_ci)
     cost = cost_efficiency(predictions)
-    ece_score = expected_calibration_error(entries, pred_map, adaptive=True)
+    ece_score: float | None = expected_calibration_error(entries, pred_map, adaptive=True)
+    # ECE is unreliable with ≤2 distinct confidence values (binary tools with 0.0/1.0 only)
+    distinct_confidences = len(set(p.confidence for p in predictions if p.label != "UNCERTAIN"))
+    if distinct_confidences <= 2:
+        ece_score = None  # suppress unreliable ECE
     auroc_score = auroc(entries, pred_map)
     auprc_score = auprc(entries, pred_map)
 
@@ -1648,6 +1654,26 @@ def evaluate(
     num_hallucinated = sum(1 for e in entries if e.label == "HALLUCINATED")
     num_valid = sum(1 for e in entries if e.label == "VALID")
     num_uncertain = sum(1 for p in predictions if p.label == "UNCERTAIN")
+
+    # Uncertain precision: fraction of UNCERTAIN predictions where ground truth is HALLUCINATED.
+    # Measures whether the tool's uncertainty signal is directionally correct.
+    entry_map = {e.bibtex_key: e for e in entries}
+    uncertain_preds = [p for p in predictions if p.label == "UNCERTAIN"]
+    uncertain_correct = sum(
+        1
+        for p in uncertain_preds
+        if entry_map.get(p.bibtex_key) and entry_map[p.bibtex_key].label == "HALLUCINATED"
+    )
+    uncertain_precision: float | None = (
+        uncertain_correct / len(uncertain_preds) if uncertain_preds else None
+    )
+    if uncertain_precision is not None:
+        logger.info(
+            "Uncertain precision: %.3f (%d/%d UNCERTAIN predictions are hallucinated)",
+            uncertain_precision,
+            uncertain_correct,
+            len(uncertain_preds),
+        )
 
     fpr: float | None = cm.false_positive_rate
     if num_valid == 0:
@@ -1691,8 +1717,8 @@ def evaluate(
 
         temporal_result = temporal_analysis(entries, pred_map)
         temporal_robustness_value = temporal_result.robustness_delta
-    except Exception:
-        pass  # entries may lack date fields
+    except (ValueError, KeyError, TypeError) as e:
+        logger.debug("Temporal analysis skipped: %s", e)
 
     return EvaluationResult(
         tool_name=tool_name,

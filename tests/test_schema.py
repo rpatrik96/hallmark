@@ -375,3 +375,56 @@ class TestBackwardCompatibility:
         )
         assert entry.hallucination_type == "swapped_authors"
         assert entry.label == "HALLUCINATED"
+
+
+class TestExpectedSubtests:
+    """Tests for the centralized subtest truth table."""
+
+    def test_all_types_covered(self):
+        """EXPECTED_SUBTESTS has an entry for every HallucinationType."""
+        from hallmark.dataset.schema import EXPECTED_SUBTESTS, HallucinationType
+
+        for ht in HallucinationType:
+            assert ht in EXPECTED_SUBTESTS, f"{ht} missing from EXPECTED_SUBTESTS"
+
+    def test_all_subtests_have_six_keys(self):
+        """Each type has exactly the 6 standard subtest keys."""
+        from hallmark.dataset.schema import EXPECTED_SUBTESTS, SUBTEST_NAMES
+
+        for ht, subtests in EXPECTED_SUBTESTS.items():
+            assert set(subtests.keys()) == set(SUBTEST_NAMES), (
+                f"{ht}: expected keys {SUBTEST_NAMES}, got {set(subtests.keys())}"
+            )
+
+    def test_cross_db_agreement_always_false(self):
+        """All hallucination types have cross_db_agreement=False."""
+        from hallmark.dataset.schema import EXPECTED_SUBTESTS
+
+        for ht, subtests in EXPECTED_SUBTESTS.items():
+            assert subtests["cross_db_agreement"] is False, f"{ht}: cross_db_agreement not False"
+
+
+class TestSchemaVersion:
+    def test_default_schema_version(self):
+        """BenchmarkEntry defaults to schema_version='1.0'."""
+        entry = BenchmarkEntry(
+            bibtex_key="test",
+            bibtex_type="article",
+            fields={"title": "Test"},
+            label="VALID",
+        )
+        assert entry.schema_version == "1.0"
+
+    def test_schema_version_roundtrip(self):
+        """schema_version survives to_dict/from_dict roundtrip."""
+        entry = BenchmarkEntry(
+            bibtex_key="test",
+            bibtex_type="article",
+            fields={"title": "Test"},
+            label="VALID",
+            schema_version="2.0",
+        )
+        d = entry.to_dict()
+        assert d["schema_version"] == "2.0"
+        restored = BenchmarkEntry.from_dict(d)
+        assert restored.schema_version == "2.0"

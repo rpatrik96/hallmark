@@ -5,6 +5,7 @@ from collections.abc import Callable
 
 from hallmark.dataset.schema import BenchmarkEntry
 
+from ._pools import ML_BUZZWORDS, REAL_VENUES
 from .tier1 import (
     generate_fabricated_doi,
     generate_future_date,
@@ -57,32 +58,6 @@ def generate_tier2_batch(
     """Generate a batch of Tier 2 hallucinated entries."""
     rng = random.Random(seed)
     results = []
-    venues = [
-        "NeurIPS",
-        "ICML",
-        "ICLR",
-        "AAAI",
-        "ACL",
-        "CVPR",
-        "ECCV",
-        "EMNLP",
-        "AISTATS",
-        "UAI",
-    ]
-
-    # ML buzzwords for chimeric_title
-    ml_buzzwords = [
-        "Attention",
-        "Transformer",
-        "Self-Supervised",
-        "Contrastive",
-        "Few-Shot",
-        "Multi-Modal",
-        "Reinforcement",
-        "Diffusion",
-        "Neural Architecture Search",
-        "Meta-Learning",
-    ]
 
     for _i in range(count):
         source = rng.choice(valid_entries)
@@ -99,7 +74,7 @@ def generate_tier2_batch(
         )
 
         if method == "wrong_venue":
-            wrong_v = rng.choice(venues)
+            wrong_v = rng.choice(REAL_VENUES)
             results.append(generate_wrong_venue(source, wrong_v, rng=rng))
         elif method == "swapped_authors":
             donor = rng.choice(valid_entries)
@@ -107,10 +82,13 @@ def generate_tier2_batch(
                 donor = rng.choice(valid_entries)
             results.append(generate_swapped_authors(source, donor, rng))
         elif method == "preprint_as_published":
-            fake_v = rng.choice(venues)
+            fake_v = rng.choice(REAL_VENUES)
             results.append(generate_preprint_as_published(source, fake_v, rng))
         elif method == "chimeric_title":
-            fake_title = f"{rng.choice(ml_buzzwords)} for {rng.choice(['Classification', 'Generation', 'Reasoning'])}"
+            buzzword = rng.choice(ML_BUZZWORDS)
+            fake_title = (
+                f"{buzzword} for {rng.choice(['Classification', 'Generation', 'Reasoning'])}"
+            )
             results.append(generate_chimeric_title(source, fake_title, rng))
         elif method == "hybrid_fabrication":
             results.append(generate_hybrid_fabrication(source, rng))

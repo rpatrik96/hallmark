@@ -122,9 +122,7 @@ class TestEvaluateMixed:
 class TestEvaluateEmptyPredictions:
     """Zero-overlap predictions → conservative (all VALID)."""
 
-    def test_zero_overlap_handled_gracefully(self, caplog):
-        import logging
-
+    def test_zero_overlap_raises_error(self):
         entries = [
             _make_entry("h1", "HALLUCINATED"),
             _make_entry("v1", "VALID"),
@@ -134,12 +132,8 @@ class TestEvaluateEmptyPredictions:
             _make_pred("other1", "HALLUCINATED"),
             _make_pred("other2", "VALID"),
         ]
-        with caplog.at_level(logging.WARNING, logger="hallmark.evaluation.metrics"):
-            result = evaluate(entries, preds, tool_name="empty", split_name="test")
-        # Zero overlap should emit a warning
-        assert any("overlap" in r.message.lower() for r in caplog.records)
-        # Missing predictions treated as VALID → DR=0
-        assert result.detection_rate == pytest.approx(0.0)
+        with pytest.raises(ValueError, match="No predictions matched"):
+            evaluate(entries, preds, tool_name="empty", split_name="test")
 
     def test_empty_prediction_list(self):
         entries = [
@@ -243,6 +237,61 @@ class TestEvaluateAllHallucinated:
         assert result.detection_rate == pytest.approx(1.0)
 
 
+class TestBlindSplitFiles:
+    """Verify blind JSONL files exist and contain only blind-safe fields."""
+
+    BLIND_FIELDS: frozenset[str] = frozenset({"bibtex_key", "bibtex_type", "fields", "raw_bibtex"})
+    FORBIDDEN_FIELDS: frozenset[str] = frozenset(
+        {
+            "label",
+            "hallucination_type",
+            "generation_method",
+            "subtests",
+            "explanation",
+            "difficulty_tier",
+        }
+    )
+
+    def _check_blind_file(self, path):
+        """Assert that every line in a blind JSONL has only blind-safe fields."""
+        import json
+
+        with open(path) as f:
+            for line in f:
+                line = line.strip()
+                if not line:
+                    continue
+                record = json.loads(line)
+                leaked = set(record.keys()) & self.FORBIDDEN_FIELDS
+                assert not leaked, f"Leaked fields in {path.name}: {leaked}"
+                unknown = set(record.keys()) - self.BLIND_FIELDS
+                assert not unknown, f"Unexpected fields in {path.name}: {unknown}"
+
+    def test_dev_blind_file(self):
+        from pathlib import Path
+
+        path = Path(__file__).parent.parent / "data" / "v1.0" / "dev_public_blind.jsonl"
+        if not path.exists():
+            pytest.skip("dev_public_blind.jsonl not generated yet")
+        self._check_blind_file(path)
+
+    def test_test_blind_file(self):
+        from pathlib import Path
+
+        path = Path(__file__).parent.parent / "data" / "v1.0" / "test_public_blind.jsonl"
+        if not path.exists():
+            pytest.skip("test_public_blind.jsonl not generated yet")
+        self._check_blind_file(path)
+
+    def test_stress_test_blind_file(self):
+        from pathlib import Path
+
+        path = Path(__file__).parent.parent / "data" / "v1.0" / "stress_test_blind.jsonl"
+        if not path.exists():
+            pytest.skip("stress_test_blind.jsonl not generated yet")
+        self._check_blind_file(path)
+
+
 class TestDegenerateBaselinesOnRealData:
     """Degenerate baselines (random, always_hallucinated, always_valid) on real dev_public entries."""
 
@@ -300,7 +349,7 @@ class TestDegenerateBaselinesOnRealData:
             assert result.detection_rate is not None, f"{name}: detection_rate is None"
             assert result.f1_hallucination is not None, f"{name}: f1_hallucination is None"
             assert result.tier_weighted_f1 is not None, f"{name}: tier_weighted_f1 is None"
-            assert result.ece is not None, f"{name}: ece is None"
+            # ECE is None for degenerate baselines (<=2 distinct confidence values)
             # Coverage must be 1.0 — all entries have predictions
             assert result.coverage == pytest.approx(1.0), f"{name}: coverage != 1.0"
             # Entry counts must match

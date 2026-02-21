@@ -45,9 +45,9 @@ entries = load_entries('my_entries.jsonl')
 results = validate_batch(entries)
 n_valid = sum(1 for r in results if r.valid)
 print(f'{n_valid}/{len(results)} entries valid')
-for r in results:
+for entry, r in zip(entries, results):
     if not r.valid:
-        print(f'  INVALID {r.key}: {r.errors}')
+        print(f'  INVALID {entry.bibtex_key}: {r.errors}')
 "
 ```
 
@@ -67,18 +67,19 @@ Or open a pull request adding your entries to `data/pool/contributions/`.
 
 ## Adding a New Hallucination Type
 
-Adding a new type requires changes in 7 locations:
+Adding a new type requires changes in 8 locations:
 
 1. **Enum member**: Add to `HallucinationType` in `hallmark/dataset/schema.py`
-2. **Tier mapping**: Add to `HALLUCINATION_TIER_MAP` in the same file
-3. **Stress-test flag** (if applicable): Add to `STRESS_TEST_TYPES`
-4. **Generator function**: Create in `hallmark/dataset/generators/tier{N}.py` following the signature pattern:
+2. **Tier mapping**: Add to `HALLUCINATION_TIER_MAP` in `hallmark/dataset/schema.py` with the appropriate `DifficultyTier`
+3. **Expected subtests**: Add to `EXPECTED_SUBTESTS` in `hallmark/dataset/schema.py` listing which subtest keys should be present for entries of this type
+4. **Stress-test flag** (if applicable): Add to `STRESS_TEST_TYPES`
+5. **Generator function**: Create in `hallmark/dataset/generators/tier{N}.py` following the signature pattern:
    ```python
    def generate_your_type(entry: BenchmarkEntry, rng: Random) -> BenchmarkEntry:
    ```
-5. **Generator exports**: Add to `hallmark/dataset/generators/__init__.py`
-6. **Batch dispatcher**: Add dispatch logic in `hallmark/dataset/generators/batch.py`
-7. **Tests**: Add generation tests in `tests/test_generator.py`
+6. **Generator exports**: Add to `hallmark/dataset/generators/__init__.py`
+7. **Batch dispatcher**: Add dispatch logic in `hallmark/dataset/generators/batch.py`
+8. **Tests**: Add generation tests in `tests/test_generator.py`
 
 See `generate_fabricated_doi` in `tier1.py` for the simplest example.
 

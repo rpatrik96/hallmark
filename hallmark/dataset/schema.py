@@ -80,6 +80,133 @@ HALLUCINATION_TIER_MAP: dict[HallucinationType, DifficultyTier] = {
     HallucinationType.ARXIV_VERSION_MISMATCH: DifficultyTier.HARD,
 }
 
+assert set(HALLUCINATION_TIER_MAP.keys()) == set(HallucinationType), (
+    f"HALLUCINATION_TIER_MAP missing types: "
+    f"{set(HallucinationType) - set(HALLUCINATION_TIER_MAP.keys())}"
+)
+
+# Expected subtest ground truth for each hallucination type.
+# None means "depends on source entry" (e.g., doi_resolves depends on whether entry has a DOI).
+# Generators should copy this dict and override dynamic fields per-entry.
+EXPECTED_SUBTESTS: dict[HallucinationType, dict[str, bool | None]] = {
+    HallucinationType.FABRICATED_DOI: {
+        "doi_resolves": False,
+        "title_exists": True,
+        "authors_match": True,
+        "venue_correct": True,
+        "fields_complete": True,
+        "cross_db_agreement": False,
+    },
+    HallucinationType.NONEXISTENT_VENUE: {
+        "doi_resolves": None,  # depends on source entry having DOI
+        "title_exists": True,
+        "authors_match": True,
+        "venue_correct": False,
+        "fields_complete": True,
+        "cross_db_agreement": False,
+    },
+    HallucinationType.PLACEHOLDER_AUTHORS: {
+        "doi_resolves": None,
+        "title_exists": True,
+        "authors_match": False,
+        "venue_correct": True,
+        "fields_complete": True,
+        "cross_db_agreement": False,
+    },
+    HallucinationType.FUTURE_DATE: {
+        "doi_resolves": None,
+        "title_exists": True,
+        "authors_match": True,
+        "venue_correct": True,
+        "fields_complete": False,
+        "cross_db_agreement": False,
+    },
+    HallucinationType.CHIMERIC_TITLE: {
+        "doi_resolves": None,
+        "title_exists": False,
+        "authors_match": True,
+        "venue_correct": True,
+        "fields_complete": True,
+        "cross_db_agreement": False,
+    },
+    HallucinationType.WRONG_VENUE: {
+        "doi_resolves": None,
+        "title_exists": True,
+        "authors_match": True,
+        "venue_correct": False,
+        "fields_complete": True,
+        "cross_db_agreement": False,
+    },
+    HallucinationType.AUTHOR_MISMATCH: {
+        "doi_resolves": None,
+        "title_exists": True,
+        "authors_match": False,
+        "venue_correct": True,
+        "fields_complete": True,
+        "cross_db_agreement": False,
+    },
+    HallucinationType.PREPRINT_AS_PUBLISHED: {
+        "doi_resolves": None,
+        "title_exists": True,
+        "authors_match": True,
+        "venue_correct": False,
+        "fields_complete": True,
+        "cross_db_agreement": False,
+    },
+    HallucinationType.HYBRID_FABRICATION: {
+        "doi_resolves": None,
+        "title_exists": False,
+        "authors_match": False,
+        "venue_correct": True,
+        "fields_complete": True,
+        "cross_db_agreement": False,
+    },
+    HallucinationType.NEAR_MISS_TITLE: {
+        "doi_resolves": None,
+        "title_exists": False,
+        "authors_match": True,
+        "venue_correct": True,
+        "fields_complete": True,
+        "cross_db_agreement": False,
+    },
+    HallucinationType.PLAUSIBLE_FABRICATION: {
+        "doi_resolves": None,  # always None (no real DOI)
+        "title_exists": False,
+        "authors_match": False,
+        "venue_correct": True,
+        "fields_complete": None,  # depends on whether entry has identifier
+        "cross_db_agreement": False,
+    },
+    HallucinationType.MERGED_CITATION: {
+        "doi_resolves": None,  # depends on donor entry
+        "title_exists": True,
+        "authors_match": False,
+        "venue_correct": False,
+        "fields_complete": True,
+        "cross_db_agreement": False,
+    },
+    HallucinationType.PARTIAL_AUTHOR_LIST: {
+        "doi_resolves": None,
+        "title_exists": True,
+        "authors_match": False,
+        "venue_correct": True,
+        "fields_complete": True,
+        "cross_db_agreement": False,
+    },
+    HallucinationType.ARXIV_VERSION_MISMATCH: {
+        "doi_resolves": None,
+        "title_exists": True,
+        "authors_match": True,
+        "venue_correct": False,
+        "fields_complete": True,
+        "cross_db_agreement": False,
+    },
+}
+
+assert set(EXPECTED_SUBTESTS.keys()) == set(HallucinationType), (
+    f"EXPECTED_SUBTESTS missing types: {set(HallucinationType) - set(EXPECTED_SUBTESTS.keys())}"
+)
+
 # Stress-test types: theoretically-motivated, evaluated in separate split
 STRESS_TEST_TYPES: set[HallucinationType] = {
     HallucinationType.MERGED_CITATION,
@@ -180,6 +307,9 @@ class BenchmarkEntry:
 
     # Optional: the raw BibTeX string
     raw_bibtex: str | None = None
+
+    # Schema version for forward/backward compatibility
+    schema_version: str = "1.0"
 
     def __post_init__(self) -> None:
         """Validate entry after creation."""
@@ -321,6 +451,12 @@ class Prediction:
     @classmethod
     def from_dict(cls, data: dict) -> Prediction:
         """Deserialize from dictionary, ignoring unknown fields."""
+        required = {"bibtex_key", "label"}
+        missing = required - set(data.keys())
+        if missing:
+            raise ValueError(
+                f"Prediction missing required fields: {missing}. Got keys: {sorted(data.keys())}"
+            )
         known = {f.name for f in fields(cls)}
         return cls(**{k: v for k, v in data.items() if k in known})
 

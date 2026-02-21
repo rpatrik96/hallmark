@@ -12,20 +12,14 @@ from collections import Counter
 from hallmark.dataset.generator import (
     generate_arxiv_version_mismatch,
     generate_chimeric_title,
-    generate_fabricated_doi,
-    generate_future_date,
-    generate_hybrid_fabrication,
     generate_merged_citation,
-    generate_near_miss_title,
-    generate_nonexistent_venue,
-    generate_partial_author_list,
-    generate_placeholder_authors,
-    generate_plausible_fabrication,
     generate_preprint_as_published,
     generate_swapped_authors,
     generate_wrong_venue,
     is_preprint_source,
 )
+from hallmark.dataset.generators._registry import get_generator, get_generator_func
+from hallmark.dataset.generators.tier1 import _current_reference_year
 from hallmark.dataset.schema import BenchmarkEntry, HallucinationType
 
 # ML buzzwords for chimeric titles
@@ -160,52 +154,65 @@ def generate_for_type(
     build_date: str,
 ) -> BenchmarkEntry:
     """Unified type→generator dispatch. Used by scale_up and expand_hidden."""
-    if type_val == HallucinationType.FABRICATED_DOI.value:
-        entry = generate_fabricated_doi(source, rng)
-    elif type_val == HallucinationType.NONEXISTENT_VENUE.value:
-        entry = generate_nonexistent_venue(source, rng)
-    elif type_val == HallucinationType.PLACEHOLDER_AUTHORS.value:
-        entry = generate_placeholder_authors(source, rng)
-    elif type_val == HallucinationType.FUTURE_DATE.value:
-        entry = generate_future_date(source, rng)
-    elif type_val == HallucinationType.CHIMERIC_TITLE.value:
+    hall_type = HallucinationType(type_val)
+    spec = get_generator(hall_type)
+    gen_func = get_generator_func(hall_type)
+
+    # Determine reference_year from build_date (Change 6: thread to future_date)
+    reference_year: int | None = None
+    if build_date:
+        try:
+            reference_year = int(build_date[:4])
+        except ValueError:
+            reference_year = _current_reference_year()
+
+    # Types that need a venue candidate (different from current source venue)
+    def _pick_venue() -> str:
+        current = source.venue
+        candidates = [v for v in VENUES if v != current]
+        return rng.choice(candidates)
+
+    # Assemble kwargs based on what the generator's extra_args declare,
+    # plus any dispatch-level argument preparation that can't be inferred
+    # from the spec alone (donor selection, chimeric title cycling, etc.).
+    if hall_type == HallucinationType.CHIMERIC_TITLE:
         title = chimeric_titles[chimeric_idx[0] % len(chimeric_titles)]
         chimeric_idx[0] += 1
         entry = generate_chimeric_title(source, title, rng)
-    elif type_val == HallucinationType.WRONG_VENUE.value:
-        current = source.venue
-        candidates = [v for v in VENUES if v != current]
-        entry = generate_wrong_venue(source, rng.choice(candidates), rng=rng)
-    elif type_val == HallucinationType.AUTHOR_MISMATCH.value:
+
+    elif hall_type == HallucinationType.WRONG_VENUE:
+        entry = generate_wrong_venue(source, _pick_venue(), rng=rng)
+
+    elif hall_type == HallucinationType.AUTHOR_MISMATCH:
         donor = rng.choice(valid_entries)
         while donor.bibtex_key == source.bibtex_key and len(valid_entries) > 1:
             donor = rng.choice(valid_entries)
         entry = generate_swapped_authors(source, donor, rng)
-    elif type_val == HallucinationType.PREPRINT_AS_PUBLISHED.value:
+
+    elif hall_type == HallucinationType.PREPRINT_AS_PUBLISHED:
         preprint_sources = [e for e in valid_entries if is_preprint_source(e)]
-        if preprint_sources:
-            source = rng.choice(preprint_sources)
-        entry = generate_preprint_as_published(source, rng.choice(VENUES), rng)
-    elif type_val == HallucinationType.HYBRID_FABRICATION.value:
-        entry = generate_hybrid_fabrication(source, rng)
-    elif type_val == HallucinationType.MERGED_CITATION.value:
+        effective_source = rng.choice(preprint_sources) if preprint_sources else source
+        entry = generate_preprint_as_published(effective_source, rng.choice(VENUES), rng)
+
+    elif hall_type == HallucinationType.MERGED_CITATION:
         donor_b = rng.choice(valid_entries)
         while donor_b.bibtex_key == source.bibtex_key and len(valid_entries) > 1:
             donor_b = rng.choice(valid_entries)
         donor_c = rng.choice(valid_entries) if rng.random() < 0.5 else None
         entry = generate_merged_citation(source, donor_b, donor_c, rng)
-    elif type_val == HallucinationType.PARTIAL_AUTHOR_LIST.value:
-        entry = generate_partial_author_list(source, rng)
-    elif type_val == HallucinationType.NEAR_MISS_TITLE.value:
-        entry = generate_near_miss_title(source, rng)
-    elif type_val == HallucinationType.PLAUSIBLE_FABRICATION.value:
-        entry = generate_plausible_fabrication(source, rng)
-    elif type_val == HallucinationType.ARXIV_VERSION_MISMATCH.value:
-        current = source.venue
-        candidates = [v for v in VENUES if v != current]
-        entry = generate_arxiv_version_mismatch(source, rng.choice(candidates), rng)
+
+    elif hall_type == HallucinationType.ARXIV_VERSION_MISMATCH:
+        entry = generate_arxiv_version_mismatch(source, _pick_venue(), rng)
+
+    elif "reference_year" in spec.extra_args:
+        # FUTURE_DATE — pass reference_year derived from build_date
+        entry = gen_func(source, rng=rng, reference_year=reference_year)
+
     else:
-        raise ValueError(f"Unknown hallucination type: {type_val}")
+        # All remaining types take only (entry, rng): fabricated_doi,
+        # nonexistent_venue, placeholder_authors, hybrid_fabrication,
+        # partial_author_list, near_miss_title, plausible_fabrication
+        entry = gen_func(source, rng)
 
     entry.added_to_benchmark = build_date
     entry.bibtex_key = f"{key_prefix}_{type_val}_{idx}"

@@ -17,13 +17,23 @@ from hallmark.evaluation.temporal import DEFAULT_SEGMENTS, temporal_analysis
 
 
 def simulate_baseline(entries):
-    """Simulate bibtex-updater baseline using subtests."""
+    """Simulate a DOI-presence heuristic baseline (no ground truth access).
+
+    This is a blind baseline: it calls entry.to_blind() and inspects only the
+    fields visible to a real tool. It does NOT access labels, subtests, or any
+    other ground-truth attributes.
+    """
     pred_map = {}
     for e in entries:
-        subtests = e.subtests or {}
-        fails = sum(1 for v in subtests.values() if v is False)
-        label = "HALLUCINATED" if fails > 0 else "VALID"
-        pred_map[e.bibtex_key] = Prediction(bibtex_key=e.bibtex_key, label=label, confidence=0.8)
+        blind = e.to_blind()
+        has_doi = bool(blind.fields.get("doi", "").strip())
+        label = "VALID" if has_doi else "HALLUCINATED"
+        confidence = 0.8 if has_doi else 0.6
+        pred_map[blind.bibtex_key] = Prediction(
+            bibtex_key=blind.bibtex_key,
+            label=label,
+            confidence=confidence,
+        )
     return pred_map
 
 

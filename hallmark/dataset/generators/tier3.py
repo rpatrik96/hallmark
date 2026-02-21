@@ -3,6 +3,7 @@ from __future__ import annotations
 import random
 
 from hallmark.dataset.schema import (
+    EXPECTED_SUBTESTS,
     BenchmarkEntry,
     DifficultyTier,
     GenerationMethod,
@@ -23,9 +24,15 @@ from ._pools import (
     PLAUSIBLE_NOUNS,
     PLAUSIBLE_PROPERTIES,
     PLAUSIBLE_SETTINGS,
+    REAL_VENUES,
 )
+from ._registry import register_generator
 
 
+@register_generator(
+    HallucinationType.NEAR_MISS_TITLE,
+    description="Title off by 1-2 words from the real paper",
+)
 def generate_near_miss_title(
     entry: BenchmarkEntry,
     rng: random.Random | None = None,
@@ -180,18 +187,17 @@ def generate_near_miss_title(
     new_entry.difficulty_tier = DifficultyTier.HARD.value
     new_entry.generation_method = GenerationMethod.PERTURBATION.value
     new_entry.explanation = f"Title slightly modified: '{new_title}' (original: '{title}')"
-    new_entry.subtests = {
-        "doi_resolves": True if has_doi else None,  # DOI resolves to original (correct) paper
-        "title_exists": False,
-        "authors_match": True,
-        "venue_correct": True,
-        "fields_complete": True,
-        "cross_db_agreement": False,
-    }
+    subtests = dict(EXPECTED_SUBTESTS[HallucinationType.NEAR_MISS_TITLE])
+    subtests["doi_resolves"] = True if has_doi else None  # DOI resolves to original (correct) paper
+    new_entry.subtests = subtests
     new_entry.bibtex_key = f"near_miss_{new_entry.bibtex_key}"
     return new_entry
 
 
+@register_generator(
+    HallucinationType.PLAUSIBLE_FABRICATION,
+    description="Fabricate a realistic but non-existent paper at a real prestigious venue",
+)
 def generate_plausible_fabrication(
     entry: BenchmarkEntry, rng: random.Random | None = None
 ) -> BenchmarkEntry:
@@ -261,10 +267,9 @@ def generate_plausible_fabrication(
     authors = [f"{first_pool[i]} {last_pool[i]}" for i in range(n_authors)]
     new_entry.fields["author"] = " and ".join(authors)
 
-    # Keep a real prestigious venue
-    real_venues = ["NeurIPS", "ICML", "ICLR", "AAAI", "ACL", "CVPR"]
+    # Keep a real prestigious venue (import from _pools for consistency)
     # Always use booktitle (normalized to inproceedings per P0.2)
-    new_entry.fields["booktitle"] = rng.choice(real_venues)
+    new_entry.fields["booktitle"] = rng.choice(REAL_VENUES)
     new_entry.fields.pop("journal", None)  # Remove journal if present
     new_entry.bibtex_type = "inproceedings"
 
@@ -278,18 +283,18 @@ def generate_plausible_fabrication(
     new_entry.difficulty_tier = DifficultyTier.HARD.value
     new_entry.generation_method = GenerationMethod.ADVERSARIAL.value
     new_entry.explanation = "Completely fabricated paper with plausible metadata at real venue"
-    new_entry.subtests = {
-        "doi_resolves": None,
-        "title_exists": False,
-        "authors_match": False,
-        "venue_correct": True,
-        "fields_complete": has_identifier,
-        "cross_db_agreement": False,
-    }
+    subtests = dict(EXPECTED_SUBTESTS[HallucinationType.PLAUSIBLE_FABRICATION])
+    subtests["fields_complete"] = has_identifier
+    new_entry.subtests = subtests
     new_entry.bibtex_key = f"plausible_{new_entry.bibtex_key}"
     return new_entry
 
 
+@register_generator(
+    HallucinationType.ARXIV_VERSION_MISMATCH,
+    extra_args=("wrong_venue",),
+    description="Mix arXiv preprint metadata with conference publication metadata",
+)
 def generate_arxiv_version_mismatch(
     entry: BenchmarkEntry,
     wrong_venue: str,
@@ -336,14 +341,10 @@ def generate_arxiv_version_mismatch(
         f"{year + year_shift}; metadata mixes preprint and publication versions"
     )
     has_doi = bool(new_entry.fields.get("doi"))
-    new_entry.subtests = {
-        "doi_resolves": True if has_doi else None,  # DOI resolves to the real paper; N/A if no DOI
-        "title_exists": True,
-        "authors_match": True,
-        # wrong_venue was explicitly set above; the venue does not match the real paper.
-        "venue_correct": False,
-        "fields_complete": True,
-        "cross_db_agreement": False,  # venue/year don't match what DOI resolves to
-    }
+    subtests = dict(EXPECTED_SUBTESTS[HallucinationType.ARXIV_VERSION_MISMATCH])
+    subtests["doi_resolves"] = (
+        True if has_doi else None
+    )  # DOI resolves to the real paper; N/A if no DOI
+    new_entry.subtests = subtests
     new_entry.bibtex_key = f"arxiv_vm_{new_entry.bibtex_key}"
     return new_entry
