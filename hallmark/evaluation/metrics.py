@@ -118,13 +118,20 @@ class ConfusionMatrix:
 
 def build_confusion_matrix(
     entries: list[BenchmarkEntry],
-    predictions: dict[str, Prediction],
+    predictions: dict[str, Prediction] | list[Prediction],
 ) -> ConfusionMatrix:
     """Build confusion matrix from entries and predictions.
 
     UNCERTAIN predictions are treated as VALID (conservative default).
     Missing predictions are also treated as VALID.
+
+    Args:
+        entries: Benchmark entries (ground truth).
+        predictions: Tool's predictions — either a dict keyed by bibtex_key
+            or a list of Prediction objects (converted internally).
     """
+    if isinstance(predictions, list):
+        predictions = {p.bibtex_key: p for p in predictions}
     cm = ConfusionMatrix()
     for entry in entries:
         pred = predictions.get(entry.bibtex_key)
@@ -213,6 +220,7 @@ def union_recall_at_k(
     entries: list[BenchmarkEntry],
     predictions_per_strategy: list[dict[str, Prediction]],
     k: int | None = None,
+    strategy_costs: list[float] | None = None,
 ) -> dict[int, float]:
     """Compute the fraction of hallucinations detected by the union of the first k strategies.
 
@@ -232,12 +240,34 @@ def union_recall_at_k(
     Args:
         entries: Benchmark entries.
         predictions_per_strategy: List of prediction dicts, one per verification strategy.
-            Must be ordered by ascending cost (see above).
+            If ``strategy_costs`` is not provided, must already be ordered by ascending cost.
         k: If provided, compute only for this k. Otherwise compute for k=1..len(strategies).
+        strategy_costs: Optional list of floats (one per strategy) giving the cost of each
+            strategy. If provided, strategies are sorted by ascending cost before computing
+            the union-recall curve. If not provided, the given order is used as-is and a
+            debug warning is emitted to remind callers to pass strategies in ascending cost
+            order.
 
     Returns:
         Dict mapping k -> fraction of hallucinations detected by at least one of k strategies.
     """
+    if strategy_costs is not None:
+        if len(strategy_costs) != len(predictions_per_strategy):
+            raise ValueError(
+                f"strategy_costs length ({len(strategy_costs)}) must match "
+                f"predictions_per_strategy length ({len(predictions_per_strategy)})"
+            )
+        # Sort strategies by ascending cost
+        sorted_pairs = sorted(
+            zip(strategy_costs, predictions_per_strategy, strict=True), key=lambda x: x[0]
+        )
+        predictions_per_strategy = [p for _, p in sorted_pairs]
+    else:
+        logger.debug(
+            "union_recall_at_k: no strategy_costs provided. Using given order. "
+            "Pass strategy_costs for reproducible cost-ordered union-recall curves."
+        )
+
     hallucinated = [e for e in entries if e.label == "HALLUCINATED"]
     if not hallucinated:
         return {}
@@ -311,14 +341,15 @@ def per_tier_metrics(
 
 def per_type_metrics(
     entries: list[BenchmarkEntry],
-    predictions: dict[str, Prediction],
+    predictions: dict[str, Prediction] | list[Prediction],
     compute_ci: bool = False,
 ) -> dict[str, dict[str, float]]:
     """Compute metrics broken down by hallucination type.
 
     Args:
         entries: Benchmark entries.
-        predictions: Tool's predictions.
+        predictions: Tool's predictions — either a dict keyed by bibtex_key
+            or a list of Prediction objects (converted internally).
         compute_ci: If True, add Wilson score 95% CI keys ``dr_ci_lower`` and
             ``dr_ci_upper`` for detection rate per type. CI is only meaningful
             for hallucinated types (n > 0); valid entries get 0.0/0.0.
@@ -328,6 +359,8 @@ def per_type_metrics(
         is True, each inner dict also contains ``dr_ci_lower`` and
         ``dr_ci_upper``.
     """
+    if isinstance(predictions, list):
+        predictions = {p.bibtex_key: p for p in predictions}
     type_entries: dict[str, list[BenchmarkEntry]] = defaultdict(list)
     for entry in entries:
         h_type = entry.hallucination_type or "valid"
@@ -403,7 +436,7 @@ def expected_calibration_error(
     entries: list[BenchmarkEntry],
     predictions: dict[str, Prediction],
     n_bins: int = 10,
-    adaptive: bool = False,
+    adaptive: bool = True,
 ) -> float:
     """Compute Expected Calibration Error (ECE).
 
@@ -419,12 +452,11 @@ def expected_calibration_error(
         entries: Benchmark entries (ground truth).
         predictions: Tool's predictions.
         n_bins: Number of bins for calibration estimation.
-        adaptive: If True, use equal-frequency (quantile) binning — sort predictions
-            by confidence and split into n_bins equal-sized groups. This avoids
-            pathological empty-bin behaviour for deterministic tools that concentrate
-            all predictions in 2 bins (e.g., confidence in {0.0, 1.0}). If False
-            (default), use fixed equal-width bins [0, 1/n_bins), [1/n_bins, 2/n_bins),
-            … for backward compatibility.
+        adaptive: If True (default), use equal-frequency (quantile) binning — sort
+            predictions by confidence and split into n_bins equal-sized groups. This
+            avoids pathological empty-bin behaviour for deterministic tools that
+            concentrate all predictions in 2 bins (e.g., confidence in {0.0, 1.0}).
+            If False, use fixed equal-width bins [0, 1/n_bins), [1/n_bins, 2/n_bins), …
     """
     if not predictions:
         return 0.0
@@ -469,7 +501,7 @@ def expected_calibration_error(
             accuracy = sum(1 for _, correct in bin_data if correct) / bin_size
             ece += (bin_size / total) * abs(accuracy - avg_conf)
     else:
-        # Fixed equal-width bins (default, backward compatible)
+        # Fixed equal-width bins
         bins: list[list[tuple[float, bool]]] = [[] for _ in range(n_bins)]
         for conf, correct in pairs:
             bin_idx = min(int(conf * n_bins), n_bins - 1)
@@ -490,9 +522,15 @@ def auroc(entries: list[BenchmarkEntry], predictions: dict[str, Prediction]) -> 
     """Compute Area Under ROC Curve for hallucination detection.
 
     Positive class: HALLUCINATED. Score = confidence for HALLUCINATED predictions,
-    (1 - confidence) for VALID predictions. UNCERTAIN treated as VALID.
-    Missing predictions treated as VALID with confidence 0.5.
-    Returns None if fewer than 2 classes present.
+    (1 - confidence) for VALID predictions.
+
+    Missing predictions and UNCERTAIN predictions are excluded from the AUROC
+    computation entirely (not assigned a neutral score of 0.5). This avoids
+    artificially inflating or deflating AUROC by treating absence of a prediction
+    as weak evidence. Only entries with a definite HALLUCINATED or VALID prediction
+    are included.
+
+    Returns None if fewer than 2 classes present among the included entries.
 
     Args:
         entries: Benchmark entries (ground truth).
@@ -502,19 +540,16 @@ def auroc(entries: list[BenchmarkEntry], predictions: dict[str, Prediction]) -> 
         AUROC score in [0, 1], or None if insufficient class diversity.
     """
     # Build (score, true_label) pairs where true_label is 1 for HALLUCINATED, 0 for VALID
+    # Skip missing and UNCERTAIN predictions entirely.
     pairs: list[tuple[float, int]] = []
     for entry in entries:
         pred = predictions.get(entry.bibtex_key)
 
-        # Determine score (probability of HALLUCINATED)
-        if pred is None:
-            score = 0.5  # Missing prediction -> neutral
-        elif pred.label == "UNCERTAIN":
-            score = 0.5  # UNCERTAIN treated as VALID but with neutral confidence
-        elif pred.label == "HALLUCINATED":
-            score = pred.confidence
-        else:  # VALID
-            score = 1.0 - pred.confidence
+        # Skip missing predictions and UNCERTAIN (no reliable score available)
+        if pred is None or pred.label == "UNCERTAIN":
+            continue
+
+        score = pred.confidence if pred.label == "HALLUCINATED" else 1.0 - pred.confidence
 
         true_label = 1 if entry.label == "HALLUCINATED" else 0
         pairs.append((score, true_label))
@@ -571,7 +606,9 @@ def auroc(entries: list[BenchmarkEntry], predictions: dict[str, Prediction]) -> 
 def auprc(entries: list[BenchmarkEntry], predictions: dict[str, Prediction]) -> float | None:
     """Compute Area Under Precision-Recall Curve for hallucination detection.
 
-    Same scoring convention as auroc(). Returns None if no positive examples.
+    Same scoring convention as auroc(). Missing predictions and UNCERTAIN predictions
+    are excluded from the computation entirely (not assigned a neutral score of 0.5).
+    Returns None if no positive examples among the included entries.
 
     Args:
         entries: Benchmark entries (ground truth).
@@ -581,19 +618,16 @@ def auprc(entries: list[BenchmarkEntry], predictions: dict[str, Prediction]) -> 
         AUPRC score in [0, 1], or None if no positive examples.
     """
     # Build (score, true_label) pairs where true_label is 1 for HALLUCINATED, 0 for VALID
+    # Skip missing and UNCERTAIN predictions entirely.
     pairs: list[tuple[float, int]] = []
     for entry in entries:
         pred = predictions.get(entry.bibtex_key)
 
-        # Determine score (probability of HALLUCINATED)
-        if pred is None:
-            score = 0.5  # Missing prediction -> neutral
-        elif pred.label == "UNCERTAIN":
-            score = 0.5  # UNCERTAIN treated as VALID but with neutral confidence
-        elif pred.label == "HALLUCINATED":
-            score = pred.confidence
-        else:  # VALID
-            score = 1.0 - pred.confidence
+        # Skip missing predictions and UNCERTAIN (no reliable score available)
+        if pred is None or pred.label == "UNCERTAIN":
+            continue
+
+        score = pred.confidence if pred.label == "HALLUCINATED" else 1.0 - pred.confidence
 
         true_label = 1 if entry.label == "HALLUCINATED" else 0
         pairs.append((score, true_label))
@@ -652,15 +686,22 @@ def auprc(entries: list[BenchmarkEntry], predictions: dict[str, Prediction]) -> 
 
 def source_stratified_metrics(
     entries: list[BenchmarkEntry],
-    predictions: dict[str, Prediction],
+    predictions: dict[str, Prediction] | list[Prediction],
 ) -> dict[str, dict[str, float]]:
     """Compute detection metrics stratified by API sources queried.
 
     Groups predictions by their api_sources_queried field and computes
     per-source detection rate and false positive rate.
 
+    Args:
+        entries: Benchmark entries (ground truth).
+        predictions: Tool's predictions — either a dict keyed by bibtex_key
+            or a list of Prediction objects (converted internally).
+
     Returns dict mapping source combination string to metrics dict.
     """
+    if isinstance(predictions, list):
+        predictions = {p.bibtex_key: p for p in predictions}
     # Group predictions by source combination
     source_groups: dict[str, list[str]] = defaultdict(list)
     for key, pred in predictions.items():
@@ -671,8 +712,10 @@ def source_stratified_metrics(
 
     result = {}
     for source_key, keys in sorted(source_groups.items()):
+        # Use set for O(1) membership lookup
+        keys_set = set(keys)
         # Filter entries that have predictions in this group
-        group_entries = [e for e in entries if e.bibtex_key in keys]
+        group_entries = [e for e in entries if e.bibtex_key in keys_set]
         if not group_entries:
             continue
 
@@ -721,15 +764,23 @@ def generation_method_stratified_metrics(
 
 def subtest_accuracy_table(
     entries: list[BenchmarkEntry],
-    predictions: dict[str, Prediction],
+    predictions: dict[str, Prediction] | list[Prediction],
 ) -> dict[str, dict[str, float]]:
     """Compute per-subtest accuracy across all entries.
 
     For each subtest name, computes accuracy (fraction of entries where
     the prediction's subtest result matches the ground truth subtest).
 
-    Returns dict mapping subtest name to {accuracy, count, true_positives, false_positives}.
+    Args:
+        entries: Benchmark entries (ground truth).
+        predictions: Tool's predictions — either a dict keyed by bibtex_key
+            or a list of Prediction objects (converted internally).
+
+    Returns:
+        Dict mapping subtest name to {accuracy, count, true_positives, false_positives}.
     """
+    if isinstance(predictions, list):
+        predictions = {p.bibtex_key: p for p in predictions}
     from hallmark.dataset.schema import SUBTEST_NAMES
 
     result = {}
@@ -868,6 +919,109 @@ def stratified_bootstrap_ci(
     return (lower, upper)
 
 
+def _bootstrap_all_cis(
+    entries: list[BenchmarkEntry],
+    predictions: list[Prediction],
+    n_bootstrap: int,
+    seed: int,
+    alpha: float,
+    tier_weights: dict[int, float] | None = None,
+) -> dict[str, tuple[float, float]]:
+    """Compute bootstrap CIs for all 6 primary metrics in a single resampling loop.
+
+    This is ~6x faster than calling ``stratified_bootstrap_ci`` 6 times separately
+    because it reuses each bootstrap resample for all metrics.
+
+    Stratification is by hallucination type, matching ``stratified_bootstrap_ci``.
+    Missing predictions are filled with VALID/0.5 placeholders, consistent with
+    ``build_confusion_matrix``.
+
+    Args:
+        entries: Benchmark entries (ground truth).
+        predictions: Tool's predictions.
+        n_bootstrap: Number of bootstrap resamples.
+        seed: Random seed for reproducibility.
+        alpha: Significance level (e.g., 0.05 for 95% CIs).
+        tier_weights: Optional tier weights for tier-weighted F1.
+
+    Returns:
+        Dict mapping metric name to (lower, upper) CI tuple. Keys:
+        ``detection_rate``, ``f1_hallucination``, ``tier_weighted_f1``,
+        ``false_positive_rate``, ``ece``, ``mcc``.
+    """
+    try:
+        import numpy as np
+    except ImportError as e:
+        raise ImportError("numpy is required for bootstrap CIs: pip install numpy") from e
+
+    rng = np.random.default_rng(seed)
+
+    # Group entries and predictions by hallucination type for stratified resampling
+    type_groups: dict[str, tuple[list[BenchmarkEntry], list[Prediction]]] = defaultdict(
+        lambda: ([], [])
+    )
+    pred_map = {p.bibtex_key: p for p in predictions}
+
+    for entry in entries:
+        h_type = entry.hallucination_type or "valid"
+        pred = pred_map.get(entry.bibtex_key)
+        type_groups[h_type][0].append(entry)
+        if pred is not None:
+            type_groups[h_type][1].append(pred)
+        else:
+            type_groups[h_type][1].append(
+                Prediction(bibtex_key=entry.bibtex_key, label="VALID", confidence=0.5)
+            )
+
+    # Per-metric accumulators
+    dr_samples: list[float] = []
+    f1_samples: list[float] = []
+    twf1_samples: list[float] = []
+    fpr_samples: list[float] = []
+    ece_samples: list[float] = []
+    mcc_samples: list[float] = []
+
+    for _ in range(n_bootstrap):
+        resampled_entries: list[BenchmarkEntry] = []
+        resampled_preds: list[Prediction] = []
+
+        for entries_in_type, preds_in_type in type_groups.values():
+            n = len(entries_in_type)
+            if n == 0:
+                continue
+            indices = rng.choice(n, size=n, replace=True)
+            resampled_entries.extend([entries_in_type[i] for i in indices])
+            resampled_preds.extend([preds_in_type[i] for i in indices])
+
+        if not resampled_entries:
+            continue
+
+        boot_map = {p.bibtex_key: p for p in resampled_preds}
+        cm_boot = build_confusion_matrix(resampled_entries, boot_map)
+        dr_samples.append(cm_boot.detection_rate)
+        f1_samples.append(cm_boot.f1)
+        fpr_samples.append(cm_boot.false_positive_rate)
+        mcc_samples.append(cm_boot.mcc)
+        twf1_samples.append(tier_weighted_f1(resampled_entries, boot_map, tier_weights))
+        ece_samples.append(expected_calibration_error(resampled_entries, boot_map, adaptive=True))
+
+    def _ci(samples: list[float]) -> tuple[float, float]:
+        if not samples:
+            return (0.0, 0.0)
+        lo = float(np.percentile(samples, 100 * alpha / 2))
+        hi = float(np.percentile(samples, 100 * (1 - alpha / 2)))
+        return (lo, hi)
+
+    return {
+        "detection_rate": _ci(dr_samples),
+        "f1_hallucination": _ci(f1_samples),
+        "tier_weighted_f1": _ci(twf1_samples),
+        "false_positive_rate": _ci(fpr_samples),
+        "ece": _ci(ece_samples),
+        "mcc": _ci(mcc_samples),
+    }
+
+
 def paired_bootstrap_test(
     entries: list[BenchmarkEntry],
     predictions_a: list[Prediction],
@@ -878,8 +1032,12 @@ def paired_bootstrap_test(
 ) -> tuple[float, float, float]:
     """Paired bootstrap significance test with stratified resampling by hallucination type.
 
-    Returns (observed_diff, p_value, effect_size_cohens_h).
-    H0: metric_A <= metric_B. p-value = fraction of resamples where delta <= 0.
+    Returns (observed_diff, p_value_one_sided, effect_size_cohens_h).
+    H0: metric_A <= metric_B.
+
+    The p-value is **one-sided**: p = fraction of bootstrap resamples where
+    delta (metric_A - metric_B) <= 0. This tests the directional hypothesis
+    that tool A is better than tool B. For a two-sided test, double the p-value.
 
     Resampling is stratified by hallucination type, matching the approach in
     ``stratified_bootstrap_ci``. Each bootstrap iteration resamples within each
@@ -894,9 +1052,9 @@ def paired_bootstrap_test(
         seed: Random seed for reproducibility.
 
     Returns:
-        Tuple (observed_diff, p_value, effect_size_cohens_h).
+        Tuple (observed_diff, p_value_one_sided, effect_size_cohens_h).
         - observed_diff: metric_A - metric_B on original data
-        - p_value: P(delta <= 0 | H0) under bootstrap distribution
+        - p_value_one_sided: P(delta <= 0 | H0) under bootstrap distribution (one-sided)
         - effect_size_cohens_h: Cohen's h effect size (2 * (arcsin(sqrt(p_a)) - arcsin(sqrt(p_b))))
     """
     try:
@@ -952,8 +1110,10 @@ def paired_bootstrap_test(
             metric_b_boot = metric_fn(resampled_entries, resampled_preds_b)
             bootstrap_diffs.append(metric_a_boot - metric_b_boot)
 
-    # p-value: fraction of bootstrap samples where delta <= 0
-    p_value = float(np.mean([d <= 0 for d in bootstrap_diffs])) if bootstrap_diffs else 1.0
+    # One-sided p-value: fraction of bootstrap samples where delta <= 0
+    p_value_one_sided = (
+        float(np.mean([d <= 0 for d in bootstrap_diffs])) if bootstrap_diffs else 1.0
+    )
 
     # Cohen's h effect size
     if 0.0 <= metric_a <= 1.0 and 0.0 <= metric_b <= 1.0:
@@ -961,7 +1121,7 @@ def paired_bootstrap_test(
     else:
         cohens_h = metric_a - metric_b  # fallback for non-proportion metrics
 
-    return (observed_diff, p_value, float(cohens_h))
+    return (observed_diff, p_value_one_sided, float(cohens_h))
 
 
 def tier_weight_sensitivity(
@@ -1209,6 +1369,10 @@ def compare_tools(
     For C(n,2) tool pairs, runs ``paired_bootstrap_test`` and then applies
     ``apply_multiple_comparison_correction`` to the collected p-values.
 
+    Note: ``paired_bootstrap_test`` returns a one-sided p-value (see its docstring).
+    The ``p_value_raw`` and ``p_value_adjusted`` keys in the output reflect this
+    one-sided interpretation.
+
     Args:
         entries: Benchmark entries (ground truth).
         tool_predictions: Dict mapping tool_name -> list of Predictions.
@@ -1220,6 +1384,7 @@ def compare_tools(
     Returns:
         List of dicts with keys: tool_a, tool_b, observed_diff, p_value_raw,
         p_value_adjusted, effect_size, significant.
+        p_value_raw and p_value_adjusted are one-sided p-values.
     """
     if metric_fn is None:
 
@@ -1241,18 +1406,18 @@ def compare_tools(
             preds_a = tool_predictions[name_a]
             preds_b = tool_predictions[name_b]
 
-            obs_diff, p_value, effect_size = paired_bootstrap_test(
+            obs_diff, p_value_one_sided, effect_size = paired_bootstrap_test(
                 entries, preds_a, preds_b, metric_fn, n_bootstrap=n_bootstrap, seed=seed
             )
 
             pair_key = f"{name_a}_vs_{name_b}"
-            raw_p_values[pair_key] = p_value
+            raw_p_values[pair_key] = p_value_one_sided
             raw_results.append(
                 {
                     "tool_a": name_a,
                     "tool_b": name_b,
                     "observed_diff": obs_diff,
-                    "p_value_raw": p_value,
+                    "p_value_raw": p_value_one_sided,
                     "effect_size": effect_size,
                     "_pair_key": pair_key,
                 }
@@ -1300,7 +1465,35 @@ def evaluate(
         per-tier and per-type breakdowns, count of UNCERTAIN predictions,
         and optionally bootstrap CIs for primary metrics.
     """
+    # Warn on duplicate bibtex_keys before dict conversion (last prediction wins)
+    seen_keys: set[str] = set()
+    duplicate_keys: list[str] = []
+    for p in predictions:
+        if p.bibtex_key in seen_keys:
+            duplicate_keys.append(p.bibtex_key)
+        seen_keys.add(p.bibtex_key)
+    if duplicate_keys:
+        logger.warning(
+            "Duplicate bibtex_key(s) found in predictions: %s. Last prediction wins.",
+            duplicate_keys,
+        )
+
     pred_map = {p.bibtex_key: p for p in predictions}
+
+    # Warn on degenerate prediction distributions
+    if pred_map:
+        label_counts: dict[str, int] = defaultdict(int)
+        for p in pred_map.values():
+            label_counts[p.label] += 1
+        total_preds = len(pred_map)
+        for label, count in label_counts.items():
+            pct = 100.0 * count / total_preds
+            if pct > 95.0:
+                logger.warning(
+                    "Degenerate predictions: %.1f%% are %s. Results may not be meaningful.",
+                    pct,
+                    label,
+                )
 
     entry_keys = {e.bibtex_key for e in entries}
     pred_keys = set(pred_map.keys())
@@ -1347,7 +1540,7 @@ def evaluate(
         )
         fpr = None
 
-    # Compute bootstrap CIs if requested
+    # Compute bootstrap CIs if requested — single resampling loop for all 6 metrics
     detection_rate_ci = None
     f1_hallucination_ci = None
     tier_weighted_f1_ci = None
@@ -1356,51 +1549,19 @@ def evaluate(
     mcc_ci = None
 
     if compute_ci:
-        # Detection Rate CI
-        def dr_metric(ents: list[BenchmarkEntry], preds: list[Prediction]) -> float:
-            cm_boot = build_confusion_matrix(ents, {p.bibtex_key: p for p in preds})
-            return cm_boot.detection_rate
-
-        detection_rate_ci = stratified_bootstrap_ci(
-            entries, predictions, dr_metric, n_bootstrap=10_000
+        all_cis = _bootstrap_all_cis(
+            entries,
+            predictions,
+            n_bootstrap=10_000,
+            seed=42,
+            alpha=0.05,
         )
-
-        # F1-Hallucination CI
-        def f1_metric(ents: list[BenchmarkEntry], preds: list[Prediction]) -> float:
-            cm_boot = build_confusion_matrix(ents, {p.bibtex_key: p for p in preds})
-            return cm_boot.f1
-
-        f1_hallucination_ci = stratified_bootstrap_ci(
-            entries, predictions, f1_metric, n_bootstrap=10_000
-        )
-
-        # Tier-weighted F1 CI
-        def tw_f1_metric(ents: list[BenchmarkEntry], preds: list[Prediction]) -> float:
-            return tier_weighted_f1(ents, {p.bibtex_key: p for p in preds})
-
-        tier_weighted_f1_ci = stratified_bootstrap_ci(
-            entries, predictions, tw_f1_metric, n_bootstrap=10_000
-        )
-
-        # FPR CI
-        def fpr_metric(ents: list[BenchmarkEntry], preds: list[Prediction]) -> float:
-            cm_boot = build_confusion_matrix(ents, {p.bibtex_key: p for p in preds})
-            return cm_boot.false_positive_rate
-
-        fpr_ci = stratified_bootstrap_ci(entries, predictions, fpr_metric, n_bootstrap=10_000)
-
-        # ECE CI — must match point estimate: adaptive=True
-        def ece_metric(ents: list[BenchmarkEntry], preds: list[Prediction]) -> float:
-            return expected_calibration_error(ents, {p.bibtex_key: p for p in preds}, adaptive=True)
-
-        ece_ci = stratified_bootstrap_ci(entries, predictions, ece_metric, n_bootstrap=10_000)
-
-        # MCC CI
-        def mcc_metric(ents: list[BenchmarkEntry], preds: list[Prediction]) -> float:
-            cm_boot = build_confusion_matrix(ents, {p.bibtex_key: p for p in preds})
-            return cm_boot.mcc
-
-        mcc_ci = stratified_bootstrap_ci(entries, predictions, mcc_metric, n_bootstrap=10_000)
+        detection_rate_ci = all_cis["detection_rate"]
+        f1_hallucination_ci = all_cis["f1_hallucination"]
+        tier_weighted_f1_ci = all_cis["tier_weighted_f1"]
+        fpr_ci = all_cis["false_positive_rate"]
+        ece_ci = all_cis["ece"]
+        mcc_ci = all_cis["mcc"]
 
     return EvaluationResult(
         tool_name=tool_name,

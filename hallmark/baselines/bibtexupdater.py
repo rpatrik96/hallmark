@@ -20,7 +20,7 @@ import time
 from pathlib import Path
 
 from hallmark.baselines.common import entries_to_bib, fallback_predictions, run_with_prescreening
-from hallmark.dataset.schema import BenchmarkEntry, Prediction
+from hallmark.dataset.schema import BlindEntry, Prediction
 
 logger = logging.getLogger(__name__)
 
@@ -88,7 +88,7 @@ STATUS_TO_CONFIDENCE: dict[str, float] = {
 
 
 def run_bibtex_check(
-    entries: list[BenchmarkEntry],
+    entries: list[BlindEntry],
     extra_args: list[str] | None = None,
     timeout: float = 600.0,
     rate_limit: int = 120,
@@ -114,7 +114,7 @@ def run_bibtex_check(
         skip_prescreening: Skip pre-screening checks (default: False).
     """
 
-    def _run_tool(tool_entries: list[BenchmarkEntry]) -> list[Prediction]:
+    def _run_tool(tool_entries: list[BlindEntry]) -> list[Prediction]:
         return _run_bibtex_check_subprocess(
             tool_entries,
             extra_args=extra_args,
@@ -132,7 +132,7 @@ def run_bibtex_check(
 
 
 def _run_bibtex_check_subprocess(
-    entries: list[BenchmarkEntry],
+    entries: list[BlindEntry],
     extra_args: list[str] | None = None,
     timeout: float = 600.0,
     rate_limit: int = 120,

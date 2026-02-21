@@ -27,7 +27,7 @@ import time
 from pathlib import Path
 
 from hallmark.baselines.common import entries_to_bib, fallback_predictions, run_with_prescreening
-from hallmark.dataset.schema import BenchmarkEntry, Prediction
+from hallmark.dataset.schema import BlindEntry, Prediction
 
 logger = logging.getLogger(__name__)
 
@@ -69,7 +69,7 @@ def strip_ansi_codes(text: str) -> str:
 
 
 def run_verify_citations(
-    entries: list[BenchmarkEntry],
+    entries: list[BlindEntry],
     timeout: float = 600.0,
     skip_prescreening: bool = False,
 ) -> list[Prediction]:
@@ -87,7 +87,7 @@ def run_verify_citations(
         skip_prescreening: Skip pre-screening checks (default: False).
     """
 
-    def _run_tool(tool_entries: list[BenchmarkEntry]) -> list[Prediction]:
+    def _run_tool(tool_entries: list[BlindEntry]) -> list[Prediction]:
         return _run_verify_citations_subprocess(tool_entries, timeout=timeout)
 
     return run_with_prescreening(
@@ -99,7 +99,7 @@ def run_verify_citations(
 
 
 def _run_verify_citations_subprocess(
-    entries: list[BenchmarkEntry],
+    entries: list[BlindEntry],
     timeout: float = 600.0,
 ) -> list[Prediction]:
     """Run verify-citations subprocess and return raw predictions (no pre-screening)."""
@@ -170,7 +170,7 @@ def _run_verify_citations_subprocess(
 
 def _parse_terminal_output(
     stdout: str,
-    entries: list[BenchmarkEntry],
+    entries: list[BlindEntry],
     total_elapsed: float,
     total_entries: int,
 ) -> list[Prediction]:

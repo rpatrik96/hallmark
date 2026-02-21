@@ -205,6 +205,48 @@ class TestEnsemble:
         result = ensemble_predict(entries, strat_preds, config)
         assert result[0].label == "HALLUCINATED"
 
+    def test_weighted_vote_with_uncertain(self):
+        """UNCERTAIN predictions in weighted_vote should be treated as VALID weight."""
+        entries = [_entry("a")]
+        strat_preds = {
+            "s1": [_pred("a", "HALLUCINATED", 0.9)],
+            "s2": [Prediction(bibtex_key="a", label="UNCERTAIN", confidence=0.5)],
+        }
+        result = ensemble_predict(entries, strat_preds)
+        assert len(result) == 1
+        # s1: HALLUCINATED weight = 1.0 * 0.9 = 0.9
+        # s2: UNCERTAIN → treated as VALID weight = 1.0 * 0.5 = 0.5
+        # hall_fraction = 0.9 / (1.0 + 1.0) = 0.45 < 0.5 threshold → VALID
+        assert result[0].label == "VALID"
+
+    def test_weighted_vote_uncertain_does_not_count_as_hallucinated(self):
+        """UNCERTAIN should never contribute to the hallucinated weight."""
+        entries = [_entry("a")]
+        # All three strategies return UNCERTAIN
+        strat_preds = {
+            "s1": [Prediction(bibtex_key="a", label="UNCERTAIN", confidence=0.9)],
+            "s2": [Prediction(bibtex_key="a", label="UNCERTAIN", confidence=0.9)],
+            "s3": [Prediction(bibtex_key="a", label="UNCERTAIN", confidence=0.9)],
+        }
+        result = ensemble_predict(entries, strat_preds)
+        assert len(result) == 1
+        # hall_fraction = 0.0 / 3.0 = 0.0 < 0.5 → VALID
+        assert result[0].label == "VALID"
+
+    def test_weighted_vote_uncertain_mixed_with_hallucinated(self):
+        """Majority HALLUCINATED overrides UNCERTAIN vote."""
+        entries = [_entry("a")]
+        strat_preds = {
+            "s1": [_pred("a", "HALLUCINATED", 0.9)],
+            "s2": [_pred("a", "HALLUCINATED", 0.9)],
+            "s3": [Prediction(bibtex_key="a", label="UNCERTAIN", confidence=0.5)],
+        }
+        result = ensemble_predict(entries, strat_preds)
+        assert len(result) == 1
+        # hall_weight = 0.9 + 0.9 = 1.8; valid_weight (from UNCERTAIN) = 0.5
+        # total_weight = 3.0; hall_fraction = 1.8 / 3.0 = 0.6 >= 0.5 → HALLUCINATED
+        assert result[0].label == "HALLUCINATED"
+
     def test_missing_entry_in_strategy(self):
         entries = [_entry("a"), _entry("b")]
         strat_preds = {

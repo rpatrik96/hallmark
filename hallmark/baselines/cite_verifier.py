@@ -17,7 +17,7 @@ import time
 from pathlib import Path
 
 from hallmark.baselines.common import fallback_predictions
-from hallmark.dataset.schema import BenchmarkEntry, Prediction
+from hallmark.dataset.schema import BlindEntry, Prediction
 
 logger = logging.getLogger(__name__)
 
@@ -37,7 +37,7 @@ CITEVERIFIER_CONFIDENCE_MAP: dict[str, float] = {
 }
 
 
-def _entries_to_citeverifier_json(entries: list[BenchmarkEntry]) -> list[dict]:
+def _entries_to_citeverifier_json(entries: list[BlindEntry]) -> list[dict]:
     """Convert benchmark entries to CiteVerifier JSON input format."""
     refs = []
     for entry in entries:
@@ -54,7 +54,7 @@ def _entries_to_citeverifier_json(entries: list[BenchmarkEntry]) -> list[dict]:
 
 
 def run_cite_verifier(
-    entries: list[BenchmarkEntry],
+    entries: list[BlindEntry],
     citeverifier_path: str | Path = "CiteVerifier",
     concurrent: int = 10,
     dblp_threshold: float = 0.9,

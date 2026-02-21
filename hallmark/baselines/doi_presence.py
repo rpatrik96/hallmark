@@ -7,10 +7,10 @@ how much DOI-absence correlates with hallucination labels.
 
 from __future__ import annotations
 
-from hallmark.dataset.schema import BenchmarkEntry, Prediction
+from hallmark.dataset.schema import BlindEntry, Prediction
 
 
-def run_doi_presence_heuristic(entries: list[BenchmarkEntry]) -> list[Prediction]:
+def run_doi_presence_heuristic(entries: list[BlindEntry]) -> list[Prediction]:
     """Run DOI-presence heuristic on all entries.
 
     This baseline uses a simple rule:

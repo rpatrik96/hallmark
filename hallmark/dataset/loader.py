@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import warnings
 from pathlib import Path
 
 from hallmark.dataset.schema import BenchmarkEntry, DifficultyTier, load_entries
@@ -116,7 +117,19 @@ def filter_by_type(
     entries: list[BenchmarkEntry],
     hallucination_type: str,
 ) -> list[BenchmarkEntry]:
-    """Filter entries to a specific hallucination type (plus all valid entries)."""
+    """Filter entries to a specific hallucination type (plus all valid entries).
+
+    Emits a warning if no hallucinated entries match the requested type,
+    since only VALID entries will be returned in that case.
+    """
+    if not any(
+        e.hallucination_type == hallucination_type for e in entries if e.label == "HALLUCINATED"
+    ):
+        warnings.warn(
+            f"No hallucinated entries match type '{hallucination_type}'. "
+            "Only VALID entries will be returned.",
+            stacklevel=2,
+        )
     return [e for e in entries if e.hallucination_type == hallucination_type or e.label == "VALID"]
 
 
@@ -130,7 +143,7 @@ def _normalize_date(d: str) -> str:
     if len(parts) == 1:  # "2024" -> "2024-01-01"
         return f"{parts[0]}-01-01"
     if len(parts) == 2:  # "2024-01" -> "2024-01-01"
-        return f"{parts[0]}-{parts[1]:>02}-01"
+        return f"{parts[0]}-{parts[1].zfill(2)}-01"
     return d
 
 

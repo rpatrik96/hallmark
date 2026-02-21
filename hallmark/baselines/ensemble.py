@@ -10,7 +10,7 @@ import logging
 from dataclasses import dataclass
 from typing import Literal
 
-from hallmark.dataset.schema import BenchmarkEntry, Prediction
+from hallmark.dataset.schema import BlindEntry, Prediction
 
 logger = logging.getLogger(__name__)
 
@@ -28,7 +28,7 @@ class EnsembleConfig:
 
 
 def ensemble_predict(
-    entries: list[BenchmarkEntry],
+    entries: list[BlindEntry],
     strategy_predictions: dict[str, list[Prediction]],
     config: EnsembleConfig | None = None,
 ) -> list[Prediction]:
@@ -69,7 +69,7 @@ def ensemble_predict(
 
 
 def _weighted_vote(
-    entry: BenchmarkEntry,
+    entry: BlindEntry,
     indexed: dict[str, dict[str, Prediction]],
     config: EnsembleConfig,
 ) -> Prediction:
@@ -122,7 +122,7 @@ def _weighted_vote(
 
 
 def _max_confidence(
-    entry: BenchmarkEntry,
+    entry: BlindEntry,
     indexed: dict[str, dict[str, Prediction]],
     config: EnsembleConfig,
 ) -> Prediction:
@@ -155,7 +155,7 @@ def _max_confidence(
 
 
 def _mean_confidence(
-    entry: BenchmarkEntry,
+    entry: BlindEntry,
     indexed: dict[str, dict[str, Prediction]],
     config: EnsembleConfig,
 ) -> Prediction:
@@ -197,7 +197,7 @@ def _mean_confidence(
         is_hallucinated = weighted_hall > weighted_valid
     else:
         is_hallucinated = False
-    confidence = max(mean_hall, mean_valid)
+    confidence = mean_hall if is_hallucinated else mean_valid
 
     return Prediction(
         bibtex_key=entry.bibtex_key,

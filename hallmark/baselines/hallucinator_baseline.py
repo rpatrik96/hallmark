@@ -22,7 +22,7 @@ import time
 from pathlib import Path
 
 from hallmark.baselines.common import fallback_predictions
-from hallmark.dataset.schema import BenchmarkEntry, Prediction
+from hallmark.dataset.schema import BlindEntry, Prediction
 
 logger = logging.getLogger(__name__)
 
@@ -40,7 +40,7 @@ API_SOURCES = [
 ]
 
 
-def _create_minimal_pdf(entries: list[BenchmarkEntry], output_path: str) -> None:
+def _create_minimal_pdf(entries: list[BlindEntry], output_path: str) -> None:
     """Create a minimal PDF with a references section from entries.
 
     Uses reportlab if available, otherwise falls back to a text-based approach.
@@ -94,7 +94,7 @@ def _create_minimal_pdf(entries: list[BenchmarkEntry], output_path: str) -> None
 
 
 def run_hallucinator(
-    entries: list[BenchmarkEntry],
+    entries: list[BlindEntry],
     hallucinator_path: str | Path = "hallucinator",
     openalex_key: str | None = None,
     s2_api_key: str | None = None,
@@ -215,7 +215,7 @@ def _title_matches(entry_title: str, title_set: set[str]) -> bool:
 
 
 def _parse_output(
-    entries: list[BenchmarkEntry],
+    entries: list[BlindEntry],
     stdout: str,
     output_path: str,
     total_time: float,

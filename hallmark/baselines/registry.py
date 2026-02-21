@@ -12,9 +12,25 @@ from dataclasses import dataclass, field
 from typing import Any
 
 from hallmark.baselines.common import fallback_predictions
-from hallmark.dataset.schema import BenchmarkEntry, Prediction
+from hallmark.dataset.schema import BenchmarkEntry, BlindEntry, Prediction
 
 logger = logging.getLogger(__name__)
+
+# Re-export BlindEntry so callers can import it from this module.
+__all__ = [
+    "BaselineInfo",
+    "BlindEntry",
+    "check_available",
+    "get_registry",
+    "list_baselines",
+    "register",
+    "run_baseline",
+]
+
+
+def _to_blind(entries: list[BenchmarkEntry]) -> list[BlindEntry]:
+    """Convert BenchmarkEntry list to BlindEntry list, hiding ground-truth labels."""
+    return [e.to_blind() for e in entries]
 
 
 @dataclass
@@ -121,9 +137,12 @@ def run_baseline(
 ) -> list[Prediction]:
     """Run a baseline by name.
 
+    Converts BenchmarkEntry objects to BlindEntry before passing to the runner,
+    so baseline implementations never see ground-truth labels.
+
     Args:
         name: Registered baseline name.
-        entries: Benchmark entries to evaluate.
+        entries: Benchmark entries to evaluate (ground-truth labels are hidden).
         **kwargs: Extra arguments forwarded to the runner.
 
     Returns:
@@ -142,7 +161,8 @@ def run_baseline(
 
     info = _REGISTRY[name]
     merged_kwargs = {**info.runner_kwargs, **kwargs}
-    return info.runner(entries, **merged_kwargs)
+    blind_entries = _to_blind(entries)
+    return info.runner(blind_entries, **merged_kwargs)
 
 
 # Mapping from pip package names to importable module names
@@ -161,7 +181,7 @@ def _register_builtins() -> None:
     """Register all built-in baselines on module import."""
 
     # --- DOI-presence heuristic (no extra deps) ---
-    def _run_doi_presence_heuristic(entries: list[BenchmarkEntry], **kw: Any) -> list[Prediction]:
+    def _run_doi_presence_heuristic(entries: list[BlindEntry], **kw: Any) -> list[Prediction]:
         from hallmark.baselines.doi_presence import run_doi_presence_heuristic
 
         return run_doi_presence_heuristic(entries, **kw)
@@ -175,7 +195,7 @@ def _register_builtins() -> None:
     )
 
     # --- DOI-only (no extra deps) ---
-    def _run_doi_only(entries: list[BenchmarkEntry], **kw: Any) -> list[Prediction]:
+    def _run_doi_only(entries: list[BlindEntry], **kw: Any) -> list[Prediction]:
         from hallmark.baselines.doi_only import run_doi_only
 
         return run_doi_only(entries, **kw)
@@ -189,7 +209,7 @@ def _register_builtins() -> None:
     )
 
     # --- DOI-only (no pre-screening) ---
-    def _run_doi_only_no_prescreening(entries: list[BenchmarkEntry], **kw: Any) -> list[Prediction]:
+    def _run_doi_only_no_prescreening(entries: list[BlindEntry], **kw: Any) -> list[Prediction]:
         from hallmark.baselines.doi_only import run_doi_only
 
         return run_doi_only(entries, skip_prescreening=True, **kw)
@@ -203,7 +223,7 @@ def _register_builtins() -> None:
     )
 
     # --- bibtex-updater ---
-    def _run_bibtexupdater(entries: list[BenchmarkEntry], **kw: Any) -> list[Prediction]:
+    def _run_bibtexupdater(entries: list[BlindEntry], **kw: Any) -> list[Prediction]:
         from hallmark.baselines.bibtexupdater import run_bibtex_check
 
         return run_bibtex_check(entries, **kw)
@@ -219,7 +239,7 @@ def _register_builtins() -> None:
 
     # --- bibtex-updater (no pre-screening) ---
     def _run_bibtexupdater_no_prescreening(
-        entries: list[BenchmarkEntry], **kw: Any
+        entries: list[BlindEntry], **kw: Any
     ) -> list[Prediction]:
         from hallmark.baselines.bibtexupdater import run_bibtex_check
 
@@ -235,7 +255,7 @@ def _register_builtins() -> None:
     )
 
     # --- HaRC ---
-    def _run_harc(entries: list[BenchmarkEntry], **kw: Any) -> list[Prediction]:
+    def _run_harc(entries: list[BlindEntry], **kw: Any) -> list[Prediction]:
         from hallmark.baselines.harc import run_harc
 
         return run_harc(entries, **kw)
@@ -250,7 +270,7 @@ def _register_builtins() -> None:
     )
 
     # --- HaRC (no pre-screening) ---
-    def _run_harc_no_prescreening(entries: list[BenchmarkEntry], **kw: Any) -> list[Prediction]:
+    def _run_harc_no_prescreening(entries: list[BlindEntry], **kw: Any) -> list[Prediction]:
         from hallmark.baselines.harc import run_harc
 
         return run_harc(entries, skip_prescreening=True, **kw)
@@ -265,7 +285,7 @@ def _register_builtins() -> None:
     )
 
     # --- verify-citations ---
-    def _run_verify_citations(entries: list[BenchmarkEntry], **kw: Any) -> list[Prediction]:
+    def _run_verify_citations(entries: list[BlindEntry], **kw: Any) -> list[Prediction]:
         from hallmark.baselines.verify_citations_baseline import run_verify_citations
 
         return run_verify_citations(entries, **kw)
@@ -281,7 +301,7 @@ def _register_builtins() -> None:
 
     # --- verify-citations (no pre-screening) ---
     def _run_verify_citations_no_prescreening(
-        entries: list[BenchmarkEntry], **kw: Any
+        entries: list[BlindEntry], **kw: Any
     ) -> list[Prediction]:
         from hallmark.baselines.verify_citations_baseline import run_verify_citations
 
@@ -297,7 +317,7 @@ def _register_builtins() -> None:
     )
 
     # --- LLM: OpenAI ---
-    def _run_llm_openai(entries: list[BenchmarkEntry], **kw: Any) -> list[Prediction]:
+    def _run_llm_openai(entries: list[BlindEntry], **kw: Any) -> list[Prediction]:
         from hallmark.baselines.llm_verifier import verify_with_openai
 
         return verify_with_openai(entries, **kw)
@@ -315,7 +335,7 @@ def _register_builtins() -> None:
     )
 
     # --- LLM: Anthropic ---
-    def _run_llm_anthropic(entries: list[BenchmarkEntry], **kw: Any) -> list[Prediction]:
+    def _run_llm_anthropic(entries: list[BlindEntry], **kw: Any) -> list[Prediction]:
         from hallmark.baselines.llm_verifier import verify_with_anthropic
 
         return verify_with_anthropic(entries, **kw)
@@ -341,7 +361,7 @@ def _register_builtins() -> None:
         def _make_openrouter_runner(
             mid: str,
         ) -> Callable[..., list[Prediction]]:
-            def _run(entries: list[BenchmarkEntry], **kw: Any) -> list[Prediction]:
+            def _run(entries: list[BlindEntry], **kw: Any) -> list[Prediction]:
                 from hallmark.baselines.llm_verifier import verify_with_openrouter
 
                 return verify_with_openrouter(entries, model=mid, **kw)
@@ -361,16 +381,20 @@ def _register_builtins() -> None:
         )
 
     # --- Ensemble ---
-    def _run_ensemble(entries: list[BenchmarkEntry], **kw: Any) -> list[Prediction]:
+    def _run_ensemble(entries: list[BlindEntry], **kw: Any) -> list[Prediction]:
         from hallmark.baselines.ensemble import ensemble_predict
 
         # Default: combine doi_only + bibtexupdater
+        # Entries are already BlindEntry here, so call component runners directly
+        # (bypassing run_baseline which would attempt a second to_blind() conversion).
         strategy_preds: dict[str, list[Prediction]] = {}
         for dep_name in ["doi_only", "bibtexupdater"]:
             avail, _ = check_available(dep_name)
             if avail:
                 try:
-                    strategy_preds[dep_name] = run_baseline(dep_name, entries)
+                    dep_info = _REGISTRY[dep_name]
+                    dep_kwargs = dict(dep_info.runner_kwargs)
+                    strategy_preds[dep_name] = dep_info.runner(entries, **dep_kwargs)
                 except Exception as e:
                     logger.warning(f"Ensemble: skipping {dep_name}: {e}")
 

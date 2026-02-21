@@ -586,11 +586,29 @@ class TestAUROC:
             _entry("v1", "VALID"),
             _entry("h1", "HALLUCINATED"),
         ]
-        # Only predict one entry
+        # Only predict one entry — missing predictions are skipped entirely,
+        # leaving a single class (HALLUCINATED) → AUROC is undefined → None
         preds = {"h1": _pred("h1", "HALLUCINATED", confidence=0.9)}
         score = auroc(entries, preds)
+        assert score is None
+
+    def test_auroc_partial_predictions_both_classes(self):
+        from hallmark.evaluation.metrics import auroc
+
+        entries = [
+            _entry("v1", "VALID"),
+            _entry("v2", "VALID"),
+            _entry("h1", "HALLUCINATED"),
+            _entry("h2", "HALLUCINATED"),
+        ]
+        # Predict 3 of 4 entries — both classes still represented
+        preds = {
+            "v1": _pred("v1", "VALID", confidence=0.9),
+            "h1": _pred("h1", "HALLUCINATED", confidence=0.9),
+            "h2": _pred("h2", "HALLUCINATED", confidence=0.8),
+        }
+        score = auroc(entries, preds)
         assert score is not None
-        # Missing prediction treated as neutral (0.5 confidence)
         assert 0.0 <= score <= 1.0
 
 
@@ -970,6 +988,158 @@ class TestStatisticalMethods:
         assert result.num_entries == len(entries)
 
 
+class TestECEAdaptiveMode:
+    """Tests for adaptive (equal-frequency) ECE binning."""
+
+    def test_ece_adaptive_returns_valid_value(self):
+        """ECE with adaptive=True should return a value in [0, 1]."""
+        from hallmark.evaluation.metrics import expected_calibration_error
+
+        entries = [
+            _entry("v1", "VALID"),
+            _entry("v2", "VALID"),
+            _entry("h1", "HALLUCINATED"),
+            _entry("h2", "HALLUCINATED"),
+        ]
+        preds = {
+            "v1": _pred("v1", "VALID", confidence=0.9),
+            "v2": _pred("v2", "VALID", confidence=0.7),
+            "h1": _pred("h1", "HALLUCINATED", confidence=0.85),
+            "h2": _pred("h2", "HALLUCINATED", confidence=0.6),
+        }
+        ece = expected_calibration_error(entries, preds, adaptive=True)
+        assert 0.0 <= ece <= 1.0
+
+    def test_ece_adaptive_perfect_calibration_low(self):
+        """Correct predictions with consistent confidence should yield low adaptive ECE."""
+        from hallmark.evaluation.metrics import expected_calibration_error
+
+        entries = [_entry(f"h{i}", "HALLUCINATED") for i in range(5)]
+        entries += [_entry(f"v{i}", "VALID") for i in range(5)]
+        preds = {}
+        for i in range(5):
+            preds[f"h{i}"] = _pred(f"h{i}", "HALLUCINATED", confidence=0.9)
+        for i in range(5):
+            preds[f"v{i}"] = _pred(f"v{i}", "VALID", confidence=0.9)
+        ece = expected_calibration_error(entries, preds, adaptive=True)
+        assert ece < 0.3
+
+    def test_ece_adaptive_empty_predictions(self):
+        """Empty predictions should return 0.0 for adaptive ECE."""
+        from hallmark.evaluation.metrics import expected_calibration_error
+
+        entries = [_entry("v1", "VALID")]
+        ece = expected_calibration_error(entries, {}, adaptive=True)
+        assert ece == 0.0
+
+    def test_ece_adaptive_varies_from_fixed(self):
+        """Adaptive and fixed ECE may differ on the same data (at least one should be callable)."""
+        from hallmark.evaluation.metrics import expected_calibration_error
+
+        # Deterministic tool: all predictions at exactly 0.9 confidence
+        entries = [_entry("h1", "HALLUCINATED"), _entry("v1", "VALID")]
+        preds = {
+            "h1": _pred("h1", "HALLUCINATED", confidence=0.9),
+            "v1": _pred("v1", "VALID", confidence=0.9),
+        }
+        ece_fixed = expected_calibration_error(entries, preds, adaptive=False)
+        ece_adaptive = expected_calibration_error(entries, preds, adaptive=True)
+        # Both must be in valid range
+        assert 0.0 <= ece_fixed <= 1.0
+        assert 0.0 <= ece_adaptive <= 1.0
+
+
+class TestBenjaminiHochbergCorrection:
+    """Tests for BH multiple comparison correction."""
+
+    def test_bh_returns_values_in_unit_interval(self):
+        raw = {"a": 0.01, "b": 0.04, "c": 0.10}
+        result = apply_multiple_comparison_correction(raw, method="bh")
+        for v in result.values():
+            assert 0.0 <= v <= 1.0
+
+    def test_bh_less_conservative_than_bonferroni(self):
+        """BH adjusted p-values should be <= Bonferroni adjusted p-values."""
+        raw = {"a": 0.01, "b": 0.03, "c": 0.05, "d": 0.10}
+        bh = apply_multiple_comparison_correction(raw, method="bh")
+        bonf = apply_multiple_comparison_correction(raw, method="bonferroni")
+        for label in raw:
+            assert bh[label] <= bonf[label], f"BH not less conservative than Bonferroni for {label}"
+
+    def test_bh_monotone_adjusted_p_values(self):
+        """BH adjusted p-values should be non-decreasing when sorted by raw p-value."""
+        raw = {"a": 0.005, "b": 0.01, "c": 0.03, "d": 0.10}
+        result = apply_multiple_comparison_correction(raw, method="bh")
+        # Sort by raw p-value order and check adjusted values are non-decreasing
+        sorted_labels = sorted(raw, key=lambda x: raw[x])
+        adjusted_in_order = [result[label] for label in sorted_labels]
+        for i in range(len(adjusted_in_order) - 1):
+            assert adjusted_in_order[i] <= adjusted_in_order[i + 1], (
+                f"BH adjusted p-values not monotone at index {i}: "
+                f"{adjusted_in_order[i]} > {adjusted_in_order[i + 1]}"
+            )
+
+    def test_bh_single_p_value_equals_raw(self):
+        raw = {"only": 0.04}
+        result = apply_multiple_comparison_correction(raw, method="bh")
+        assert result["only"] == pytest.approx(0.04)
+
+    def test_bh_empty_dict_returns_empty(self):
+        assert apply_multiple_comparison_correction({}, method="bh") == {}
+
+    def test_bh_adjusted_ge_raw(self):
+        """BH step-up with monotone enforcement: adjusted >= raw only for the smallest p-value
+        when FDR < FWER. The key property is monotonicity, not that adjusted >= raw."""
+        raw = {"t1": 0.01, "t2": 0.03, "t3": 0.05, "t4": 0.10}
+        result = apply_multiple_comparison_correction(raw, method="bh")
+        # The smallest raw p-value: adjusted = p * n / 1 = p * n >= p
+        smallest_label = min(raw, key=lambda x: raw[x])
+        assert result[smallest_label] >= raw[smallest_label]
+
+    def test_bh_all_p_values_significant_stays_bounded(self):
+        """All very small p-values should still produce adjusted values in [0, 1]."""
+        raw = {"a": 0.0001, "b": 0.0002, "c": 0.0003}
+        result = apply_multiple_comparison_correction(raw, method="bh")
+        for v in result.values():
+            assert 0.0 <= v <= 1.0
+
+
+class TestDuplicatePredictionKeys:
+    """Duplicate bibtex_key in predictions list — last value wins."""
+
+    def test_evaluate_duplicate_prediction_keys_last_wins(self):
+        """Duplicate bibtex_keys in predictions list should use the last value (dict overwrite)."""
+        entries = [
+            _entry("h1", "HALLUCINATED", tier=1),
+            _entry("v1", "VALID"),
+        ]
+        # Two predictions for h1: first says VALID, last says HALLUCINATED
+        # The dict comprehension {p.bibtex_key: p for p in predictions} gives last one priority
+        preds = [
+            _pred("v1", "VALID"),
+            _pred("h1", "VALID", confidence=0.8),  # first: wrong label
+            _pred("h1", "HALLUCINATED", confidence=0.9),  # last: correct label
+        ]
+        result = evaluate(entries, preds, tool_name="test", split_name="dev")
+        # Last prediction for h1 is HALLUCINATED — should be detected
+        assert result.detection_rate == 1.0
+
+    def test_evaluate_duplicate_prediction_keys_first_is_overwritten(self):
+        """When first prediction is correct but last is wrong, last wins (overwrite)."""
+        entries = [
+            _entry("h1", "HALLUCINATED", tier=1),
+            _entry("v1", "VALID"),
+        ]
+        preds = [
+            _pred("v1", "VALID"),
+            _pred("h1", "HALLUCINATED", confidence=0.9),  # first: correct
+            _pred("h1", "VALID", confidence=0.6),  # last: wrong (overwrites)
+        ]
+        result = evaluate(entries, preds, tool_name="test", split_name="dev")
+        # Last prediction for h1 is VALID — hallucination missed
+        assert result.detection_rate == 0.0
+
+
 class TestPrescreeningAblation:
     """Tests for bibtexupdater pre-screening ablation."""
 
@@ -1299,6 +1469,23 @@ class TestCompareTools:
         # alpha (perfect) - zeta (miss) > 0, one-sided p should be < 0.05
         assert float(results[0]["observed_diff"]) > 0.5  # type: ignore[arg-type]
         assert float(results[0]["p_value_raw"]) < 0.05  # type: ignore[arg-type]
+
+    def test_bh_correction_method(self):
+        """compare_tools with correction_method='bh' should run without error."""
+        entries = [_entry("h1", "HALLUCINATED", tier=1), _entry("v1", "VALID")]
+        preds = [_pred("h1", "HALLUCINATED"), _pred("v1", "VALID")]
+
+        from hallmark.evaluation.metrics import compare_tools
+
+        results = compare_tools(
+            entries,
+            {"a": preds, "b": preds},
+            correction_method="bh",
+            n_bootstrap=100,
+            seed=42,
+        )
+        assert len(results) == 1
+        assert "p_value_adjusted" in results[0]
 
     def test_three_tools_produces_three_pairs(self):
         entries = [_entry("h1", "HALLUCINATED", tier=1), _entry("v1", "VALID")]

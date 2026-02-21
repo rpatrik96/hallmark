@@ -4,13 +4,13 @@ from __future__ import annotations
 
 from collections.abc import Callable
 
-from hallmark.dataset.schema import BenchmarkEntry, Prediction
+from hallmark.dataset.schema import BlindEntry, Prediction
 
 BothVariantsResult = dict[str, list[Prediction]]
 
 
 def fallback_predictions(
-    entries: list[BenchmarkEntry],
+    entries: list[BlindEntry],
     reason: str = "Tool unavailable",
     api_sources: list[str] | None = None,
     api_calls: int = 0,
@@ -32,14 +32,14 @@ def fallback_predictions(
     ]
 
 
-def entries_to_bib(entries: list[BenchmarkEntry]) -> str:
+def entries_to_bib(entries: list[BlindEntry]) -> str:
     """Convert benchmark entries to a BibTeX string."""
     return "\n\n".join(e.to_bibtex() for e in entries)
 
 
 def run_with_prescreening(
-    entries: list[BenchmarkEntry],
-    run_tool: Callable[[list[BenchmarkEntry]], list[Prediction]],
+    entries: list[BlindEntry],
+    run_tool: Callable[[list[BlindEntry]], list[Prediction]],
     skip_prescreening: bool = False,
     backfill_reason: str = "Entry not in tool output",
 ) -> list[Prediction]:
@@ -88,8 +88,8 @@ def run_with_prescreening(
 
 
 def run_baseline_both_variants(
-    entries: list[BenchmarkEntry],
-    baseline_runner: Callable[[list[BenchmarkEntry]], list[Prediction]],
+    entries: list[BlindEntry],
+    baseline_runner: Callable[[list[BlindEntry]], list[Prediction]],
 ) -> BothVariantsResult:
     """Run a baseline with and without pre-screening for fair comparison reporting.
 

@@ -22,7 +22,38 @@ from hallmark.dataset.schema import (
     load_entries,
     load_predictions,
 )
-from hallmark.evaluation.metrics import build_confusion_matrix, evaluate
+from hallmark.evaluation.metrics import EvaluationResult, build_confusion_matrix, evaluate
+
+
+def _format_csv(result: EvaluationResult) -> str:
+    """Format evaluation result as a CSV row with header."""
+    fpr = result.false_positive_rate if result.false_positive_rate is not None else ""
+    mcc = result.mcc if result.mcc is not None else ""
+    ece = result.ece if result.ece is not None else ""
+    header = "tool,split,detection_rate,fpr,f1_hallucination,tier_weighted_f1,ece,mcc"
+    row = (
+        f"{result.tool_name},{result.split_name},"
+        f"{result.detection_rate:.3f},"
+        f"{fpr if fpr == '' else f'{fpr:.3f}'},"
+        f"{result.f1_hallucination:.3f},"
+        f"{result.tier_weighted_f1:.3f},"
+        f"{ece if ece == '' else f'{ece:.3f}'},"
+        f"{mcc if mcc == '' else f'{mcc:.3f}'}"
+    )
+    return f"{header}\n{row}"
+
+
+def _format_latex(result: EvaluationResult) -> str:
+    """Format evaluation result as a LaTeX booktabs table row."""
+    tool = result.tool_name.replace("_", r"\_")
+    fpr = f"{result.false_positive_rate:.3f}" if result.false_positive_rate is not None else "--"
+    mcc = f"{result.mcc:.3f}" if result.mcc is not None else "--"
+    ece = f"{result.ece:.3f}" if result.ece is not None else "--"
+    return (
+        f"{tool} & {result.detection_rate:.3f} & {fpr} & "
+        f"{result.f1_hallucination:.3f} & {result.tier_weighted_f1:.3f} & "
+        f"{ece} & {mcc} \\\\"
+    )
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -88,6 +119,17 @@ def main(argv: list[str] | None = None) -> int:
         metavar="TYPE",
         help='Filter entries to a specific hallucination type (e.g., "fabricated_doi")',
     )
+    eval_parser.add_argument(
+        "--format",
+        default="text",
+        choices=["text", "csv", "latex"],
+        help="Output format: text (default), csv, or latex",
+    )
+    eval_parser.add_argument(
+        "--strict",
+        action="store_true",
+        help="Require predictions for all entries; exit with error if any are missing",
+    )
 
     # --- contribute ---
     contrib_parser = subparsers.add_parser(
@@ -128,6 +170,12 @@ def main(argv: list[str] | None = None) -> int:
         default="f1",
         choices=["f1", "mcc", "tw_f1", "detection_rate", "ece"],
         help="Metric to sort leaderboard by (default: f1)",
+    )
+    lb_parser.add_argument(
+        "--format",
+        default="text",
+        choices=["text", "csv", "latex"],
+        help="Output format: text (default), csv, or latex",
     )
 
     # --- list-baselines ---
@@ -285,6 +333,19 @@ def _cmd_evaluate(args: argparse.Namespace) -> int:
         entry_keys = {e.bibtex_key for e in entries}
         predictions = [p for p in predictions if p.bibtex_key in entry_keys]
 
+    # Strict coverage check
+    if args.strict:
+        entry_keys = {e.bibtex_key for e in entries}
+        pred_keys = {p.bibtex_key for p in predictions}
+        missing = entry_keys - pred_keys
+        if missing:
+            print(
+                f"ERROR: --strict mode: {len(missing)} entries have no predictions.",
+                file=sys.stderr,
+            )
+            print(f"First 10 missing: {sorted(missing)[:10]}", file=sys.stderr)
+            sys.exit(1)
+
     # Evaluate
     result = evaluate(
         entries=entries,
@@ -294,98 +355,123 @@ def _cmd_evaluate(args: argparse.Namespace) -> int:
         compute_ci=args.ci,
     )
 
-    # Print results
-    print(f"\n{'=' * 60}")
-    print(f"  HALLMARK Evaluation: {result.tool_name}")
-    print(f"  Split: {result.split_name}")
-    print(f"{'=' * 60}")
-    print(f"  Entries:          {result.num_entries}")
-    print(f"  Hallucinated:     {result.num_hallucinated}")
-    print(f"  Valid:            {result.num_valid}")
-    if result.num_uncertain > 0:
-        print(f"  Uncertain:        {result.num_uncertain}")
-
-    # Confusion matrix
+    # Build pred_map once (needed for confusion matrix and detailed sections)
     pred_map = {p.bibtex_key: p for p in predictions}
-    cm = build_confusion_matrix(entries, pred_map)
-    print(f"{'─' * 60}")
-    print("  Confusion Matrix:")
-    print(f"    TP: {cm.tp:<6} FP: {cm.fp}")
-    print(f"    FN: {cm.fn:<6} TN: {cm.tn}")
 
-    print(f"{'─' * 60}")
-    print(f"  Detection Rate:   {result.detection_rate:.3f}")
-    if result.detection_rate_ci:
-        print(f"    95% CI: [{result.detection_rate_ci[0]:.3f}, {result.detection_rate_ci[1]:.3f}]")
-    fpr_str = (
-        f"{result.false_positive_rate:.3f}" if result.false_positive_rate is not None else "N/A"
-    )
-    print(f"  False Pos. Rate:  {fpr_str}")
-    if result.fpr_ci:
-        print(f"    95% CI: [{result.fpr_ci[0]:.3f}, {result.fpr_ci[1]:.3f}]")
-    print(f"  F1 (Halluc.):     {result.f1_hallucination:.3f}")
-    if result.f1_hallucination_ci:
-        print(
-            f"    95% CI: [{result.f1_hallucination_ci[0]:.3f}, {result.f1_hallucination_ci[1]:.3f}]"
-        )
-    print(f"  Tier-weighted F1: {result.tier_weighted_f1:.3f}")
-    if result.tier_weighted_f1_ci:
-        print(
-            f"    95% CI: [{result.tier_weighted_f1_ci[0]:.3f}, {result.tier_weighted_f1_ci[1]:.3f}]"
-        )
-    if result.mcc is not None:
-        print(f"  MCC:              {result.mcc:.3f}")
-        if result.mcc_ci:
-            print(f"    95% CI: [{result.mcc_ci[0]:.3f}, {result.mcc_ci[1]:.3f}]")
-    if result.macro_f1 is not None:
-        print(f"  Macro-F1:         {result.macro_f1:.3f}")
-    if result.ece is not None:
-        print(f"  ECE:              {result.ece:.3f}")
-        if result.ece_ci:
-            print(f"    95% CI: [{result.ece_ci[0]:.3f}, {result.ece_ci[1]:.3f}]")
-    if result.auroc is not None:
-        print(f"  AUROC:            {result.auroc:.3f}")
-    if result.auprc is not None:
-        print(f"  AUPRC:            {result.auprc:.3f}")
-    if result.cost_efficiency:
-        print(f"  Entries/sec:      {result.cost_efficiency:.1f}")
-    if result.mean_api_calls:
-        print(f"  Mean API calls:   {result.mean_api_calls:.1f}")
-    print(f"{'─' * 60}")
+    # Dispatch on output format
+    output_format: str = args.format
 
-    if result.per_tier_metrics:
-        print("  Per-tier breakdown:")
-        for tier, metrics in sorted(result.per_tier_metrics.items()):
-            if tier == 0:
-                continue
-            print(
-                f"    Tier {tier}: DR={metrics['detection_rate']:.3f} "
-                f"F1={metrics['f1']:.3f} (n={metrics['count']:.0f})"
-            )
+    if output_format == "csv":
+        print(_format_csv(result))
+    elif output_format == "latex":
+        print(_format_latex(result))
+    else:
+        # --- text format (default) ---
+        print(f"\n{'=' * 60}")
+        print(f"  HALLMARK Evaluation: {result.tool_name}")
+        print(f"  Split: {result.split_name}")
+        print(f"{'=' * 60}")
+        print(f"  Entries:          {result.num_entries}")
+        print(f"  Hallucinated:     {result.num_hallucinated}")
+        print(f"  Valid:            {result.num_valid}")
+        if result.num_uncertain > 0:
+            print(f"  Uncertain:        {result.num_uncertain}")
 
-    # Detailed output if requested
-    if args.detailed:
+        # Confusion matrix
+        cm = build_confusion_matrix(entries, pred_map)
         print(f"{'─' * 60}")
-        if result.per_type_metrics:
-            print("  Per-type detection rates:")
-            for h_type, metrics in sorted(result.per_type_metrics.items()):
-                count = int(metrics["count"])
-                dr = metrics["detection_rate"]
-                print(f"    {h_type:<30} {count:>3} entries  DR={dr:.3f}")
+        print("  Confusion Matrix:")
+        print(f"    TP: {cm.tp:<6} FP: {cm.fp}")
+        print(f"    FN: {cm.fn:<6} TN: {cm.tn}")
 
-        # Compute and display subtest accuracy
-        from hallmark.evaluation.metrics import subtest_accuracy_table
+        print(f"{'─' * 60}")
+        print(f"  Detection Rate:   {result.detection_rate:.3f}")
+        if result.detection_rate_ci:
+            print(
+                f"    95% CI: [{result.detection_rate_ci[0]:.3f}, {result.detection_rate_ci[1]:.3f}]"
+            )
+        fpr_str = (
+            f"{result.false_positive_rate:.3f}" if result.false_positive_rate is not None else "N/A"
+        )
+        print(f"  False Pos. Rate:  {fpr_str}")
+        if result.fpr_ci:
+            print(f"    95% CI: [{result.fpr_ci[0]:.3f}, {result.fpr_ci[1]:.3f}]")
+        print(f"  F1 (Halluc.):     {result.f1_hallucination:.3f}")
+        if result.f1_hallucination_ci:
+            print(
+                f"    95% CI: [{result.f1_hallucination_ci[0]:.3f}, {result.f1_hallucination_ci[1]:.3f}]"
+            )
+        print(f"  Tier-weighted F1: {result.tier_weighted_f1:.3f}")
+        if result.tier_weighted_f1_ci:
+            print(
+                f"    95% CI: [{result.tier_weighted_f1_ci[0]:.3f}, {result.tier_weighted_f1_ci[1]:.3f}]"
+            )
+        if result.mcc is not None:
+            print(f"  MCC:              {result.mcc:.3f}")
+            if result.mcc_ci:
+                print(f"    95% CI: [{result.mcc_ci[0]:.3f}, {result.mcc_ci[1]:.3f}]")
+        if result.macro_f1 is not None:
+            print(f"  Macro-F1:         {result.macro_f1:.3f}")
+        if result.ece is not None:
+            print(f"  ECE:              {result.ece:.3f}")
+            if result.ece_ci:
+                print(f"    95% CI: [{result.ece_ci[0]:.3f}, {result.ece_ci[1]:.3f}]")
+        if result.auroc is not None:
+            print(f"  AUROC:            {result.auroc:.3f}")
+        if result.auprc is not None:
+            print(f"  AUPRC:            {result.auprc:.3f}")
+        if result.cost_efficiency:
+            print(f"  Entries/sec:      {result.cost_efficiency:.1f}")
+        if result.mean_api_calls:
+            print(f"  Mean API calls:   {result.mean_api_calls:.1f}")
+        print(f"{'─' * 60}")
 
-        subtest_acc = subtest_accuracy_table(entries, pred_map)
-        if subtest_acc:
+        if result.per_tier_metrics:
+            print("  Per-tier breakdown:")
+            for tier, metrics in sorted(result.per_tier_metrics.items()):
+                if tier == 0:
+                    continue
+                print(
+                    f"    Tier {tier}: DR={metrics['detection_rate']:.3f} "
+                    f"F1={metrics['f1']:.3f} (n={metrics['count']:.0f})"
+                )
+
+        # Detailed output if requested
+        if args.detailed:
             print(f"{'─' * 60}")
-            print("  Subtest accuracy:")
-            for subtest_name, metrics in sorted(subtest_acc.items()):
-                acc = metrics["accuracy"]
-                count = int(metrics["count"])
-                print(f"    {subtest_name:<25} {acc:.3f} ({count} entries)")
+            if result.per_type_metrics:
+                # Re-compute per-type metrics with CIs if --ci is also set
+                if args.ci:
+                    from hallmark.evaluation.metrics import per_type_metrics as _per_type
 
-    print(f"{'=' * 60}\n")
+                    type_metrics_ci = _per_type(entries, pred_map, compute_ci=True)
+                else:
+                    type_metrics_ci = result.per_type_metrics
+                print("  Per-type detection rates:")
+                for h_type, metrics in sorted(type_metrics_ci.items()):
+                    count = int(metrics["count"])
+                    dr = metrics["detection_rate"]
+                    if args.ci and "dr_ci_lower" in metrics:
+                        ci_lo = metrics["dr_ci_lower"]
+                        ci_hi = metrics["dr_ci_upper"]
+                        dr_str = f"{dr:.3f} [{ci_lo:.3f}, {ci_hi:.3f}]"
+                    else:
+                        dr_str = f"{dr:.3f}"
+                    print(f"    {h_type:<30} {count:>3} entries  DR={dr_str}")
+
+            # Compute and display subtest accuracy
+            from hallmark.evaluation.metrics import subtest_accuracy_table
+
+            subtest_acc = subtest_accuracy_table(entries, pred_map)
+            if subtest_acc:
+                print(f"{'─' * 60}")
+                print("  Subtest accuracy:")
+                for subtest_name, sub_metrics in sorted(subtest_acc.items()):
+                    acc = sub_metrics["accuracy"]
+                    count = int(sub_metrics["count"])
+                    print(f"    {subtest_name:<25} {acc:.3f} ({count} entries)")
+
+        print(f"{'=' * 60}\n")
 
     # Save results
     if args.output:
@@ -494,27 +580,65 @@ def _cmd_leaderboard(args: argparse.Namespace) -> int:
     reverse = args.sort_by != "ece"
     results.sort(key=lambda r: r.get(sort_field) or 0, reverse=reverse)
 
-    print(f"\n{'=' * 70}")
-    print(f"  HALLMARK Leaderboard: {args.split}  (sorted by {args.sort_by})")
-    print(f"{'=' * 70}")
-    print(f"  {'Rank':<6}{'Tool':<25}{'F1':<8}{'DR':<8}{'FPR':<8}{'TW-F1':<8}{'MCC':<8}")
-    print(f"  {'─' * 70}")
+    output_format: str = args.format
 
-    for i, r in enumerate(results, 1):
-        fpr_val = r.get("false_positive_rate")
-        fpr_str = f"{fpr_val:<8.3f}" if fpr_val is not None else "N/A     "
-        mcc_val = r.get("mcc")
-        mcc_str = f"{mcc_val:<8.3f}" if mcc_val is not None else "N/A     "
-        print(
-            f"  {i:<6}{r.get('tool_name', '?'):<25}"
-            f"{r.get('f1_hallucination', 0):<8.3f}"
-            f"{r.get('detection_rate', 0):<8.3f}"
-            f"{fpr_str}"
-            f"{r.get('tier_weighted_f1', 0):<8.3f}"
-            f"{mcc_str}"
-        )
+    if output_format == "csv":
+        print("rank,tool,split,f1_hallucination,detection_rate,fpr,tier_weighted_f1,mcc,ece")
+        for i, r in enumerate(results, 1):
+            fpr_val = r.get("false_positive_rate")
+            fpr_str = f"{fpr_val:.3f}" if fpr_val is not None else ""
+            mcc_val = r.get("mcc")
+            mcc_str = f"{mcc_val:.3f}" if mcc_val is not None else ""
+            ece_val = r.get("ece")
+            ece_str = f"{ece_val:.3f}" if ece_val is not None else ""
+            print(
+                f"{i},{r.get('tool_name', '?')},{r.get('split_name', args.split)},"
+                f"{r.get('f1_hallucination', 0):.3f},"
+                f"{r.get('detection_rate', 0):.3f},"
+                f"{fpr_str},{r.get('tier_weighted_f1', 0):.3f},{mcc_str},{ece_str}"
+            )
+    elif output_format == "latex":
+        print(r"\begin{tabular}{lrrrrrr}")
+        print(r"\toprule")
+        print(r"Tool & F1 & DR & FPR & TW-F1 & MCC & ECE \\")
+        print(r"\midrule")
+        for r in results:
+            tool = r.get("tool_name", "?").replace("_", r"\_")
+            fpr_val = r.get("false_positive_rate")
+            fpr_str = f"{fpr_val:.3f}" if fpr_val is not None else "--"
+            mcc_val = r.get("mcc")
+            mcc_str = f"{mcc_val:.3f}" if mcc_val is not None else "--"
+            ece_val = r.get("ece")
+            ece_str = f"{ece_val:.3f}" if ece_val is not None else "--"
+            print(
+                f"{tool} & {r.get('f1_hallucination', 0):.3f} & "
+                f"{r.get('detection_rate', 0):.3f} & {fpr_str} & "
+                f"{r.get('tier_weighted_f1', 0):.3f} & {mcc_str} & {ece_str} \\\\"
+            )
+        print(r"\bottomrule")
+        print(r"\end{tabular}")
+    else:
+        print(f"\n{'=' * 70}")
+        print(f"  HALLMARK Leaderboard: {args.split}  (sorted by {args.sort_by})")
+        print(f"{'=' * 70}")
+        print(f"  {'Rank':<6}{'Tool':<25}{'F1':<8}{'DR':<8}{'FPR':<8}{'TW-F1':<8}{'MCC':<8}")
+        print(f"  {'─' * 70}")
 
-    print(f"{'=' * 70}\n")
+        for i, r in enumerate(results, 1):
+            fpr_val = r.get("false_positive_rate")
+            fpr_str = f"{fpr_val:<8.3f}" if fpr_val is not None else "N/A     "
+            mcc_val = r.get("mcc")
+            mcc_str = f"{mcc_val:<8.3f}" if mcc_val is not None else "N/A     "
+            print(
+                f"  {i:<6}{r.get('tool_name', '?'):<25}"
+                f"{r.get('f1_hallucination', 0):<8.3f}"
+                f"{r.get('detection_rate', 0):<8.3f}"
+                f"{fpr_str}"
+                f"{r.get('tier_weighted_f1', 0):<8.3f}"
+                f"{mcc_str}"
+            )
+
+        print(f"{'=' * 70}\n")
     return 0
 
 

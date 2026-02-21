@@ -113,6 +113,31 @@ VALID_SUBTESTS: dict[str, bool | None] = {
 
 
 @dataclass
+class BlindEntry:
+    """A privacy-preserving view of a BenchmarkEntry for baseline runners.
+
+    Contains only the fields baselines need to perform verification.
+    Ground-truth labels, difficulty tiers, and generation metadata are
+    intentionally excluded to prevent baselines from accessing oracle information.
+    """
+
+    bibtex_key: str
+    bibtex_type: str
+    fields: dict[str, str]
+    raw_bibtex: str | None = None
+
+    def to_bibtex(self) -> str:
+        """Reconstruct BibTeX string from fields."""
+        if self.raw_bibtex:
+            return self.raw_bibtex
+        lines = [f"@{self.bibtex_type}{{{self.bibtex_key},"]
+        for key, value in sorted(self.fields.items()):
+            lines.append(f"  {key} = {{{value}}},")
+        lines.append("}")
+        return "\n".join(lines)
+
+
+@dataclass
 class BenchmarkEntry:
     """A single benchmark entry (valid or hallucinated BibTeX reference).
 
@@ -227,6 +252,15 @@ class BenchmarkEntry:
             lines.append(f"  {key} = {{{value}}},")
         lines.append("}")
         return "\n".join(lines)
+
+    def to_blind(self) -> BlindEntry:
+        """Convert to a BlindEntry that hides ground-truth labels from baselines."""
+        return BlindEntry(
+            bibtex_key=self.bibtex_key,
+            bibtex_type=self.bibtex_type,
+            fields=self.fields,
+            raw_bibtex=self.raw_bibtex,
+        )
 
 
 @dataclass
@@ -347,12 +381,34 @@ class EvaluationResult:
             data["per_tier_metrics"] = {int(k): v for k, v in data["per_tier_metrics"].items()}
         if "union_recall_at_k" in data and data["union_recall_at_k"] is not None:
             data["union_recall_at_k"] = {int(k): v for k, v in data["union_recall_at_k"].items()}
+        # JSON round-trips tuples as lists — coerce CI fields back to tuples
+        ci_fields = (
+            "detection_rate_ci",
+            "fpr_ci",
+            "f1_hallucination_ci",
+            "tier_weighted_f1_ci",
+            "ece_ci",
+            "mcc_ci",
+        )
+        for ci_field in ci_fields:
+            if ci_field in data and isinstance(data[ci_field], list):
+                data[ci_field] = tuple(data[ci_field])
         known = {f.name for f in fields(cls)}
         unknown = set(data.keys()) - known
         if unknown:
             logger.debug("Ignoring unknown fields in %s: %s", cls.__name__, unknown)
         data = {k: v for k, v in data.items() if k in known}
         return cls(**data)
+
+    def summary(self) -> dict[str, float | None]:
+        """Return only the 5 primary metrics as a flat dict."""
+        return {
+            "detection_rate": self.detection_rate,
+            "fpr": self.false_positive_rate,
+            "f1_hallucination": self.f1_hallucination,
+            "tier_weighted_f1": self.tier_weighted_f1,
+            "ece": self.ece,
+        }
 
     @classmethod
     def from_json(cls, text: str) -> EvaluationResult:
@@ -380,10 +436,13 @@ def load_entries(path: str | Path) -> list[BenchmarkEntry]:
     """
     entries = []
     with open(path) as f:
-        for line in f:
+        for lineno, line in enumerate(f, 1):
             line = line.strip()
             if line:
-                entries.append(BenchmarkEntry.from_json(line))
+                try:
+                    entries.append(BenchmarkEntry.from_json(line))
+                except Exception as exc:
+                    raise ValueError(f"Failed to parse entry at {path}:{lineno}: {exc}") from exc
     entries = [e for e in entries if not is_canary_entry(e)]
     seen_keys: set[str] = set()
     duplicates: list[str] = []
@@ -416,10 +475,15 @@ def load_predictions(path: str | Path) -> list[Prediction]:
     """Load predictions from a JSONL file."""
     predictions = []
     with open(path) as f:
-        for line in f:
+        for lineno, line in enumerate(f, 1):
             line = line.strip()
             if line:
-                predictions.append(Prediction.from_json(line))
+                try:
+                    predictions.append(Prediction.from_json(line))
+                except Exception as exc:
+                    raise ValueError(
+                        f"Failed to parse prediction at {path}:{lineno}: {exc}"
+                    ) from exc
     return predictions
 
 

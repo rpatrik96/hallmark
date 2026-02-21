@@ -12,7 +12,7 @@ import time
 import httpx
 
 from hallmark.baselines.prescreening import merge_with_predictions, prescreen_entries
-from hallmark.dataset.schema import BenchmarkEntry, Prediction
+from hallmark.dataset.schema import BlindEntry, Prediction
 
 logger = logging.getLogger(__name__)
 
@@ -50,7 +50,7 @@ def check_doi(doi: str, timeout: float = 10.0) -> tuple[bool | None, str]:
 
 
 def run_doi_only(
-    entries: list[BenchmarkEntry],
+    entries: list[BlindEntry],
     timeout_per_doi: float = 10.0,
     skip_prescreening: bool = False,
 ) -> list[Prediction]:

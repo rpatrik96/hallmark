@@ -15,7 +15,7 @@ from pathlib import Path
 from typing import Any
 
 from hallmark.baselines.common import fallback_predictions
-from hallmark.dataset.schema import BenchmarkEntry, Prediction
+from hallmark.dataset.schema import BlindEntry, Prediction
 
 logger = logging.getLogger(__name__)
 
@@ -119,7 +119,7 @@ def _append_checkpoint(checkpoint_path: Path, pred: Prediction) -> None:
 
 
 def _verify_entries(
-    entries: list[BenchmarkEntry],
+    entries: list[BlindEntry],
     call_fn: Callable[[str], str],
     source_prefix: str,
     model: str,
@@ -226,7 +226,7 @@ def _verify_entries(
 
 
 def _verify_with_openai_compatible(
-    entries: list[BenchmarkEntry],
+    entries: list[BlindEntry],
     model: str,
     api_key: str | None,
     base_url: str | None,
@@ -267,7 +267,7 @@ def _verify_with_openai_compatible(
 
 
 def verify_with_openai(
-    entries: list[BenchmarkEntry],
+    entries: list[BlindEntry],
     model: str = "gpt-5.1",
     api_key: str | None = None,
     log_dir: Path | None = None,
@@ -287,7 +287,7 @@ def verify_with_openai(
 
 
 def verify_with_openrouter(
-    entries: list[BenchmarkEntry],
+    entries: list[BlindEntry],
     model: str = "deepseek/deepseek-r1",
     api_key: str | None = None,
     log_dir: Path | None = None,
@@ -307,7 +307,7 @@ def verify_with_openrouter(
 
 
 def verify_with_anthropic(
-    entries: list[BenchmarkEntry],
+    entries: list[BlindEntry],
     model: str = "claude-sonnet-4-5-20250929",
     api_key: str | None = None,
     log_dir: Path | None = None,

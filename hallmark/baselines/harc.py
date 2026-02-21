@@ -21,7 +21,7 @@ import time
 from pathlib import Path
 
 from hallmark.baselines.common import fallback_predictions, run_with_prescreening
-from hallmark.dataset.schema import BenchmarkEntry, Prediction
+from hallmark.dataset.schema import BlindEntry, Prediction
 
 logger = logging.getLogger(__name__)
 
@@ -81,7 +81,7 @@ def _parse_harcx_output(output: str) -> dict[str, list[str]]:
 
 def _run_harcx_batch(
     harcx_bin: str,
-    batch: list[BenchmarkEntry],
+    batch: list[BlindEntry],
     author_threshold: float,
     check_urls: bool,
     api_key: str | None,
@@ -126,7 +126,7 @@ def _run_harcx_batch(
 
 
 def run_harc(
-    entries: list[BenchmarkEntry],
+    entries: list[BlindEntry],
     author_threshold: float = 0.6,
     check_urls: bool = False,
     api_key: str | None = None,
@@ -166,7 +166,7 @@ def run_harc(
         )
         return fallback_predictions(entries, reason="Fallback: harcx unavailable")
 
-    def _run_tool(tool_entries: list[BenchmarkEntry]) -> list[Prediction]:
+    def _run_tool(tool_entries: list[BlindEntry]) -> list[Prediction]:
         return _run_harc_batches(
             tool_entries,
             harcx_bin=harcx_bin,
@@ -187,7 +187,7 @@ def run_harc(
 
 
 def _run_harc_batches(
-    entries: list[BenchmarkEntry],
+    entries: list[BlindEntry],
     harcx_bin: str,
     author_threshold: float,
     check_urls: bool,

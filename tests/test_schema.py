@@ -299,6 +299,69 @@ class TestLabelValidation:
             assert pred.label == label
 
 
+class TestPredictionNanInfRejection:
+    def test_prediction_nan_confidence_rejected(self):
+        """NaN confidence should raise ValueError."""
+        with pytest.raises(ValueError):
+            Prediction(bibtex_key="test", label="VALID", confidence=float("nan"))
+
+    def test_prediction_inf_confidence_rejected(self):
+        """Inf confidence should raise ValueError."""
+        with pytest.raises(ValueError):
+            Prediction(bibtex_key="test", label="VALID", confidence=float("inf"))
+
+    def test_prediction_negative_inf_confidence_rejected(self):
+        """Negative inf confidence should raise ValueError."""
+        with pytest.raises(ValueError):
+            Prediction(bibtex_key="test", label="VALID", confidence=float("-inf"))
+
+
+class TestEvaluationResultJsonRoundtrip:
+    def test_evaluation_result_json_roundtrip_ci_tuples(self):
+        """CI fields should remain tuples after JSON roundtrip."""
+        from hallmark.dataset.schema import EvaluationResult
+
+        result = EvaluationResult(
+            tool_name="test",
+            split_name="dev",
+            num_entries=10,
+            num_hallucinated=5,
+            num_valid=5,
+            detection_rate=0.8,
+            false_positive_rate=0.1,
+            f1_hallucination=0.75,
+            tier_weighted_f1=0.7,
+            mcc=0.6,
+            detection_rate_ci=(0.7, 0.9),
+            f1_hallucination_ci=(0.65, 0.85),
+        )
+        json_str = result.to_json()
+        restored = EvaluationResult.from_json(json_str)
+        assert isinstance(restored.detection_rate_ci, tuple)
+        assert isinstance(restored.f1_hallucination_ci, tuple)
+        assert restored.detection_rate_ci == (0.7, 0.9)
+        assert restored.f1_hallucination_ci == (0.65, 0.85)
+
+    def test_evaluation_result_json_roundtrip_none_ci(self):
+        """None CI fields should remain None after JSON roundtrip."""
+        from hallmark.dataset.schema import EvaluationResult
+
+        result = EvaluationResult(
+            tool_name="test",
+            split_name="dev",
+            num_entries=10,
+            num_hallucinated=5,
+            num_valid=5,
+            detection_rate=0.8,
+            false_positive_rate=0.1,
+            f1_hallucination=0.75,
+            tier_weighted_f1=0.7,
+        )
+        restored = EvaluationResult.from_json(result.to_json())
+        assert restored.detection_rate_ci is None
+        assert restored.f1_hallucination_ci is None
+
+
 class TestBackwardCompatibility:
     def test_swapped_authors_value_still_works(self):
         # Ensure old entries with hallucination_type="swapped_authors" still work

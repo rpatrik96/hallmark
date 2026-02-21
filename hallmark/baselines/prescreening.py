@@ -20,7 +20,7 @@ from typing import Literal
 
 import httpx
 
-from hallmark.dataset.schema import BenchmarkEntry, Prediction
+from hallmark.dataset.schema import BlindEntry, Prediction
 
 logger = logging.getLogger(__name__)
 
@@ -35,7 +35,7 @@ class PreScreenResult:
     check_name: str
 
 
-def check_doi_resolves(entry: BenchmarkEntry) -> PreScreenResult:
+def check_doi_resolves(entry: BlindEntry) -> PreScreenResult:
     """Check if DOI resolves via HTTP HEAD request.
 
     Returns:
@@ -106,7 +106,7 @@ def check_doi_resolves(entry: BenchmarkEntry) -> PreScreenResult:
         )
 
 
-def check_year_bounds(entry: BenchmarkEntry, reference_year: int | None = None) -> PreScreenResult:
+def check_year_bounds(entry: BlindEntry, reference_year: int | None = None) -> PreScreenResult:
     """Check if publication year is within plausible bounds.
 
     Args:
@@ -172,7 +172,7 @@ def check_year_bounds(entry: BenchmarkEntry, reference_year: int | None = None) 
     )
 
 
-def check_author_heuristics(entry: BenchmarkEntry) -> PreScreenResult:
+def check_author_heuristics(entry: BlindEntry) -> PreScreenResult:
     """Check for placeholder or synthetic author patterns.
 
     Returns:
@@ -252,16 +252,14 @@ def check_author_heuristics(entry: BenchmarkEntry) -> PreScreenResult:
 
 
 # Registry of all checks (excluding check_year_bounds which takes an extra arg)
-ALL_CHECKS: list[Callable[[BenchmarkEntry], PreScreenResult]] = [
+ALL_CHECKS: list[Callable[[BlindEntry], PreScreenResult]] = [
     check_doi_resolves,
     check_year_bounds,
     check_author_heuristics,
 ]
 
 
-def prescreen_entry(
-    entry: BenchmarkEntry, reference_year: int | None = None
-) -> list[PreScreenResult]:
+def prescreen_entry(entry: BlindEntry, reference_year: int | None = None) -> list[PreScreenResult]:
     """Run all pre-screening checks on a single entry.
 
     Args:
@@ -294,7 +292,7 @@ def prescreen_entry(
 
 
 def prescreen_entries(
-    entries: list[BenchmarkEntry], reference_year: int | None = None
+    entries: list[BlindEntry], reference_year: int | None = None
 ) -> dict[str, list[PreScreenResult]]:
     """Run pre-screening on all entries.
 
@@ -313,7 +311,7 @@ def prescreen_entries(
 
 
 def merge_with_predictions(
-    entries: list[BenchmarkEntry],
+    entries: list[BlindEntry],
     tool_predictions: list[Prediction],
     prescreen_results: dict[str, list[PreScreenResult]],
 ) -> list[Prediction]:
