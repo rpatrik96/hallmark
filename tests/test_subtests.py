@@ -8,7 +8,7 @@ from hallmark.evaluation.subtests import (
     check_cross_db_agreement,
     check_fields_complete,
     check_title_exists,
-    check_venue_real,
+    check_venue_correct,
 )
 
 
@@ -121,30 +121,30 @@ class TestCheckAuthorsMatch:
         assert r.passed is None
 
 
-class TestCheckVenueReal:
+class TestCheckVenueCorrect:
     def test_known_venue(self):
-        r = check_venue_real(
+        r = check_venue_correct(
             "NeurIPS",
             known_venues={"NeurIPS", "ICML", "ICLR"},
         )
         assert r.passed is True
 
     def test_api_match(self):
-        r = check_venue_real(
+        r = check_venue_correct(
             "Neural Information Processing Systems",
             api_venue="Advances in Neural Information Processing Systems",
         )
         assert r.passed is True
 
     def test_unknown_venue(self):
-        r = check_venue_real(
+        r = check_venue_correct(
             "International Conference on Advanced AI Systems",
             known_venues={"NeurIPS", "ICML", "ICLR"},
         )
         assert r.passed is False
 
     def test_no_reference_data(self):
-        r = check_venue_real("Some Venue")
+        r = check_venue_correct("Some Venue")
         assert r.passed is None
 
 

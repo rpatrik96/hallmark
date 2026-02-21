@@ -134,7 +134,7 @@ def check_authors_match(
     )
 
 
-def check_venue_real(
+def check_venue_correct(
     venue: str,
     known_venues: set[str] | None = None,
     api_venue: str | None = None,
@@ -142,7 +142,7 @@ def check_venue_real(
 ) -> SubTestResult:
     """Check if the venue is real and matches API records."""
     if not venue:
-        return SubTestResult(name="venue_real", passed=None, detail="No venue provided")
+        return SubTestResult(name="venue_correct", passed=None, detail="No venue provided")
 
     # Check against known venues list
     if known_venues:
@@ -153,11 +153,14 @@ def check_venue_real(
         )
         if best >= threshold:
             return SubTestResult(
-                name="venue_real", passed=True, detail="Venue found in known venues list", score=1.0
+                name="venue_correct",
+                passed=True,
+                detail="Venue found in known venues list",
+                score=1.0,
             )
         else:
             return SubTestResult(
-                name="venue_real",
+                name="venue_correct",
                 passed=False,
                 detail=f"Venue not in known venues (best match: {best:.2f})",
                 score=best,
@@ -168,13 +171,15 @@ def check_venue_real(
         score = fuzz.token_sort_ratio(venue.lower(), api_venue.lower()) / 100.0
         passed = score >= threshold
         return SubTestResult(
-            name="venue_real",
+            name="venue_correct",
             passed=passed,
             detail=f"API venue match: {score:.2f} (entry='{venue}', api='{api_venue}')",
             score=score,
         )
 
-    return SubTestResult(name="venue_real", passed=None, detail="No reference data to verify venue")
+    return SubTestResult(
+        name="venue_correct", passed=None, detail="No reference data to verify venue"
+    )
 
 
 def check_fields_complete(
@@ -285,7 +290,7 @@ def run_all_subtests(
 
     # Venue verification
     venue = fields.get("booktitle", "") or fields.get("journal", "")
-    results.append(check_venue_real(venue, known_venues, api_venue))
+    results.append(check_venue_correct(venue, known_venues, api_venue))
 
     # Field completeness
     results.append(check_fields_complete(bibtex_type, fields))

@@ -343,7 +343,8 @@ class EvaluationResult:
     detection_rate: float  # Recall on HALLUCINATED
     false_positive_rate: float | None  # Valid entries incorrectly flagged; None when num_valid==0
     f1_hallucination: float  # F1 on HALLUCINATED class
-    tier_weighted_f1: float  # F1 weighted by difficulty tier
+    # F1 weighted by difficulty tier. Only recall is tier-weighted; FPs carry uniform weight 1.0.
+    tier_weighted_f1: float
 
     # Prevalence-invariant metrics
     mcc: float | None = None  # Matthews Correlation Coefficient

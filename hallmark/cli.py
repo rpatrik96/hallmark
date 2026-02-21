@@ -253,6 +253,9 @@ def main(argv: list[str] | None = None) -> int:
     diag_parser.add_argument(
         "--errors-only", action="store_true", help="Show only misclassified entries"
     )
+    diag_parser.add_argument(
+        "--full", action="store_true", help="Show full reason strings without truncation"
+    )
     diag_parser.add_argument("--data-dir", type=str, help="Override data directory")
     diag_parser.add_argument("--version", default="v1.0", help="Dataset version")
 
@@ -347,7 +350,14 @@ def _cmd_evaluate(args: argparse.Namespace) -> int:
             data_dir=args.data_dir,
         )
     except FileNotFoundError as e:
-        logging.error(str(e))
+        if args.split == "test_hidden":
+            print(
+                "The test_hidden split is held out for official evaluation. "
+                "Submit predictions at https://github.com/rpatrik96/hallmark .",
+                file=sys.stderr,
+            )
+        else:
+            logging.error(str(e))
         return 1
 
     logging.info(f"Loaded {len(entries)} entries from {args.split}")
@@ -377,7 +387,14 @@ def _cmd_evaluate(args: argparse.Namespace) -> int:
         if args.tool_name is None:
             tool_name = Path(args.predictions).stem
     elif args.baseline:
-        predictions = _run_baseline(args.baseline, entries)
+        try:
+            predictions = _run_baseline(args.baseline, entries)
+        except (ImportError, ValueError) as e:
+            logging.error(
+                f"Baseline '{args.baseline}' is not available: {e}\n"
+                "Run 'hallmark list-baselines' to see available options."
+            )
+            return 1
         tool_name = args.baseline
     else:
         logging.error("Provide --predictions or --baseline")
@@ -561,8 +578,9 @@ def _cmd_evaluate(args: argparse.Namespace) -> int:
                     count = int(sub_metrics["count"])
                     print(f"    {subtest_name:<25} {acc:.3f} ({count} entries)")
 
-        # Pre-screening breakdown if requested
-        if args.prescreening_breakdown:
+        # Pre-screening breakdown: auto-detect or explicit flag
+        has_prescreening = any("[Pre-screening override]" in (p.reason or "") for p in predictions)
+        if has_prescreening or args.prescreening_breakdown:
             from hallmark.baselines.prescreening import (
                 compute_prescreening_breakdown,
                 format_prescreening_breakdown,
@@ -748,7 +766,14 @@ def _cmd_leaderboard(args: argparse.Namespace) -> int:
     sort_field = _LEADERBOARD_SORT_FIELDS.get(args.sort_by, "f1_hallucination")
     # For ECE lower is better; for all others higher is better
     reverse = args.sort_by != "ece"
-    results.sort(key=lambda r: r.get(sort_field) or 0, reverse=reverse)
+
+    def _sort_key(r: dict) -> float:  # type: ignore[type-arg]
+        val = r.get(sort_field)
+        if val is None:
+            return float("inf") if not reverse else float("-inf")
+        return float(val)
+
+    results.sort(key=_sort_key, reverse=reverse)
 
     # Significance clustering (opt-in via --cluster)
     clusters: dict[str, str] = {}
@@ -1067,7 +1092,7 @@ def _cmd_diagnose(args: argparse.Namespace) -> int:
         true_label = entry.label
         confidence = f"{pred.confidence:.2f}" if pred and pred.confidence is not None else "N/A"
         reason = (pred.reason or "") if pred else ""
-        reason_trunc = reason[:80] if len(reason) > 80 else reason
+        reason_trunc = reason if args.full else reason[:80]
         h_type = entry.hallucination_type or "valid"
         tier = str(entry.difficulty_tier) if entry.difficulty_tier is not None else "-"
 

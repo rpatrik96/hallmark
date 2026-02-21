@@ -9,28 +9,37 @@ Evaluation Protocol:
 
 1. **Prediction Labels**:
    - Tools must return VALID or HALLUCINATED predictions
-   - UNCERTAIN is accepted as a valid label (treated as VALID conservatively)
+   - UNCERTAIN is accepted as a valid label — see UNCERTAIN Protocol below
    - Missing predictions are treated as VALID (conservative default)
 
-2. **Pre-screening**:
+2. **UNCERTAIN Protocol**:
+   - UNCERTAIN predictions are excluded from all classification metrics (DR, FPR, F1, TW-F1).
+     The tool did respond, but with insufficient confidence to make a definitive call.
+   - UNCERTAIN predictions COUNT toward coverage (the tool processed the entry).
+   - UNCERTAIN predictions are excluded from AUROC and AUPRC (same as before).
+   - UNCERTAIN predictions are excluded from ECE (no reliable confidence signal).
+   - ``num_uncertain`` in EvaluationResult tracks how many were skipped.
+
+3. **Pre-screening**:
    - Baseline wrappers may include pre-screening (lightweight local checks before external APIs)
    - Pre-screening results are included in the tool's predictions and reported transparently
    - The `reason` field indicates pre-screening with `[Pre-screening override]` prefix
 
-3. **Handling Incomplete Evaluations**:
+4. **Handling Incomplete Evaluations**:
    - Tools may evaluate only a subset of benchmark entries (e.g., due to API limits)
    - For single-tool evaluation: metrics computed only on covered entries
    - For multi-tool ranking: use Plackett-Luce model (see hallmark.evaluation.ranking)
      to fairly rank tools with heterogeneous coverage
 
-4. **Metrics Computation**:
-   - UNCERTAIN predictions treated as VALID for all metrics
+5. **Metrics Computation**:
+   - UNCERTAIN predictions excluded from classification metrics (see UNCERTAIN Protocol)
+   - Missing predictions treated as VALID (conservative default)
    - Tier-weighted F1: harder hallucinations (Tier 3) weighted 3x vs Tier 1
    - ECE (Expected Calibration Error): measures confidence calibration
    - Per-type metrics: detection rate by hallucination type
    - Subtest accuracy: accuracy on individual verification checks (DOI, title, authors, etc.)
 
-5. **Cost Tracking**:
+6. **Cost Tracking**:
    - wall_clock_seconds: total time per prediction
    - api_calls: number of external API calls made
    - cost_efficiency: entries evaluated per second
@@ -122,8 +131,10 @@ def build_confusion_matrix(
 ) -> ConfusionMatrix:
     """Build confusion matrix from entries and predictions.
 
-    UNCERTAIN predictions are treated as VALID (conservative default).
-    Missing predictions are also treated as VALID.
+    UNCERTAIN Protocol: UNCERTAIN predictions are excluded from the confusion matrix
+    entirely — they do not contribute to TP, FP, TN, or FN. They count toward
+    coverage (the tool did respond) but not toward classification metrics.
+    Missing predictions are treated as VALID (conservative default).
 
     Args:
         entries: Benchmark entries (ground truth).
@@ -143,16 +154,17 @@ def build_confusion_matrix(
                 cm.tn += 1
             continue
 
-        # Treat UNCERTAIN as VALID (conservative)
-        pred_label = "VALID" if pred.label == "UNCERTAIN" else pred.label
+        # UNCERTAIN excluded from classification metrics — skip this entry entirely
+        if pred.label == "UNCERTAIN":
+            continue
 
         if entry.label == "HALLUCINATED":
-            if pred_label == "HALLUCINATED":
+            if pred.label == "HALLUCINATED":
                 cm.tp += 1
             else:
                 cm.fn += 1
         else:
-            if pred_label == "HALLUCINATED":
+            if pred.label == "HALLUCINATED":
                 cm.fp += 1
             else:
                 cm.tn += 1
@@ -161,13 +173,13 @@ def build_confusion_matrix(
 
 def tier_weighted_f1(
     entries: list[BenchmarkEntry],
-    predictions: dict[str, Prediction],
+    predictions: dict[str, Prediction] | list[Prediction],
     tier_weights: dict[int, float] | None = None,
 ) -> float:
     """Compute F1 weighted by difficulty tier (Tier 3 worth 3x Tier 1).
 
     Each hallucinated entry contributes to F1 proportionally to its tier weight.
-    UNCERTAIN predictions are treated as VALID (conservative).
+    UNCERTAIN predictions are excluded (not counted toward the confusion matrix).
 
     FP weighting note:
     - False positives (valid entries incorrectly flagged) are always weighted at 1.0,
@@ -181,6 +193,10 @@ def tier_weighted_f1(
 
     Entries with difficulty_tier=None are assigned to tier 1 (the default tier).
     """
+    # F-15: accept list as well as dict
+    if isinstance(predictions, list):
+        predictions = {p.bibtex_key: p for p in predictions}
+
     if tier_weights is None:
         tier_weights = {1: 1.0, 2: 2.0, 3: 3.0}
 
@@ -193,18 +209,22 @@ def tier_weighted_f1(
         tier = entry.difficulty_tier or 1
         w = tier_weights.get(tier, 1.0)
 
-        # Treat UNCERTAIN as VALID
-        pred_label = pred.label if pred and pred.label != "UNCERTAIN" else "VALID"
+        # UNCERTAIN predictions are excluded from classification metrics entirely.
+        # Missing predictions are treated as VALID (conservative default).
+        if pred is not None and pred.label == "UNCERTAIN":
+            continue
+
+        pred_label = pred.label if pred is not None else "VALID"
 
         if entry.label == "HALLUCINATED":
-            if pred is not None and pred_label == "HALLUCINATED":
+            if pred_label == "HALLUCINATED":
                 weighted_tp += w
             else:
                 weighted_fn += w
         else:
             # FP weighting: VALID entries are penalized uniformly (weight 1.0)
             # regardless of weighting scheme, affecting only precision, not recall.
-            if pred is not None and pred_label == "HALLUCINATED":
+            if pred_label == "HALLUCINATED":
                 weighted_fp += 1.0
 
     precision = (
@@ -455,7 +475,7 @@ def cost_efficiency(predictions: list[Prediction]) -> dict[str, float | None]:
 
 def expected_calibration_error(
     entries: list[BenchmarkEntry],
-    predictions: dict[str, Prediction],
+    predictions: dict[str, Prediction] | list[Prediction],
     n_bins: int = 10,
     adaptive: bool = True,
 ) -> float:
@@ -467,11 +487,12 @@ def expected_calibration_error(
     Confidence represents the tool's belief in its own prediction: a tool
     predicting HALLUCINATED with confidence 0.9 claims 90% certainty.
 
-    UNCERTAIN predictions are treated as VALID with the reported confidence.
+    UNCERTAIN predictions are excluded from ECE entirely (no reliable confidence signal).
 
     Args:
         entries: Benchmark entries (ground truth).
-        predictions: Tool's predictions.
+        predictions: Tool's predictions — either a dict keyed by bibtex_key
+            or a list of Prediction objects (converted internally).
         n_bins: Number of bins for calibration estimation.
         adaptive: If True (default), use equal-frequency (quantile) binning — sort
             predictions by confidence and split into n_bins equal-sized groups. This
@@ -479,23 +500,34 @@ def expected_calibration_error(
             concentrate all predictions in 2 bins (e.g., confidence in {0.0, 1.0}).
             If False, use fixed equal-width bins [0, 1/n_bins), [1/n_bins, 2/n_bins), …
     """
+    # F-15: accept list as well as dict
+    if isinstance(predictions, list):
+        predictions = {p.bibtex_key: p for p in predictions}
+
     if not predictions:
         return 0.0
 
-    # Collect (confidence, correctness) pairs
+    # Collect (confidence, correctness) pairs — skip UNCERTAIN (no reliable confidence signal)
     pairs: list[tuple[float, bool]] = []
     for entry in entries:
         pred = predictions.get(entry.bibtex_key)
         if pred is None:
             continue
 
-        # Treat UNCERTAIN as VALID
-        pred_label = "VALID" if pred.label == "UNCERTAIN" else pred.label
-        is_correct = pred_label == entry.label
+        # UNCERTAIN excluded from ECE (consistent with AUROC/AUPRC treatment)
+        if pred.label == "UNCERTAIN":
+            continue
+
+        is_correct = pred.label == entry.label
         pairs.append((pred.confidence, is_correct))
 
     if not pairs:
         return 0.0
+
+    # F-14: warn when the tool uses only 1-2 distinct confidence values — ECE is unreliable
+    # because calibration curves require meaningful variation in confidence scores.
+    if len(set(conf for conf, _ in pairs)) <= 2:
+        logger.warning("ECE is unreliable for tools with <= 2 distinct confidence values.")
 
     ece = 0.0
     total = len(pairs)
@@ -539,7 +571,9 @@ def expected_calibration_error(
     return ece
 
 
-def auroc(entries: list[BenchmarkEntry], predictions: dict[str, Prediction]) -> float | None:
+def auroc(
+    entries: list[BenchmarkEntry], predictions: dict[str, Prediction] | list[Prediction]
+) -> float | None:
     """Compute Area Under ROC Curve for hallucination detection.
 
     Positive class: HALLUCINATED. Score = confidence for HALLUCINATED predictions,
@@ -555,11 +589,16 @@ def auroc(entries: list[BenchmarkEntry], predictions: dict[str, Prediction]) -> 
 
     Args:
         entries: Benchmark entries (ground truth).
-        predictions: Tool's predictions.
+        predictions: Tool's predictions — either a dict keyed by bibtex_key
+            or a list of Prediction objects (converted internally).
 
     Returns:
         AUROC score in [0, 1], or None if insufficient class diversity.
     """
+    # F-15: accept list as well as dict
+    if isinstance(predictions, list):
+        predictions = {p.bibtex_key: p for p in predictions}
+
     # Build (score, true_label) pairs where true_label is 1 for HALLUCINATED, 0 for VALID
     # Skip missing and UNCERTAIN predictions entirely.
     pairs: list[tuple[float, int]] = []
@@ -624,7 +663,9 @@ def auroc(entries: list[BenchmarkEntry], predictions: dict[str, Prediction]) -> 
     return area
 
 
-def auprc(entries: list[BenchmarkEntry], predictions: dict[str, Prediction]) -> float | None:
+def auprc(
+    entries: list[BenchmarkEntry], predictions: dict[str, Prediction] | list[Prediction]
+) -> float | None:
     """Compute Area Under Precision-Recall Curve for hallucination detection.
 
     Same scoring convention as auroc(). Missing predictions and UNCERTAIN predictions
@@ -633,11 +674,16 @@ def auprc(entries: list[BenchmarkEntry], predictions: dict[str, Prediction]) -> 
 
     Args:
         entries: Benchmark entries (ground truth).
-        predictions: Tool's predictions.
+        predictions: Tool's predictions — either a dict keyed by bibtex_key
+            or a list of Prediction objects (converted internally).
 
     Returns:
         AUPRC score in [0, 1], or None if no positive examples.
     """
+    # F-15: accept list as well as dict
+    if isinstance(predictions, list):
+        predictions = {p.bibtex_key: p for p in predictions}
+
     # Build (score, true_label) pairs where true_label is 1 for HALLUCINATED, 0 for VALID
     # Skip missing and UNCERTAIN predictions entirely.
     pairs: list[tuple[float, int]] = []
@@ -997,14 +1043,23 @@ def _bootstrap_all_cis(
         if not resampled_entries:
             continue
 
-        boot_map = {p.bibtex_key: p for p in resampled_preds}
-        cm_boot = build_confusion_matrix(resampled_entries, boot_map)
+        # F-8: Use resampled_preds as a list (not dict) for tier_weighted_f1 and ECE so that
+        # duplicate entries from bootstrap resampling-with-replacement all contribute
+        # independently. Building a dict would deduplicate by bibtex_key and narrow CIs.
+        # build_confusion_matrix iterates entries in lockstep with predictions via the list
+        # path, so duplicates are counted correctly there too.
+        cm_boot = build_confusion_matrix(resampled_entries, resampled_preds)
         dr_samples.append(cm_boot.detection_rate)
         f1_samples.append(cm_boot.f1)
-        fpr_samples.append(cm_boot.false_positive_rate)
+        # F-9: Skip FPR when no valid entries in this resample to avoid mixing 0.0 (undefined)
+        # with genuine 0.0 (no false positives), which would bias the CI downward.
+        if cm_boot.tn + cm_boot.fp > 0:
+            fpr_samples.append(cm_boot.false_positive_rate)
         mcc_samples.append(cm_boot.mcc)
-        twf1_samples.append(tier_weighted_f1(resampled_entries, boot_map, tier_weights))
-        ece_samples.append(expected_calibration_error(resampled_entries, boot_map, adaptive=True))
+        twf1_samples.append(tier_weighted_f1(resampled_entries, resampled_preds, tier_weights))
+        ece_samples.append(
+            expected_calibration_error(resampled_entries, resampled_preds, adaptive=True)
+        )
 
     def _ci(samples: list[float]) -> tuple[float, float]:
         if not samples:
@@ -1462,8 +1517,9 @@ def evaluate(
     """Run full evaluation and return aggregated results.
 
     Evaluation Protocol:
-    - UNCERTAIN predictions are treated as VALID (conservative default) for all metrics
-    - Missing predictions are treated as VALID
+    - UNCERTAIN predictions are excluded from classification metrics (DR, FPR, F1, TW-F1).
+      They count toward coverage but not toward the confusion matrix.
+    - Missing predictions are treated as VALID (conservative default)
     - Pre-screening results (if any) are included in the tool's predictions
     - Incomplete evaluations (partial coverage) can be aggregated using Plackett-Luce
       ranking (see hallmark.evaluation.ranking module)
@@ -1483,6 +1539,7 @@ def evaluate(
         per-tier and per-type breakdowns, count of UNCERTAIN predictions,
         and optionally bootstrap CIs for primary metrics.
     """
+    # Defense-in-depth: filter canaries even if load_entries() already did.
     entries = [e for e in entries if not is_canary_entry(e)]
 
     # Warn on duplicate bibtex_keys before dict conversion (last prediction wins)
@@ -1534,7 +1591,9 @@ def evaluate(
             100 * len(overlap) / len(entry_keys),
         )
 
-    coverage = len(pred_map) / len(entries) if entries else 1.0
+    # F-7: Use intersection of entry_keys and pred_keys so that extra predictions
+    # (keys not in entries) do not push coverage above 1.0.
+    coverage = len(entry_keys & pred_keys) / len(entries) if entries else 1.0
 
     cm = build_confusion_matrix(entries, pred_map)
     tw_f1 = tier_weighted_f1(entries, pred_map)

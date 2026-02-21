@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import importlib.util
+
 import pytest
 
 from hallmark.dataset.schema import BenchmarkEntry, Prediction
@@ -10,8 +12,11 @@ from hallmark.evaluation.ranking import (
     load_results_matrix,
     rank_tools,
     rank_tools_mean_score,
+    rank_tools_plackett_luce,
     save_results_matrix,
 )
+
+HAS_CHOIX = importlib.util.find_spec("choix") is not None
 
 
 def _entry(key, label="VALID", tier=0, h_type=None):
@@ -147,3 +152,121 @@ class TestSaveLoadMatrix:
         assert loaded_matrix[0][1] == pytest.approx(0.5)
         assert loaded_matrix[1][0] is None
         assert loaded_matrix[1][1] == pytest.approx(0.8)
+
+
+def _make_entries_and_preds():
+    """Return 4 entries + two tool prediction sets (perfect and random)."""
+    entries = [
+        BenchmarkEntry(**_entry("a", "VALID")),
+        BenchmarkEntry(**_entry("b", "VALID")),
+        BenchmarkEntry(**_entry("c", "HALLUCINATED", 1, "fabricated_doi")),
+        BenchmarkEntry(**_entry("d", "HALLUCINATED", 2, "near_miss_title")),
+    ]
+    perfect_preds = [
+        _pred("a", "VALID", 0.95),
+        _pred("b", "VALID", 0.95),
+        _pred("c", "HALLUCINATED", 0.95),
+        _pred("d", "HALLUCINATED", 0.95),
+    ]
+    random_preds = [
+        _pred("a", "HALLUCINATED", 0.5),  # wrong
+        _pred("b", "VALID", 0.5),
+        _pred("c", "VALID", 0.5),  # wrong
+        _pred("d", "HALLUCINATED", 0.5),
+    ]
+    return entries, perfect_preds, random_preds
+
+
+class TestPerfectToolRanksHigher:
+    """F-19a: A perfect tool should rank above a random/bad tool."""
+
+    def test_perfect_tool_ranks_higher_mean(self):
+        entries, perfect_preds, random_preds = _make_entries_and_preds()
+        tool_preds = {"perfect": perfect_preds, "random": random_preds}
+        ranking = rank_tools(entries, tool_preds, method="mean")
+        names = [r[0] for r in ranking]
+        assert names[0] == "perfect", f"Expected 'perfect' first, got {names}"
+
+    def test_scores_ordered_descending(self):
+        entries, perfect_preds, random_preds = _make_entries_and_preds()
+        tool_preds = {"perfect": perfect_preds, "random": random_preds}
+        ranking = rank_tools(entries, tool_preds, method="mean")
+        scores = [r[1] for r in ranking]
+        assert scores[0] >= scores[1]
+
+
+class TestRankToolsMeanMethod:
+    """F-19b: rank_tools(..., method='mean') — correct ordering."""
+
+    def test_rank_tools_mean_method(self):
+        entries, perfect_preds, random_preds = _make_entries_and_preds()
+        tool_preds = {"alpha": perfect_preds, "beta": random_preds}
+        ranking = rank_tools(entries, tool_preds, method="mean")
+        # Result must be list of (name, score) tuples
+        assert isinstance(ranking, list)
+        assert len(ranking) == 2
+        assert all(isinstance(r, tuple) and len(r) == 2 for r in ranking)
+        # Perfect tool ranks first
+        assert ranking[0][0] == "alpha"
+        assert ranking[0][1] > ranking[1][1]
+
+    def test_rank_tools_mean_three_tools(self):
+        entries, perfect_preds, random_preds = _make_entries_and_preds()
+        # Add a third "zero" tool that gets everything wrong
+        zero_preds = [
+            _pred("a", "HALLUCINATED", 0.99),
+            _pred("b", "HALLUCINATED", 0.99),
+            _pred("c", "VALID", 0.99),
+            _pred("d", "VALID", 0.99),
+        ]
+        tool_preds = {
+            "perfect": perfect_preds,
+            "random": random_preds,
+            "zero": zero_preds,
+        }
+        ranking = rank_tools(entries, tool_preds, method="mean")
+        names = [r[0] for r in ranking]
+        assert names[0] == "perfect"
+        assert names[-1] == "zero"
+
+
+@pytest.mark.skipif(not HAS_CHOIX, reason="choix not installed")
+class TestPlackettLuceRanking:
+    """F-19c: Plackett-Luce ranking when choix is available."""
+
+    def test_plackett_luce_returns_ranking(self):
+        entries, perfect_preds, random_preds = _make_entries_and_preds()
+        tool_preds = {"perfect": perfect_preds, "random": random_preds}
+        ranking = rank_tools(entries, tool_preds, method="plackett_luce")
+        assert isinstance(ranking, list)
+        assert len(ranking) == 2
+        assert all(isinstance(r, tuple) and len(r) == 2 for r in ranking)
+
+    def test_plackett_luce_perfect_ranks_first(self):
+        entries, perfect_preds, random_preds = _make_entries_and_preds()
+        tool_preds = {"perfect": perfect_preds, "random": random_preds}
+        ranking = rank_tools(entries, tool_preds, method="plackett_luce")
+        assert ranking[0][0] == "perfect"
+
+    def test_plackett_luce_scores_are_positive(self):
+        entries, perfect_preds, random_preds = _make_entries_and_preds()
+        tool_preds = {"perfect": perfect_preds, "random": random_preds}
+        ranking = rank_tools(entries, tool_preds, method="plackett_luce")
+        for _name, score in ranking:
+            assert score > 0.0
+
+    def test_rank_tools_plackett_luce_with_ci(self):
+        """rank_tools_plackett_luce with compute_ci=True returns (ranked, ci_dict)."""
+        entries, perfect_preds, random_preds = _make_entries_and_preds()
+        tool_preds = {"perfect": perfect_preds, "random": random_preds}
+        entry_keys, tool_names, matrix = build_results_matrix(entries, tool_preds)
+
+        result = rank_tools_plackett_luce(
+            entry_keys, tool_names, matrix, compute_ci=True, n_bootstrap=50, seed=42
+        )
+        ranked, cis = result
+        assert isinstance(ranked, list)
+        assert isinstance(cis, dict)
+        # CI tuples must be (lower, upper) with lower <= upper
+        for tool_name, (lo, hi) in cis.items():
+            assert lo <= hi, f"CI for {tool_name} has lo > hi: ({lo}, {hi})"

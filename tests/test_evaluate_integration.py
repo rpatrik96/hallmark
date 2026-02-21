@@ -153,18 +153,23 @@ class TestEvaluateEmptyPredictions:
 
 
 class TestEvaluateUncertain:
-    """UNCERTAIN labels are treated as VALID."""
+    """UNCERTAIN predictions are excluded from classification metrics (new protocol).
 
-    def test_uncertain_treated_as_valid(self):
+    UNCERTAIN entries count toward coverage but are not included in the confusion
+    matrix — they do not contribute to TP, FP, TN, or FN.
+    """
+
+    def test_uncertain_excluded_from_confusion_matrix(self):
         entries = [
             _make_entry("h1", "HALLUCINATED"),
             _make_entry("v1", "VALID"),
         ]
         preds = [
-            _make_pred("h1", "UNCERTAIN", confidence=0.5),  # → VALID → FN
-            _make_pred("v1", "UNCERTAIN", confidence=0.5),  # → VALID → TN
+            _make_pred("h1", "UNCERTAIN", confidence=0.5),  # excluded → no TP/FN
+            _make_pred("v1", "UNCERTAIN", confidence=0.5),  # excluded → no TN/FP
         ]
         result = evaluate(entries, preds, tool_name="uncertain", split_name="test")
+        # Both entries excluded from confusion matrix → detection_rate=0.0 (no TPs)
         assert result.detection_rate == pytest.approx(0.0)
         assert result.false_positive_rate == pytest.approx(0.0)
         assert result.num_uncertain == 2
@@ -176,11 +181,12 @@ class TestEvaluateUncertain:
         ]
         preds = [
             _make_pred("h1", "HALLUCINATED"),
-            _make_pred("h2", "UNCERTAIN", confidence=0.5),
+            _make_pred("h2", "UNCERTAIN", confidence=0.5),  # excluded from metrics
         ]
         result = evaluate(entries, preds, tool_name="uncertain", split_name="test")
         assert result.num_uncertain == 1
-        assert result.detection_rate == pytest.approx(0.5)
+        # h2 excluded; only h1 counts → detection_rate = 1/1 = 1.0
+        assert result.detection_rate == pytest.approx(1.0)
 
 
 class TestEvaluateSingleEntry:

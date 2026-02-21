@@ -138,6 +138,7 @@ def check_available(name: str) -> tuple[bool, str]:
 def run_baseline(
     name: str,
     entries: list[BenchmarkEntry],
+    split: str | None = None,
     **kwargs: Any,
 ) -> list[Prediction]:
     """Run a baseline by name.
@@ -148,6 +149,8 @@ def run_baseline(
     Args:
         name: Registered baseline name.
         entries: Benchmark entries to evaluate (ground-truth labels are hidden).
+        split: Name of the split being evaluated. Used to detect self-referential
+            evaluation (e.g., title_oracle on dev_public).
         **kwargs: Extra arguments forwarded to the runner.
 
     Returns:
@@ -166,6 +169,8 @@ def run_baseline(
 
     info = _REGISTRY[name]
     merged_kwargs = {**info.runner_kwargs, **kwargs}
+    if split is not None:
+        merged_kwargs.setdefault("split", split)
     blind_entries = _to_blind(entries)
     return info.runner(blind_entries, **merged_kwargs)
 
@@ -405,7 +410,29 @@ def _register_builtins() -> None:
         from hallmark.baselines.title_oracle import run_title_oracle
         from hallmark.dataset.loader import load_split
 
+        split = kw.pop("split", None)
+        if split == "dev_public":
+            logger.warning(
+                "Title oracle is self-referential when evaluated on dev_public. "
+                "Results reflect label memorization, not detection capability."
+            )
+
         reference_pool = load_split("dev_public")
+
+        # Warn if input entries overlap significantly with the reference pool
+        # (catches self-referential evaluation even without explicit split name)
+        if split is None:
+            input_keys = {e.bibtex_key for e in entries}
+            ref_keys = {e.bibtex_key for e in reference_pool}
+            overlap = input_keys & ref_keys
+            if len(input_keys) > 0 and len(overlap) / len(input_keys) > 0.5:
+                logger.warning(
+                    "Title oracle: >50%% of input entries overlap with the dev_public reference "
+                    "pool (%d/%d). Results reflect label memorization, not detection capability.",
+                    len(overlap),
+                    len(input_keys),
+                )
+
         return run_title_oracle(entries, reference_pool, **kw)
 
     register(

@@ -53,7 +53,7 @@ def _make_base_entry() -> BenchmarkEntry:
             "doi_resolves": True,
             "title_exists": True,
             "authors_match": True,
-            "venue_real": True,
+            "venue_correct": True,
             "fields_complete": True,
             "cross_db_agreement": True,
         },
@@ -81,10 +81,10 @@ class TestGeneratePlausibleFabrication:
         result = generate_plausible_fabrication(entry)
         assert "doi" not in result.fields
 
-    def test_venue_real_subtest_true(self):
+    def test_venue_correct_subtest_true(self):
         entry = _make_base_entry()
         result = generate_plausible_fabrication(entry)
-        assert result.subtests["venue_real"] is True
+        assert result.subtests["venue_correct"] is True
         assert result.subtests["doi_resolves"] is None  # DOI removed; not applicable
         assert result.subtests["title_exists"] is False
 

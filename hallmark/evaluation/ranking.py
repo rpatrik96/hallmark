@@ -23,7 +23,7 @@ evaluation), the Plackett-Luce model enables fair ranking by:
    - correct: score = confidence (rewards correct + high confidence)
    - incorrect: score = 1 - confidence (partial credit for calibrated uncertainty)
    - Applies uniformly to all entry types (HALLUCINATED and VALID)
-   - UNCERTAIN predictions treated as VALID (conservative, per evaluation protocol)
+   - UNCERTAIN predictions are excluded (treated as missing, consistent with metrics.py)
 
 3. **ILSR Ranking**: Iterative Luce Spectral Ranking aggregates pairwise comparisons
    into global tool rankings, accounting for varying coverage and difficulty.
@@ -59,6 +59,7 @@ References:
 
 from __future__ import annotations
 
+import contextlib
 import csv
 import hashlib
 import logging
@@ -117,12 +118,14 @@ def build_results_matrix(
 
             pred = pred_lookup[tool_name][entry_key]
 
-            # Treat UNCERTAIN as VALID (per evaluation protocol)
-            pred_label = "VALID" if pred.label == "UNCERTAIN" else pred.label
+            # Skip UNCERTAIN predictions (consistent with metrics.py exclusion)
+            if pred.label == "UNCERTAIN":
+                row.append(None)
+                continue
 
             # Confidence-weighted scoring (symmetric across all entry types):
             # correct: reward high confidence; incorrect: reward low confidence
-            is_correct = pred_label == entry.label
+            is_correct = pred.label == entry.label
             score = pred.confidence if is_correct else 1.0 - pred.confidence
 
             row.append(score)
@@ -270,9 +273,13 @@ def rank_tools_plackett_luce(
         return fallback
 
     # Estimate point-estimate parameters using ILSR
+    _ILSR_ERRORS: tuple[type[Exception], ...] = (ValueError, RuntimeError)
+    with contextlib.suppress(AttributeError):
+        _ILSR_ERRORS = (*_ILSR_ERRORS, np.linalg.LinAlgError)
+
     try:
         log_params = choix.ilsr_pairwise(n_tools, comparisons, alpha=alpha)
-    except Exception as e:
+    except _ILSR_ERRORS as e:
         logger.error(f"ILSR failed: {e}. Falling back to mean-score ranking.")
         fallback = rank_tools_mean_score(entry_keys, tool_names, matrix)
         if compute_ci:

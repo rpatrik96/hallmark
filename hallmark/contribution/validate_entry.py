@@ -9,8 +9,6 @@ from __future__ import annotations
 import logging
 from dataclasses import dataclass
 
-from rapidfuzz import fuzz
-
 from hallmark.dataset.schema import (
     SUBTEST_NAMES,
     BenchmarkEntry,
@@ -161,6 +159,8 @@ def _is_duplicate(
     title_threshold: float = 0.95,
 ) -> bool:
     """Check if two entries are duplicates based on title similarity."""
+    from rapidfuzz import fuzz  # lazy import: not needed for basic validation
+
     title1 = entry.fields.get("title", "").lower().strip()
     title2 = existing.fields.get("title", "").lower().strip()
 

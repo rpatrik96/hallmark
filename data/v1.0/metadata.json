@@ -2,22 +2,22 @@
     "version": "1.0",
     "build_date": "2026-02-20",
     "seed": 8042,
-    "total_entries": 2554,
+    "total_entries": 2466,
     "splits": {
         "dev_public": {
             "file": "dev_public.jsonl",
             "total": 1063,
-            "valid": 486,
-            "hallucinated": 577,
+            "valid": 487,
+            "hallucinated": 576,
             "tier_distribution": {
                 "1": 156,
-                "2": 274,
+                "2": 273,
                 "3": 147
             },
             "type_distribution": {
                 "arxiv_version_mismatch": 30,
-                "chimeric_title": 35,
-                "fabricated_doi": 60,
+                "chimeric_title": 34,
+                "fabricated_doi": 59,
                 "future_date": 30,
                 "hybrid_fabrication": 46,
                 "merged_citation": 30,
@@ -25,14 +25,15 @@
                 "nonexistent_venue": 32,
                 "partial_author_list": 30,
                 "placeholder_authors": 34,
-                "plausible_fabrication": 82,
+                "plausible_fabrication": 83,
                 "preprint_as_published": 31,
                 "swapped_authors": 67,
                 "wrong_venue": 35
             },
             "generation_methods": {
                 "adversarial": 60,
-                "llm_generated": 109,
+                "canary": 1,
+                "llm_generated": 108,
                 "perturbation": 360,
                 "real_world": 48,
                 "scraped": 486
@@ -40,54 +41,56 @@
         },
         "test_public": {
             "file": "test_public.jsonl",
-            "total": 836,
-            "valid": 294,
-            "hallucinated": 542,
+            "total": 828,
+            "valid": 295,
+            "hallucinated": 533,
             "tier_distribution": {
-                "1": 150,
-                "2": 257,
-                "3": 135
+                "1": 144,
+                "2": 255,
+                "3": 134
             },
             "type_distribution": {
-                "arxiv_version_mismatch": 30,
+                "arxiv_version_mismatch": 29,
                 "chimeric_title": 33,
-                "fabricated_doi": 56,
-                "future_date": 30,
-                "hybrid_fabrication": 42,
+                "fabricated_doi": 51,
+                "future_date": 29,
+                "hybrid_fabrication": 41,
                 "merged_citation": 30,
                 "near_miss_title": 31,
                 "nonexistent_venue": 31,
                 "partial_author_list": 30,
-                "placeholder_authors": 33,
-                "plausible_fabrication": 74,
-                "preprint_as_published": 30,
+                "placeholder_authors": 31,
+                "plausible_fabrication": 76,
+                "preprint_as_published": 29,
                 "swapped_authors": 59,
                 "wrong_venue": 33
             },
             "generation_methods": {
-                "adversarial": 60,
+                "adversarial": 59,
+                "canary": 1,
                 "llm_generated": 91,
-                "perturbation": 357,
+                "perturbation": 349,
                 "real_world": 34,
                 "scraped": 294
             }
         },
         "stress_test": {
             "file": "stress_test.jsonl",
-            "total": 202,
-            "valid": 0,
-            "hallucinated": 202,
+            "total": 122,
+            "valid": 1,
+            "hallucinated": 121,
             "tier_distribution": {
-                "2": 140,
-                "3": 62
+                "2": 85,
+                "3": 36
             },
             "type_distribution": {
-                "arxiv_version_mismatch": 62,
-                "merged_citation": 70,
-                "partial_author_list": 70
+                "arxiv_version_mismatch": 36,
+                "merged_citation": 46,
+                "partial_author_list": 39
             },
             "generation_methods": {
-                "perturbation": 202
+                "canary": 1,
+                "perturbation": 121
             }
         },
         "test_hidden": {

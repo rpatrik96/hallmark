@@ -24,6 +24,10 @@ from hallmark.dataset.schema import BlindEntry, Prediction
 
 logger = logging.getLogger(__name__)
 
+# Pinned reference year for reproducible evaluation runs.
+# Update this constant when a new benchmark version is released.
+_BENCHMARK_REFERENCE_YEAR: int = 2026
+
 
 @dataclass
 class PreScreenResult:
@@ -140,13 +144,7 @@ def check_year_bounds(entry: BlindEntry, reference_year: int | None = None) -> P
             check_name="check_year_bounds",
         )
 
-    import datetime
-
-    current_year = (
-        reference_year
-        if reference_year is not None
-        else datetime.datetime.now(tz=datetime.timezone.utc).year
-    )
+    current_year = reference_year if reference_year is not None else _BENCHMARK_REFERENCE_YEAR
 
     if year > current_year:
         return PreScreenResult(

@@ -184,7 +184,7 @@ def generate_near_miss_title(
         "doi_resolves": True if has_doi else None,  # DOI resolves to original (correct) paper
         "title_exists": False,
         "authors_match": True,
-        "venue_real": True,
+        "venue_correct": True,
         "fields_complete": True,
         "cross_db_agreement": False,
     }
@@ -282,7 +282,7 @@ def generate_plausible_fabrication(
         "doi_resolves": None,
         "title_exists": False,
         "authors_match": False,
-        "venue_real": True,
+        "venue_correct": True,
         "fields_complete": has_identifier,
         "cross_db_agreement": False,
     }
@@ -340,7 +340,7 @@ def generate_arxiv_version_mismatch(
         "doi_resolves": True if has_doi else None,  # DOI resolves to the real paper; N/A if no DOI
         "title_exists": True,
         "authors_match": True,
-        "venue_real": True,
+        "venue_correct": True,
         "fields_complete": True,
         "cross_db_agreement": False,  # venue/year don't match what DOI resolves to
     }

@@ -457,7 +457,7 @@ def classify_hallucination(entry_dict: dict, crossref_data: dict | None) -> tupl
         "doi_resolves": False,
         "title_exists": False,
         "authors_match": False,
-        "venue_real": False,
+        "venue_correct": False,
         "fields_complete": bool(title and authors and year),
         "cross_db_agreement": False,
     }
@@ -507,7 +507,7 @@ def classify_hallucination(entry_dict: dict, crossref_data: dict | None) -> tupl
             else:
                 # DOI exists but title/authors don't match
                 subtests["doi_resolves"] = True
-                subtests["venue_real"] = True
+                subtests["venue_correct"] = True
                 return (
                     HallucinationType.HYBRID_FABRICATION.value,
                     f"Real DOI {doi} with fabricated metadata",
@@ -525,7 +525,7 @@ def classify_hallucination(entry_dict: dict, crossref_data: dict | None) -> tupl
         venue_lower = venue.lower()
         for indicator in fake_venue_indicators:
             if indicator in venue_lower:
-                subtests["venue_real"] = False
+                subtests["venue_correct"] = False
                 return (
                     HallucinationType.NONEXISTENT_VENUE.value,
                     f"Venue '{venue}' appears fabricated",
@@ -541,7 +541,7 @@ def classify_hallucination(entry_dict: dict, crossref_data: dict | None) -> tupl
 
     # We have a CrossRef match - check what's different
     subtests["title_exists"] = True
-    subtests["venue_real"] = True
+    subtests["venue_correct"] = True
 
     # Extract CrossRef metadata
     cr_title = crossref_data.get("title", [""])[0] if crossref_data.get("title") else ""

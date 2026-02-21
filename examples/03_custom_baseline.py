@@ -11,11 +11,11 @@ import re
 from pathlib import Path
 
 from hallmark.dataset.loader import load_split
-from hallmark.dataset.schema import Prediction
+from hallmark.dataset.schema import BlindEntry, Prediction
 from hallmark.evaluation.metrics import evaluate
 
 
-def rule_based_verifier(entries):
+def rule_based_verifier(entries: list[BlindEntry]) -> list[Prediction]:
     """A custom rule-based citation verifier.
 
     Rules:
@@ -76,7 +76,9 @@ def rule_based_verifier(entries):
 def main():
     # Load and evaluate
     entries = load_split("dev_public")
-    predictions = rule_based_verifier(entries)
+    # IMPORTANT: Always convert to BlindEntry before passing to your tool to prevent label leakage.
+    blind_entries = [e.to_blind() for e in entries]
+    predictions = rule_based_verifier(blind_entries)
 
     result = evaluate(
         entries=entries,

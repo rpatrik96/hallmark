@@ -42,11 +42,12 @@ from hallmark.dataset.schema import load_entries
 from hallmark.contribution.validate_entry import validate_batch
 
 entries = load_entries('my_entries.jsonl')
-result = validate_batch(entries)
-print(f'{result[\"valid\"]}/{result[\"total\"]} entries valid')
-for r in result['results']:
-    if not r['valid']:
-        print(f'  INVALID {r[\"key\"]}: {r[\"errors\"]}')
+results = validate_batch(entries)
+n_valid = sum(1 for r in results if r.valid)
+print(f'{n_valid}/{len(results)} entries valid')
+for r in results:
+    if not r.valid:
+        print(f'  INVALID {r.key}: {r.errors}')
 "
 ```
 
@@ -99,12 +100,10 @@ HALLMARK applies a pre-screening layer (DOI resolution, year bounds, author heur
 ```python
 from hallmark.baselines.common import run_with_prescreening
 
-def run_my_tool(entries, **kwargs):
+def run_my_tool(entries):
     return run_with_prescreening(
         entries=entries,
-        tool_fn=_my_tool_core,  # your actual tool logic
-        tool_name="my_tool",
-        **kwargs,
+        run_tool=_my_tool_core,  # your actual tool logic
     )
 ```
 

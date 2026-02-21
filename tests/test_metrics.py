@@ -454,7 +454,8 @@ class TestUncertainPredictions:
         restored = Prediction.from_json(json_str)
         assert restored.label == "UNCERTAIN"
 
-    def test_confusion_matrix_treats_uncertain_as_valid(self):
+    def test_confusion_matrix_excludes_uncertain(self):
+        """UNCERTAIN predictions are excluded from the confusion matrix entirely."""
         entries = [
             _entry("v1", "VALID"),
             _entry("h1", "HALLUCINATED"),
@@ -464,21 +465,22 @@ class TestUncertainPredictions:
             "h1": _pred("h1", "UNCERTAIN", confidence=0.5),
         }
         cm = build_confusion_matrix(entries, preds)
-        # UNCERTAIN on valid entry -> treated as VALID -> TN
-        assert cm.tn == 1
-        # UNCERTAIN on hallucinated entry -> treated as VALID -> FN (missed)
-        assert cm.fn == 1
+        # UNCERTAIN entries are skipped — they do not contribute to any cell
         assert cm.tp == 0
         assert cm.fp == 0
+        assert cm.tn == 0
+        assert cm.fn == 0
 
-    def test_tier_weighted_f1_treats_uncertain_as_valid(self):
+    def test_tier_weighted_f1_excludes_uncertain(self):
+        """UNCERTAIN predictions are skipped; the entry is not counted in any bucket."""
         entries = [
             _entry("h1", "HALLUCINATED", tier=3),
         ]
         preds_uncertain = {"h1": _pred("h1", "UNCERTAIN", confidence=0.5)}
-        preds_valid = {"h1": _pred("h1", "VALID", confidence=0.5)}
-        # UNCERTAIN and VALID should yield identical tier-weighted F1
-        assert tier_weighted_f1(entries, preds_uncertain) == tier_weighted_f1(entries, preds_valid)
+        # UNCERTAIN skipped → weighted_tp=0, weighted_fn=0 → F1=0.0
+        # VALID (missing pred equivalent) → weighted_fn=3.0 → F1=0.0
+        # Both yield 0.0 because there are no TPs
+        assert tier_weighted_f1(entries, preds_uncertain) == 0.0
 
     def test_detect_at_k_ignores_uncertain(self):
         entries = [_entry("h1", "HALLUCINATED")]
@@ -510,21 +512,24 @@ class TestUncertainPredictions:
         preds = [
             _pred("v1", "VALID"),
             _pred("h1", "HALLUCINATED"),  # correct detection
-            _pred("h2", "UNCERTAIN", confidence=0.5),  # treated as VALID = missed
+            _pred("h2", "UNCERTAIN", confidence=0.5),  # excluded from metrics
         ]
         result = evaluate(entries, preds, tool_name="test", split_name="dev")
         assert result.num_uncertain == 1
-        assert result.detection_rate == 0.5  # 1 of 2 hallucinated detected
+        # h2 is UNCERTAIN → excluded from cm, so only h1 contributes: tp=1, fn=0
+        # DR = tp / (tp + fn) = 1 / (1 + 0) = 1.0 (h2 is simply not counted)
+        assert result.detection_rate == 1.0
         assert result.false_positive_rate == 0.0
 
-    def test_ece_treats_uncertain_as_valid(self):
+    def test_ece_excludes_uncertain(self):
+        """UNCERTAIN predictions are excluded from ECE — no reliable confidence signal."""
         from hallmark.evaluation.metrics import expected_calibration_error
 
         entries = [_entry("v1", "VALID")]
         preds = {"v1": _pred("v1", "UNCERTAIN", confidence=0.5)}
         ece = expected_calibration_error(entries, preds)
-        assert ece >= 0.0
-        assert ece <= 1.0
+        # UNCERTAIN excluded → no pairs → ECE = 0.0
+        assert ece == 0.0
 
 
 class TestAUROC:
@@ -1713,3 +1718,108 @@ class TestPerGenerationMethodMetrics:
         result = per_generation_method_metrics([entry], preds)
         assert "unknown" in result
         assert result["unknown"]["detection_rate"] == pytest.approx(1.0)
+
+
+@pytest.mark.skipif(not HAS_NUMPY, reason="numpy required")
+class TestBootstrapCI:
+    """Bootstrap CI integration test (F-18): evaluate() with compute_ci=True."""
+
+    def _make_dataset(self):
+        """Build a small synthetic dataset with both labels and tiers."""
+        entries = []
+        predictions = []
+
+        # 10 valid entries
+        for i in range(10):
+            entries.append(_entry(f"v{i}", "VALID"))
+            predictions.append(_pred(f"v{i}", "VALID", confidence=0.85))
+
+        # 15 hallucinated across all three tiers
+        for tier in [1, 2, 3]:
+            for i in range(5):
+                key = f"h{tier}_{i}"
+                entries.append(_entry(key, "HALLUCINATED", tier=tier))
+                # Detect 4 of 5 per tier
+                label = "HALLUCINATED" if i < 4 else "VALID"
+                predictions.append(_pred(key, label, confidence=0.8))
+
+        return entries, predictions
+
+    def test_ci_fields_not_none(self):
+        """All CI fields must be populated when compute_ci=True."""
+        entries, predictions = self._make_dataset()
+        result = evaluate(
+            entries,
+            predictions,
+            tool_name="test",
+            split_name="dev",
+            compute_ci=True,
+            n_bootstrap=50,
+        )
+
+        assert result.detection_rate_ci is not None
+        assert result.f1_hallucination_ci is not None
+        assert result.tier_weighted_f1_ci is not None
+        assert result.fpr_ci is not None
+        assert result.mcc_ci is not None
+
+    def test_ci_brackets_point_estimate(self):
+        """For each CI tuple (low, high): low <= point_estimate <= high."""
+        entries, predictions = self._make_dataset()
+        result = evaluate(
+            entries,
+            predictions,
+            tool_name="test",
+            split_name="dev",
+            compute_ci=True,
+            n_bootstrap=50,
+        )
+
+        dr_lo, dr_hi = result.detection_rate_ci  # type: ignore[misc]
+        assert dr_lo <= result.detection_rate <= dr_hi
+
+        f1_lo, f1_hi = result.f1_hallucination_ci  # type: ignore[misc]
+        assert f1_lo <= result.f1_hallucination <= f1_hi
+
+        tw_lo, tw_hi = result.tier_weighted_f1_ci  # type: ignore[misc]
+        assert tw_lo <= result.tier_weighted_f1 <= tw_hi
+
+        if result.false_positive_rate is not None and result.fpr_ci is not None:
+            fpr_lo, fpr_hi = result.fpr_ci
+            assert fpr_lo <= result.false_positive_rate <= fpr_hi
+
+        if result.mcc is not None and result.mcc_ci is not None:
+            mcc_lo, mcc_hi = result.mcc_ci
+            assert mcc_lo <= result.mcc <= mcc_hi
+
+    def test_ci_width_positive(self):
+        """CI width > 0 for all populated CI fields."""
+        entries, predictions = self._make_dataset()
+        result = evaluate(
+            entries,
+            predictions,
+            tool_name="test",
+            split_name="dev",
+            compute_ci=True,
+            n_bootstrap=50,
+        )
+
+        for ci_field_name, ci in [
+            ("detection_rate_ci", result.detection_rate_ci),
+            ("f1_hallucination_ci", result.f1_hallucination_ci),
+            ("tier_weighted_f1_ci", result.tier_weighted_f1_ci),
+        ]:
+            assert ci is not None, f"{ci_field_name} is None"
+            lo, hi = ci
+            assert hi > lo, f"{ci_field_name} has zero width: [{lo}, {hi}]"
+
+    def test_ci_none_when_compute_ci_false(self):
+        """With compute_ci=False (default) all CI fields remain None."""
+        entries, predictions = self._make_dataset()
+        result = evaluate(entries, predictions, tool_name="test", split_name="dev")
+
+        assert result.detection_rate_ci is None
+        assert result.f1_hallucination_ci is None
+        assert result.tier_weighted_f1_ci is None
+        assert result.fpr_ci is None
+        assert result.mcc_ci is None

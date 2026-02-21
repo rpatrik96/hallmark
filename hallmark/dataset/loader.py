@@ -3,10 +3,13 @@
 from __future__ import annotations
 
 import json
+import logging
 import warnings
 from pathlib import Path
 
 from hallmark.dataset.schema import BenchmarkEntry, DifficultyTier, load_entries
+
+logger = logging.getLogger(__name__)
 
 # Default data directory (relative to package root)
 _PACKAGE_DIR = Path(__file__).parent.parent.parent
@@ -179,6 +182,12 @@ def filter_by_date_range(
         if norm_end and norm_entry > norm_end:
             continue
         result.append(e)
+    n_dropped = len(entries) - len(result)
+    if n_dropped > 0:
+        logger.warning(
+            "filter_by_date_range: dropped %d entries with missing publication_date",
+            n_dropped,
+        )
     return result
 
 

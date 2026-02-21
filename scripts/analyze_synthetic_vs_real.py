@@ -32,7 +32,7 @@ def extract_subtest_pattern(entry: dict[str, Any]) -> tuple[bool, ...]:
         "doi_resolves",
         "title_exists",
         "authors_match",
-        "venue_real",
+        "venue_correct",
         "fields_complete",
         "cross_db_agreement",
     ]

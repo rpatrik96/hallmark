@@ -48,8 +48,8 @@ def verify_entry_subtests(entry: dict) -> dict[str, dict]:
         "reason": f"has_doi={has_doi}, label={label}, type={h_type}",
     }
 
-    # venue_real: valid entries and most hallucinated types use real venues
-    assigned_vr = subtests.get("venue_real")
+    # venue_correct: valid entries and most hallucinated types use real venues
+    assigned_vr = subtests.get("venue_correct")
     if h_type == "nonexistent_venue":
         expected_vr = False
     elif label == "VALID":
@@ -57,7 +57,7 @@ def verify_entry_subtests(entry: dict) -> dict[str, dict]:
     else:
         expected_vr = assigned_vr  # trust generator for other types
 
-    results["venue_real"] = {
+    results["venue_correct"] = {
         "assigned": assigned_vr,
         "expected": expected_vr,
         "consistent": assigned_vr == expected_vr,
