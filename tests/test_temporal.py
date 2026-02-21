@@ -2,12 +2,15 @@
 
 from datetime import date
 
-from hallmark.dataset.schema import BenchmarkEntry
+import pytest
+
+from hallmark.dataset.schema import BenchmarkEntry, Prediction
 from hallmark.evaluation.temporal import (
     TemporalSegment,
     default_segments,
     parse_date,
     segment_entries,
+    temporal_analysis,
 )
 
 # ---------------------------------------------------------------------------
@@ -211,3 +214,141 @@ class TestTemporalSegmentContains:
     def test_not_contains_after(self):
         seg = TemporalSegment("test", date(2020, 1, 1), date(2020, 12, 31))
         assert not seg.contains(date(2021, 1, 1))
+
+
+# ---------------------------------------------------------------------------
+# temporal_analysis — integration tests
+# ---------------------------------------------------------------------------
+
+
+def _entry_dated(key: str, label: str, pub_date: str) -> BenchmarkEntry:
+    kwargs: dict = {
+        "bibtex_key": key,
+        "bibtex_type": "article",
+        "fields": {"title": f"Paper {key}", "author": "Author", "year": "2020"},
+        "label": label,
+        "explanation": "test",
+        "publication_date": pub_date,
+    }
+    if label == "HALLUCINATED":
+        kwargs["hallucination_type"] = "fabricated_doi"
+        kwargs["difficulty_tier"] = 1
+    return BenchmarkEntry(**kwargs)
+
+
+def _pred(key: str, label: str, confidence: float = 0.9) -> Prediction:
+    return Prediction(bibtex_key=key, label=label, confidence=confidence)
+
+
+class TestTemporalBasicSegments:
+    def test_segment_metrics_keys_present(self):
+        """temporal_analysis returns segment_metrics with expected segment name keys."""
+        segments = [
+            TemporalSegment("historical", date(2015, 1, 1), date(2019, 12, 31)),
+            TemporalSegment("future", date(2025, 1, 1), date(2030, 12, 31)),
+        ]
+        entries = [
+            _entry_dated("h1", "HALLUCINATED", "2017-06-01"),
+            _entry_dated("h2", "HALLUCINATED", "2018-03-15"),
+            _entry_dated("v1", "VALID", "2026-01-10"),
+            _entry_dated("v2", "VALID", "2027-05-20"),
+        ]
+        pred_map = {
+            "h1": _pred("h1", "HALLUCINATED"),
+            "h2": _pred("h2", "HALLUCINATED"),
+            "v1": _pred("v1", "VALID"),
+            "v2": _pred("v2", "VALID"),
+        }
+        result = temporal_analysis(entries, pred_map, segments=segments)
+
+        assert "historical" in result.segment_metrics
+        assert "future" in result.segment_metrics
+        hist = result.segment_metrics["historical"]
+        assert "detection_rate" in hist
+        assert "false_positive_rate" in hist
+        assert "f1" in hist
+        assert "num_entries" in hist
+
+
+class TestTemporalContaminationHigh:
+    def test_contamination_score_positive_when_historical_dr_higher(self):
+        """contamination_score > 0 when historical DR >> future DR."""
+        segments = [
+            TemporalSegment("historical", date(2015, 1, 1), date(2019, 12, 31)),
+            TemporalSegment("future", date(2025, 1, 1), date(2030, 12, 31)),
+        ]
+        # Historical: all hallucinations detected (DR=1.0)
+        hist_entries = [_entry_dated(f"h_hist_{i}", "HALLUCINATED", "2017-01-01") for i in range(5)]
+        # Future: no hallucinations detected (DR=0.0)
+        fut_entries = [_entry_dated(f"h_fut_{i}", "HALLUCINATED", "2026-01-01") for i in range(5)]
+        entries = hist_entries + fut_entries
+
+        pred_map: dict[str, Prediction] = {}
+        for e in hist_entries:
+            pred_map[e.bibtex_key] = _pred(e.bibtex_key, "HALLUCINATED")
+        for e in fut_entries:
+            pred_map[e.bibtex_key] = _pred(e.bibtex_key, "VALID")
+
+        result = temporal_analysis(entries, pred_map, segments=segments)
+
+        assert result.contamination_score is not None
+        assert result.contamination_score > 0.0
+        assert result.segment_metrics["historical"]["detection_rate"] == pytest.approx(1.0)
+        assert result.segment_metrics["future"]["detection_rate"] == pytest.approx(0.0)
+
+
+class TestTemporalNoFutureEntries:
+    def test_contamination_score_none_without_future_entries(self):
+        """contamination_score is None when future segment has no entries."""
+        segments = [
+            TemporalSegment("historical", date(2015, 1, 1), date(2019, 12, 31)),
+            TemporalSegment("future", date(2025, 1, 1), date(2030, 12, 31)),
+        ]
+        # All entries fall in the historical segment only
+        entries = [
+            _entry_dated("h1", "HALLUCINATED", "2016-04-01"),
+            _entry_dated("h2", "HALLUCINATED", "2018-09-15"),
+            _entry_dated("v1", "VALID", "2017-07-01"),
+        ]
+        pred_map = {
+            "h1": _pred("h1", "HALLUCINATED"),
+            "h2": _pred("h2", "VALID"),
+            "v1": _pred("v1", "VALID"),
+        }
+        result = temporal_analysis(entries, pred_map, segments=segments)
+
+        # future segment has no entries → contamination_score cannot be computed
+        assert result.contamination_score is None
+        assert result.robustness_delta is None
+
+
+class TestTemporalRobustnessDelta:
+    def test_robustness_delta_equals_historical_minus_future_dr(self):
+        """robustness_delta = historical_DR - future_DR (sign convention check)."""
+        segments = [
+            TemporalSegment("historical", date(2015, 1, 1), date(2019, 12, 31)),
+            TemporalSegment("future", date(2025, 1, 1), date(2030, 12, 31)),
+        ]
+        # Historical: 3/4 detected (DR=0.75)
+        hist_entries = [_entry_dated(f"h_hist_{i}", "HALLUCINATED", "2018-01-01") for i in range(4)]
+        # Future: 1/4 detected (DR=0.25)
+        fut_entries = [_entry_dated(f"h_fut_{i}", "HALLUCINATED", "2026-01-01") for i in range(4)]
+        entries = hist_entries + fut_entries
+
+        pred_map: dict[str, Prediction] = {}
+        for i, e in enumerate(hist_entries):
+            label = "HALLUCINATED" if i < 3 else "VALID"  # 3 detected, 1 missed
+            pred_map[e.bibtex_key] = _pred(e.bibtex_key, label)
+        for i, e in enumerate(fut_entries):
+            label = "HALLUCINATED" if i < 1 else "VALID"  # 1 detected, 3 missed
+            pred_map[e.bibtex_key] = _pred(e.bibtex_key, label)
+
+        result = temporal_analysis(entries, pred_map, segments=segments)
+
+        assert result.robustness_delta is not None
+        hist_dr = result.segment_metrics["historical"]["detection_rate"]
+        fut_dr = result.segment_metrics["future"]["detection_rate"]
+        # Verify the sign convention: robustness_delta == historical_DR - future_DR
+        assert result.robustness_delta == pytest.approx(hist_dr - fut_dr)
+        # 0.75 - 0.25 = 0.50 → positive delta (historical performs better)
+        assert result.robustness_delta > 0.0

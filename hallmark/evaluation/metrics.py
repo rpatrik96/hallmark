@@ -1635,7 +1635,7 @@ def evaluate(
     cm = build_confusion_matrix(entries, pred_map)
     tw_f1 = tier_weighted_f1(entries, pred_map)
     tier_metrics = per_tier_metrics(entries, pred_map)
-    type_metrics = per_type_metrics(entries, pred_map)
+    type_metrics = per_type_metrics(entries, pred_map, compute_ci=compute_ci)
     cost = cost_efficiency(predictions)
     ece_score = expected_calibration_error(entries, pred_map, adaptive=True)
     auroc_score = auroc(entries, pred_map)
@@ -1684,6 +1684,16 @@ def evaluate(
     f1_hallucination = cm.f1
     coverage_adjusted_f1 = f1_hallucination * coverage
 
+    # Temporal robustness analysis
+    temporal_robustness_value = None
+    try:
+        from hallmark.evaluation.temporal import temporal_analysis
+
+        temporal_result = temporal_analysis(entries, pred_map)
+        temporal_robustness_value = temporal_result.robustness_delta
+    except Exception:
+        pass  # entries may lack date fields
+
     return EvaluationResult(
         tool_name=tool_name,
         split_name=split_name,
@@ -1697,6 +1707,7 @@ def evaluate(
         mcc=cm.mcc,
         macro_f1=cm.macro_f1,
         union_recall_at_k=dat_k,
+        temporal_robustness=temporal_robustness_value,
         cost_efficiency=cost.get("entries_per_second"),
         mean_api_calls=cost.get("mean_api_calls"),
         ece=ece_score,

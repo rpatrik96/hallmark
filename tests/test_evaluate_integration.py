@@ -241,3 +241,67 @@ class TestEvaluateAllHallucinated:
         assert result.num_valid == 0
         assert result.false_positive_rate is None
         assert result.detection_rate == pytest.approx(1.0)
+
+
+class TestDegenerateBaselinesOnRealData:
+    """Degenerate baselines (random, always_hallucinated, always_valid) on real dev_public entries."""
+
+    def _load_entries(self, n: int = 10):
+        from hallmark.dataset.loader import load_split
+
+        return load_split("dev_public")[:n]
+
+    def test_always_hallucinated_detection_rate_is_one(self):
+        from hallmark.baselines.degenerate import always_hallucinated_baseline
+
+        entries = self._load_entries()
+        predictions = always_hallucinated_baseline(entries)
+        result = evaluate(
+            entries, predictions, tool_name="always_hallucinated", split_name="dev_public"
+        )
+
+        # Every hallucinated entry is flagged → detection_rate == 1.0
+        assert result.detection_rate == pytest.approx(1.0)
+
+    def test_always_valid_detection_rate_is_zero(self):
+        from hallmark.baselines.degenerate import always_valid_baseline
+
+        entries = self._load_entries()
+        predictions = always_valid_baseline(entries)
+        result = evaluate(entries, predictions, tool_name="always_valid", split_name="dev_public")
+
+        # No hallucinated entry is flagged → detection_rate == 0.0
+        assert result.detection_rate == pytest.approx(0.0)
+
+    def test_random_baseline_returns_correct_number_of_predictions(self):
+        from hallmark.baselines.degenerate import random_baseline
+
+        entries = self._load_entries()
+        predictions = random_baseline(entries, seed=0)
+        assert len(predictions) == len(entries)
+
+    def test_all_baselines_produce_populated_evaluation_result(self):
+        from hallmark.baselines.degenerate import (
+            always_hallucinated_baseline,
+            always_valid_baseline,
+            random_baseline,
+        )
+
+        entries = self._load_entries()
+
+        for name, preds in [
+            ("always_hallucinated", always_hallucinated_baseline(entries)),
+            ("always_valid", always_valid_baseline(entries)),
+            ("random", random_baseline(entries, seed=42)),
+        ]:
+            result = evaluate(entries, preds, tool_name=name, split_name="dev_public")
+
+            # Core fields must not be None
+            assert result.detection_rate is not None, f"{name}: detection_rate is None"
+            assert result.f1_hallucination is not None, f"{name}: f1_hallucination is None"
+            assert result.tier_weighted_f1 is not None, f"{name}: tier_weighted_f1 is None"
+            assert result.ece is not None, f"{name}: ece is None"
+            # Coverage must be 1.0 — all entries have predictions
+            assert result.coverage == pytest.approx(1.0), f"{name}: coverage != 1.0"
+            # Entry counts must match
+            assert result.num_entries == len(entries), f"{name}: num_entries mismatch"

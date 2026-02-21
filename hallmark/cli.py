@@ -36,7 +36,13 @@ def _format_csv(result: EvaluationResult) -> str:
     fpr = result.false_positive_rate if result.false_positive_rate is not None else ""
     mcc = result.mcc if result.mcc is not None else ""
     ece = result.ece if result.ece is not None else ""
-    header = "tool,split,detection_rate,fpr,f1_hallucination,tier_weighted_f1,ece,mcc"
+    auroc = result.auroc if result.auroc is not None else ""
+    auprc = result.auprc if result.auprc is not None else ""
+    macro_f1 = result.macro_f1 if result.macro_f1 is not None else ""
+    header = (
+        "tool,split,detection_rate,fpr,f1_hallucination,tier_weighted_f1,ece,mcc,"
+        "auroc,auprc,macro_f1,coverage,coverage_adjusted_f1"
+    )
     row = (
         f"{result.tool_name},{result.split_name},"
         f"{result.detection_rate:.3f},"
@@ -44,7 +50,12 @@ def _format_csv(result: EvaluationResult) -> str:
         f"{result.f1_hallucination:.3f},"
         f"{result.tier_weighted_f1:.3f},"
         f"{ece if ece == '' else f'{ece:.3f}'},"
-        f"{mcc if mcc == '' else f'{mcc:.3f}'}"
+        f"{mcc if mcc == '' else f'{mcc:.3f}'},"
+        f"{auroc if auroc == '' else f'{auroc:.3f}'},"
+        f"{auprc if auprc == '' else f'{auprc:.3f}'},"
+        f"{macro_f1 if macro_f1 == '' else f'{macro_f1:.3f}'},"
+        f"{result.coverage:.3f},"
+        f"{result.coverage_adjusted_f1:.3f}"
     )
     return f"{header}\n{row}"
 
@@ -149,6 +160,19 @@ def main(argv: list[str] | None = None) -> int:
             "After main metrics, show a breakdown of pre-screening overrides vs. "
             "tool-only predictions (counts and per-group accuracy)"
         ),
+    )
+    eval_parser.add_argument(
+        "--save-predictions",
+        type=str,
+        default=None,
+        metavar="PATH",
+        help="Save predictions to a JSONL file at the given path",
+    )
+    eval_parser.add_argument(
+        "--by-source",
+        action="store_true",
+        default=False,
+        help="Show metrics broken down by API source combination",
     )
 
     # --- contribute ---
@@ -255,6 +279,12 @@ def main(argv: list[str] | None = None) -> int:
     )
     diag_parser.add_argument(
         "--full", action="store_true", help="Show full reason strings without truncation"
+    )
+    diag_parser.add_argument(
+        "--gate",
+        action="store_true",
+        default=False,
+        help="Exit with code 1 if any misclassifications are found",
     )
     diag_parser.add_argument("--data-dir", type=str, help="Override data directory")
     diag_parser.add_argument("--version", default="v1.0", help="Dataset version")
@@ -602,6 +632,27 @@ def _cmd_evaluate(args: argparse.Namespace) -> int:
 
         print(f"{'=' * 60}\n")
 
+    # By-source breakdown
+    if args.by_source:
+        from hallmark.evaluation import source_stratified_metrics
+
+        src_metrics = source_stratified_metrics(entries, predictions)
+        if src_metrics:
+            print(f"\n{'─' * 60}")
+            print("  Source-stratified metrics:")
+            print(f"    {'Source':<30} {'N':>5}  {'Det.Rate':>8}  {'F1':>6}")
+            print(f"    {'─' * 54}")
+            for src_key, m in sorted(src_metrics.items()):
+                n = int(m["count"])
+                print(f"    {src_key:<30} {n:>5}  {m['detection_rate']:8.3f}  {m['f1']:6.3f}")
+
+    # Save predictions
+    if args.save_predictions:
+        from hallmark.dataset.schema import save_predictions as _save_predictions
+
+        _save_predictions(predictions, args.save_predictions)
+        logging.info(f"Predictions written to {args.save_predictions}")
+
     # Save results
     if args.output:
         Path(args.output).write_text(result.to_json())
@@ -637,6 +688,8 @@ def _cmd_contribute(args: argparse.Namespace) -> int:
         elif r["warnings"]:
             print(f"  WARNING {r['key']}: {r['warnings']}")
 
+    if review["invalid"] > 0:
+        return 1
     return 0
 
 
@@ -669,6 +722,10 @@ def _cmd_stats(args: argparse.Namespace) -> int:
         print("  Type distribution:")
         for h_type, count in sorted(stats["type_distribution"].items()):
             print(f"    {h_type}: {count}")
+    if "method_distribution" in stats:
+        print("  Generation Method Distribution:")
+        for method, count in sorted(stats["method_distribution"].items()):
+            print(f"    {method}: {count}")
     print(f"{'=' * 50}\n")
 
     return 0
@@ -818,7 +875,9 @@ def _cmd_leaderboard(args: argparse.Namespace) -> int:
     output_format: str = args.format
 
     if output_format == "csv":
-        header = "rank,tool,split,f1_hallucination,detection_rate,fpr,tier_weighted_f1,mcc,ece"
+        header = (
+            "rank,tool,split,f1_hallucination,detection_rate,fpr,tier_weighted_f1,mcc,ece,cov_f1"
+        )
         if clusters:
             header += ",cluster"
         print(header)
@@ -830,20 +889,22 @@ def _cmd_leaderboard(args: argparse.Namespace) -> int:
             mcc_str = f"{mcc_val:.3f}" if mcc_val is not None else ""
             ece_val = r.get("ece")
             ece_str = f"{ece_val:.3f}" if ece_val is not None else ""
+            cov_f1_val = r.get("coverage_adjusted_f1")
+            cov_f1_str = f"{cov_f1_val:.3f}" if cov_f1_val is not None else ""
             row = (
                 f"{i},{tool},{r.get('split_name', args.split)},"
                 f"{r.get('f1_hallucination', 0):.3f},"
                 f"{r.get('detection_rate', 0):.3f},"
-                f"{fpr_str},{r.get('tier_weighted_f1', 0):.3f},{mcc_str},{ece_str}"
+                f"{fpr_str},{r.get('tier_weighted_f1', 0):.3f},{mcc_str},{ece_str},{cov_f1_str}"
             )
             if clusters:
                 row += f",{clusters.get(tool, '')}"
             print(row)
     elif output_format == "latex":
-        col_spec = "lrrrrrr" + ("r" if clusters else "")
+        col_spec = "lrrrrrrr" + ("r" if clusters else "")
         print(r"\begin{tabular}{" + col_spec + r"}")
         print(r"\toprule")
-        header_row = r"Tool & F1 & DR & FPR & TW-F1 & MCC & ECE"
+        header_row = r"Tool & F1 & DR & FPR & TW-F1 & MCC & ECE & CovF1"
         if clusters:
             header_row += r" & Cluster"
         print(header_row + r" \\")
@@ -857,10 +918,12 @@ def _cmd_leaderboard(args: argparse.Namespace) -> int:
             mcc_str = f"{mcc_val:.3f}" if mcc_val is not None else "--"
             ece_val = r.get("ece")
             ece_str = f"{ece_val:.3f}" if ece_val is not None else "--"
+            cov_f1_val = r.get("coverage_adjusted_f1")
+            cov_f1_str = f"{cov_f1_val:.3f}" if cov_f1_val is not None else "--"
             row = (
                 f"{tool_tex} & {r.get('f1_hallucination', 0):.3f} & "
                 f"{r.get('detection_rate', 0):.3f} & {fpr_str} & "
-                f"{r.get('tier_weighted_f1', 0):.3f} & {mcc_str} & {ece_str}"
+                f"{r.get('tier_weighted_f1', 0):.3f} & {mcc_str} & {ece_str} & {cov_f1_str}"
             )
             if clusters:
                 row += f" & {clusters.get(tool, '--')}"
@@ -873,7 +936,7 @@ def _cmd_leaderboard(args: argparse.Namespace) -> int:
                 r" (paired bootstrap, p > 0.05, Holm-Bonferroni correction)."
             )
     else:
-        width = 78 if clusters else 70
+        width = 86 if clusters else 78
         print(f"\n{'=' * width}")
         print(f"  HALLMARK Leaderboard: {args.split}  (sorted by {args.sort_by})")
         print("  NOTE: Use MCC for cross-split comparison (prevalence-invariant).")
@@ -881,10 +944,13 @@ def _cmd_leaderboard(args: argparse.Namespace) -> int:
         if clusters:
             print(
                 f"  {'Rank':<6}{'Tool':<25}{'F1':<8}{'DR':<8}{'FPR':<8}"
-                f"{'TW-F1':<8}{'MCC':<8}{'Cluster':<8}"
+                f"{'TW-F1':<8}{'MCC':<8}{'CovF1':<8}{'Cluster':<8}"
             )
         else:
-            print(f"  {'Rank':<6}{'Tool':<25}{'F1':<8}{'DR':<8}{'FPR':<8}{'TW-F1':<8}{'MCC':<8}")
+            print(
+                f"  {'Rank':<6}{'Tool':<25}{'F1':<8}{'DR':<8}{'FPR':<8}"
+                f"{'TW-F1':<8}{'MCC':<8}{'CovF1':<8}"
+            )
         print(f"  {'─' * (width - 2)}")
 
         for i, r in enumerate(results, 1):
@@ -893,6 +959,8 @@ def _cmd_leaderboard(args: argparse.Namespace) -> int:
             fpr_str = f"{fpr_val:<8.3f}" if fpr_val is not None else "N/A     "
             mcc_val = r.get("mcc")
             mcc_str = f"{mcc_val:<8.3f}" if mcc_val is not None else "N/A     "
+            cov_f1_val = r.get("coverage_adjusted_f1")
+            cov_f1_str = f"{cov_f1_val:<8.3f}" if cov_f1_val is not None else "N/A     "
             row = (
                 f"  {i:<6}{tool:<25}"
                 f"{r.get('f1_hallucination', 0):<8.3f}"
@@ -900,6 +968,7 @@ def _cmd_leaderboard(args: argparse.Namespace) -> int:
                 f"{fpr_str}"
                 f"{r.get('tier_weighted_f1', 0):<8.3f}"
                 f"{mcc_str}"
+                f"{cov_f1_str}"
             )
             if clusters:
                 row += f"{clusters.get(tool, ''):<8}"
@@ -961,6 +1030,12 @@ def _cmd_history_append(args: argparse.Namespace) -> int:
             "tier_weighted_f1": data.get("tier_weighted_f1"),
             "num_entries": data.get("num_entries"),
             "cost_efficiency": data.get("cost_efficiency"),
+            "mcc": data.get("mcc"),
+            "ece": data.get("ece"),
+            "auroc": data.get("auroc"),
+            "auprc": data.get("auprc"),
+            "coverage": data.get("coverage"),
+            "coverage_adjusted_f1": data.get("coverage_adjusted_f1"),
         }
         with open(history_file, "a") as out:
             out.write(json.dumps(entry, ensure_ascii=False) + "\n")
@@ -1143,6 +1218,8 @@ def _cmd_diagnose(args: argparse.Namespace) -> int:
         print(f"    {h_type:<30} correct={counts['correct']}/{t}  acc={acc:.3f}")
     print(f"{'=' * 120}\n")
 
+    if args.gate and wrong > 0:
+        return 1
     return 0
 
 

@@ -448,6 +448,49 @@ def _register_builtins() -> None:
         )
     )
 
+    # --- Degenerate baselines (statistical reference points) ---
+    def _run_random(entries: list[BlindEntry], **kw: Any) -> list[Prediction]:
+        from hallmark.baselines.degenerate import random_baseline
+
+        return random_baseline(entries, **kw)
+
+    register(
+        BaselineInfo(
+            name="random",
+            description="Random baseline: predict HALLUCINATED with probability=prevalence (default 0.5)",
+            runner=_run_random,
+            confidence_type="binary",
+        )
+    )
+
+    def _run_always_hallucinated(entries: list[BlindEntry], **kw: Any) -> list[Prediction]:
+        from hallmark.baselines.degenerate import always_hallucinated_baseline
+
+        return always_hallucinated_baseline(entries)
+
+    register(
+        BaselineInfo(
+            name="always_hallucinated",
+            description="Constant baseline: predict HALLUCINATED for every entry",
+            runner=_run_always_hallucinated,
+            confidence_type="binary",
+        )
+    )
+
+    def _run_always_valid(entries: list[BlindEntry], **kw: Any) -> list[Prediction]:
+        from hallmark.baselines.degenerate import always_valid_baseline
+
+        return always_valid_baseline(entries)
+
+    register(
+        BaselineInfo(
+            name="always_valid",
+            description="Constant baseline: predict VALID for every entry",
+            runner=_run_always_valid,
+            confidence_type="binary",
+        )
+    )
+
     # --- Ensemble ---
     def _run_ensemble(entries: list[BlindEntry], **kw: Any) -> list[Prediction]:
         from hallmark.baselines.ensemble import ensemble_predict
