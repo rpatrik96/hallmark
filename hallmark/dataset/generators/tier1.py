@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import random
 import string
-from datetime import date
 
 from hallmark.dataset.schema import (
     BenchmarkEntry,
@@ -13,6 +12,9 @@ from hallmark.dataset.schema import (
 
 from ._helpers import _clone_entry
 from ._pools import FAKE_AUTHORS, FAKE_DOI_PREFIXES, FAKE_VENUES
+
+# Pin to dataset build year for reproducibility across regeneration runs.
+_DATASET_REFERENCE_YEAR: int = 2025
 
 
 def generate_fabricated_doi(
@@ -117,7 +119,7 @@ def generate_future_date(entry: BenchmarkEntry, rng: random.Random | None = None
     """Tier 1: Set publication year to the future."""
     rng = rng or random.Random()
     new_entry = _clone_entry(entry)
-    future_year = str(date.today().year + rng.randint(4, 10))
+    future_year = str(_DATASET_REFERENCE_YEAR + rng.randint(4, 10))
     new_entry.fields["year"] = future_year
     new_entry.label = "HALLUCINATED"
     new_entry.hallucination_type = HallucinationType.FUTURE_DATE.value

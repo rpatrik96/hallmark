@@ -1,7 +1,8 @@
 """LLM-based verification baseline.
 
-Uses GPT-4 or Claude to verify BibTeX entries by prompting the model
-to assess whether a citation appears genuine or hallucinated.
+Uses GPT-5.1 (OpenAI), Claude Sonnet 4.5 (Anthropic), or OpenRouter models
+to verify BibTeX entries by prompting the model to assess whether a citation
+appears genuine or hallucinated.
 """
 
 from __future__ import annotations
@@ -118,6 +119,7 @@ def _verify_with_openai_compatible(
             messages=[{"role": "user", "content": prompt}],
             temperature=0.0,
             max_completion_tokens=256,
+            seed=42,
         )
         return str(resp.choices[0].message.content).strip()
 
@@ -174,6 +176,7 @@ def verify_with_anthropic(
         resp = client.messages.create(
             model=model,
             max_tokens=256,
+            temperature=0.0,
             messages=[{"role": "user", "content": prompt}],
         )
         return str(resp.content[0].text).strip()

@@ -251,7 +251,7 @@ def _aggregate_entry_mean(sparse_eval: SparseEvaluation) -> list[ToolScore]:
 
 def _bootstrap_ci(
     values: list[float],
-    n_bootstrap: int = 1000,
+    n_bootstrap: int = 10_000,
     confidence: float = 0.95,
 ) -> tuple[float, float]:
     """Compute bootstrap confidence interval."""

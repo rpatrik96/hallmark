@@ -20,7 +20,7 @@ Formally, for entries $\{e_i\}$ with tier weights $w_i \in \{1,2,3\}$, predictio
 \text{TW-Precision} &= \frac{\sum_i w_i \cdot \mathbf{1}[\hat{y}_i = y_i = \text{H}]}{\sum_i w_i \cdot \mathbf{1}[\hat{y}_i = \text{H}]}, &
 \text{TW-Recall} &= \frac{\sum_i w_i \cdot \mathbf{1}[\hat{y}_i = y_i = \text{H}]}{\sum_i w_i \cdot \mathbf{1}[y_i = \text{H}]}, \label{eq:twf1}
 \end{align}
-where H denotes the hallucinated class, and TW-F1 is their harmonic mean.
+where H denotes the hallucinated class, and TW-F1 is their harmonic mean.\footnote{Valid entries carry no difficulty tier, so false positives (valid entries predicted as hallucinated) contribute uniform weight 1.0 in the TW-Precision denominator regardless of their tier.}
 
 \textbf{Expected Calibration Error (ECE)}~\citep{naeini2015} measures how well a tool's confidence scores reflect its actual accuracy.
 We partition predictions into $B=10$ equal-width confidence bins and compute:
@@ -31,7 +31,8 @@ where $S_b$ is the set of predictions in bin $b$, $\text{acc}(S_b)$ is the fract
 Well-calibrated tools have ECE $\approx 0$; in practice, ECE $< 0.05$ indicates excellent calibration, $0.05$--$0.15$ is acceptable, and ECE $> 0.2$ signals that confidence scores are unreliable for downstream decision-making.
 
 \paragraph{Diagnostic metrics.}
-\textbf{detect@$k$} is the fraction of hallucinations detected by at least one of $k$ verification strategies, analogous to HumanEval's pass@$k$~\citep{humaneval}.
+\textbf{detect@$k$} is the fraction of hallucinations detected by at least one of $k$ verification strategies (union recall at $k$).
+Unlike HumanEval's pass@$k$~\citep{humaneval}, which uses an unbiased stochastic estimator over random subsets of $n$ samples, detect@$k$ is deterministic and order-dependent: it evaluates a fixed, ordered set of $k$ strategies rather than estimating the probability that at least one random draw succeeds.
 \textbf{Per-tier and per-type breakdowns} reveal which categories each tool handles well or poorly.
 \textbf{Source-stratified metrics} disaggregate performance by which bibliographic APIs a tool queried, revealing API-specific blind spots.
 \textbf{Sub-test accuracy} measures per-sub-test correctness, showing whether a tool detects hallucinations for the right reasons.

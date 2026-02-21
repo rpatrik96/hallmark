@@ -46,6 +46,12 @@ Usage:
     }
     rankings = rank_tools(entries, tool_predictions, method="plackett_luce")
 
+    # With bootstrap uncertainty
+    ranked, cis = rank_tools_plackett_luce(
+        entry_keys, tool_names, matrix, compute_ci=True
+    )
+    # cis["tool_a"] == (lower_95, upper_95)
+
 References:
     ONEBench: https://github.com/bethgelab/onebench
     Plackett-Luce model: Luce (1959), Plackett (1975)
@@ -57,7 +63,7 @@ import csv
 import hashlib
 import logging
 from pathlib import Path
-from typing import Literal
+from typing import Literal, overload
 
 from hallmark.dataset.schema import BenchmarkEntry, Prediction
 
@@ -126,12 +132,82 @@ def build_results_matrix(
     return entry_keys, tool_names, matrix
 
 
+def _build_comparisons(
+    entry_keys: list[str],
+    tool_names: list[str],
+    matrix: list[list[float | None]],
+) -> list[tuple[int, int]]:
+    """Convert a results matrix into pairwise (winner, loser) index comparisons.
+
+    Used by both the point-estimate and bootstrap paths so the logic lives in
+    one place.
+    """
+    comparisons: list[tuple[int, int]] = []
+
+    for entry_key, row in zip(entry_keys, matrix, strict=True):
+        available_tools = [(idx, score) for idx, score in enumerate(row) if score is not None]
+
+        if len(available_tools) < 2:
+            continue
+
+        for i in range(len(available_tools)):
+            for j in range(i + 1, len(available_tools)):
+                idx_i, score_i = available_tools[i]
+                idx_j, score_j = available_tools[j]
+
+                tool_a = tool_names[idx_i]
+                tool_b = tool_names[idx_j]
+
+                if score_i > score_j + 1e-9:
+                    comparisons.append((idx_i, idx_j))
+                elif score_j > score_i + 1e-9:
+                    comparisons.append((idx_j, idx_i))
+                else:
+                    # Exact tie: deterministic hash-based random assignment.
+                    # On average carries no information (50/50) but preserves
+                    # the pairwise comparison count for all entry types.
+                    tie_seed = hashlib.sha256(f"{entry_key}:{tool_a}:{tool_b}".encode()).digest()[0]
+                    if tie_seed % 2 == 0:
+                        comparisons.append((idx_i, idx_j))
+                    else:
+                        comparisons.append((idx_j, idx_i))
+
+    return comparisons
+
+
+@overload
+def rank_tools_plackett_luce(
+    entry_keys: list[str],
+    tool_names: list[str],
+    matrix: list[list[float | None]],
+    alpha: float = ...,
+    n_bootstrap: int = ...,
+    seed: int = ...,
+    compute_ci: Literal[False] = ...,
+) -> list[tuple[str, float]]: ...
+
+
+@overload
+def rank_tools_plackett_luce(
+    entry_keys: list[str],
+    tool_names: list[str],
+    matrix: list[list[float | None]],
+    alpha: float = ...,
+    n_bootstrap: int = ...,
+    seed: int = ...,
+    compute_ci: Literal[True] = ...,
+) -> tuple[list[tuple[str, float]], dict[str, tuple[float, float]]]: ...
+
+
 def rank_tools_plackett_luce(
     entry_keys: list[str],
     tool_names: list[str],
     matrix: list[list[float | None]],
     alpha: float = 0.01,
-) -> list[tuple[str, float]]:
+    n_bootstrap: int = 1000,
+    seed: int = 42,
+    compute_ci: bool = False,
+) -> list[tuple[str, float]] | tuple[list[tuple[str, float]], dict[str, tuple[float, float]]]:
     """Rank tools using Plackett-Luce model via choix library.
 
     Converts the results matrix into pairwise comparisons and estimates tool
@@ -148,10 +224,22 @@ def rank_tools_plackett_luce(
         tool_names: List of tool names (column labels)
         matrix: Results matrix where matrix[i][j] is correctness of tool j on entry i
         alpha: L2 regularization parameter for ILSR (default: 0.01)
+        n_bootstrap: Number of bootstrap resamples for CI estimation (default: 1000).
+            Only used when compute_ci=True.
+        seed: Random seed for bootstrap resampling (default: 42).
+            Only used when compute_ci=True.
+        compute_ci: If True, also return 95% bootstrap CIs for each tool's score.
+            Default False preserves the original return type.
 
     Returns:
-        List of (tool_name, score) tuples sorted descending by score.
-        Scores are normalized probabilities summing to 1.
+        When compute_ci=False (default):
+            List of (tool_name, score) tuples sorted descending by score.
+            Scores are normalized probabilities summing to 1.
+        When compute_ci=True:
+            Tuple of (ranked, score_ci) where:
+            - ranked: same list as above
+            - score_ci: dict mapping tool name to (lower_95, upper_95) CI tuple.
+              CI is None for a tool if the bootstrap failed for that tool.
     """
     try:
         import choix
@@ -161,56 +249,36 @@ def rank_tools_plackett_luce(
             "choix library not installed. Install with 'pip install choix'. "
             "Falling back to mean-score ranking."
         )
-        return rank_tools_mean_score(entry_keys, tool_names, matrix)
+        fallback = rank_tools_mean_score(entry_keys, tool_names, matrix)
+        if compute_ci:
+            empty_ci: dict[str, tuple[float, float]] = {}
+            return fallback, empty_ci
+        return fallback
 
     n_tools = len(tool_names)
+    n_entries = len(entry_keys)
 
-    # Convert matrix to pairwise comparisons
-    # For each entry, compare each pair of tools that have predictions
-    comparisons: list[tuple[int, int]] = []
-
-    for entry_key, row in zip(entry_keys, matrix, strict=True):
-        # Find tools with predictions for this entry
-        available_tools = [(idx, score) for idx, score in enumerate(row) if score is not None]
-
-        if len(available_tools) < 2:
-            continue  # Need at least 2 tools to compare
-
-        # Compare all pairs
-        for i in range(len(available_tools)):
-            for j in range(i + 1, len(available_tools)):
-                idx_i, score_i = available_tools[i]
-                idx_j, score_j = available_tools[j]
-
-                tool_a = tool_names[idx_i]
-                tool_b = tool_names[idx_j]
-
-                if score_i > score_j + 1e-9:
-                    # Tool i wins
-                    comparisons.append((idx_i, idx_j))
-                elif score_j > score_i + 1e-9:
-                    # Tool j wins
-                    comparisons.append((idx_j, idx_i))
-                else:
-                    # Exact tie: deterministic hash-based random assignment.
-                    # On average carries no information (50/50) but preserves
-                    # the pairwise comparison count for all entry types.
-                    tie_seed = hashlib.sha256(f"{entry_key}:{tool_a}:{tool_b}".encode()).digest()[0]
-                    if tie_seed % 2 == 0:
-                        comparisons.append((idx_i, idx_j))
-                    else:
-                        comparisons.append((idx_j, idx_i))
+    # Build point-estimate pairwise comparisons
+    comparisons = _build_comparisons(entry_keys, tool_names, matrix)
 
     if not comparisons:
         logger.warning("No pairwise comparisons available. Falling back to mean-score ranking.")
-        return rank_tools_mean_score(entry_keys, tool_names, matrix)
+        fallback = rank_tools_mean_score(entry_keys, tool_names, matrix)
+        if compute_ci:
+            empty_ci = {}
+            return fallback, empty_ci
+        return fallback
 
-    # Estimate parameters using ILSR
+    # Estimate point-estimate parameters using ILSR
     try:
         log_params = choix.ilsr_pairwise(n_tools, comparisons, alpha=alpha)
     except Exception as e:
         logger.error(f"ILSR failed: {e}. Falling back to mean-score ranking.")
-        return rank_tools_mean_score(entry_keys, tool_names, matrix)
+        fallback = rank_tools_mean_score(entry_keys, tool_names, matrix)
+        if compute_ci:
+            empty_ci = {}
+            return fallback, empty_ci
+        return fallback
 
     # Convert log-parameters to normalized probabilities
     params = np.exp(log_params)
@@ -223,7 +291,62 @@ def rank_tools_plackett_luce(
         reverse=True,
     )
 
-    return ranked
+    if not compute_ci:
+        return ranked
+
+    # Bootstrap uncertainty estimation
+    # boot_scores[tool_idx] accumulates one score per successful bootstrap iteration
+    boot_scores: list[list[float]] = [[] for _ in range(n_tools)]
+
+    rng = np.random.default_rng(seed)
+
+    # Convert matrix rows to a numpy array of object dtype for easy resampling
+    matrix_np = np.array(matrix, dtype=object)  # shape (n_entries, n_tools)
+
+    try:
+        for _ in range(n_bootstrap):
+            # Resample rows (entries) with replacement
+            indices = rng.integers(0, n_entries, size=n_entries)
+            resampled_keys = [entry_keys[i] for i in indices]
+            resampled_matrix: list[list[float | None]] = matrix_np[indices].tolist()
+
+            boot_comparisons = _build_comparisons(resampled_keys, tool_names, resampled_matrix)
+
+            if not boot_comparisons:
+                continue  # Skip degenerate resample
+
+            try:
+                boot_log_params = choix.ilsr_pairwise(n_tools, boot_comparisons, alpha=alpha)
+            except Exception:
+                continue  # Skip failed resample
+
+            boot_params = np.exp(boot_log_params)
+            boot_params = boot_params / boot_params.sum()
+
+            for t in range(n_tools):
+                boot_scores[t].append(float(boot_params[t]))
+
+    except Exception as e:
+        logger.warning(f"Bootstrap CI estimation failed: {e}. Returning empty CIs.")
+        score_ci: dict[str, tuple[float, float]] = {}
+        return ranked, score_ci
+
+    # Compute 95% CIs from bootstrap distribution
+    score_ci = {}
+    for t, tool_name in enumerate(tool_names):
+        samples = boot_scores[t]
+        if len(samples) < 2:
+            logger.warning(
+                f"Too few successful bootstrap samples for '{tool_name}' "
+                f"({len(samples)}); CI not available."
+            )
+            continue
+        arr = np.array(samples)
+        lower = float(np.percentile(arr, 2.5))
+        upper = float(np.percentile(arr, 97.5))
+        score_ci[tool_name] = (lower, upper)
+
+    return ranked, score_ci
 
 
 def rank_tools_mean_score(

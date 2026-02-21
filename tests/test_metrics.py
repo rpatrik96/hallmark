@@ -1077,7 +1077,7 @@ class TestZeroValidEntriesWarning:
         assert result.num_hallucinated == 3
 
     def test_fpr_is_zero_when_no_valid_entries(self):
-        """ConfusionMatrix.false_positive_rate returns 0.0 when FP+TN == 0."""
+        """FPR is None when there are zero valid entries (undefined)."""
         entries = self._all_hallucinated_entries()
         preds = [
             _pred("h1", "HALLUCINATED"),
@@ -1085,7 +1085,7 @@ class TestZeroValidEntriesWarning:
             _pred("h3", "HALLUCINATED"),
         ]
         result = evaluate(entries, preds, tool_name="test", split_name="dev")
-        assert result.false_positive_rate == 0.0
+        assert result.false_positive_rate is None
 
     def test_detection_rate_and_f1_valid(self):
         """Metrics other than FPR should still be meaningful."""

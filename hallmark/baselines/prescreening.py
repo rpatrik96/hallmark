@@ -12,7 +12,6 @@ return VALID for the DOI check on these entries.
 
 from __future__ import annotations
 
-import datetime
 import logging
 import re
 from collections.abc import Callable
@@ -128,7 +127,9 @@ def check_year_bounds(entry: BenchmarkEntry) -> PreScreenResult:
             check_name="check_year_bounds",
         )
 
-    current_year = datetime.datetime.now().year
+    import datetime
+
+    current_year = datetime.datetime.now(tz=datetime.timezone.utc).year
 
     if year > current_year:
         return PreScreenResult(

@@ -831,10 +831,14 @@ def paired_bootstrap_test(
     n_bootstrap: int = 10_000,
     seed: int = 42,
 ) -> tuple[float, float, float]:
-    """Paired bootstrap significance test.
+    """Paired bootstrap significance test with stratified resampling by hallucination type.
 
     Returns (observed_diff, p_value, effect_size_cohens_h).
     H0: metric_A <= metric_B. p-value = fraction of resamples where delta <= 0.
+
+    Resampling is stratified by hallucination type, matching the approach in
+    ``stratified_bootstrap_ci``. Each bootstrap iteration resamples within each
+    type group and concatenates, preserving the original type distribution.
 
     Args:
         entries: Benchmark entries (ground truth).
@@ -866,29 +870,39 @@ def paired_bootstrap_test(
     pred_map_a = {p.bibtex_key: p for p in predictions_a}
     pred_map_b = {p.bibtex_key: p for p in predictions_b}
 
-    # Bootstrap resampling (paired - same indices for both)
+    # Group entries (and corresponding paired predictions) by hallucination type for
+    # stratified resampling — same grouping logic as stratified_bootstrap_ci().
+    type_groups: dict[str, list[tuple[BenchmarkEntry, Prediction, Prediction]]] = defaultdict(list)
+    for entry in entries:
+        h_type = entry.hallucination_type or "valid"
+        pa = pred_map_a.get(entry.bibtex_key) or Prediction(
+            bibtex_key=entry.bibtex_key, label="VALID", confidence=0.5
+        )
+        pb = pred_map_b.get(entry.bibtex_key) or Prediction(
+            bibtex_key=entry.bibtex_key, label="VALID", confidence=0.5
+        )
+        type_groups[h_type].append((entry, pa, pb))
+
+    # Bootstrap resampling: resample within each type group, then concatenate (paired)
     bootstrap_diffs = []
-    n = len(entries)
 
     for _ in range(n_bootstrap):
-        indices = rng.choice(n, size=n, replace=True)
-        resampled_entries = [entries[i] for i in indices]
+        resampled_entries = []
+        resampled_preds_a: list[Prediction] = []
+        resampled_preds_b: list[Prediction] = []
 
-        # Resample predictions using same indices, preserving entry-prediction alignment.
-        # Missing predictions become VALID with default confidence (same convention as
-        # build_confusion_matrix).
-        resampled_preds_a = [
-            pred_map_a.get(entries[i].bibtex_key)
-            or Prediction(bibtex_key=entries[i].bibtex_key, label="VALID", confidence=0.5)
-            for i in indices
-        ]
-        resampled_preds_b = [
-            pred_map_b.get(entries[i].bibtex_key)
-            or Prediction(bibtex_key=entries[i].bibtex_key, label="VALID", confidence=0.5)
-            for i in indices
-        ]
+        for group in type_groups.values():
+            n = len(group)
+            if n == 0:
+                continue
+            indices = rng.choice(n, size=n, replace=True)
+            for i in indices:
+                entry, pa, pb = group[i]
+                resampled_entries.append(entry)
+                resampled_preds_a.append(pa)
+                resampled_preds_b.append(pb)
 
-        if resampled_preds_a and resampled_preds_b:
+        if resampled_entries:
             metric_a_boot = metric_fn(resampled_entries, resampled_preds_a)
             metric_b_boot = metric_fn(resampled_entries, resampled_preds_b)
             bootstrap_diffs.append(metric_a_boot - metric_b_boot)
@@ -1069,13 +1083,20 @@ def apply_multiple_comparison_correction(
     """Apply multiple comparison correction to a family of p-values.
 
     When comparing tools across multiple hallucination types or tiers,
-    the family-wise error rate inflates beyond the nominal alpha. This
-    function adjusts p-values to control the false discovery rate.
+    the family-wise error rate (FWER) inflates beyond the nominal alpha. This
+    function adjusts p-values to control either the FWER or the false discovery
+    rate (FDR), depending on the chosen method.
 
     Args:
         p_values: Dict mapping comparison label to raw p-value.
-        method: Correction method. "holm" (Holm-Bonferroni, recommended)
-            or "bonferroni" (more conservative).
+        method: Correction method.
+            - "holm" (Holm-Bonferroni, recommended): step-down procedure that
+              controls the FWER while being less conservative than Bonferroni.
+            - "bonferroni": single-step FWER control, most conservative.
+            - "bh" (Benjamini-Hochberg): step-up procedure that controls the
+              FDR (expected fraction of false discoveries among rejections).
+              Less conservative than FWER methods; preferred when many
+              simultaneous tests are performed.
 
     Returns:
         Dict mapping comparison label to adjusted p-value.
@@ -1101,8 +1122,20 @@ def apply_multiple_comparison_correction(
             adj = min(1.0, p * (n - rank))
             max_so_far = max(max_so_far, adj)
             adjusted[label] = max_so_far
+    elif method == "bh":
+        # Benjamini-Hochberg FDR control
+        sorted_items = sorted(items, key=lambda x: x[1])  # sort by p-value ascending
+        for rank, (label, p) in enumerate(sorted_items, 1):
+            adjusted[label] = min(1.0, p * n / rank)
+        # Enforce monotonicity (step-up): traverse from largest to smallest
+        prev = 1.0
+        for label, _ in reversed(sorted_items):
+            adjusted[label] = min(adjusted[label], prev)
+            prev = adjusted[label]
     else:
-        raise ValueError(f"Unknown correction method: {method!r}. Use 'holm' or 'bonferroni'.")
+        raise ValueError(
+            f"Unknown correction method: {method!r}. Use 'holm', 'bonferroni', or 'bh'."
+        )
 
     return adjusted
 
@@ -1144,7 +1177,7 @@ def evaluate(
     tier_metrics = per_tier_metrics(entries, pred_map)
     type_metrics = per_type_metrics(entries, pred_map)
     cost = cost_efficiency(predictions)
-    ece_score = expected_calibration_error(entries, pred_map)
+    ece_score = expected_calibration_error(entries, pred_map, adaptive=True)
     auroc_score = auroc(entries, pred_map)
     auprc_score = auprc(entries, pred_map)
 
@@ -1156,12 +1189,14 @@ def evaluate(
     num_valid = sum(1 for e in entries if e.label == "VALID")
     num_uncertain = sum(1 for p in predictions if p.label == "UNCERTAIN")
 
+    fpr: float | None = cm.false_positive_rate
     if num_valid == 0:
         logger.warning(
             "Split contains zero valid entries. FPR is undefined and "
             "tier-weighted F1 reduces to weighted recall only. "
             "Metrics should be interpreted as recall-only diagnostics."
         )
+        fpr = None
 
     # Compute bootstrap CIs if requested
     detection_rate_ci = None
@@ -1217,7 +1252,7 @@ def evaluate(
         num_hallucinated=num_hallucinated,
         num_valid=num_valid,
         detection_rate=cm.detection_rate,
-        false_positive_rate=cm.false_positive_rate,
+        false_positive_rate=fpr,
         f1_hallucination=cm.f1,
         tier_weighted_f1=tw_f1,
         union_recall_at_k=dat_k,

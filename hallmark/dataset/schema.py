@@ -197,7 +197,7 @@ class BenchmarkEntry:
         if self.raw_bibtex:
             return self.raw_bibtex
         lines = [f"@{self.bibtex_type}{{{self.bibtex_key},"]
-        for key, value in self.fields.items():
+        for key, value in sorted(self.fields.items()):
             lines.append(f"  {key} = {{{value}}},")
         lines.append("}")
         return "\n".join(lines)
@@ -253,7 +253,7 @@ class EvaluationResult:
 
     # Primary metrics
     detection_rate: float  # Recall on HALLUCINATED
-    false_positive_rate: float  # Valid entries incorrectly flagged
+    false_positive_rate: float | None  # Valid entries incorrectly flagged; None when num_valid==0
     f1_hallucination: float  # F1 on HALLUCINATED class
     tier_weighted_f1: float  # F1 weighted by difficulty tier
 

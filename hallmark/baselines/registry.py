@@ -291,7 +291,7 @@ def _register_builtins() -> None:
     register(
         BaselineInfo(
             name="llm_openai",
-            description="GPT-4o citation verification via OpenAI API",
+            description="GPT-5.1 citation verification via OpenAI API",
             runner=_run_llm_openai,
             pip_packages=["openai"],
             requires_api_key=True,

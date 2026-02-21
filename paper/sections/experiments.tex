@@ -4,7 +4,7 @@
 \subsection{Evaluated tools}
 \label{sec:baselines}
 
-We evaluate four independent citation verification tools on the \texttt{dev\_public} split.
+We evaluate three independent external citation verification tools (HaRC, verify-citations, GPT-5.1) plus DOI-only, an internal lower-bound baseline, on the \texttt{dev\_public} split.
 We additionally report results for \texttt{bibtex-updater}, a tool developed by the authors, in \cref{app:codesign} to maintain transparency about the co-design relationship.
 
 \paragraph{DOI-only.}
@@ -38,7 +38,7 @@ Like HaRC, it was rate-limited and completed 71 of 1,063 entries (6.7\%).
 \midrule
 DOI-only            & 0.256          & 0.195          & 0.361          & 0.314          & 0.143 & 1.00 \\
 HaRC$^*$            & 0.155          & \textbf{0.000} & 0.268          & 0.188          & 0.361          & 0.02 \\
-verify-citations$^*$& 0.042          & 0.024          & 0.071          & 0.062          & 0.317          & 0.08 \\
+verify-citations$^*$& 0.042          & 0.024          & 0.071          & 0.062          & 0.317          & 0.07 \\
 \midrule
 GPT-5.1 (zero-shot) & \textbf{0.797} & 0.171          & \textbf{0.822} & \textbf{0.846} & \textbf{0.107} & 1.00 \\
 \bottomrule
@@ -46,7 +46,7 @@ GPT-5.1 (zero-shot) & \textbf{0.797} & 0.171          & \textbf{0.822} & \textbf
 \end{table}
 
 The results reveal three key insights about the current citation verification landscape.
-First, \emph{API-based tools are insufficient}: the best API-based tool (DOI-only) catches only 25.6\% of hallucinations because most types in \textsc{Hallmark} use valid DOIs, and multi-source tools (HaRC, verify-citations) completed only 1.9\% and 6.6\% of entries respectively due to rate limiting.
+First, \emph{API-based tools are insufficient}: the best API-based tool (DOI-only) catches only 25.6\% of hallucinations because most types in \textsc{Hallmark} use valid DOIs, and multi-source tools (HaRC, verify-citations) completed only 1.9\% and 6.7\% of entries respectively due to rate limiting.
 Second, \emph{LLMs dramatically outperform API-based tools}: GPT-5.1 achieves an 80\% detection rate---a $3{\times}$ improvement over DOI-only---demonstrating that language models can identify the very hallucinations they produce.
 Third, \emph{a capability gap remains}: even GPT-5.1 misses 20\% of hallucinations, with systematic weaknesses on subtle types like \texttt{author\_mismatch} (63\%) and \texttt{near\_miss\_title} (63\%), providing concrete improvement targets.
 Since Detection Rate and FPR are prevalence-independent, we emphasize these as primary metrics.\footnote{F1 is prevalence-sensitive: a benchmark with 50\% hallucination prevalence inflates F1 relative to real-world deployment where hallucination rates may be much lower. F1 values should only be compared within the same split, never across splits or with external results.}
@@ -56,7 +56,7 @@ We evaluate GPT-5.1~\citep{openai2025gpt5} as a zero-shot citation verifier: eac
 Unlike API-dependent tools, the LLM baseline achieves full coverage (100\% of entries) and the lowest ECE (0.107), indicating well-calibrated confidence estimates.
 
 \paragraph{Incomplete-coverage tools.}
-HaRC and verify-citations completed only 1.9\% and 6.6\% of entries respectively due to API rate limiting.
+HaRC and verify-citations completed only 1.9\% and 6.7\% of entries respectively due to API rate limiting.
 Their metrics reflect performance on the completed subset only and are not directly comparable to full-coverage tools.
 Plackett-Luce ranking (\cref{app:ranking}) provides a principled framework for comparing tools with heterogeneous coverage but requires substantially higher pairwise overlap than achieved here.
 

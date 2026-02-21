@@ -23,8 +23,8 @@ HALLMARK draws on best practices from established benchmarks:
 - **2,554 annotated entries**: 980 valid (from DBLP) + 1,574 hallucinated with ground truth
 - **6 sub-tests per entry**: DOI resolution, title matching, author consistency, venue verification, field completeness, cross-database agreement
 - **Evaluation metrics**: Detection Rate, F1, tier-weighted F1, detect@k, ECE
-- **Built-in baselines**: DOI-only, bibtex-updater, LLM-based (OpenAI, Anthropic, OpenRouter), ensemble, HaRC, CiteVerifier, hallucinator, verify-citations
-- **Baseline registry**: Central discovery, availability checking, and dispatch for all baselines (20+ variants)
+- **Built-in baselines**: DOI-only, bibtex-updater, LLM-based (OpenAI, Anthropic, OpenRouter), ensemble, HaRC, verify-citations (CiteVerifier and hallucinator are available as wrapper modules but not registered in the default registry)
+- **Baseline registry**: Central discovery, availability checking, and dispatch for all baselines (17 variants)
 - **Plackett-Luce ranking**: ONEBench-inspired ranking that handles incomplete evaluation data
 - **Automated execution**: Orchestrator script and CI workflow for batch baseline evaluation
 - **Temporal analysis**: Contamination detection via pre/post-cutoff comparison
@@ -170,7 +170,7 @@ Each entry is a JSON object in JSONL format:
 | **F1-Hallucination** | Harmonic mean of precision and recall on HALLUCINATED class |
 | **Tier-weighted F1** | F1 weighted by difficulty (Tier 3 = 3x weight) |
 | **ECE** | Expected Calibration Error — measures confidence calibration quality |
-| **detect@k** | Fraction detected using k verification strategies (analogous to pass@k) |
+| **detect@k** | Fraction detected using k verification strategies (deterministic and order-dependent, unlike the stochastic pass@k) |
 
 ## Baseline Results (dev_public, 1,063 entries)
 
@@ -285,7 +285,7 @@ mean_ranking = rank_tools_mean_score(entry_keys, tool_names, matrix)
 HALLMARK includes two GitHub Actions workflows:
 
 - **`tests.yml`**: Runs the full test suite across Python 3.10-3.13 on every push/PR
-- **`baselines.yml`**: Runs all free baselines (doi_only, bibtexupdater, harc, verify_citations) weekly and on demand, uploading results as artifacts
+- **`baselines.yml`**: Runs live free baselines (doi_only, verify_citations) weekly and on demand; harc and bibtexupdater use pre-computed result validation (checksum checks) instead of live re-execution due to API rate limiting
 
 ## Contributing Entries
 
@@ -317,7 +317,7 @@ hallmark/
 ├── .github/workflows/
 │   ├── tests.yml              # CI: test suite across Python versions
 │   └── baselines.yml          # CI: weekly free baseline evaluation
-├── tests/                     # Test suite (269 tests)
+├── tests/                     # Test suite (298 tests)
 ├── figures/                   # Evaluation figures
 └── examples/                  # Usage examples
 ```

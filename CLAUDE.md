@@ -35,7 +35,7 @@ This is a single atomic workflow. The commit is not done until all hooks pass an
 ## Hallucination Taxonomy (11 main + 3 stress-test)
 - **Tier 1 (Easy, 4 types):** fabricated_doi, nonexistent_venue, placeholder_authors, future_date
 - **Tier 2 (Medium, 5 types):** chimeric_title, wrong_venue, author_mismatch (enum value: `"swapped_authors"`), preprint_as_published, hybrid_fabrication
-- **Tier 3 (Hard, 3 types):** near_miss_title, plausible_fabrication, arxiv_version_mismatch
+- **Tier 3 (Hard, 2 main + 1 stress-test):** near_miss_title, plausible_fabrication; arxiv_version_mismatch (stress-test)
 - `AUTHOR_MISMATCH` enum member keeps value `"swapped_authors"` for backward compatibility with data files
 - `hybrid_fabrication`: real DOI + fabricated metadata — DOI resolves but authors/title don't match the DOI target
 - Three theoretically-motivated types (merged_citation, partial_author_list, arxiv_version_mismatch) appear in all splits; `stress_test.jsonl` provides additional depth
@@ -50,7 +50,7 @@ This is a single atomic workflow. The commit is not done until all hooks pass an
 - `hallmark/baselines/registry.py` — central baseline registry (discovery, availability, dispatch)
 - `hallmark/evaluation/ranking.py` — ONEBench-inspired Plackett-Luce ranking
 - `scripts/` — orchestrator scripts (run_all_baselines.py, run_evaluation.py, generate_reference_results.py, generate_new_instances.py)
-- `tests/` — pytest test suite (269 tests)
+- `tests/` — pytest test suite (298 tests)
 - `data/v1.0/` — benchmark data splits (dev: 1,063, test: 836, hidden: 453, stress: 202; total 2,554 entries)
 - `data/v1.0/baseline_results/` — pre-computed reference results for rate-limited baselines
 - `.github/workflows/` — CI (tests.yml, baselines.yml)
@@ -75,7 +75,8 @@ Any user of the tool would benefit from these.
 ## LLM Baselines (OpenAI, Anthropic, OpenRouter)
 - `llm_openai` — GPT-5.1 via `OPENAI_API_KEY`
 - `llm_anthropic` — Claude Sonnet 4.5 via `ANTHROPIC_API_KEY`
-- `llm_openrouter_{deepseek_r1,deepseek_v3,qwen,mistral}` — via `OPENROUTER_API_KEY` (uses `openai` SDK with custom `base_url`)
+- `llm_openrouter_{deepseek_r1,deepseek_v3,qwen,mistral,gemini_flash}` — via `OPENROUTER_API_KEY` (uses `openai` SDK with custom `base_url`)
+- `llm_openrouter_gemini_flash` — Gemini 2.5 Flash via `OPENROUTER_API_KEY`
 - Model configs live in `OPENROUTER_MODELS` dict in `hallmark/baselines/llm_verifier.py`
 - `_verify_with_openai_compatible()` is the shared helper for all OpenAI-SDK-based providers
 - Generation script: `scripts/generate_llm_hallucinations.py --backend openrouter --model deepseek/deepseek-r1`
