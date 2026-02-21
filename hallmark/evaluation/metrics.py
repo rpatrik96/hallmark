@@ -193,19 +193,24 @@ def tier_weighted_f1(
 
     Entries with difficulty_tier=None are assigned to tier 1 (the default tier).
     """
-    # F-15: accept list as well as dict
-    if isinstance(predictions, list):
-        predictions = {p.bibtex_key: p for p in predictions}
-
     if tier_weights is None:
         tier_weights = {1: 1.0, 2: 2.0, 3: 3.0}
+
+    # When predictions is a list (e.g. bootstrap resamples), iterate in lockstep
+    # to preserve duplicate entries. Dict conversion would deduplicate by bibtex_key.
+    use_lockstep = isinstance(predictions, list)
+    if not use_lockstep:
+        pred_map: dict[str, Prediction] = predictions  # type: ignore[assignment]
 
     weighted_tp = 0.0
     weighted_fn = 0.0
     weighted_fp = 0.0
 
-    for entry in entries:
-        pred = predictions.get(entry.bibtex_key)
+    for idx, entry in enumerate(entries):
+        if use_lockstep:
+            pred = predictions[idx] if idx < len(predictions) else None  # type: ignore[index]
+        else:
+            pred = pred_map.get(entry.bibtex_key)
         tier = entry.difficulty_tier or 1
         w = tier_weights.get(tier, 1.0)
 
@@ -515,17 +520,22 @@ def expected_calibration_error(
             concentrate all predictions in 2 bins (e.g., confidence in {0.0, 1.0}).
             If False, use fixed equal-width bins [0, 1/n_bins), [1/n_bins, 2/n_bins), …
     """
-    # F-15: accept list as well as dict
-    if isinstance(predictions, list):
-        predictions = {p.bibtex_key: p for p in predictions}
+    # When predictions is a list (e.g. bootstrap resamples), iterate in lockstep
+    # to preserve duplicate entries. Dict conversion would deduplicate by bibtex_key.
+    use_lockstep = isinstance(predictions, list)
+    if not use_lockstep:
+        pred_map_ece: dict[str, Prediction] = predictions  # type: ignore[assignment]
 
     if not predictions:
         return 0.0
 
     # Collect (confidence, correctness) pairs — skip UNCERTAIN (no reliable confidence signal)
     pairs: list[tuple[float, bool]] = []
-    for entry in entries:
-        pred = predictions.get(entry.bibtex_key)
+    for idx, entry in enumerate(entries):
+        if use_lockstep:
+            pred = predictions[idx] if idx < len(predictions) else None  # type: ignore[index]
+        else:
+            pred = pred_map_ece.get(entry.bibtex_key)
         if pred is None:
             continue
 
