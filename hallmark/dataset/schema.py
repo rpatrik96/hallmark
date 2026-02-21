@@ -398,11 +398,18 @@ class BenchmarkEntry:
         return "\n".join(lines)
 
     def to_blind(self) -> BlindEntry:
-        """Convert to a BlindEntry that hides ground-truth labels from baselines."""
+        """Convert to a BlindEntry that hides ground-truth labels from baselines.
+
+        Strips the ``url`` field from all entries so that its presence/absence
+        cannot be used as a signal (generators strip ``url`` from hallucinated
+        entries to prevent metadata-comparison shortcuts).
+        """
+        fields = dict(self.fields)
+        fields.pop("url", None)
         return BlindEntry(
             bibtex_key=self.bibtex_key,
             bibtex_type=self.bibtex_type,
-            fields=dict(self.fields),
+            fields=fields,
             raw_bibtex=self.raw_bibtex,
         )
 

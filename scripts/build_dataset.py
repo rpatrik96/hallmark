@@ -7,6 +7,7 @@ All stages operate on in-memory data; files are only written at the end (Stage 9
 Usage:
     python scripts/build_dataset.py --skip-scrape --skip-llm --seed 42 -v
     python scripts/build_dataset.py --skip-scrape --skip-llm --dry-run
+    python scripts/build_dataset.py --reproduce-v1 --skip-scrape --skip-llm
     python scripts/build_dataset.py --help
 
 Stages:
@@ -24,6 +25,7 @@ Stages:
 from __future__ import annotations
 
 import argparse
+import datetime
 import logging
 import sys
 import time
@@ -35,6 +37,10 @@ sys.path.insert(0, str(PROJECT_ROOT))
 
 
 logger = logging.getLogger("build_dataset")
+
+# Freeze date for the v1.0 release — used by --reproduce-v1
+_V1_BUILD_DATE = "2026-02-13"
+_V1_SEED = 42
 
 # Seed offsets per stage (deterministic, non-overlapping)
 STAGE_OFFSETS = {
@@ -60,8 +66,20 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--build-date",
         type=str,
-        default="2026-02-13",
-        help="Fixed build date for reproducibility (default: 2026-02-13)",
+        default=None,
+        help=(
+            "Fixed build date (YYYY-MM-DD) for reproducibility. "
+            "Defaults to today's date when not specified. "
+            "Use --reproduce-v1 to pin to the v1.0 freeze date (2026-02-13)."
+        ),
+    )
+    parser.add_argument(
+        "--reproduce-v1",
+        action="store_true",
+        help=(
+            "Reproduce the v1.0 dataset exactly: sets --build-date 2026-02-13 and --seed 42. "
+            "Overrides --build-date and --seed if provided."
+        ),
     )
     parser.add_argument(
         "--output-dir",
@@ -173,6 +191,15 @@ def main() -> None:
         datefmt="%H:%M:%S",
     )
 
+    # Resolve build date and seed
+    if args.reproduce_v1:
+        build_date = _V1_BUILD_DATE
+        seed = _V1_SEED
+        logger.info("--reproduce-v1: pinning build_date=%s, seed=%d", build_date, seed)
+    else:
+        build_date = args.build_date or datetime.date.today().isoformat()
+        seed = args.seed
+
     output_dir = PROJECT_ROOT / args.output_dir
     hidden_dir = PROJECT_ROOT / args.hidden_dir
     checkpoint_dir = Path(args.checkpoint_dir) if args.checkpoint_dir else None
@@ -180,7 +207,7 @@ def main() -> None:
     logger.info("=" * 70)
     logger.info("HALLMARK Dataset Build Pipeline")
     logger.info("=" * 70)
-    logger.info("Seed: %d | Build date: %s", args.seed, args.build_date)
+    logger.info("Seed: %d | Build date: %s", seed, build_date)
     logger.info("Output: %s | Hidden: %s", output_dir, hidden_dir)
     logger.info("Min per type: public=%d, hidden=%d", args.min_per_type, args.hidden_per_type)
 
@@ -219,7 +246,7 @@ def main() -> None:
 
     from stages.generate import stage_generate_hallucinations
 
-    seed_2 = args.seed + STAGE_OFFSETS[2]
+    seed_2 = seed + STAGE_OFFSETS[2]
     hallucinated_entries = stage_generate_hallucinations(
         valid_entries,
         args.total_hallucinated,
@@ -237,7 +264,7 @@ def main() -> None:
 
     from stages.split import stage_create_splits
 
-    seed_3 = args.seed + STAGE_OFFSETS[3]
+    seed_3 = seed + STAGE_OFFSETS[3]
     splits = stage_create_splits(valid_entries, hallucinated_entries, seed_3)
 
     timings[3] = time.time() - t0
@@ -254,8 +281,8 @@ def main() -> None:
 
     from stages.scale_up import stage_scale_up
 
-    seed_4 = args.seed + STAGE_OFFSETS[4]
-    splits = stage_scale_up(splits, args.min_per_type, seed_4, args.build_date)
+    seed_4 = seed + STAGE_OFFSETS[4]
+    splits = stage_scale_up(splits, args.min_per_type, seed_4, build_date)
 
     timings[4] = time.time() - t0
     for name, entries in splits.items():
@@ -275,7 +302,7 @@ def main() -> None:
         stage_load_gptzero_seed,
     )
 
-    real_world = stage_collect_real_world(args.build_date)
+    real_world = stage_collect_real_world(build_date)
 
     llm_path = PROJECT_ROOT / args.llm_entries
     llm_entries = stage_load_cached_llm(llm_path) if args.skip_llm else []
@@ -300,7 +327,7 @@ def main() -> None:
 
     from stages.integrate import stage_integrate_external
 
-    seed_6 = args.seed + STAGE_OFFSETS[6]
+    seed_6 = seed + STAGE_OFFSETS[6]
     splits = stage_integrate_external(
         splits,
         real_world,
@@ -308,7 +335,7 @@ def main() -> None:
         gptzero_entries,
         journal_entries,
         seed_6,
-        args.build_date,
+        build_date,
     )
 
     timings[6] = time.time() - t0
@@ -325,13 +352,13 @@ def main() -> None:
 
     from stages.expand_hidden import stage_expand_hidden
 
-    seed_7 = args.seed + STAGE_OFFSETS[7]
+    seed_7 = seed + STAGE_OFFSETS[7]
     splits = stage_expand_hidden(
         splits,
         args.hidden_per_type,
         args.hidden_valid,
         seed_7,
-        args.build_date,
+        build_date,
     )
 
     timings[7] = time.time() - t0
@@ -347,7 +374,7 @@ def main() -> None:
 
     from stages.sanitize import stage_sanitize
 
-    seed_8 = args.seed + STAGE_OFFSETS[8]
+    seed_8 = seed + STAGE_OFFSETS[8]
     splits = stage_sanitize(splits, seed_8)
 
     timings[8] = time.time() - t0
@@ -359,13 +386,13 @@ def main() -> None:
 
     from stages.finalize import stage_finalize
 
-    seed_9 = args.seed + STAGE_OFFSETS[9]
+    seed_9 = seed + STAGE_OFFSETS[9]
     splits = stage_finalize(
         splits,
         output_dir,
         hidden_dir,
         seed_9,
-        args.build_date,
+        build_date,
         min_per_type_public=args.min_per_type,
         min_per_type_hidden=args.hidden_per_type,
         dry_run=args.dry_run,
