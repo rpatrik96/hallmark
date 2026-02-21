@@ -30,6 +30,8 @@ class BaselineInfo:
     cli_commands: list[str] = field(default_factory=list)
     # Whether an API key or paid service is needed
     requires_api_key: bool = False
+    # Environment variable name holding the API key (checked in check_available)
+    env_var: str | None = None
     # Whether this baseline is free to run (no API costs)
     is_free: bool = True
     # Extra kwargs accepted by the runner
@@ -97,6 +99,18 @@ def check_available(name: str) -> tuple[bool, str]:
             f"Missing packages: {', '.join(missing_pkgs)}. "
             f"Install with: pip install {' '.join(missing_pkgs)}",
         )
+
+    # Check required environment variable for API-key baselines
+    if info.env_var:
+        import os
+
+        if info.env_var not in os.environ:
+            return (
+                False,
+                f"Missing environment variable: {info.env_var}. "
+                f"Set it with: export {info.env_var}=<your-key>",
+            )
+
     return True, "OK"
 
 
@@ -296,6 +310,7 @@ def _register_builtins() -> None:
             pip_packages=["openai"],
             requires_api_key=True,
             is_free=False,
+            env_var="OPENAI_API_KEY",
         )
     )
 
@@ -313,6 +328,7 @@ def _register_builtins() -> None:
             pip_packages=["anthropic"],
             requires_api_key=True,
             is_free=False,
+            env_var="ANTHROPIC_API_KEY",
         )
     )
 
@@ -340,6 +356,7 @@ def _register_builtins() -> None:
                 pip_packages=["openai"],
                 requires_api_key=True,
                 is_free=False,
+                env_var="OPENROUTER_API_KEY",
             )
         )
 

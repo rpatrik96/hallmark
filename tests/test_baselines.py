@@ -482,7 +482,10 @@ class TestLLMOpenRouter:
 
         # Check OpenAI client was created with OpenRouter base_url
         mock_openai_cls.assert_called_once_with(
-            api_key="sk-test", base_url="https://openrouter.ai/api/v1"
+            api_key="sk-test",
+            base_url="https://openrouter.ai/api/v1",
+            max_retries=5,
+            timeout=120.0,
         )
 
         assert len(preds) == 1

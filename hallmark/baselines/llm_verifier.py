@@ -11,12 +11,44 @@ import json
 import logging
 import time
 from collections.abc import Callable
+from pathlib import Path
 from typing import Any
 
 from hallmark.baselines.common import fallback_predictions
 from hallmark.dataset.schema import BenchmarkEntry, Prediction
 
 logger = logging.getLogger(__name__)
+
+
+def _log_api_call(
+    log_dir: Path,
+    bibtex_key: str,
+    prompt: str,
+    raw_response: str,
+    parsed: Prediction,
+    model: str,
+    elapsed: float,
+) -> None:
+    """Write full API call details to a JSON file for debugging."""
+    from datetime import datetime, timezone
+
+    log_dir.mkdir(parents=True, exist_ok=True)
+    log_path = log_dir / f"{bibtex_key}.json"
+    payload = {
+        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "bibtex_key": bibtex_key,
+        "model": model,
+        "prompt": prompt,
+        "raw_response": raw_response,
+        "parsed": {
+            "label": parsed.label,
+            "confidence": parsed.confidence,
+            "reason": parsed.reason,
+        },
+        "elapsed_seconds": elapsed,
+    }
+    log_path.write_text(json.dumps(payload, indent=2, ensure_ascii=False))
+
 
 VERIFICATION_PROMPT = """\
 You are a citation verification expert. Analyze the following BibTeX entry \
@@ -50,11 +82,50 @@ OPENROUTER_MODELS: dict[str, str] = {
 }
 
 
+def _load_checkpoint(checkpoint_path: Path) -> dict[str, Prediction]:
+    """Load previously saved predictions from a JSONL checkpoint file."""
+    if not checkpoint_path.exists():
+        return {}
+    existing: dict[str, Prediction] = {}
+    for line in checkpoint_path.read_text().splitlines():
+        if not line.strip():
+            continue
+        data = json.loads(line)
+        existing[data["bibtex_key"]] = Prediction(
+            bibtex_key=data["bibtex_key"],
+            label=data["label"],
+            confidence=data["confidence"],
+            reason=data.get("reason", ""),
+            wall_clock_seconds=data.get("wall_clock_seconds", 0.0),
+            api_calls=data.get("api_calls", 0),
+            api_sources_queried=data.get("api_sources_queried", []),
+        )
+    return existing
+
+
+def _append_checkpoint(checkpoint_path: Path, pred: Prediction) -> None:
+    """Append a single prediction to the JSONL checkpoint file."""
+    data = {
+        "bibtex_key": pred.bibtex_key,
+        "label": pred.label,
+        "confidence": pred.confidence,
+        "reason": pred.reason,
+        "wall_clock_seconds": pred.wall_clock_seconds,
+        "api_calls": pred.api_calls,
+        "api_sources_queried": pred.api_sources_queried,
+    }
+    with open(checkpoint_path, "a") as f:
+        f.write(json.dumps(data) + "\n")
+
+
 def _verify_entries(
     entries: list[BenchmarkEntry],
     call_fn: Callable[[str], str],
     source_prefix: str,
     model: str,
+    log_dir: Path | None = None,
+    checkpoint_dir: Path | None = None,
+    max_consecutive_failures: int = 3,
 ) -> list[Prediction]:
     """Shared verification loop for all LLM providers.
 
@@ -63,10 +134,35 @@ def _verify_entries(
         call_fn: Function that takes a prompt string and returns raw response text.
         source_prefix: Provider name for metadata (e.g. "openai", "anthropic").
         model: Model identifier for metadata.
+        log_dir: Optional directory to write per-entry JSON logs for debugging.
+        checkpoint_dir: Directory for JSONL checkpoint files. When provided,
+            completed predictions are saved after each entry and resumed on
+            subsequent calls.
+        max_consecutive_failures: Abort after this many consecutive API errors.
     """
-    predictions = []
+    checkpoint_path: Path | None = None
+    completed: dict[str, Prediction] = {}
+
+    if checkpoint_dir is not None:
+        checkpoint_dir.mkdir(parents=True, exist_ok=True)
+        safe_model = model.replace("/", "_")
+        checkpoint_path = checkpoint_dir / f"{source_prefix}_{safe_model}.jsonl"
+        completed = _load_checkpoint(checkpoint_path)
+        if completed:
+            logger.info(
+                "Resuming %s/%s: %d entries already completed",
+                source_prefix,
+                model,
+                len(completed),
+            )
+
+    predictions = list(completed.values())
+    consecutive_failures = 0
 
     for entry in entries:
+        if entry.bibtex_key in completed:
+            continue
+
         start = time.time()
         bibtex = entry.to_bibtex()
         prompt = VERIFICATION_PROMPT.format(bibtex=bibtex)
@@ -74,19 +170,56 @@ def _verify_entries(
         try:
             content = call_fn(prompt)
             pred = _parse_llm_response(content, entry.bibtex_key)
+            consecutive_failures = 0
+            if log_dir is not None:
+                _log_api_call(
+                    log_dir, entry.bibtex_key, prompt, content, pred, model, time.time() - start
+                )
         except Exception as e:
             logger.warning(f"{source_prefix} API error for {entry.bibtex_key}: {e}")
+            consecutive_failures += 1
             pred = Prediction(
                 bibtex_key=entry.bibtex_key,
                 label="UNCERTAIN",
                 confidence=0.5,
                 reason=f"[Error fallback] API error: {e}",
             )
+            if consecutive_failures >= max_consecutive_failures:
+                logger.error(
+                    "Aborting %s: %d consecutive API failures — likely a persistent issue",
+                    source_prefix,
+                    max_consecutive_failures,
+                )
+                pred.wall_clock_seconds = time.time() - start
+                pred.api_calls = 1
+                pred.api_sources_queried = [f"{source_prefix}/{model}"]
+                predictions.append(pred)
+                if checkpoint_path is not None:
+                    _append_checkpoint(checkpoint_path, pred)
+                # Fill remaining entries with fallback predictions
+                remaining = entries[len(predictions) :]
+                for rem_entry in remaining:
+                    if rem_entry.bibtex_key in completed:
+                        continue
+                    fallback = Prediction(
+                        bibtex_key=rem_entry.bibtex_key,
+                        label="UNCERTAIN",
+                        confidence=0.5,
+                        reason=f"[Error fallback] Skipped after {max_consecutive_failures} consecutive API failures",
+                        api_sources_queried=[f"{source_prefix}/{model}"],
+                    )
+                    predictions.append(fallback)
+                    if checkpoint_path is not None:
+                        _append_checkpoint(checkpoint_path, fallback)
+                return predictions
 
         pred.wall_clock_seconds = time.time() - start
         pred.api_calls = 1
         pred.api_sources_queried = [f"{source_prefix}/{model}"]
         predictions.append(pred)
+
+        if checkpoint_path is not None:
+            _append_checkpoint(checkpoint_path, pred)
 
     return predictions
 
@@ -97,6 +230,8 @@ def _verify_with_openai_compatible(
     api_key: str | None,
     base_url: str | None,
     source_prefix: str,
+    log_dir: Path | None = None,
+    checkpoint_dir: Path | None = None,
     **kwargs: Any,
 ) -> list[Prediction]:
     """Verification via OpenAI-SDK-compatible providers."""
@@ -111,6 +246,8 @@ def _verify_with_openai_compatible(
         client_kwargs["api_key"] = api_key
     if base_url:
         client_kwargs["base_url"] = base_url
+    client_kwargs.setdefault("max_retries", 5)
+    client_kwargs.setdefault("timeout", 120.0)
     client = openai.OpenAI(**client_kwargs)
 
     def call_fn(prompt: str) -> str:
@@ -123,13 +260,17 @@ def _verify_with_openai_compatible(
         )
         return str(resp.choices[0].message.content).strip()
 
-    return _verify_entries(entries, call_fn, source_prefix, model)
+    return _verify_entries(
+        entries, call_fn, source_prefix, model, log_dir=log_dir, checkpoint_dir=checkpoint_dir
+    )
 
 
 def verify_with_openai(
     entries: list[BenchmarkEntry],
     model: str = "gpt-5.1",
     api_key: str | None = None,
+    log_dir: Path | None = None,
+    checkpoint_dir: Path | None = None,
     **kwargs: Any,
 ) -> list[Prediction]:
     """Verify entries using OpenAI API."""
@@ -139,6 +280,8 @@ def verify_with_openai(
         api_key=api_key,
         base_url=None,
         source_prefix="openai",
+        log_dir=log_dir,
+        checkpoint_dir=checkpoint_dir,
     )
 
 
@@ -146,6 +289,8 @@ def verify_with_openrouter(
     entries: list[BenchmarkEntry],
     model: str = "deepseek/deepseek-r1",
     api_key: str | None = None,
+    log_dir: Path | None = None,
+    checkpoint_dir: Path | None = None,
     **kwargs: Any,
 ) -> list[Prediction]:
     """Verify entries using OpenRouter API (100+ models via OpenAI-compatible endpoint)."""
@@ -155,6 +300,8 @@ def verify_with_openrouter(
         api_key=api_key,
         base_url="https://openrouter.ai/api/v1",
         source_prefix="openrouter",
+        log_dir=log_dir,
+        checkpoint_dir=checkpoint_dir,
     )
 
 
@@ -162,6 +309,8 @@ def verify_with_anthropic(
     entries: list[BenchmarkEntry],
     model: str = "claude-sonnet-4-5-20250929",
     api_key: str | None = None,
+    log_dir: Path | None = None,
+    checkpoint_dir: Path | None = None,
 ) -> list[Prediction]:
     """Verify entries using Anthropic API."""
     try:
@@ -170,7 +319,10 @@ def verify_with_anthropic(
         logger.error("anthropic package not installed. Install with: pip install anthropic")
         return fallback_predictions(entries, reason="LLM baseline unavailable")
 
-    client = anthropic.Anthropic(api_key=api_key) if api_key else anthropic.Anthropic()
+    client_kwargs_anth: dict[str, Any] = {"max_retries": 5, "timeout": 120.0}
+    if api_key:
+        client_kwargs_anth["api_key"] = api_key
+    client = anthropic.Anthropic(**client_kwargs_anth)
 
     def call_fn(prompt: str) -> str:
         resp = client.messages.create(
@@ -181,7 +333,9 @@ def verify_with_anthropic(
         )
         return str(resp.content[0].text).strip()
 
-    return _verify_entries(entries, call_fn, "anthropic", model)
+    return _verify_entries(
+        entries, call_fn, "anthropic", model, log_dir=log_dir, checkpoint_dir=checkpoint_dir
+    )
 
 
 def _parse_llm_response(content: str, bibtex_key: str) -> Prediction:
