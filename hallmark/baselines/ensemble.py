@@ -190,8 +190,13 @@ def _mean_confidence(
 
     mean_hall = sum(hall_confidences) / len(hall_confidences) if hall_confidences else 0.0
     mean_valid = sum(valid_confidences) / len(valid_confidences) if valid_confidences else 0.0
-
-    is_hallucinated = mean_hall > mean_valid
+    n_total = len(hall_confidences) + len(valid_confidences)
+    if n_total > 0:
+        weighted_hall = (len(hall_confidences) / n_total) * mean_hall
+        weighted_valid = (len(valid_confidences) / n_total) * mean_valid
+        is_hallucinated = weighted_hall > weighted_valid
+    else:
+        is_hallucinated = False
     confidence = max(mean_hall, mean_valid)
 
     return Prediction(

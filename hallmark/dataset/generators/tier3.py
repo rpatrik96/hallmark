@@ -279,7 +279,7 @@ def generate_plausible_fabrication(
     new_entry.generation_method = GenerationMethod.ADVERSARIAL.value
     new_entry.explanation = "Completely fabricated paper with plausible metadata at real venue"
     new_entry.subtests = {
-        "doi_resolves": False,
+        "doi_resolves": None,
         "title_exists": False,
         "authors_match": False,
         "venue_real": True,

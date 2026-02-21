@@ -7,13 +7,14 @@ backoff retry to handle transient network errors gracefully.
 
 from __future__ import annotations
 
+import fcntl
 import hashlib
 import logging
 import shelve
 import time
 from collections.abc import Callable
 from pathlib import Path
-from typing import TypeVar
+from typing import Any, TypeVar
 
 logger = logging.getLogger(__name__)
 
@@ -31,6 +32,30 @@ def _cache_dir() -> Path:
 def content_hash(data: str) -> str:
     """SHA-256 hex digest of the input string."""
     return hashlib.sha256(data.encode()).hexdigest()
+
+
+def _locked_shelve_read(db_path: str, key: str) -> Any:
+    """Read from shelve with a shared (read) file lock."""
+    lock_path = db_path + ".lock"
+    with open(lock_path, "a") as lock_file:
+        fcntl.flock(lock_file, fcntl.LOCK_SH)
+        try:
+            with shelve.open(db_path) as db:
+                return db.get(key)
+        finally:
+            fcntl.flock(lock_file, fcntl.LOCK_UN)
+
+
+def _locked_shelve_write(db_path: str, key: str, value: Any) -> None:
+    """Write to shelve with an exclusive (write) file lock."""
+    lock_path = db_path + ".lock"
+    with open(lock_path, "a") as lock_file:
+        fcntl.flock(lock_file, fcntl.LOCK_EX)
+        try:
+            with shelve.open(db_path) as db:
+                db[key] = value
+        finally:
+            fcntl.flock(lock_file, fcntl.LOCK_UN)
 
 
 def cached_call(
@@ -53,16 +78,15 @@ def cached_call(
     d = cache_dir or _cache_dir()
     db_path = str(d / namespace)
 
-    with shelve.open(db_path) as db:
-        if key in db:
-            logger.debug("Cache hit: %s/%s", namespace, key[:12])
-            result: T = db[key]  # type: ignore[assignment]
-            return result
+    cached = _locked_shelve_read(db_path, key)
+    if cached is not None:
+        logger.debug("Cache hit: %s/%s", namespace, key[:12])
+        return cached  # type: ignore[return-value,no-any-return]
 
-        result = fn()
-        db[key] = result
-        logger.debug("Cache miss: %s/%s — stored", namespace, key[:12])
-        return result
+    result: T = fn()
+    _locked_shelve_write(db_path, key, result)
+    logger.debug("Cache miss: %s/%s — stored", namespace, key[:12])
+    return result
 
 
 def retry_with_backoff(

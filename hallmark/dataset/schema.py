@@ -3,10 +3,13 @@
 from __future__ import annotations
 
 import json
+import logging
 from dataclasses import asdict, dataclass, field, fields
 from enum import Enum
 from pathlib import Path
 from typing import Literal
+
+logger = logging.getLogger(__name__)
 
 
 class HallucinationType(str, Enum):
@@ -316,6 +319,8 @@ class EvaluationResult:
             data["per_tier_metrics"] = {int(k): v for k, v in data["per_tier_metrics"].items()}
         if "union_recall_at_k" in data and data["union_recall_at_k"] is not None:
             data["union_recall_at_k"] = {int(k): v for k, v in data["union_recall_at_k"].items()}
+        known = {f.name for f in fields(cls)}
+        data = {k: v for k, v in data.items() if k in known}
         return cls(**data)
 
     @classmethod
@@ -324,14 +329,44 @@ class EvaluationResult:
         return cls.from_dict(json.loads(text))
 
 
+# Canary / watermark string embedded in benchmark data files.
+# If this string appears in a training corpus, it indicates data leakage.
+CANARY_STRING = (
+    "HALLMARK BENCHMARK DATA -- DO NOT INCLUDE IN TRAINING CORPORA -- canary GUID a]3D#f9K$mP2!xR7"
+)
+
+
+def is_canary_entry(entry: BenchmarkEntry) -> bool:
+    """Return True if *entry* is a canary/watermark entry (not real benchmark data)."""
+    return entry.bibtex_key.startswith("__canary__")
+
+
 def load_entries(path: str | Path) -> list[BenchmarkEntry]:
-    """Load benchmark entries from a JSONL file."""
+    """Load benchmark entries from a JSONL file.
+
+    Canary entries (bibtex_key starting with ``__canary__``) are automatically
+    filtered out so they do not affect evaluation metrics.
+    """
     entries = []
     with open(path) as f:
         for line in f:
             line = line.strip()
             if line:
                 entries.append(BenchmarkEntry.from_json(line))
+    entries = [e for e in entries if not is_canary_entry(e)]
+    seen_keys: set[str] = set()
+    duplicates: list[str] = []
+    for entry in entries:
+        if entry.bibtex_key in seen_keys:
+            duplicates.append(entry.bibtex_key)
+        seen_keys.add(entry.bibtex_key)
+    if duplicates:
+        logger.warning(
+            "Duplicate bibtex_key(s) found in %s: %s. "
+            "Later entries will shadow earlier ones in dict conversions.",
+            path,
+            duplicates[:5],
+        )
     return entries
 
 

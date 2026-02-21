@@ -197,7 +197,8 @@ def _verify_entries(
                 if checkpoint_path is not None:
                     _append_checkpoint(checkpoint_path, pred)
                 # Fill remaining entries with fallback predictions
-                remaining = entries[len(predictions) :]
+                processed_keys = {p.bibtex_key for p in predictions}
+                remaining = [e for e in entries if e.bibtex_key not in processed_keys]
                 for rem_entry in remaining:
                     if rem_entry.bibtex_key in completed:
                         continue

@@ -15,7 +15,7 @@ from __future__ import annotations
 import logging
 import re
 from collections.abc import Callable
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from typing import Literal
 
 import httpx
@@ -410,7 +410,6 @@ def merge_with_predictions(
                     )
             else:
                 # Pre-screening says UNKNOWN or VALID — keep tool prediction unchanged
-                tool_pred.source = "tool"
-                merged.append(tool_pred)
+                merged.append(replace(tool_pred, source="tool"))
 
     return merged

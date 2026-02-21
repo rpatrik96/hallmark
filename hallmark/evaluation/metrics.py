@@ -180,7 +180,6 @@ def tier_weighted_f1(
     weighted_tp = 0.0
     weighted_fn = 0.0
     weighted_fp = 0.0
-    total_weight = 0.0
 
     for entry in entries:
         pred = predictions.get(entry.bibtex_key)
@@ -191,7 +190,6 @@ def tier_weighted_f1(
         pred_label = pred.label if pred and pred.label != "UNCERTAIN" else "VALID"
 
         if entry.label == "HALLUCINATED":
-            total_weight += w
             if pred is not None and pred_label == "HALLUCINATED":
                 weighted_tp += w
             else:
@@ -958,7 +956,10 @@ def paired_bootstrap_test(
     p_value = float(np.mean([d <= 0 for d in bootstrap_diffs])) if bootstrap_diffs else 1.0
 
     # Cohen's h effect size
-    cohens_h = 2 * (np.arcsin(np.sqrt(metric_a)) - np.arcsin(np.sqrt(metric_b)))
+    if 0.0 <= metric_a <= 1.0 and 0.0 <= metric_b <= 1.0:
+        cohens_h = float(2 * (np.arcsin(np.sqrt(metric_a)) - np.arcsin(np.sqrt(metric_b))))
+    else:
+        cohens_h = metric_a - metric_b  # fallback for non-proportion metrics
 
     return (observed_diff, p_value, float(cohens_h))
 
@@ -1171,7 +1172,7 @@ def apply_multiple_comparison_correction(
             adjusted[label] = max_so_far
     elif method == "bh":
         # Benjamini-Hochberg FDR control
-        sorted_items = sorted(items, key=lambda x: x[1])  # sort by p-value ascending
+        sorted_items = items  # already sorted by p-value ascending
         for rank, (label, p) in enumerate(sorted_items, 1):
             adjusted[label] = min(1.0, p * n / rank)
         # Enforce monotonicity (step-up): traverse from largest to smallest
@@ -1292,6 +1293,25 @@ def evaluate(
         and optionally bootstrap CIs for primary metrics.
     """
     pred_map = {p.bibtex_key: p for p in predictions}
+
+    entry_keys = {e.bibtex_key for e in entries}
+    pred_keys = set(pred_map.keys())
+    overlap = entry_keys & pred_keys
+    if len(overlap) == 0:
+        logger.warning(
+            "Zero key overlap between entries (%d) and predictions (%d). "
+            "Check that predictions match the correct split.",
+            len(entry_keys),
+            len(pred_keys),
+        )
+    elif len(overlap) < len(entry_keys) // 2:
+        logger.warning(
+            "Low key overlap: %d/%d entries have predictions (%.0f%%). "
+            "Missing entries are treated as VALID.",
+            len(overlap),
+            len(entry_keys),
+            100 * len(overlap) / len(entry_keys),
+        )
 
     cm = build_confusion_matrix(entries, pred_map)
     tw_f1 = tier_weighted_f1(entries, pred_map)

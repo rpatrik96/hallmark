@@ -85,7 +85,7 @@ class TestGeneratePlausibleFabrication:
         entry = _make_base_entry()
         result = generate_plausible_fabrication(entry)
         assert result.subtests["venue_real"] is True
-        assert result.subtests["doi_resolves"] is False
+        assert result.subtests["doi_resolves"] is None  # DOI removed; not applicable
         assert result.subtests["title_exists"] is False
 
     def test_fields_complete_is_false(self):

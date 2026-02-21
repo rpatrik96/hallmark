@@ -285,6 +285,9 @@ def generate_hybrid_fabrication(
         if modified_title == title:
             modified_title = "Improved " + title
         new_entry.fields["title"] = modified_title
+    else:
+        # Short titles: prepend modifier to guarantee title change
+        new_entry.fields["title"] = "Improved " + title
 
     new_entry.label = "HALLUCINATED"
     new_entry.hallucination_type = HallucinationType.HYBRID_FABRICATION.value

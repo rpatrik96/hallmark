@@ -40,7 +40,7 @@ def main(argv: list[str] | None = None) -> int:
     eval_parser.add_argument(
         "--split",
         default="dev_public",
-        choices=["dev_public", "test_public", "test_hidden"],
+        choices=["dev_public", "test_public", "test_hidden", "stress_test"],
         help="Benchmark split to evaluate on",
     )
     eval_parser.add_argument(
@@ -70,6 +70,12 @@ def main(argv: list[str] | None = None) -> int:
         action="store_true",
         help="Show detailed per-type metrics and subtest accuracy",
     )
+    eval_parser.add_argument(
+        "--ci",
+        action="store_true",
+        default=False,
+        help="Compute bootstrap confidence intervals (requires numpy)",
+    )
 
     # --- contribute ---
     contrib_parser = subparsers.add_parser(
@@ -88,7 +94,7 @@ def main(argv: list[str] | None = None) -> int:
     stats_parser.add_argument(
         "--split",
         default="dev_public",
-        choices=["dev_public", "test_public"],
+        choices=["dev_public", "test_public", "stress_test"],
     )
     stats_parser.add_argument("--data-dir", type=str, help="Override data directory")
     stats_parser.add_argument("--version", default="v1.0", help="Dataset version")
@@ -130,6 +136,21 @@ def main(argv: list[str] | None = None) -> int:
         help="Reject results with F1=0.0 (likely failed runs)",
     )
 
+    # --- diagnose ---
+    diag_parser = subparsers.add_parser("diagnose", help="Per-entry error analysis")
+    diag_parser.add_argument(
+        "--split",
+        required=True,
+        choices=["dev_public", "test_public", "test_hidden", "stress_test"],
+    )
+    diag_parser.add_argument("--predictions", required=True, help="Path to predictions JSONL")
+    diag_parser.add_argument("--type", default=None, help="Filter to specific hallucination type")
+    diag_parser.add_argument(
+        "--errors-only", action="store_true", help="Show only misclassified entries"
+    )
+    diag_parser.add_argument("--data-dir", type=str, help="Override data directory")
+    diag_parser.add_argument("--version", default="v1.0", help="Dataset version")
+
     # --- history-append ---
     hist_parser = subparsers.add_parser(
         "history-append", help="Append current results to history JSONL log"
@@ -166,6 +187,8 @@ def main(argv: list[str] | None = None) -> int:
         return _cmd_leaderboard(args)
     elif args.command == "list-baselines":
         return _cmd_list_baselines()
+    elif args.command == "diagnose":
+        return _cmd_diagnose(args)
     elif args.command == "history-append":
         return _cmd_history_append(args)
     elif args.command == "validate-results":
@@ -233,6 +256,7 @@ def _cmd_evaluate(args: argparse.Namespace) -> int:
         predictions=predictions,
         tool_name=tool_name,
         split_name=args.split,
+        compute_ci=args.ci,
     )
 
     # Print results
@@ -247,18 +271,34 @@ def _cmd_evaluate(args: argparse.Namespace) -> int:
         print(f"  Uncertain:        {result.num_uncertain}")
     print(f"{'─' * 60}")
     print(f"  Detection Rate:   {result.detection_rate:.3f}")
+    if result.detection_rate_ci:
+        print(f"    95% CI: [{result.detection_rate_ci[0]:.3f}, {result.detection_rate_ci[1]:.3f}]")
     fpr_str = (
         f"{result.false_positive_rate:.3f}" if result.false_positive_rate is not None else "N/A"
     )
     print(f"  False Pos. Rate:  {fpr_str}")
+    if result.fpr_ci:
+        print(f"    95% CI: [{result.fpr_ci[0]:.3f}, {result.fpr_ci[1]:.3f}]")
     print(f"  F1 (Halluc.):     {result.f1_hallucination:.3f}")
+    if result.f1_hallucination_ci:
+        print(
+            f"    95% CI: [{result.f1_hallucination_ci[0]:.3f}, {result.f1_hallucination_ci[1]:.3f}]"
+        )
     print(f"  Tier-weighted F1: {result.tier_weighted_f1:.3f}")
+    if result.tier_weighted_f1_ci:
+        print(
+            f"    95% CI: [{result.tier_weighted_f1_ci[0]:.3f}, {result.tier_weighted_f1_ci[1]:.3f}]"
+        )
     if result.mcc is not None:
         print(f"  MCC:              {result.mcc:.3f}")
+        if result.mcc_ci:
+            print(f"    95% CI: [{result.mcc_ci[0]:.3f}, {result.mcc_ci[1]:.3f}]")
     if result.macro_f1 is not None:
         print(f"  Macro-F1:         {result.macro_f1:.3f}")
     if result.ece is not None:
         print(f"  ECE:              {result.ece:.3f}")
+        if result.ece_ci:
+            print(f"    95% CI: [{result.ece_ci[0]:.3f}, {result.ece_ci[1]:.3f}]")
     if result.cost_efficiency:
         print(f"  Entries/sec:      {result.cost_efficiency:.1f}")
     if result.mean_api_calls:
@@ -490,6 +530,85 @@ def _cmd_validate_results(args: argparse.Namespace) -> int:
         return 1
 
     print("\nValidation passed.")
+    return 0
+
+
+def _cmd_diagnose(args: argparse.Namespace) -> int:
+    """Per-entry error analysis."""
+    try:
+        entries = load_split(
+            split=args.split,
+            version=args.version,
+            data_dir=args.data_dir,
+        )
+    except FileNotFoundError as e:
+        logging.error(str(e))
+        return 1
+
+    predictions = load_predictions(args.predictions)
+    pred_map = {p.bibtex_key: p for p in predictions}
+
+    # Filter by hallucination type if requested
+    if args.type:
+        entries = [e for e in entries if e.hallucination_type == args.type]
+
+    correct = 0
+    wrong = 0
+    by_type: dict[str, dict[str, int]] = {}
+
+    header = (
+        f"{'bibtex_key':<30} {'true':<14} {'pred':<14} {'type':<28} {'tier':<5} {'conf':<6} reason"
+    )
+    print(f"\n{'=' * 120}")
+    print(f"  HALLMARK Diagnose: {args.split}")
+    print(f"{'=' * 120}")
+    print(f"  {header}")
+    print(f"  {'─' * 116}")
+
+    for entry in entries:
+        pred = pred_map.get(entry.bibtex_key)
+        pred_label = pred.label if pred else "MISSING"
+        true_label = entry.label
+        confidence = f"{pred.confidence:.2f}" if pred and pred.confidence is not None else "N/A"
+        reason = (pred.reason or "") if pred else ""
+        reason_trunc = reason[:80] if len(reason) > 80 else reason
+        h_type = entry.hallucination_type or "valid"
+        tier = str(entry.difficulty_tier) if entry.difficulty_tier is not None else "-"
+
+        is_correct = pred_label == true_label
+        if is_correct:
+            correct += 1
+        else:
+            wrong += 1
+
+        # Track by-type breakdown
+        if h_type not in by_type:
+            by_type[h_type] = {"correct": 0, "wrong": 0}
+        if is_correct:
+            by_type[h_type]["correct"] += 1
+        else:
+            by_type[h_type]["wrong"] += 1
+
+        if args.errors_only and is_correct:
+            continue
+
+        print(
+            f"  {entry.bibtex_key:<30} {true_label:<14} {pred_label:<14} "
+            f"{h_type:<28} {tier:<5} {confidence:<6} {reason_trunc}"
+        )
+
+    print(f"\n{'─' * 120}")
+    total = correct + wrong
+    print(f"  Total: {total}  Correct: {correct}  Wrong: {wrong}")
+    if total > 0:
+        print(f"  Accuracy: {correct / total:.3f}")
+    print("\n  By-type breakdown:")
+    for h_type, counts in sorted(by_type.items()):
+        t = counts["correct"] + counts["wrong"]
+        acc = counts["correct"] / t if t > 0 else 0.0
+        print(f"    {h_type:<30} correct={counts['correct']}/{t}  acc={acc:.3f}")
+    print(f"{'=' * 120}\n")
+
     return 0
 
 
