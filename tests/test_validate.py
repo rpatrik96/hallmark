@@ -27,7 +27,7 @@ def _make_eval_result(**overrides: object) -> EvaluationResult:
         "f1_hallucination": 0.75,
         "tier_weighted_f1": 0.70,
         "per_tier_metrics": {1: {"f1": 0.9, "detection_rate": 0.95, "count": 20}},
-        "detect_at_k": {1: 0.6, 2: 0.8},
+        "union_recall_at_k": {1: 0.6, 2: 0.8},
     }
     defaults.update(overrides)
     return EvaluationResult(**defaults)
@@ -206,12 +206,12 @@ class TestEvaluationResultRoundtrip:
         assert 1 in restored.per_tier_metrics
         assert 2 in restored.per_tier_metrics
 
-    def test_int_key_coercion_detect_at_k(self):
-        original = _make_eval_result(detect_at_k={1: 0.6, 3: 0.9})
+    def test_int_key_coercion_union_recall_at_k(self):
+        original = _make_eval_result(union_recall_at_k={1: 0.6, 3: 0.9})
         restored = EvaluationResult.from_json(original.to_json())
-        assert 1 in restored.detect_at_k
-        assert 3 in restored.detect_at_k
-        assert restored.detect_at_k[1] == pytest.approx(0.6)
+        assert 1 in restored.union_recall_at_k
+        assert 3 in restored.union_recall_at_k
+        assert restored.union_recall_at_k[1] == pytest.approx(0.6)
 
     def test_from_dict_does_not_mutate_input(self):
         data = json.loads(_make_eval_result().to_json())

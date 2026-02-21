@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Main orchestrator script for running all HALLMARK baselines and producing a leaderboard.
+"""Main orchestrator script for running all HALLMARK baselines and producing a leaderboard.  [evaluation]
 
 This script runs all available baselines (or a subset) on a specified dataset split,
 evaluates their performance, and generates a leaderboard with detailed metrics.

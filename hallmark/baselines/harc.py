@@ -20,6 +20,7 @@ import tempfile
 import time
 from pathlib import Path
 
+from hallmark.baselines.common import fallback_predictions, run_with_prescreening
 from hallmark.dataset.schema import BenchmarkEntry, Prediction
 
 logger = logging.getLogger(__name__)
@@ -157,18 +158,45 @@ def run_harc(
     Returns:
         List of Predictions.
     """
-    # Run pre-screening before harcx to catch obvious hallucinations
-    from hallmark.baselines.prescreening import prescreen_entries
-
-    prescreen_results = prescreen_entries(entries) if not skip_prescreening else {}
-
     harcx_bin = shutil.which("harcx")
     if harcx_bin is None:
-        raise ImportError(
+        logger.error(
             "harcx CLI not found on PATH. "
             "Install with: pipx install harcx  (or uv tool install harcx)"
         )
+        return fallback_predictions(entries, reason="Fallback: harcx unavailable")
 
+    def _run_tool(tool_entries: list[BenchmarkEntry]) -> list[Prediction]:
+        return _run_harc_batches(
+            tool_entries,
+            harcx_bin=harcx_bin,
+            author_threshold=author_threshold,
+            check_urls=check_urls,
+            api_key=api_key,
+            batch_size=batch_size,
+            batch_timeout=batch_timeout,
+            total_timeout=total_timeout,
+        )
+
+    return run_with_prescreening(
+        entries,
+        _run_tool,
+        skip_prescreening=skip_prescreening,
+        backfill_reason="HaRC: entry not checked (timeout or missing)",
+    )
+
+
+def _run_harc_batches(
+    entries: list[BenchmarkEntry],
+    harcx_bin: str,
+    author_threshold: float,
+    check_urls: bool,
+    api_key: str | None,
+    batch_size: int,
+    batch_timeout: float,
+    total_timeout: float,
+) -> list[Prediction]:
+    """Run harcx in batches and return raw predictions (no pre-screening)."""
     start = time.time()
     all_flagged: dict[str, list[str]] = {}
     all_checked: set[str] = set()
@@ -219,46 +247,33 @@ def run_harc(
     predictions: list[Prediction] = []
 
     for entry in entries:
-        if entry.bibtex_key in all_checked:
-            issues = all_flagged.get(entry.bibtex_key, [])
-            if issues:
-                # Check for false positive patterns
-                if _is_likely_false_positive(issues):
-                    # Single transient/API error → downgrade to VALID with lower confidence
-                    predictions.append(
-                        Prediction(
-                            bibtex_key=entry.bibtex_key,
-                            label="VALID",
-                            confidence=0.60,
-                            reason=f"HaRC: flagged but likely false positive: {'; '.join(issues)}",
-                            api_sources_queried=API_SOURCES,
-                            wall_clock_seconds=per_entry_time,
-                            api_calls=len(API_SOURCES),
-                        )
-                    )
-                else:
-                    # Real issue(s): calibrate confidence based on issue count
-                    # 1 issue → 0.55, 2 issues → 0.80, 3+ issues → 0.95
-                    confidence = min(0.4 + 0.2 * len(issues), 0.95) if len(issues) >= 2 else 0.55
+        if entry.bibtex_key not in all_checked:
+            continue  # Will be backfilled by run_with_prescreening
 
-                    predictions.append(
-                        Prediction(
-                            bibtex_key=entry.bibtex_key,
-                            label="HALLUCINATED",
-                            confidence=confidence,
-                            reason=f"HaRC flagged: {'; '.join(issues)}",
-                            api_sources_queried=API_SOURCES,
-                            wall_clock_seconds=per_entry_time,
-                            api_calls=len(API_SOURCES),
-                        )
-                    )
-            else:
+        issues = all_flagged.get(entry.bibtex_key, [])
+        if issues:
+            # Check for false positive patterns
+            if _is_likely_false_positive(issues):
                 predictions.append(
                     Prediction(
                         bibtex_key=entry.bibtex_key,
                         label="VALID",
-                        confidence=0.85,
-                        reason="HaRC: No issues found across databases",
+                        confidence=0.60,
+                        reason=f"HaRC: flagged but likely false positive: {'; '.join(issues)}",
+                        api_sources_queried=API_SOURCES,
+                        wall_clock_seconds=per_entry_time,
+                        api_calls=len(API_SOURCES),
+                    )
+                )
+            else:
+                # Real issue(s): calibrate confidence based on issue count
+                confidence = min(0.4 + 0.2 * len(issues), 0.95) if len(issues) >= 2 else 0.55
+                predictions.append(
+                    Prediction(
+                        bibtex_key=entry.bibtex_key,
+                        label="HALLUCINATED",
+                        confidence=confidence,
+                        reason=f"HaRC flagged: {'; '.join(issues)}",
                         api_sources_queried=API_SOURCES,
                         wall_clock_seconds=per_entry_time,
                         api_calls=len(API_SOURCES),
@@ -269,18 +284,12 @@ def run_harc(
                 Prediction(
                     bibtex_key=entry.bibtex_key,
                     label="VALID",
-                    confidence=0.5,
-                    reason=f"HaRC: timed out ({checked_count}/{len(entries)} completed)",
+                    confidence=0.85,
+                    reason="HaRC: No issues found across databases",
                     api_sources_queried=API_SOURCES,
                     wall_clock_seconds=per_entry_time,
-                    api_calls=0,
+                    api_calls=len(API_SOURCES),
                 )
             )
-
-    # Merge pre-screening results with tool predictions (unless skipped)
-    from hallmark.baselines.prescreening import merge_with_predictions
-
-    if not skip_prescreening:
-        predictions = merge_with_predictions(entries, predictions, prescreen_results)
 
     return predictions

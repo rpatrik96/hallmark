@@ -12,18 +12,12 @@ from collections import defaultdict
 
 from hallmark.dataset.schema import BenchmarkEntry
 
+from ._common import FAKE_REALWORLD_KEYS
+
 logger = logging.getLogger(__name__)
 
 # Split ratios for new entries
 SPLIT_RATIOS = {"dev_public": 0.40, "test_public": 0.33, "test_hidden": 0.27}
-
-# Keys of fabricated entries that should be excluded from real-world data
-FAKE_REALWORLD_KEYS = {
-    "realworld_future_date_pattern",
-    "realworld_nonexistent_venue",
-    "realworld_fabricated_doi",
-    "realworld_hybrid_fabrication",
-}
 
 # NOTE: cross_db_agreement is now set correctly by generators and
 # classify_hallucination(). No post-hoc fixup needed.

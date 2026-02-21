@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Generate hallucinated citations using multiple LLM backends.
+"""Generate hallucinated citations using multiple LLM backends.  [data-collection]
 
 Supported backends:
 - openai: OpenAI API (GPT-4o, GPT-5.1, etc.)

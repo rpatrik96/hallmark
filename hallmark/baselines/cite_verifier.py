@@ -76,10 +76,12 @@ def run_cite_verifier(
     cv_path = Path(citeverifier_path)
     verifier_script = cv_path / "verifier.py"
     if not verifier_script.exists():
-        raise FileNotFoundError(
-            f"CiteVerifier not found at {cv_path}. "
-            "Clone from: https://github.com/NKU-AOSP-Lab/CiteVerifier"
+        logger.error(
+            "CiteVerifier not found at %s. "
+            "Clone from: https://github.com/NKU-AOSP-Lab/CiteVerifier",
+            cv_path,
         )
+        return fallback_predictions(entries, reason="Fallback: CiteVerifier unavailable")
 
     # Write entries as JSON input
     refs = _entries_to_citeverifier_json(entries)

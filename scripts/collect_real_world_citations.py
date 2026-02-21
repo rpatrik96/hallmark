@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Collect real-world hallucinated citations from documented incidents.
+"""Collect real-world hallucinated citations from documented incidents.  [data-collection]
 
 This script creates BenchmarkEntry objects from hallucinated citations found in
 published papers and documented by academic studies and verification tools.

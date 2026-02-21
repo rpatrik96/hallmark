@@ -26,6 +26,8 @@ import re
 
 from hallmark.dataset.schema import BenchmarkEntry
 
+from ._common import FAKE_REALWORLD_KEYS
+
 logger = logging.getLogger(__name__)
 
 # Fields that ONLY appear in hallucinated entries — leak labels
@@ -48,14 +50,6 @@ STRIP_FIELDS = HALLUCINATION_ONLY_FIELDS | {"pages", "publisher"}
 # Valid year range for non-future_date entries
 VALID_YEAR_MIN = 2021
 VALID_YEAR_MAX = 2023
-
-# Keys of fabricated entries in real_world_incidents.jsonl
-FAKE_REALWORLD_KEYS = {
-    "realworld_future_date_pattern",
-    "realworld_nonexistent_venue",
-    "realworld_fabricated_doi",
-    "realworld_hybrid_fabrication",
-}
 
 # Types where title+authors are real -> cross_db_agreement should be True
 CROSS_DB_TRUE_TYPES = {"wrong_venue", "preprint_as_published", "arxiv_version_mismatch"}
@@ -269,6 +263,54 @@ def _drop_retracted_paper(entries: list[BenchmarkEntry]) -> tuple[list[Benchmark
     return filtered, dropped
 
 
+def _enrich_dois_for_title_types(entries: list[BenchmarkEntry], seed: int) -> int:
+    """Add DOIs from valid pool to chimeric_title/near_miss_title/arxiv_version_mismatch entries.
+
+    ~60% of these entries should have DOIs to prevent DOI-absence from being a label leak.
+    Also sets appropriate subtest values for each type.
+    """
+    rng = random.Random(seed)
+    TARGET_PCT = 0.6
+
+    # Build DOI pool from valid entries in this split
+    doi_pool = [e.fields["doi"] for e in entries if e.label == "VALID" and e.fields.get("doi")]
+    if not doi_pool:
+        return 0
+
+    # Type -> subtest overrides
+    type_subtests: dict[str, dict[str, bool]] = {
+        "chimeric_title": {"doi_resolves": True, "title_exists": False},
+        "near_miss_title": {"doi_resolves": True, "title_exists": False},
+        "arxiv_version_mismatch": {"doi_resolves": True, "cross_db_agreement": False},
+    }
+
+    enriched = 0
+    for halluc_type, subtest_updates in type_subtests.items():
+        type_entries = [e for e in entries if e.hallucination_type == halluc_type]
+        if not type_entries:
+            continue
+
+        entries_without_doi = [e for e in type_entries if not e.fields.get("doi")]
+        current_with_doi = len(type_entries) - len(entries_without_doi)
+        num_to_add = int(len(type_entries) * TARGET_PCT) - current_with_doi
+
+        if num_to_add > 0 and entries_without_doi:
+            to_update = rng.sample(entries_without_doi, min(num_to_add, len(entries_without_doi)))
+            for entry in to_update:
+                entry.fields["doi"] = rng.choice(doi_pool)
+                enriched += 1
+
+        # Update subtests for all entries of this type
+        for entry in type_entries:
+            for key, value in subtest_updates.items():
+                if key == "doi_resolves":
+                    entry.subtests[key] = value if entry.fields.get("doi") else False
+                else:
+                    entry.subtests[key] = value
+
+    return enriched
+
+
 def _remove_fake_realworld(entries: list[BenchmarkEntry]) -> tuple[list[BenchmarkEntry], int]:
     """Remove fabricated entries from real-world incidents."""
     filtered = [e for e in entries if e.bibtex_key not in FAKE_REALWORLD_KEYS]
@@ -327,6 +369,10 @@ def stage_sanitize(
         # 7. Fix cross_db_agreement
         n = _fix_cross_db_agreement(entries)
         total_fixes[f"{split_name}_cross_db"] = n
+
+        # 7b. Enrich DOIs for title-based types (prevents DOI-absence label leak)
+        n = _enrich_dois_for_title_types(entries, seed)
+        total_fixes[f"{split_name}_doi_enrich"] = n
 
         # 8. Drop retracted_paper
         entries, n = _drop_retracted_paper(entries)

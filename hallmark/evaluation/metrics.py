@@ -1150,7 +1150,7 @@ def evaluate(
 
     dat_k: dict[int, float] = {}
     if predictions_per_strategy:
-        dat_k = detect_at_k(entries, predictions_per_strategy)
+        dat_k = union_recall_at_k(entries, predictions_per_strategy)
 
     num_hallucinated = sum(1 for e in entries if e.label == "HALLUCINATED")
     num_valid = sum(1 for e in entries if e.label == "VALID")
@@ -1220,7 +1220,7 @@ def evaluate(
         false_positive_rate=cm.false_positive_rate,
         f1_hallucination=cm.f1,
         tier_weighted_f1=tw_f1,
-        detect_at_k=dat_k,
+        union_recall_at_k=dat_k,
         cost_efficiency=cost.get("entries_per_second"),
         mean_api_calls=cost.get("mean_api_calls"),
         ece=ece_score,

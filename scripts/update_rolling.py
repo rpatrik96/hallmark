@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""End-to-end orchestrator for rolling dataset updates.
+"""End-to-end orchestrator for rolling dataset updates.  [operations]
 
 Chains the full pipeline: scrape -> generate hallucinations -> create splits.
 Optionally runs baselines on the resulting rolling split.

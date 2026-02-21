@@ -1,4 +1,4 @@
-"""P2.1: Test dataset generation seed sensitivity.
+"""P2.1: Test dataset generation seed sensitivity.  [analysis]
 
 Generates entries with different random seeds and measures diversity.
 """

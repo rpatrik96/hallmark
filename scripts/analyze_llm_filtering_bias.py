@@ -1,4 +1,4 @@
-"""P2.6: Document LLM filtering selection bias.
+"""P2.6: Document LLM filtering selection bias.  [analysis]
 
 Analyzes llm_generated.jsonl to identify type distribution gaps and filtering bias.
 """

@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import logging
 from dataclasses import dataclass
+from typing import Literal
 
 from hallmark.dataset.schema import BenchmarkEntry, Prediction
 
@@ -23,7 +24,7 @@ class EnsembleConfig:
     # Voting threshold: fraction of strategies that must agree on HALLUCINATED
     voting_threshold: float = 0.5
     # Method: "weighted_vote" or "max_confidence" or "mean_confidence"
-    method: str = "weighted_vote"
+    method: Literal["weighted_vote", "max_confidence", "mean_confidence"] = "weighted_vote"
 
 
 def ensemble_predict(

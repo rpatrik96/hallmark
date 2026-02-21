@@ -218,6 +218,7 @@ class Prediction:
     api_sources_queried: list[str] = field(default_factory=list)
     wall_clock_seconds: float = 0.0
     api_calls: int = 0
+    source: str | None = None  # "tool", "prescreening", "prescreening_override", or None
 
     def __post_init__(self) -> None:
         if not 0.0 <= self.confidence <= 1.0:
@@ -231,7 +232,9 @@ class Prediction:
 
     @classmethod
     def from_dict(cls, data: dict) -> Prediction:
-        return cls(**data)
+        """Deserialize from dictionary, ignoring unknown fields."""
+        known = {f.name for f in fields(cls)}
+        return cls(**{k: v for k, v in data.items() if k in known})
 
     @classmethod
     def from_json(cls, line: str) -> Prediction:
@@ -255,7 +258,7 @@ class EvaluationResult:
     tier_weighted_f1: float  # F1 weighted by difficulty tier
 
     # Secondary metrics
-    detect_at_k: dict[int, float] = field(default_factory=dict)  # k -> fraction detected
+    union_recall_at_k: dict[int, float] = field(default_factory=dict)  # k -> fraction detected
     temporal_robustness: float | None = None
     cost_efficiency: float | None = None  # entries per second
     mean_api_calls: float | None = None
@@ -287,14 +290,20 @@ class EvaluationResult:
     def from_dict(cls, data: dict) -> EvaluationResult:
         """Deserialize from dictionary.
 
-        Coerces JSON string keys back to int for per_tier_metrics and detect_at_k.
+        Coerces JSON string keys back to int for per_tier_metrics and union_recall_at_k.
+        Accepts legacy ``detect_at_k`` key for backward compatibility.
         """
         data = dict(data)  # shallow copy to avoid mutating caller's dict
+        # Backward compat: accept legacy detect_at_k key
+        if "detect_at_k" in data and "union_recall_at_k" not in data:
+            data["union_recall_at_k"] = data.pop("detect_at_k")
+        elif "detect_at_k" in data:
+            del data["detect_at_k"]
         # JSON serializes int keys as strings — coerce them back
         if "per_tier_metrics" in data and data["per_tier_metrics"] is not None:
             data["per_tier_metrics"] = {int(k): v for k, v in data["per_tier_metrics"].items()}
-        if "detect_at_k" in data and data["detect_at_k"] is not None:
-            data["detect_at_k"] = {int(k): v for k, v in data["detect_at_k"].items()}
+        if "union_recall_at_k" in data and data["union_recall_at_k"] is not None:
+            data["union_recall_at_k"] = {int(k): v for k, v in data["union_recall_at_k"].items()}
         return cls(**data)
 
     @classmethod

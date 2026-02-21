@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Compute stratified bootstrap confidence intervals for baseline results."""
+"""Compute stratified bootstrap confidence intervals for baseline results.  [evaluation]"""
 
 import json
 from pathlib import Path

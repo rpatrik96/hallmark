@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Verify sub-test labels against entry metadata for logical consistency.
+"""Verify sub-test labels against entry metadata for logical consistency.  [analysis]
 
 Reports agreement between assigned sub-tests and what can be inferred from
 entry fields without API calls. For full live verification (DOI resolution,

@@ -1,4 +1,4 @@
-"""Parse GPTZero NeurIPS 2025 CSV and create HALLMARK benchmark entries.
+"""Parse GPTZero NeurIPS 2025 CSV and create HALLMARK benchmark entries.  [data-collection]
 
 Reads the GPTZero analysis CSV containing hallucinated citations found in NeurIPS 2025
 papers and converts them to BenchmarkEntry objects with proper classification.

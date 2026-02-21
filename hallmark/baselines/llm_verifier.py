@@ -9,6 +9,7 @@ from __future__ import annotations
 import json
 import logging
 import time
+from collections.abc import Callable
 from typing import Any
 
 from hallmark.baselines.common import fallback_predictions
@@ -48,27 +49,20 @@ OPENROUTER_MODELS: dict[str, str] = {
 }
 
 
-def _verify_with_openai_compatible(
+def _verify_entries(
     entries: list[BenchmarkEntry],
-    model: str,
-    api_key: str | None,
-    base_url: str | None,
+    call_fn: Callable[[str], str],
     source_prefix: str,
-    **kwargs: Any,
+    model: str,
 ) -> list[Prediction]:
-    """Shared verification loop for OpenAI-SDK-compatible providers."""
-    try:
-        import openai
-    except ImportError:
-        logger.error("openai package not installed. Install with: pip install openai")
-        return fallback_predictions(entries, reason="LLM baseline unavailable")
+    """Shared verification loop for all LLM providers.
 
-    client_kwargs: dict[str, Any] = {}
-    if api_key:
-        client_kwargs["api_key"] = api_key
-    if base_url:
-        client_kwargs["base_url"] = base_url
-    client = openai.OpenAI(**client_kwargs)
+    Args:
+        entries: Benchmark entries to verify.
+        call_fn: Function that takes a prompt string and returns raw response text.
+        source_prefix: Provider name for metadata (e.g. "openai", "anthropic").
+        model: Model identifier for metadata.
+    """
     predictions = []
 
     for entry in entries:
@@ -77,13 +71,7 @@ def _verify_with_openai_compatible(
         prompt = VERIFICATION_PROMPT.format(bibtex=bibtex)
 
         try:
-            response = client.chat.completions.create(
-                model=model,
-                messages=[{"role": "user", "content": prompt}],
-                temperature=0.0,
-                max_completion_tokens=256,
-            )
-            content = response.choices[0].message.content.strip()
+            content = call_fn(prompt)
             pred = _parse_llm_response(content, entry.bibtex_key)
         except Exception as e:
             logger.warning(f"{source_prefix} API error for {entry.bibtex_key}: {e}")
@@ -100,6 +88,40 @@ def _verify_with_openai_compatible(
         predictions.append(pred)
 
     return predictions
+
+
+def _verify_with_openai_compatible(
+    entries: list[BenchmarkEntry],
+    model: str,
+    api_key: str | None,
+    base_url: str | None,
+    source_prefix: str,
+    **kwargs: Any,
+) -> list[Prediction]:
+    """Verification via OpenAI-SDK-compatible providers."""
+    try:
+        import openai
+    except ImportError:
+        logger.error("openai package not installed. Install with: pip install openai")
+        return fallback_predictions(entries, reason="LLM baseline unavailable")
+
+    client_kwargs: dict[str, Any] = {}
+    if api_key:
+        client_kwargs["api_key"] = api_key
+    if base_url:
+        client_kwargs["base_url"] = base_url
+    client = openai.OpenAI(**client_kwargs)
+
+    def call_fn(prompt: str) -> str:
+        resp = client.chat.completions.create(
+            model=model,
+            messages=[{"role": "user", "content": prompt}],
+            temperature=0.0,
+            max_completion_tokens=256,
+        )
+        return str(resp.choices[0].message.content).strip()
+
+    return _verify_entries(entries, call_fn, source_prefix, model)
 
 
 def verify_with_openai(
@@ -147,36 +169,16 @@ def verify_with_anthropic(
         return fallback_predictions(entries, reason="LLM baseline unavailable")
 
     client = anthropic.Anthropic(api_key=api_key) if api_key else anthropic.Anthropic()
-    predictions = []
 
-    for entry in entries:
-        start = time.time()
-        bibtex = entry.to_bibtex()
-        prompt = VERIFICATION_PROMPT.format(bibtex=bibtex)
+    def call_fn(prompt: str) -> str:
+        resp = client.messages.create(
+            model=model,
+            max_tokens=256,
+            messages=[{"role": "user", "content": prompt}],
+        )
+        return str(resp.content[0].text).strip()
 
-        try:
-            response = client.messages.create(
-                model=model,
-                max_tokens=256,
-                messages=[{"role": "user", "content": prompt}],
-            )
-            content = response.content[0].text.strip()
-            pred = _parse_llm_response(content, entry.bibtex_key)
-        except Exception as e:
-            logger.warning(f"Anthropic API error for {entry.bibtex_key}: {e}")
-            pred = Prediction(
-                bibtex_key=entry.bibtex_key,
-                label="UNCERTAIN",
-                confidence=0.5,
-                reason=f"[Error fallback] API error: {e}",
-            )
-
-        pred.wall_clock_seconds = time.time() - start
-        pred.api_calls = 1
-        pred.api_sources_queried = [f"anthropic/{model}"]
-        predictions.append(pred)
-
-    return predictions
+    return _verify_entries(entries, call_fn, "anthropic", model)
 
 
 def _parse_llm_response(content: str, bibtex_key: str) -> Prediction:

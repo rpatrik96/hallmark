@@ -1,4 +1,4 @@
-"""Probe GPT-5.1 temporal robustness on recent (2025-2026) papers.
+"""Probe GPT-5.1 temporal robustness on recent (2025-2026) papers.  [analysis]
 
 Scrapes fresh valid entries from DBLP and arXiv, generates hallucinated
 variants, runs GPT-5.1, and compares with the full-dataset baseline.

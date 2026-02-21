@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Quarterly pool update script.
+"""Quarterly pool update script.  [operations]
 
 Reviews pending contributions and updates the validated pool.
 

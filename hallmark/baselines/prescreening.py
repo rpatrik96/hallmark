@@ -325,6 +325,7 @@ def merge_with_predictions(
                         api_sources_queried=[],
                         wall_clock_seconds=0.0,
                         api_calls=0,
+                        source="prescreening",
                     )
                 )
             else:
@@ -339,6 +340,7 @@ def merge_with_predictions(
                         api_sources_queried=[],
                         wall_clock_seconds=0.0,
                         api_calls=0,
+                        source="prescreening",
                     )
                 )
         else:
@@ -358,6 +360,7 @@ def merge_with_predictions(
                         api_sources_queried=tool_pred.api_sources_queried,
                         wall_clock_seconds=tool_pred.wall_clock_seconds,
                         api_calls=tool_pred.api_calls,
+                        source="prescreening_override",
                     )
                 )
             elif strongest_hallucinated and tool_pred.label == "HALLUCINATED":
@@ -376,6 +379,7 @@ def merge_with_predictions(
                             api_sources_queried=tool_pred.api_sources_queried,
                             wall_clock_seconds=tool_pred.wall_clock_seconds,
                             api_calls=tool_pred.api_calls,
+                            source="tool",
                         )
                     )
                 else:
@@ -393,10 +397,12 @@ def merge_with_predictions(
                             api_sources_queried=tool_pred.api_sources_queried,
                             wall_clock_seconds=tool_pred.wall_clock_seconds,
                             api_calls=tool_pred.api_calls,
+                            source="tool",
                         )
                     )
             else:
                 # Pre-screening says UNKNOWN or VALID — keep tool prediction unchanged
+                tool_pred.source = "tool"
                 merged.append(tool_pred)
 
     return merged

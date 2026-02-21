@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Scrape valid journal articles from DBLP to diversify benchmark beyond conference papers.
+"""Scrape valid journal articles from DBLP to diversify benchmark beyond conference papers.  [data-collection]
 
 This addresses P1.5: Add valid journal articles to eliminate article/misc type as shortcut.
 """

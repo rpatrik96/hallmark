@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Analyze baseline performance stratified by generation method.
+"""Analyze baseline performance stratified by generation method.  [analysis]
 
 This script evaluates how tools perform on different types of benchmark entries:
 - perturbation: systematic perturbations of valid entries

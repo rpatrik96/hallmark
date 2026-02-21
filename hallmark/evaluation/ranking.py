@@ -57,6 +57,7 @@ import csv
 import hashlib
 import logging
 from pathlib import Path
+from typing import Literal
 
 from hallmark.dataset.schema import BenchmarkEntry, Prediction
 
@@ -261,7 +262,7 @@ def rank_tools_mean_score(
 def rank_tools(
     entries: list[BenchmarkEntry],
     tool_predictions: dict[str, list[Prediction]],
-    method: str = "auto",
+    method: Literal["auto", "plackett_luce", "mean"] = "auto",
     alpha: float = 0.01,
 ) -> list[tuple[str, float]]:
     """Rank citation verification tools on benchmark entries.

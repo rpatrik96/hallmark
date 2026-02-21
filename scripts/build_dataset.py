@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""HALLMARK Dataset Build Orchestrator.
+"""HALLMARK Dataset Build Orchestrator.  [pipeline]
 
 Rebuilds the entire HALLMARK benchmark dataset from scratch in 9 deterministic stages.
 All stages operate on in-memory data; files are only written at the end (Stage 9).

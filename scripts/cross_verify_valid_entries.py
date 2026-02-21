@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Cross-verify existing valid entries against CrossRef API.
+"""Cross-verify existing valid entries against CrossRef API.  [analysis]
 
 This addresses P1.7: Verify that valid entries are truly valid by checking against CrossRef.
 """

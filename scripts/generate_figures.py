@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Generate evaluation figures for HALLMARK.
+"""Generate evaluation figures for HALLMARK.  [evaluation]
 
 Creates publication-quality figures:
 1. Tier-wise detection rates (grouped bar chart)

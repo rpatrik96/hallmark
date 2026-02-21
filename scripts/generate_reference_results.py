@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Generate pre-computed reference results for rate-limited baselines.
+"""Generate pre-computed reference results for rate-limited baselines.  [evaluation]
 
 Usage:
     python scripts/generate_reference_results.py --baselines harc,bibtexupdater

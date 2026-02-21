@@ -1,4 +1,4 @@
-"""P1.3: Compare synthetic vs real-world hallucination distributions.
+"""P1.3: Compare synthetic vs real-world hallucination distributions.  [analysis]
 
 Analyzes whether synthetic (perturbation + adversarial) hallucinations
 match real-world hallucination patterns across sub-test failures and features.

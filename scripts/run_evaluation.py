@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Run full evaluation pipeline.
+"""Run full evaluation pipeline.  [evaluation]
 
 Usage:
     python scripts/run_evaluation.py \

@@ -19,8 +19,7 @@ import tempfile
 import time
 from pathlib import Path
 
-from hallmark.baselines.common import entries_to_bib, fallback_predictions
-from hallmark.baselines.prescreening import merge_with_predictions, prescreen_entries
+from hallmark.baselines.common import entries_to_bib, fallback_predictions, run_with_prescreening
 from hallmark.dataset.schema import BenchmarkEntry, Prediction
 
 logger = logging.getLogger(__name__)
@@ -114,10 +113,33 @@ def run_bibtex_check(
         academic_only: Skip web/book/working-paper checks (default: True).
         skip_prescreening: Skip pre-screening checks (default: False).
     """
-    start_time = time.time()
 
-    # Run pre-screening before bibtex-check to catch obvious hallucinations
-    prescreen_results = prescreen_entries(entries) if not skip_prescreening else {}
+    def _run_tool(tool_entries: list[BenchmarkEntry]) -> list[Prediction]:
+        return _run_bibtex_check_subprocess(
+            tool_entries,
+            extra_args=extra_args,
+            timeout=timeout,
+            rate_limit=rate_limit,
+            academic_only=academic_only,
+        )
+
+    return run_with_prescreening(
+        entries,
+        _run_tool,
+        skip_prescreening=skip_prescreening,
+        backfill_reason="Entry not in bibtex-check output",
+    )
+
+
+def _run_bibtex_check_subprocess(
+    entries: list[BenchmarkEntry],
+    extra_args: list[str] | None = None,
+    timeout: float = 600.0,
+    rate_limit: int = 120,
+    academic_only: bool = True,
+) -> list[Prediction]:
+    """Run bibtex-check subprocess and return raw predictions (no pre-screening)."""
+    start_time = time.time()
 
     # Use a directory we control to avoid cleanup race on timeout
     tmpdir = tempfile.mkdtemp()
@@ -190,29 +212,6 @@ def run_bibtex_check(
         import shutil
 
         shutil.rmtree(tmpdir, ignore_errors=True)
-
-    # Fill in missing predictions (entries not in output)
-    predicted_keys = {p.bibtex_key for p in predictions}
-    for entry in entries:
-        if entry.bibtex_key not in predicted_keys:
-            reason = (
-                f"bibtex-check timed out ({checked}/{len(entries)} completed)"
-                if timed_out
-                else "Entry not in bibtex-check output"
-            )
-            predictions.append(
-                Prediction(
-                    bibtex_key=entry.bibtex_key,
-                    label="VALID",
-                    confidence=0.5,
-                    reason=reason,
-                    wall_clock_seconds=elapsed / len(entries),
-                )
-            )
-
-    # Merge pre-screening results with tool predictions (unless skipped)
-    if not skip_prescreening:
-        predictions = merge_with_predictions(entries, predictions, prescreen_results)
 
     return predictions
 

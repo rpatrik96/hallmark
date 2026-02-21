@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Scrape valid BibTeX entries from conference proceedings via DBLP.
+"""Scrape valid BibTeX entries from conference proceedings via DBLP.  [data-collection]
 
 Usage:
     python scripts/scrape_proceedings.py --venues NeurIPS ICML ICLR \

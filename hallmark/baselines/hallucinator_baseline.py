@@ -116,10 +116,11 @@ def run_hallucinator(
     h_path = Path(hallucinator_path)
     script = h_path / "check_hallucinated_references.py"
     if not script.exists():
-        raise FileNotFoundError(
-            f"hallucinator not found at {h_path}. "
-            "Clone from: https://github.com/gianlucasb/hallucinator"
+        logger.error(
+            "hallucinator not found at %s. Clone from: https://github.com/gianlucasb/hallucinator",
+            h_path,
         )
+        return fallback_predictions(entries, reason="Fallback: hallucinator unavailable")
 
     # Create a temporary PDF with references
     with tempfile.NamedTemporaryFile(suffix=".pdf", delete=False) as f:
