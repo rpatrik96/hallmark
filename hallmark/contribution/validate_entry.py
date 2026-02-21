@@ -159,13 +159,17 @@ def _is_duplicate(
     title_threshold: float = 0.95,
 ) -> bool:
     """Check if two entries are duplicates based on title similarity."""
-    from rapidfuzz import fuzz  # lazy import: not needed for basic validation
-
     title1 = entry.fields.get("title", "").lower().strip()
     title2 = existing.fields.get("title", "").lower().strip()
 
     if not title1 or not title2:
         return False
 
-    similarity = fuzz.token_sort_ratio(title1, title2) / 100.0
-    return similarity >= title_threshold
+    try:
+        from rapidfuzz import fuzz
+
+        similarity = fuzz.token_sort_ratio(title1, title2) / 100.0
+        return similarity >= title_threshold
+    except ImportError:
+        # Fallback: exact match when rapidfuzz is not installed
+        return title1 == title2

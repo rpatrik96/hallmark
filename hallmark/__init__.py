@@ -14,6 +14,8 @@ from hallmark.dataset.schema import (
     EvaluationResult,
     HallucinationType,
     Prediction,
+    load_predictions,
+    save_predictions,
 )
 from hallmark.evaluation.metrics import evaluate
 
@@ -25,5 +27,7 @@ __all__ = [
     "Prediction",
     "__version__",
     "evaluate",
+    "load_predictions",
     "load_split",
+    "save_predictions",
 ]

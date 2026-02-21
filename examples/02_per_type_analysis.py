@@ -2,9 +2,14 @@
 """Example 2: Analyzing detection performance by hallucination type.
 
 This example shows how to:
-1. Load entries and filter by type/tier
-2. Evaluate per-type and per-tier performance
-3. Identify which hallucination types are hardest to detect
+1. Load entries and convert to BlindEntry for prediction
+2. Build a simple DOI-based detector using only BlindEntry fields
+3. Evaluate per-type and per-tier performance
+4. Identify which hallucination types are hardest to detect
+
+NOTE: The evaluate() function receives the original BenchmarkEntry objects
+(with ground truth) alongside your predictions for metrics computation.
+Your prediction logic must only use BlindEntry fields.
 """
 
 from hallmark.dataset.loader import filter_by_tier, load_split
@@ -16,31 +21,41 @@ from hallmark.evaluation.metrics import (
 )
 
 
-def simulate_doi_baseline(entries):
-    """Simulate the DOI-only baseline using ground-truth subtests."""
+def doi_presence_baseline(blind_entries):
+    """Simple DOI-presence baseline using only BlindEntry fields.
+
+    Predicts HALLUCINATED when no DOI is present. This is a trivial
+    heuristic — real tools would resolve the DOI and cross-check metadata.
+    """
     predictions = {}
-    for e in entries:
-        doi = e.fields.get("doi")
+    for entry in blind_entries:
+        doi = entry.fields.get("doi")
         if not doi:
-            predictions[e.bibtex_key] = Prediction(
-                bibtex_key=e.bibtex_key, label="VALID", confidence=0.5
+            predictions[entry.bibtex_key] = Prediction(
+                bibtex_key=entry.bibtex_key,
+                label="HALLUCINATED",
+                confidence=0.6,
+                reason="No DOI field present",
             )
         else:
-            doi_ok = e.subtests.get("doi_resolves", True) if e.subtests else True
-            predictions[e.bibtex_key] = Prediction(
-                bibtex_key=e.bibtex_key,
-                label="VALID" if doi_ok else "HALLUCINATED",
+            predictions[entry.bibtex_key] = Prediction(
+                bibtex_key=entry.bibtex_key,
+                label="VALID",
                 confidence=0.8,
+                reason="DOI present (not verified)",
             )
     return predictions
 
 
 def main():
     entries = load_split("dev_public")
-    pred_map = simulate_doi_baseline(entries)
 
-    # Per-tier analysis
-    print("=== Per-Tier Detection Rates (DOI-only baseline) ===\n")
+    # Convert to blind entries for prediction (hides ground truth)
+    blind_entries = [e.to_blind() for e in entries]
+    pred_map = doi_presence_baseline(blind_entries)
+
+    # Per-tier analysis (uses original entries for ground truth)
+    print("=== Per-Tier Detection Rates (DOI-presence baseline) ===\n")
     tier_m = per_tier_metrics(entries, pred_map)
     for tier in [1, 2, 3]:
         m = tier_m.get(tier, {})

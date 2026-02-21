@@ -293,7 +293,7 @@ class Prediction:
 
     bibtex_key: str
     label: Literal["VALID", "HALLUCINATED", "UNCERTAIN"]
-    confidence: float  # [0, 1]
+    confidence: float = 0.5  # [0, 1]; defaults to 0.5 (maximum entropy)
     reason: str = ""  # free-text explanation
     subtest_results: dict[str, bool | None] = field(default_factory=dict)
     api_sources_queried: list[str] = field(default_factory=list)

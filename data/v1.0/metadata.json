@@ -2,7 +2,7 @@
     "version": "1.0",
     "build_date": "2026-02-20",
     "seed": 8042,
-    "total_entries": 2466,
+    "total_entries": 2436,
     "splits": {
         "dev_public": {
             "file": "dev_public.jsonl",
@@ -41,37 +41,13 @@
         },
         "test_public": {
             "file": "test_public.jsonl",
-            "total": 828,
-            "valid": 295,
-            "hallucinated": 533,
-            "tier_distribution": {
-                "1": 144,
-                "2": 255,
-                "3": 134
-            },
-            "type_distribution": {
-                "arxiv_version_mismatch": 29,
-                "chimeric_title": 33,
-                "fabricated_doi": 51,
-                "future_date": 29,
-                "hybrid_fabrication": 41,
-                "merged_citation": 30,
-                "near_miss_title": 31,
-                "nonexistent_venue": 31,
-                "partial_author_list": 30,
-                "placeholder_authors": 31,
-                "plausible_fabrication": 76,
-                "preprint_as_published": 29,
-                "swapped_authors": 59,
-                "wrong_venue": 33
-            },
+            "total": 798,
             "generation_methods": {
                 "adversarial": 59,
-                "canary": 1,
-                "llm_generated": 91,
-                "perturbation": 349,
+                "llm_generated": 85,
+                "perturbation": 333,
                 "real_world": 34,
-                "scraped": 294
+                "scraped": 287
             }
         },
         "stress_test": {
@@ -96,29 +72,6 @@
         "test_hidden": {
             "file": "test_hidden.jsonl",
             "total": 453,
-            "valid": 200,
-            "hallucinated": 253,
-            "tier_distribution": {
-                "1": 69,
-                "2": 115,
-                "3": 69
-            },
-            "type_distribution": {
-                "arxiv_version_mismatch": 15,
-                "chimeric_title": 15,
-                "fabricated_doi": 24,
-                "future_date": 15,
-                "hybrid_fabrication": 15,
-                "merged_citation": 15,
-                "near_miss_title": 15,
-                "nonexistent_venue": 15,
-                "partial_author_list": 15,
-                "placeholder_authors": 15,
-                "plausible_fabrication": 39,
-                "preprint_as_published": 15,
-                "swapped_authors": 25,
-                "wrong_venue": 15
-            },
             "generation_methods": {
                 "adversarial": 6,
                 "llm_generated": 77,

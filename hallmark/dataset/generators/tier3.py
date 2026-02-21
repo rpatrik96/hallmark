@@ -340,7 +340,8 @@ def generate_arxiv_version_mismatch(
         "doi_resolves": True if has_doi else None,  # DOI resolves to the real paper; N/A if no DOI
         "title_exists": True,
         "authors_match": True,
-        "venue_correct": True,
+        # wrong_venue was explicitly set above; the venue does not match the real paper.
+        "venue_correct": False,
         "fields_complete": True,
         "cross_db_agreement": False,  # venue/year don't match what DOI resolves to
     }

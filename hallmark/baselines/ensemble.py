@@ -95,7 +95,11 @@ def _weighted_vote(
         # hall_fraction = sum(w_i * conf_i for HALL) / sum(w_i) is a confidence-weighted
         # average, not a majority vote. The threshold thus represents a minimum
         # confidence-weighted proportion, not a vote count.
-        if pred.label == "HALLUCINATED":
+        if pred.label == "UNCERTAIN":
+            # UNCERTAIN = tool couldn't decide — exclude from vote entirely
+            total_weight -= w  # Don't count this tool's weight
+            reasons.append(f"{name}: UNCERTAIN ({pred.confidence:.2f})")
+        elif pred.label == "HALLUCINATED":
             hall_weight += w * pred.confidence
             reasons.append(f"{name}: HALL ({pred.confidence:.2f})")
         else:
@@ -132,7 +136,7 @@ def _max_confidence(
 
     for _name, pred_map in indexed.items():
         pred = pred_map.get(entry.bibtex_key)
-        if pred and pred.confidence > best_confidence:
+        if pred and pred.label != "UNCERTAIN" and pred.confidence > best_confidence:
             best_confidence = pred.confidence
             best_pred = pred
 
@@ -169,6 +173,13 @@ def _mean_confidence(
     for name, pred_map in indexed.items():
         pred = pred_map.get(entry.bibtex_key)
         if pred is None:
+            continue
+
+        if pred.label == "UNCERTAIN":
+            # UNCERTAIN = tool couldn't decide — exclude from mean computation entirely
+            reasons.append(f"{name}: UNCERTAIN ({pred.confidence:.2f})")
+            total_time += pred.wall_clock_seconds
+            total_api_calls += pred.api_calls
             continue
 
         if pred.label == "HALLUCINATED":

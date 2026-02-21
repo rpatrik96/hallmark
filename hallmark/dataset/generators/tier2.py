@@ -191,7 +191,10 @@ def generate_merged_citation(
         "doi_resolves": entry_b.doi is not None,
         "title_exists": True,
         "authors_match": False,
-        "venue_correct": True,
+        # Venue comes from entry_c (or entry_a), not from entry_b whose title is used.
+        # The merged entry attributes entry_b's title to a different paper's venue, so
+        # the venue does not match what entry_b was actually published at.
+        "venue_correct": False,
         "fields_complete": True,
         "cross_db_agreement": False,
     }
@@ -207,6 +210,10 @@ def generate_partial_author_list(
 
     Keeps first and last author, drops middle co-authors. Common in LLM outputs
     when the model remembers only prominent authors.
+
+    Raises:
+        ValueError: If the entry has fewer than 2 authors and cannot produce a
+            genuinely different partial list. Callers should skip such entries.
     """
     rng = rng or random.Random()
     new_entry = _clone_entry(entry)
@@ -228,11 +235,12 @@ def generate_partial_author_list(
         # Drop one author randomly
         new_entry.fields["author"] = authors[rng.randint(0, 1)]
     else:
-        # Single author — can't reduce further, swap initial format instead
-        # e.g., "John Smith" -> "J. Smith"
-        parts = authors[0].split()
-        if len(parts) >= 2 and len(parts[0]) > 1:
-            new_entry.fields["author"] = f"{parts[0][0]}. {' '.join(parts[1:])}"
+        # Single author (or empty) — cannot produce a meaningfully different partial
+        # list without fabricating data. Skip these entries at the call site.
+        raise ValueError(
+            f"Cannot generate partial_author_list for entry '{entry.bibtex_key}': "
+            f"found {len(authors)} author(s); need at least 2 to drop one."
+        )
 
     new_entry.label = "HALLUCINATED"
     new_entry.hallucination_type = HallucinationType.PARTIAL_AUTHOR_LIST.value

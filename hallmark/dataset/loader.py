@@ -173,8 +173,10 @@ def filter_by_date_range(
     norm_start = _normalize_date(start_date) if start_date else None
     norm_end = _normalize_date(end_date) if end_date else None
     result = []
+    n_missing_date = 0
     for e in entries:
         if not e.publication_date:
+            n_missing_date += 1
             continue
         norm_entry = _normalize_date(e.publication_date)
         if norm_start and norm_entry < norm_start:
@@ -182,11 +184,18 @@ def filter_by_date_range(
         if norm_end and norm_entry > norm_end:
             continue
         result.append(e)
-    n_dropped = len(entries) - len(result)
-    if n_dropped > 0:
+    if n_missing_date > 0:
         logger.warning(
             "filter_by_date_range: dropped %d entries with missing publication_date",
-            n_dropped,
+            n_missing_date,
+        )
+    n_out_of_range = len(entries) - len(result) - n_missing_date
+    if n_out_of_range > 0:
+        logger.info(
+            "filter_by_date_range: filtered %d entries outside [%s, %s]",
+            n_out_of_range,
+            start_date or "...",
+            end_date or "...",
         )
     return result
 

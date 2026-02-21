@@ -187,9 +187,9 @@ def main(argv: list[str] | None = None) -> int:
     )
     lb_parser.add_argument(
         "--sort-by",
-        default="f1",
-        choices=["f1", "mcc", "tw_f1", "detection_rate", "ece"],
-        help="Metric to sort leaderboard by (default: f1)",
+        default="cov_f1",
+        choices=["f1", "cov_f1", "mcc", "tw_f1", "detection_rate", "ece"],
+        help="Metric to sort leaderboard by (default: cov_f1)",
     )
     lb_parser.add_argument(
         "--format",
@@ -388,7 +388,7 @@ def _cmd_evaluate(args: argparse.Namespace) -> int:
             tool_name = Path(args.predictions).stem
     elif args.baseline:
         try:
-            predictions = _run_baseline(args.baseline, entries)
+            predictions = _run_baseline(args.baseline, entries, split=args.split)
         except (ImportError, ValueError) as e:
             logging.error(
                 f"Baseline '{args.baseline}' is not available: {e}\n"
@@ -427,6 +427,14 @@ def _cmd_evaluate(args: argparse.Namespace) -> int:
         compute_ci=args.ci,
     )
 
+    if result.coverage < 1.0:
+        logging.warning(
+            "Coverage is %.1f%% (%d/%d entries). Missing predictions are treated as VALID.",
+            result.coverage * 100,
+            int(result.coverage * result.num_entries),
+            result.num_entries,
+        )
+
     # Build pred_map once (needed for confusion matrix and detailed sections)
     pred_map = {p.bibtex_key: p for p in predictions}
 
@@ -445,7 +453,7 @@ def _cmd_evaluate(args: argparse.Namespace) -> int:
         print(f"{'=' * 60}")
 
         # Stress-test split notice: all entries are hallucinated by design
-        if result.num_valid == 0 or result.split_name == "stress_test":
+        if result.num_valid == 0:
             print("  Note: stress_test contains only hallucinated entries (no valid references).")
             print("  FPR and specificity are undefined. Use detection rate as the primary metric.")
             print(f"{'─' * 60}")
@@ -669,6 +677,7 @@ def _cmd_stats(args: argparse.Namespace) -> int:
 # Mapping from --sort-by choices to result dict field names
 _LEADERBOARD_SORT_FIELDS: dict[str, str] = {
     "f1": "f1_hallucination",
+    "cov_f1": "coverage_adjusted_f1",
     "mcc": "mcc",
     "tw_f1": "tier_weighted_f1",
     "detection_rate": "detection_rate",
@@ -918,12 +927,14 @@ def _cmd_list_baselines() -> int:
     print(f"  {'─' * 81}")
 
     for name, info in sorted(registry.items()):
-        avail, _msg = check_available(name)
+        avail, msg = check_available(name)
         avail_str = "yes" if avail else "NO"
         free_str = "yes" if info.is_free else "no"
         print(
             f"  {name:<22}{avail_str:<12}{free_str:<8}{info.confidence_type:<16}{info.description}"
         )
+        if not avail:
+            print(f"    -> {msg}")
 
     print(f"{'=' * 85}\n")
     return 0
@@ -1092,7 +1103,9 @@ def _cmd_diagnose(args: argparse.Namespace) -> int:
         true_label = entry.label
         confidence = f"{pred.confidence:.2f}" if pred and pred.confidence is not None else "N/A"
         reason = (pred.reason or "") if pred else ""
-        reason_trunc = reason if args.full else reason[:80]
+        reason_trunc = (
+            reason if args.full else (reason[:80] + "..." if len(reason) > 80 else reason)
+        )
         h_type = entry.hallucination_type or "valid"
         tier = str(entry.difficulty_tier) if entry.difficulty_tier is not None else "-"
 
@@ -1133,11 +1146,13 @@ def _cmd_diagnose(args: argparse.Namespace) -> int:
     return 0
 
 
-def _run_baseline(name: str, entries: list[BenchmarkEntry]) -> list[Prediction]:
+def _run_baseline(
+    name: str, entries: list[BenchmarkEntry], split: str | None = None
+) -> list[Prediction]:
     """Run a baseline via the registry."""
     from hallmark.baselines.registry import run_baseline
 
-    return run_baseline(name, entries)
+    return run_baseline(name, entries, split=split)
 
 
 if __name__ == "__main__":

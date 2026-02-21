@@ -340,21 +340,36 @@ def per_tier_metrics(
     entries: list[BenchmarkEntry],
     predictions: dict[str, Prediction],
 ) -> dict[int, dict[str, float]]:
-    """Compute metrics broken down by difficulty tier."""
-    tier_entries: dict[int, list[BenchmarkEntry]] = defaultdict(list)
+    """Compute metrics broken down by difficulty tier.
+
+    VALID entries (difficulty_tier=None) are included in ALL tiers' FPR
+    denominators, not assigned to tier 1. This ensures each tier reports a
+    meaningful FPR rather than tier 1 absorbing all false positives and tiers
+    2-3 showing 0.0 FPR.
+
+    For each tier the confusion matrix is built from:
+    - hallucinated entries of that tier (for detection rate / recall)
+    - ALL valid entries across all tiers (for FPR)
+    """
+    # Separate valid from hallucinated entries
+    valid_entries = [e for e in entries if e.label == "VALID"]
+    hall_by_tier: dict[int, list[BenchmarkEntry]] = defaultdict(list)
     for entry in entries:
-        tier = entry.difficulty_tier or 1
-        tier_entries[tier].append(entry)
+        if entry.label == "HALLUCINATED":
+            tier = entry.difficulty_tier or 1
+            hall_by_tier[tier].append(entry)
 
     result = {}
-    for tier, tier_e in sorted(tier_entries.items()):
+    for tier, hall_e in sorted(hall_by_tier.items()):
+        # Each tier uses its own hallucinated entries + all valid entries
+        tier_e = hall_e + valid_entries
         cm = build_confusion_matrix(tier_e, predictions)
         result[tier] = {
             "detection_rate": cm.detection_rate,
             "false_positive_rate": cm.false_positive_rate,
             "f1": cm.f1,
             "precision": cm.precision,
-            "count": len(tier_e),
+            "count": len(hall_e),  # report hallucinated-only count per tier
         }
     return result
 
@@ -460,7 +475,7 @@ def per_generation_method_metrics(
 def cost_efficiency(predictions: list[Prediction]) -> dict[str, float | None]:
     """Compute cost efficiency metrics."""
     if not predictions:
-        return {"entries_per_second": 0.0, "mean_api_calls": 0.0}
+        return {"entries_per_second": 0.0, "mean_api_calls": 0.0, "total_wall_clock_seconds": 0.0}
 
     total_time = sum(p.wall_clock_seconds for p in predictions)
     total_api_calls = sum(p.api_calls for p in predictions)
@@ -1173,7 +1188,13 @@ def paired_bootstrap_test(
             metric_b_boot = metric_fn(resampled_entries, resampled_preds_b)
             bootstrap_diffs.append(metric_a_boot - metric_b_boot)
 
-    # One-sided p-value: fraction of bootstrap samples where delta <= 0
+    # One-sided p-value: fraction of bootstrap samples where delta <= 0.
+    # Note: this implementation is conservative — it counts bootstrap diffs
+    # against the raw null (delta <= 0) rather than the null-centered approach
+    # (d - observed_diff <= 0). The null-centered method would be unbiased
+    # (matching the permutation-test philosophy), but the conservative approach
+    # is acceptable for a benchmark leaderboard where we prefer to under-report
+    # significance rather than over-report it. This is a deliberate design choice.
     p_value_one_sided = (
         float(np.mean([d <= 0 for d in bootstrap_diffs])) if bootstrap_diffs else 1.0
     )
@@ -1469,13 +1490,19 @@ def compare_tools(
             preds_a = tool_predictions[name_a]
             preds_b = tool_predictions[name_b]
 
+            # Derive a unique seed per pair so each pair uses a distinct
+            # resampling pattern. Without this, every pair uses identical
+            # bootstrap samples (same seed), which, while not technically wrong
+            # (pairs are independent), is statistically undesirable.
+            pair_seed = (seed + hash((name_a, name_b))) % (2**31)
+
             obs_diff, p_value_two_sided, effect_size = paired_bootstrap_test(
                 entries,
                 preds_a,
                 preds_b,
                 metric_fn,
                 n_bootstrap=n_bootstrap,
-                seed=seed,
+                seed=pair_seed,
                 two_sided=True,
             )
 
