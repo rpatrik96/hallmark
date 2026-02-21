@@ -174,7 +174,7 @@ def convert_to_benchmark_entry(dblp_entry: dict[str, Any], seq_id: int) -> dict[
         "doi_resolves": bool(doi),
         "title_exists": True,
         "authors_match": True,
-        "venue_real": True,
+        "venue_correct": True,
         "fields_complete": bool(authors and title and venue and year_str),
         "cross_db_agreement": bool(doi),  # If DOI exists, CrossRef can verify
     }

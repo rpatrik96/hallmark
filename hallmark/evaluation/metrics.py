@@ -43,7 +43,7 @@ from collections import defaultdict
 from collections.abc import Callable
 from dataclasses import dataclass
 
-from hallmark.dataset.schema import BenchmarkEntry, EvaluationResult, Prediction
+from hallmark.dataset.schema import BenchmarkEntry, EvaluationResult, Prediction, is_canary_entry
 
 logger = logging.getLogger(__name__)
 
@@ -416,7 +416,7 @@ def per_generation_method_metrics(
     return result
 
 
-def cost_efficiency(predictions: list[Prediction]) -> dict[str, float]:
+def cost_efficiency(predictions: list[Prediction]) -> dict[str, float | None]:
     """Compute cost efficiency metrics."""
     if not predictions:
         return {"entries_per_second": 0.0, "mean_api_calls": 0.0}
@@ -426,7 +426,7 @@ def cost_efficiency(predictions: list[Prediction]) -> dict[str, float]:
     n = len(predictions)
 
     return {
-        "entries_per_second": n / total_time if total_time > 0 else float("inf"),
+        "entries_per_second": n / total_time if total_time > 0 else None,
         "mean_api_calls": total_api_calls / n,
         "total_wall_clock_seconds": total_time,
     }
@@ -1029,15 +1029,20 @@ def paired_bootstrap_test(
     metric_fn: Callable[[list[BenchmarkEntry], list[Prediction]], float],
     n_bootstrap: int = 10_000,
     seed: int = 42,
+    two_sided: bool = True,
 ) -> tuple[float, float, float]:
     """Paired bootstrap significance test with stratified resampling by hallucination type.
 
-    Returns (observed_diff, p_value_one_sided, effect_size_cohens_h).
+    Returns (observed_diff, p_value, effect_size_cohens_h).
     H0: metric_A <= metric_B.
 
-    The p-value is **one-sided**: p = fraction of bootstrap resamples where
-    delta (metric_A - metric_B) <= 0. This tests the directional hypothesis
-    that tool A is better than tool B. For a two-sided test, double the p-value.
+    When ``two_sided=True`` (default), the returned p-value is two-sided:
+    p = 2 * fraction of bootstrap resamples where delta (metric_A - metric_B) <= 0,
+    capped at 1.0. This tests whether the two tools differ in either direction.
+
+    When ``two_sided=False``, the p-value is one-sided: p = fraction of bootstrap
+    resamples where delta <= 0. This tests the directional hypothesis that tool A
+    is better than tool B.
 
     Resampling is stratified by hallucination type, matching the approach in
     ``stratified_bootstrap_ci``. Each bootstrap iteration resamples within each
@@ -1050,11 +1055,13 @@ def paired_bootstrap_test(
         metric_fn: Function that takes (entries, predictions) and returns a scalar metric.
         n_bootstrap: Number of bootstrap resamples.
         seed: Random seed for reproducibility.
+        two_sided: If True (default), return a two-sided p-value (one-sided * 2, capped at 1.0).
+            If False, return the one-sided p-value directly.
 
     Returns:
-        Tuple (observed_diff, p_value_one_sided, effect_size_cohens_h).
+        Tuple (observed_diff, p_value, effect_size_cohens_h).
         - observed_diff: metric_A - metric_B on original data
-        - p_value_one_sided: P(delta <= 0 | H0) under bootstrap distribution (one-sided)
+        - p_value: two-sided p-value if ``two_sided=True``, one-sided otherwise
         - effect_size_cohens_h: Cohen's h effect size (2 * (arcsin(sqrt(p_a)) - arcsin(sqrt(p_b))))
     """
     try:
@@ -1114,6 +1121,7 @@ def paired_bootstrap_test(
     p_value_one_sided = (
         float(np.mean([d <= 0 for d in bootstrap_diffs])) if bootstrap_diffs else 1.0
     )
+    p_value = min(1.0, 2.0 * p_value_one_sided) if two_sided else p_value_one_sided
 
     # Cohen's h effect size
     if 0.0 <= metric_a <= 1.0 and 0.0 <= metric_b <= 1.0:
@@ -1121,7 +1129,7 @@ def paired_bootstrap_test(
     else:
         cohens_h = metric_a - metric_b  # fallback for non-proportion metrics
 
-    return (observed_diff, p_value_one_sided, float(cohens_h))
+    return (observed_diff, p_value, float(cohens_h))
 
 
 def tier_weight_sensitivity(
@@ -1369,9 +1377,8 @@ def compare_tools(
     For C(n,2) tool pairs, runs ``paired_bootstrap_test`` and then applies
     ``apply_multiple_comparison_correction`` to the collected p-values.
 
-    Note: ``paired_bootstrap_test`` returns a one-sided p-value (see its docstring).
-    The ``p_value_raw`` and ``p_value_adjusted`` keys in the output reflect this
-    one-sided interpretation.
+    Note: ``paired_bootstrap_test`` is called with ``two_sided=True`` (the default).
+    The ``p_value_raw`` and ``p_value_adjusted`` keys in the output are two-sided p-values.
 
     Args:
         entries: Benchmark entries (ground truth).
@@ -1384,7 +1391,7 @@ def compare_tools(
     Returns:
         List of dicts with keys: tool_a, tool_b, observed_diff, p_value_raw,
         p_value_adjusted, effect_size, significant.
-        p_value_raw and p_value_adjusted are one-sided p-values.
+        p_value_raw and p_value_adjusted are two-sided p-values.
     """
     if metric_fn is None:
 
@@ -1406,18 +1413,24 @@ def compare_tools(
             preds_a = tool_predictions[name_a]
             preds_b = tool_predictions[name_b]
 
-            obs_diff, p_value_one_sided, effect_size = paired_bootstrap_test(
-                entries, preds_a, preds_b, metric_fn, n_bootstrap=n_bootstrap, seed=seed
+            obs_diff, p_value_two_sided, effect_size = paired_bootstrap_test(
+                entries,
+                preds_a,
+                preds_b,
+                metric_fn,
+                n_bootstrap=n_bootstrap,
+                seed=seed,
+                two_sided=True,
             )
 
             pair_key = f"{name_a}_vs_{name_b}"
-            raw_p_values[pair_key] = p_value_one_sided
+            raw_p_values[pair_key] = p_value_two_sided
             raw_results.append(
                 {
                     "tool_a": name_a,
                     "tool_b": name_b,
                     "observed_diff": obs_diff,
-                    "p_value_raw": p_value_one_sided,
+                    "p_value_raw": p_value_two_sided,
                     "effect_size": effect_size,
                     "_pair_key": pair_key,
                 }
@@ -1442,6 +1455,8 @@ def evaluate(
     split_name: str = "unknown",
     predictions_per_strategy: list[dict[str, Prediction]] | None = None,
     compute_ci: bool = False,
+    n_bootstrap: int = 10_000,
+    ci_seed: int = 42,
 ) -> EvaluationResult:
     """Run full evaluation and return aggregated results.
 
@@ -1459,12 +1474,16 @@ def evaluate(
         split_name: Name of the benchmark split.
         predictions_per_strategy: Optional list of prediction dicts for detect@k.
         compute_ci: If True, compute bootstrap confidence intervals (requires numpy).
+        n_bootstrap: Number of bootstrap resamples for CIs (default 10_000).
+        ci_seed: Random seed for bootstrap CI computation (default 42).
 
     Returns:
         EvaluationResult with primary metrics (DR, FPR, F1, TW-F1, ECE),
         per-tier and per-type breakdowns, count of UNCERTAIN predictions,
         and optionally bootstrap CIs for primary metrics.
     """
+    entries = [e for e in entries if not is_canary_entry(e)]
+
     # Warn on duplicate bibtex_keys before dict conversion (last prediction wins)
     seen_keys: set[str] = set()
     duplicate_keys: list[str] = []
@@ -1514,6 +1533,8 @@ def evaluate(
             100 * len(overlap) / len(entry_keys),
         )
 
+    coverage = len(pred_map) / len(entries) if entries else 1.0
+
     cm = build_confusion_matrix(entries, pred_map)
     tw_f1 = tier_weighted_f1(entries, pred_map)
     tier_metrics = per_tier_metrics(entries, pred_map)
@@ -1552,8 +1573,8 @@ def evaluate(
         all_cis = _bootstrap_all_cis(
             entries,
             predictions,
-            n_bootstrap=10_000,
-            seed=42,
+            n_bootstrap=n_bootstrap,
+            seed=ci_seed,
             alpha=0.05,
         )
         detection_rate_ci = all_cis["detection_rate"]
@@ -1563,6 +1584,9 @@ def evaluate(
         ece_ci = all_cis["ece"]
         mcc_ci = all_cis["mcc"]
 
+    f1_hallucination = cm.f1
+    coverage_adjusted_f1 = f1_hallucination * coverage
+
     return EvaluationResult(
         tool_name=tool_name,
         split_name=split_name,
@@ -1571,7 +1595,7 @@ def evaluate(
         num_valid=num_valid,
         detection_rate=cm.detection_rate,
         false_positive_rate=fpr,
-        f1_hallucination=cm.f1,
+        f1_hallucination=f1_hallucination,
         tier_weighted_f1=tw_f1,
         mcc=cm.mcc,
         macro_f1=cm.macro_f1,
@@ -1590,4 +1614,6 @@ def evaluate(
         fpr_ci=fpr_ci,
         ece_ci=ece_ci,
         mcc_ci=mcc_ci,
+        coverage=coverage,
+        coverage_adjusted_f1=coverage_adjusted_f1,
     )

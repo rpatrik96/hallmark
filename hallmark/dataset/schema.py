@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import logging
+import math
 from dataclasses import asdict, dataclass, field, fields
 from enum import Enum
 from pathlib import Path
@@ -126,6 +127,9 @@ class BlindEntry:
     fields: dict[str, str]
     raw_bibtex: str | None = None
 
+    def __post_init__(self) -> None:
+        self.fields = dict(self.fields)
+
     def to_bibtex(self) -> str:
         """Reconstruct BibTeX string from fields."""
         if self.raw_bibtex:
@@ -179,6 +183,7 @@ class BenchmarkEntry:
 
     def __post_init__(self) -> None:
         """Validate entry after creation."""
+        self.fields = dict(self.fields)
         if self.label not in ("VALID", "HALLUCINATED"):
             raise ValueError(
                 f"Invalid BenchmarkEntry label: {self.label!r}. Must be 'VALID' or 'HALLUCINATED'."
@@ -188,6 +193,15 @@ class BenchmarkEntry:
                 raise ValueError("Hallucinated entries must have a hallucination_type")
             if self.difficulty_tier is None:
                 raise ValueError("Hallucinated entries must have a difficulty_tier")
+            if self.hallucination_type is not None:
+                valid_values = {t.value for t in HallucinationType}
+                if self.hallucination_type not in valid_values:
+                    logger.warning(
+                        "Unknown hallucination_type %r for entry %r; "
+                        "not in HallucinationType enum. Continuing for forward compatibility.",
+                        self.hallucination_type,
+                        self.bibtex_key,
+                    )
         if self.label == "VALID" and self.hallucination_type is not None:
             raise ValueError("Valid entries must not have a hallucination_type")
 
@@ -258,7 +272,7 @@ class BenchmarkEntry:
         return BlindEntry(
             bibtex_key=self.bibtex_key,
             bibtex_type=self.bibtex_type,
-            fields=self.fields,
+            fields=dict(self.fields),
             raw_bibtex=self.raw_bibtex,
         )
 
@@ -293,6 +307,8 @@ class Prediction:
             raise ValueError(
                 f"Invalid Prediction label: {self.label!r}. Must be one of {_VALID_LABELS}."
             )
+        if math.isnan(self.confidence) or math.isinf(self.confidence):
+            raise ValueError(f"Confidence must be a finite number, got {self.confidence}")
         if not 0.0 <= self.confidence <= 1.0:
             raise ValueError(f"Confidence must be in [0, 1], got {self.confidence}")
 
@@ -357,6 +373,10 @@ class EvaluationResult:
     # Per-type breakdown
     per_type_metrics: dict[str, dict[str, float]] = field(default_factory=dict)
 
+    # Coverage metrics
+    coverage: float = 1.0  # fraction of entries with predictions
+    coverage_adjusted_f1: float = 0.0  # F1 * coverage, penalizes selective abstention
+
     def to_dict(self) -> dict:
         return asdict(self)
 
@@ -401,13 +421,16 @@ class EvaluationResult:
         return cls(**data)
 
     def summary(self) -> dict[str, float | None]:
-        """Return only the 5 primary metrics as a flat dict."""
+        """Return the primary metrics as a flat dict."""
         return {
             "detection_rate": self.detection_rate,
             "fpr": self.false_positive_rate,
             "f1_hallucination": self.f1_hallucination,
             "tier_weighted_f1": self.tier_weighted_f1,
             "ece": self.ece,
+            "mcc": self.mcc,
+            "coverage": self.coverage,
+            "coverage_adjusted_f1": self.coverage_adjusted_f1,
         }
 
     @classmethod

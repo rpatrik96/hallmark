@@ -152,6 +152,10 @@ See [`examples/03_custom_baseline.py`](examples/03_custom_baseline.py) for a com
 | `wall_clock_seconds` | No | Cost efficiency |
 | `api_calls` | No | Mean API calls |
 
+**UNCERTAIN label**: `UNCERTAIN` is accepted as a prediction label. `UNCERTAIN` predictions are treated as `VALID` for confusion-matrix metrics (conservative default) and excluded from AUROC/AUPRC. Prefer `VALID` or `HALLUCINATED` with calibrated confidence when possible.
+
+**Confidence semantics**: `confidence` = P(your predicted label is correct). If you predict `HALLUCINATED` with 0.9, you claim 90% certainty it is hallucinated. If you predict `VALID` with 0.8, you claim 80% certainty it is valid. This is NOT P(HALLUCINATED).
+
 ## Hallucination Taxonomy
 
 ### Tier 1: Easy (detectable by simple API lookup)
@@ -169,7 +173,7 @@ See [`examples/03_custom_baseline.py`](examples/03_custom_baseline.py) for a com
 |------|-------------|---------|
 | `chimeric_title` | Real author + fabricated title | Real authors, plausible but non-existent paper |
 | `wrong_venue` | Real paper, wrong venue/year | Correct title but at ICML not NeurIPS |
-| `author_mismatch` | Author list swapped or fabricated | Correct title, wrong author list |
+| `author_mismatch` | Author list swapped or fabricated (data value: `swapped_authors`) | Correct title, wrong author list |
 | `preprint_as_published` | arXiv paper cited as venue paper | Correct paper, fabricated venue acceptance |
 | `hybrid_fabrication` | Real DOI + fabricated metadata | Valid DOI resolves but authors/title don't match |
 | `merged_citation` | Metadata from 2-3 papers merged | Authors from paper A, title from paper B |
@@ -232,7 +236,7 @@ Each entry is a JSON object in JSONL format:
     "doi_resolves": true,
     "title_exists": true,
     "authors_match": true,
-    "venue_real": true,
+    "venue_correct": true,
     "fields_complete": true,
     "cross_db_agreement": true
   }
@@ -249,6 +253,7 @@ Each entry is a JSON object in JSONL format:
 | **Tier-weighted F1** | F1 weighted by difficulty (Tier 3 = 3x weight) |
 | **ECE** | Expected Calibration Error — measures confidence calibration quality |
 | **detect@k** | Fraction detected using k verification strategies (deterministic and order-dependent, unlike the stochastic pass@k) |
+| **MCC** | Matthews Correlation Coefficient — prevalence-invariant; use as primary metric when comparing results across splits |
 
 ## Baseline Results (dev_public, 1,063 entries)
 

@@ -24,6 +24,8 @@ from hallmark.dataset.schema import (
 )
 from hallmark.evaluation.metrics import EvaluationResult, build_confusion_matrix, evaluate
 
+_SPLIT_CHOICES = ["dev_public", "test_public", "test_hidden", "stress_test"]
+
 
 def _format_csv(result: EvaluationResult) -> str:
     """Format evaluation result as a CSV row with header."""
@@ -71,7 +73,7 @@ def main(argv: list[str] | None = None) -> int:
     eval_parser.add_argument(
         "--split",
         default="dev_public",
-        choices=["dev_public", "test_public", "test_hidden", "stress_test"],
+        choices=_SPLIT_CHOICES,
         help="Benchmark split to evaluate on",
     )
     eval_parser.add_argument(
@@ -148,7 +150,7 @@ def main(argv: list[str] | None = None) -> int:
     stats_parser.add_argument(
         "--split",
         default="dev_public",
-        choices=["dev_public", "test_public", "stress_test"],
+        choices=_SPLIT_CHOICES,
     )
     stats_parser.add_argument("--data-dir", type=str, help="Override data directory")
     stats_parser.add_argument("--version", default="v1.0", help="Dataset version")
@@ -158,7 +160,7 @@ def main(argv: list[str] | None = None) -> int:
     lb_parser.add_argument(
         "--split",
         default="test_public",
-        choices=["dev_public", "test_public"],
+        choices=_SPLIT_CHOICES,
     )
     lb_parser.add_argument(
         "--results-dir",
@@ -207,7 +209,7 @@ def main(argv: list[str] | None = None) -> int:
     diag_parser.add_argument(
         "--split",
         required=True,
-        choices=["dev_public", "test_public", "test_hidden", "stress_test"],
+        choices=_SPLIT_CHOICES,
     )
     diag_parser.add_argument("--predictions", required=True, help="Path to predictions JSONL")
     diag_parser.add_argument("--type", default=None, help="Filter to specific hallucination type")
@@ -216,6 +218,20 @@ def main(argv: list[str] | None = None) -> int:
     )
     diag_parser.add_argument("--data-dir", type=str, help="Override data directory")
     diag_parser.add_argument("--version", default="v1.0", help="Dataset version")
+
+    # --- validate-predictions ---
+    vp_parser = subparsers.add_parser(
+        "validate-predictions", help="Validate a predictions JSONL file"
+    )
+    vp_parser.add_argument("--file", required=True, type=str, help="Path to predictions JSONL file")
+    vp_parser.add_argument(
+        "--split",
+        default=None,
+        choices=_SPLIT_CHOICES,
+        help="Benchmark split to validate bibtex_keys against (optional)",
+    )
+    vp_parser.add_argument("--data-dir", type=str, help="Override data directory")
+    vp_parser.add_argument("--version", default="v1.0", help="Dataset version")
 
     # --- history-append ---
     hist_parser = subparsers.add_parser(
@@ -259,6 +275,8 @@ def main(argv: list[str] | None = None) -> int:
         return _cmd_history_append(args)
     elif args.command == "validate-results":
         return _cmd_validate_results(args)
+    elif args.command == "validate-predictions":
+        return _cmd_validate_predictions(args)
 
     return 0
 
@@ -344,7 +362,7 @@ def _cmd_evaluate(args: argparse.Namespace) -> int:
                 file=sys.stderr,
             )
             print(f"First 10 missing: {sorted(missing)[:10]}", file=sys.stderr)
-            sys.exit(1)
+            return 1
 
     # Evaluate
     result = evaluate(
@@ -371,11 +389,13 @@ def _cmd_evaluate(args: argparse.Namespace) -> int:
         print(f"  HALLMARK Evaluation: {result.tool_name}")
         print(f"  Split: {result.split_name}")
         print(f"{'=' * 60}")
+        prevalence = result.num_hallucinated / result.num_entries if result.num_entries else 0
         print(f"  Entries:          {result.num_entries}")
-        print(f"  Hallucinated:     {result.num_hallucinated}")
+        print(f"  Hallucinated:     {result.num_hallucinated} ({prevalence:.1%})")
         print(f"  Valid:            {result.num_valid}")
         if result.num_uncertain > 0:
             print(f"  Uncertain:        {result.num_uncertain}")
+        print("  NOTE: Prevalence varies across splits. Use MCC for cross-split comparison.")
 
         # Confusion matrix
         cm = build_confusion_matrix(entries, pred_map)
@@ -397,6 +417,9 @@ def _cmd_evaluate(args: argparse.Namespace) -> int:
         if result.fpr_ci:
             print(f"    95% CI: [{result.fpr_ci[0]:.3f}, {result.fpr_ci[1]:.3f}]")
         print(f"  F1 (Halluc.):     {result.f1_hallucination:.3f}")
+        print(f"  Coverage:         {result.coverage:.1%}")
+        if result.coverage < 1.0:
+            print(f"  Cov-adj F1:       {result.coverage_adjusted_f1:.3f}")
         if result.f1_hallucination_ci:
             print(
                 f"    95% CI: [{result.f1_hallucination_ci[0]:.3f}, {result.f1_hallucination_ci[1]:.3f}]"
@@ -620,6 +643,7 @@ def _cmd_leaderboard(args: argparse.Namespace) -> int:
     else:
         print(f"\n{'=' * 70}")
         print(f"  HALLMARK Leaderboard: {args.split}  (sorted by {args.sort_by})")
+        print("  NOTE: Use MCC for cross-split comparison (prevalence-invariant).")
         print(f"{'=' * 70}")
         print(f"  {'Rank':<6}{'Tool':<25}{'F1':<8}{'DR':<8}{'FPR':<8}{'TW-F1':<8}{'MCC':<8}")
         print(f"  {'─' * 70}")
@@ -647,19 +671,21 @@ def _cmd_list_baselines() -> int:
     from hallmark.baselines.registry import check_available, get_registry
 
     registry = get_registry()
-    print(f"\n{'=' * 70}")
+    print(f"\n{'=' * 85}")
     print("  HALLMARK Registered Baselines")
-    print(f"{'=' * 70}")
-    print(f"  {'Name':<22}{'Available':<12}{'Free':<8}{'Description'}")
-    print(f"  {'─' * 66}")
+    print(f"{'=' * 85}")
+    print(f"  {'Name':<22}{'Available':<12}{'Free':<8}{'Confidence':<16}{'Description'}")
+    print(f"  {'─' * 81}")
 
     for name, info in sorted(registry.items()):
         avail, _msg = check_available(name)
         avail_str = "yes" if avail else "NO"
         free_str = "yes" if info.is_free else "no"
-        print(f"  {name:<22}{avail_str:<12}{free_str:<8}{info.description}")
+        print(
+            f"  {name:<22}{avail_str:<12}{free_str:<8}{info.confidence_type:<16}{info.description}"
+        )
 
-    print(f"{'=' * 70}\n")
+    print(f"{'=' * 85}\n")
     return 0
 
 
@@ -715,6 +741,77 @@ def _cmd_validate_results(args: argparse.Namespace) -> int:
 
     print("\nValidation passed.")
     return 0
+
+
+def _cmd_validate_predictions(args: argparse.Namespace) -> int:
+    """Validate a predictions JSONL file."""
+    pred_file = Path(args.file)
+    if not pred_file.exists():
+        logging.error(f"File not found: {pred_file}")
+        return 1
+
+    errors: list[str] = []
+    valid_preds: list[Prediction] = []
+
+    with open(pred_file) as f:
+        for lineno, line in enumerate(f, 1):
+            line = line.strip()
+            if not line:
+                continue
+            try:
+                data = json.loads(line)
+            except json.JSONDecodeError as e:
+                errors.append(f"Line {lineno}: JSON parse error: {e}")
+                continue
+            try:
+                pred = Prediction.from_dict(data)
+                valid_preds.append(pred)
+            except Exception as e:
+                errors.append(f"Line {lineno}: Schema error: {e}")
+
+    # Coverage check against split if requested
+    coverage_info: str = ""
+    if args.split is not None:
+        try:
+            entries = load_split(
+                split=args.split,
+                version=args.version,
+                data_dir=args.data_dir,
+            )
+            entry_keys = {e.bibtex_key for e in entries}
+            pred_keys = {p.bibtex_key for p in valid_preds}
+            covered = pred_keys & entry_keys
+            missing = entry_keys - pred_keys
+            extra = pred_keys - entry_keys
+            coverage_info = (
+                f"\n  Split coverage ({args.split}):"
+                f"\n    Entries in split:  {len(entry_keys)}"
+                f"\n    Predictions matched: {len(covered)}"
+                f"\n    Missing predictions: {len(missing)}"
+                f"\n    Extra keys (not in split): {len(extra)}"
+            )
+            if missing:
+                coverage_info += f"\n    First 10 missing: {sorted(missing)[:10]}"
+        except FileNotFoundError as e:
+            logging.warning(f"Could not load split for coverage check: {e}")
+
+    total = len(valid_preds) + len(errors)
+    print(f"\n{'=' * 60}")
+    print(f"  HALLMARK Validate Predictions: {pred_file.name}")
+    print(f"{'=' * 60}")
+    print(f"  Total lines processed: {total}")
+    print(f"  Valid predictions:     {len(valid_preds)}")
+    print(f"  Invalid:               {len(errors)}")
+    if coverage_info:
+        print(coverage_info)
+    if errors:
+        print(f"\n{'─' * 60}")
+        print("  Errors:")
+        for err in errors:
+            print(f"    {err}")
+    print(f"{'=' * 60}\n")
+
+    return 1 if errors else 0
 
 
 def _cmd_diagnose(args: argparse.Namespace) -> int:

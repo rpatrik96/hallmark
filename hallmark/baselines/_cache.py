@@ -24,6 +24,8 @@ T = TypeVar("T")
 
 _DEFAULT_CACHE_DIR = Path.home() / ".cache" / "hallmark"
 
+_BENCHMARK_VERSION = "1.0"
+
 # Sentinel object used to distinguish "key absent" from a cached falsy value.
 _MISSING: object = object()
 
@@ -113,16 +115,17 @@ def cached_call(
         The cached or freshly computed value.
     """
     d = cache_dir or _cache_dir()
-    db_path = str(d / namespace)
+    versioned_namespace = f"{namespace}:v{_BENCHMARK_VERSION}"
+    db_path = str(d / versioned_namespace)
 
     cached = _locked_shelve_read(db_path, key)
     if cached is not _MISSING:
-        logger.debug("Cache hit: %s/%s", namespace, key[:12])
+        logger.debug("Cache hit: %s/%s", versioned_namespace, key[:12])
         return cached  # type: ignore[return-value,no-any-return]
 
     result: T = fn()
     _locked_shelve_write(db_path, key, result)
-    logger.debug("Cache miss: %s/%s — stored", namespace, key[:12])
+    logger.debug("Cache miss: %s/%s — stored", versioned_namespace, key[:12])
     return result
 
 
@@ -174,12 +177,34 @@ def retry_with_backoff(
     raise last_exc  # type: ignore[misc]
 
 
-def clear_cache(namespace: str, cache_dir: Path | None = None) -> None:
-    """Remove all cached entries for *namespace*."""
+def clear_cache(namespace: str | None = None, cache_dir: Path | None = None) -> None:
+    """Remove cached entries for *namespace*, or all entries if *namespace* is None.
+
+    The versioned shelve files (e.g. ``doi_only:v1.0``) are matched by prefix
+    when *namespace* is given, so callers pass the bare namespace name (e.g.
+    ``"doi_only"``) without the version suffix.
+    """
     d = cache_dir or _cache_dir()
-    db_path = d / namespace
-    for suffix in ("", ".db", ".dir", ".bak", ".dat", ".lock"):
-        p = db_path.with_suffix(suffix) if suffix else db_path
-        if p.exists():
-            p.unlink()
-            logger.info("Removed cache file: %s", p)
+    if namespace is None:
+        candidates = list(d.iterdir())
+    else:
+        versioned_prefix = f"{namespace}:v"
+        candidates = [p for p in d.iterdir() if p.name.startswith(versioned_prefix)]
+
+    removed: set[Path] = set()
+    for p in candidates:
+        # shelve may append .db/.dir/.bak/.dat; group by stem to avoid double-logging
+        stem = p
+        for suffix in (".db", ".dir", ".bak", ".dat"):
+            if p.name.endswith(suffix):
+                stem = p.with_suffix("")
+                break
+        if stem in removed:
+            continue
+        # Remove all shelve-related files for this stem
+        for suffix in ("", ".db", ".dir", ".bak", ".dat", ".lock"):
+            target = Path(str(stem) + suffix) if suffix else stem
+            if target.exists():
+                target.unlink()
+                logger.info("Removed cache file: %s", target)
+        removed.add(stem)

@@ -58,7 +58,7 @@ def generate_fabricated_doi(
         "doi_resolves": False,
         "title_exists": True,
         "authors_match": True,
-        "venue_real": True,
+        "venue_correct": True,
         "fields_complete": True,
         "cross_db_agreement": False,
     }
@@ -90,7 +90,7 @@ def generate_nonexistent_venue(
         "doi_resolves": True if has_doi else None,
         "title_exists": True,
         "authors_match": True,
-        "venue_real": False,
+        "venue_correct": False,
         "fields_complete": True,
         "cross_db_agreement": False,
     }
@@ -115,7 +115,7 @@ def generate_placeholder_authors(
         "doi_resolves": True if has_doi else None,
         "title_exists": True,
         "authors_match": False,
-        "venue_real": True,
+        "venue_correct": True,
         "fields_complete": True,
         "cross_db_agreement": False,
     }
@@ -149,7 +149,7 @@ def generate_future_date(
         "doi_resolves": True if has_doi else None,
         "title_exists": True,
         "authors_match": True,
-        "venue_real": True,
+        "venue_correct": True,
         "fields_complete": False,  # future year = malformed metadata
         "cross_db_agreement": False,
     }

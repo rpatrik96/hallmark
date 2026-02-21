@@ -53,6 +53,7 @@ def run_doi_only(
     entries: list[BlindEntry],
     timeout_per_doi: float = 10.0,
     skip_prescreening: bool = False,
+    reference_year: int | None = None,
 ) -> list[Prediction]:
     """Run DOI-only verification on all entries.
 
@@ -63,9 +64,14 @@ def run_doi_only(
         entries: Benchmark entries to verify.
         timeout_per_doi: Timeout per DOI resolution request (default: 10.0).
         skip_prescreening: Skip pre-screening checks (default: False).
+        reference_year: Upper bound year for future-date detection. When None,
+            defaults to the current calendar year. Pass an explicit value for
+            reproducible evaluation runs.
     """
     # Run pre-screening before DOI checks to catch obvious hallucinations
-    prescreen_results = prescreen_entries(entries) if not skip_prescreening else {}
+    prescreen_results = (
+        prescreen_entries(entries, reference_year=reference_year) if not skip_prescreening else {}
+    )
 
     predictions = []
 

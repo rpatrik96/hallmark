@@ -129,7 +129,7 @@ def classify_hallucination(
         "doi_resolves": False,
         "title_exists": False,
         "authors_match": False,
-        "venue_real": True,
+        "venue_correct": True,
         "fields_complete": True,
         "cross_db_agreement": False,
     }
@@ -231,7 +231,7 @@ def classify_hallucination(
     if "publication doesn't exist" in comment_lower or (
         "journal" in comment_lower and "doesn't exist" in comment_lower
     ):
-        subtests["venue_real"] = False
+        subtests["venue_correct"] = False
         return HallucinationType.NONEXISTENT_VENUE, subtests
 
     # Complete fabrication (no matches at all)

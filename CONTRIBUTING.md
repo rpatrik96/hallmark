@@ -23,7 +23,7 @@ Hallucinated entries must:
 
 **Tier 1 (Easy):** `fabricated_doi`, `nonexistent_venue`, `placeholder_authors`, `future_date`
 
-**Tier 2 (Medium):** `chimeric_title`, `wrong_venue`, `author_mismatch` (covers swapped and fabricated authors), `preprint_as_published`, `hybrid_fabrication`
+**Tier 2 (Medium):** `chimeric_title`, `wrong_venue`, `author_mismatch` (covers swapped and fabricated authors; data value: `swapped_authors`), `preprint_as_published`, `hybrid_fabrication`
 
 **Tier 3 (Hard):** `near_miss_title`, `plausible_fabrication`, `arxiv_version_mismatch`
 

@@ -88,7 +88,7 @@ def _weighted_vote(
         total_weight += w
 
         if pred is None:
-            valid_weight += w  # Missing = assume valid (unweighted by confidence)
+            total_weight -= w  # Missing prediction: exclude from vote entirely
             continue
 
         # Confidence-weighted voting: each tool's vote is scaled by its confidence.
@@ -188,16 +188,14 @@ def _mean_confidence(
             reason="No predictions available",
         )
 
-    mean_hall = sum(hall_confidences) / len(hall_confidences) if hall_confidences else 0.0
-    mean_valid = sum(valid_confidences) / len(valid_confidences) if valid_confidences else 0.0
-    n_total = len(hall_confidences) + len(valid_confidences)
-    if n_total > 0:
-        weighted_hall = (len(hall_confidences) / n_total) * mean_hall
-        weighted_valid = (len(valid_confidences) / n_total) * mean_valid
-        is_hallucinated = weighted_hall > weighted_valid
-    else:
-        is_hallucinated = False
-    confidence = mean_hall if is_hallucinated else mean_valid
+    # Compute per-prediction hallucination scores on a common [0, 1] scale:
+    # hall_score = confidence      if HALLUCINATED
+    # hall_score = 1 - confidence  if VALID
+    # Then threshold the mean at 0.5.
+    hall_scores = hall_confidences + [1.0 - c for c in valid_confidences]
+    mean_hall_score = sum(hall_scores) / len(hall_scores)
+    is_hallucinated = mean_hall_score > 0.5
+    confidence = mean_hall_score if is_hallucinated else (1.0 - mean_hall_score)
 
     return Prediction(
         bibtex_key=entry.bibtex_key,

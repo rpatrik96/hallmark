@@ -52,6 +52,9 @@ class BaselineInfo:
     is_free: bool = True
     # Extra kwargs accepted by the runner
     runner_kwargs: dict[str, Any] = field(default_factory=dict)
+    # How confidence scores are produced: "probabilistic" (LLM self-reported),
+    # "heuristic" (rule-based), "binary" (fixed 0/1 values only)
+    confidence_type: str = "heuristic"
 
 
 # Global registry
@@ -60,6 +63,8 @@ _REGISTRY: dict[str, BaselineInfo] = {}
 
 def register(info: BaselineInfo) -> None:
     """Register a baseline."""
+    if info.name in _REGISTRY:
+        logger.warning("Overwriting existing baseline %r", info.name)
     _REGISTRY[info.name] = info
 
 
@@ -191,6 +196,7 @@ def _register_builtins() -> None:
             name="doi_presence_heuristic",
             description="Trivial heuristic: predict HALLUCINATED when DOI is absent",
             runner=_run_doi_presence_heuristic,
+            confidence_type="binary",
         )
     )
 
@@ -205,6 +211,7 @@ def _register_builtins() -> None:
             name="doi_only",
             description="Simple DOI resolution check via doi.org",
             runner=_run_doi_only,
+            confidence_type="binary",
         )
     )
 
@@ -219,6 +226,7 @@ def _register_builtins() -> None:
             name="doi_only_no_prescreening",
             description="DOI resolution check without pre-screening layer (ablation baseline)",
             runner=_run_doi_only_no_prescreening,
+            confidence_type="binary",
         )
     )
 
@@ -234,6 +242,7 @@ def _register_builtins() -> None:
             description="bibtex-check CLI: CrossRef, DBLP, Semantic Scholar",
             runner=_run_bibtexupdater,
             cli_commands=["bibtex-check"],
+            confidence_type="heuristic",
         )
     )
 
@@ -251,6 +260,7 @@ def _register_builtins() -> None:
             description="bibtex-check CLI without pre-screening layer (ablation baseline)",
             runner=_run_bibtexupdater_no_prescreening,
             cli_commands=["bibtex-check"],
+            confidence_type="heuristic",
         )
     )
 
@@ -266,6 +276,7 @@ def _register_builtins() -> None:
             description="HaRC: Semantic Scholar, DBLP, Google Scholar, Open Library",
             runner=_run_harc,
             cli_commands=["harcx"],
+            confidence_type="heuristic",
         )
     )
 
@@ -281,6 +292,7 @@ def _register_builtins() -> None:
             description="HaRC without pre-screening layer (ablation baseline)",
             runner=_run_harc_no_prescreening,
             cli_commands=["harcx"],
+            confidence_type="heuristic",
         )
     )
 
@@ -296,6 +308,7 @@ def _register_builtins() -> None:
             description="verify-citations: arXiv, ACL, S2, DBLP, Google Scholar, DuckDuckGo",
             runner=_run_verify_citations,
             cli_commands=["verify-citations"],
+            confidence_type="heuristic",
         )
     )
 
@@ -313,6 +326,7 @@ def _register_builtins() -> None:
             description="verify-citations without pre-screening layer (ablation baseline)",
             runner=_run_verify_citations_no_prescreening,
             cli_commands=["verify-citations"],
+            confidence_type="heuristic",
         )
     )
 
@@ -331,6 +345,7 @@ def _register_builtins() -> None:
             requires_api_key=True,
             is_free=False,
             env_var="OPENAI_API_KEY",
+            confidence_type="probabilistic",
         )
     )
 
@@ -349,6 +364,7 @@ def _register_builtins() -> None:
             requires_api_key=True,
             is_free=False,
             env_var="ANTHROPIC_API_KEY",
+            confidence_type="probabilistic",
         )
     )
 
@@ -377,6 +393,7 @@ def _register_builtins() -> None:
                 requires_api_key=True,
                 is_free=False,
                 env_var="OPENROUTER_API_KEY",
+                confidence_type="probabilistic",
             )
         )
 
@@ -409,6 +426,7 @@ def _register_builtins() -> None:
             name="ensemble",
             description="Weighted vote across available free baselines",
             runner=_run_ensemble,
+            confidence_type="heuristic",
         )
     )
 

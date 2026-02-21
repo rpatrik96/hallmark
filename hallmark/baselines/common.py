@@ -42,6 +42,7 @@ def run_with_prescreening(
     run_tool: Callable[[list[BlindEntry]], list[Prediction]],
     skip_prescreening: bool = False,
     backfill_reason: str = "Entry not in tool output",
+    reference_year: int | None = None,
 ) -> list[Prediction]:
     """Wrap a tool runner with pre-screening, backfill, and merge.
 
@@ -57,13 +58,18 @@ def run_with_prescreening(
             May return fewer predictions than entries (e.g. on timeout).
         skip_prescreening: Skip pre-screening checks.
         backfill_reason: Reason string for backfilled predictions.
+        reference_year: Upper bound year for future-date detection. When None,
+            defaults to the current calendar year. Pass an explicit value for
+            reproducible evaluation runs.
 
     Returns:
         Complete list of predictions (one per entry).
     """
     from hallmark.baselines.prescreening import merge_with_predictions, prescreen_entries
 
-    prescreen_results = prescreen_entries(entries) if not skip_prescreening else {}
+    prescreen_results = (
+        prescreen_entries(entries, reference_year=reference_year) if not skip_prescreening else {}
+    )
 
     predictions = run_tool(entries)
 

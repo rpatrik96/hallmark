@@ -12,6 +12,13 @@ from hallmark.dataset.schema import BenchmarkEntry, DifficultyTier, load_entries
 _PACKAGE_DIR = Path(__file__).parent.parent.parent
 DEFAULT_DATA_DIR = _PACKAGE_DIR / "data"
 
+SPLIT_PATHS: dict[str, str] = {
+    "dev_public": "dev_public.jsonl",
+    "test_public": "test_public.jsonl",
+    "stress_test": "stress_test.jsonl",
+    "test_hidden": "hidden/test_hidden.jsonl",
+}
+
 
 def _resolve_rolling_path(data_dir: Path, version: str, split: str) -> Path:
     """Resolve path for a rolling split.
@@ -59,8 +66,8 @@ def load_split(
 
     if version.startswith("rolling"):
         path = _resolve_rolling_path(data_dir, version, split)
-    elif split == "test_hidden":
-        path = data_dir / "hidden" / "test_hidden.jsonl"
+    elif split in SPLIT_PATHS:
+        path = data_dir / version / SPLIT_PATHS[split]
     else:
         path = data_dir / version / f"{split}.jsonl"
 
@@ -158,6 +165,8 @@ def filter_by_date_range(
     entry dates and filter bounds. Partial dates are normalized to YYYY-MM-DD
     before comparison so lexicographic ordering is correct.
     """
+    if start_date is None and end_date is None:
+        return list(entries)
     norm_start = _normalize_date(start_date) if start_date else None
     norm_end = _normalize_date(end_date) if end_date else None
     result = []

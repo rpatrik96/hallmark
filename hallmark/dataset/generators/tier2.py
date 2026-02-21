@@ -31,7 +31,7 @@ def generate_chimeric_title(
         "doi_resolves": True if has_doi else None,  # DOI still resolves to original paper
         "title_exists": False,
         "authors_match": True,
-        "venue_real": True,
+        "venue_correct": True,
         "fields_complete": True,
         "cross_db_agreement": False,
     }
@@ -66,7 +66,7 @@ def generate_wrong_venue(
         "doi_resolves": True if has_doi else None,
         "title_exists": True,
         "authors_match": True,
-        "venue_real": False,
+        "venue_correct": False,
         "fields_complete": True,
         "cross_db_agreement": False,  # venue mismatch causes cross-DB disagreement
     }
@@ -92,7 +92,7 @@ def generate_swapped_authors(
         "doi_resolves": True if has_doi else None,
         "title_exists": True,
         "authors_match": False,
-        "venue_real": True,
+        "venue_correct": True,
         "fields_complete": True,
         "cross_db_agreement": False,
     }
@@ -132,7 +132,7 @@ def generate_preprint_as_published(
         "doi_resolves": True if has_doi else None,  # real paper DOI resolves; N/A if no DOI
         "title_exists": True,
         "authors_match": True,
-        "venue_real": False,
+        "venue_correct": False,
         "fields_complete": True,
         "cross_db_agreement": False,  # fabricated venue causes cross-DB disagreement
     }
@@ -191,7 +191,7 @@ def generate_merged_citation(
         "doi_resolves": entry_b.doi is not None,
         "title_exists": True,
         "authors_match": False,
-        "venue_real": True,
+        "venue_correct": True,
         "fields_complete": True,
         "cross_db_agreement": False,
     }
@@ -246,7 +246,7 @@ def generate_partial_author_list(
         "doi_resolves": entry.doi is not None,
         "title_exists": True,
         "authors_match": False,  # partial list doesn't fully match
-        "venue_real": True,
+        "venue_correct": True,
         "fields_complete": True,
         "cross_db_agreement": False,
     }
@@ -299,7 +299,7 @@ def generate_hybrid_fabrication(
         "doi_resolves": True if has_doi else None,
         "title_exists": False,
         "authors_match": False,
-        "venue_real": True,
+        "venue_correct": True,
         "fields_complete": True,
         "cross_db_agreement": False,
     }
