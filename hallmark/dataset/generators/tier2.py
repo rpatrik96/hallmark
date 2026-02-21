@@ -78,7 +78,7 @@ def generate_wrong_venue(
 
 @register_generator(
     HallucinationType.AUTHOR_MISMATCH,
-    extra_args=("donor",),
+    extra_args=("donor_entry",),
     description="Correct title but authors from a different paper",
 )
 def generate_swapped_authors(
@@ -104,7 +104,7 @@ def generate_swapped_authors(
 
 @register_generator(
     HallucinationType.PREPRINT_AS_PUBLISHED,
-    extra_args=("wrong_venue",),
+    extra_args=("fake_venue",),
     description="arXiv preprint cited as if published at a venue",
 )
 def generate_preprint_as_published(
@@ -144,7 +144,7 @@ def generate_preprint_as_published(
 
 @register_generator(
     HallucinationType.MERGED_CITATION,
-    extra_args=("donor_b", "donor_c"),
+    extra_args=("entry_b", "entry_c"),
     description="Merge metadata from 2-3 real papers into one BibTeX entry",
 )
 def generate_merged_citation(

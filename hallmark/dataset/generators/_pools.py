@@ -1,6 +1,7 @@
 from __future__ import annotations
 
-# Real prestigious ML/AI venues — used by plausible_fabrication (tier3) and batch generators.
+# Real prestigious ML/AI venues — used by plausible_fabrication (tier3), batch generators,
+# and pipeline stages (_common.py).
 REAL_VENUES = [
     "NeurIPS",
     "ICML",
@@ -12,10 +13,15 @@ REAL_VENUES = [
     "EMNLP",
     "AISTATS",
     "UAI",
+    "IJCAI",
+    "COLT",
+    "KDD",
+    "WWW",
+    "SIGIR",
 ]
 
-# ML buzzwords for chimeric title generation in batch.py.
-ML_BUZZWORDS = [
+# Single ML buzzwords used for simple chimeric title construction in batch.py.
+ML_BUZZWORD_WORDS = [
     "Attention",
     "Transformer",
     "Diffusion",
@@ -26,6 +32,80 @@ ML_BUZZWORDS = [
     "Foundation Model",
     "Chain-of-Thought",
     "Mixture of Experts",
+]
+
+# Full chimeric title templates — plausible ML paper titles used by pipeline stages.
+CHIMERIC_TITLE_TEMPLATES = [
+    "Self-Attention Mechanisms for Low-Resource Temporal Reasoning",
+    "Cross-Modal Representation Learning in Heterogeneous Domains",
+    "Contrastive Self-Supervised Methods for Dense Prediction",
+    "Few-Shot Meta-Learning with Task-Adaptive Initialization",
+    "Diffusion-Based Generative Models for Molecular Design",
+    "Neural Architecture Search with Hardware Constraints",
+    "Multi-Task Transfer Learning Across Modalities",
+    "Graph Neural Network Architectures for Combinatorial Optimization",
+    "Prompt-Tuning Strategies for Instruction-Following Models",
+    "Retrieval-Augmented Generation for Long-Form Question Answering",
+    "Vision-Language Alignment via Contrastive Pre-Training",
+    "Causal Inference Methods for Treatment Effect Estimation",
+    "Federated Learning with Heterogeneous Client Distributions",
+    "Sparse Mixture-of-Experts for Efficient Inference",
+    "Test-Time Adaptation Under Distribution Shift",
+    "Token-Free Language Modeling with Character-Level Transformers",
+    "Reward Modeling for Alignment of Large Language Models",
+    "Low-Rank Adaptation for Parameter-Efficient Fine-Tuning",
+    "Continual Learning Without Catastrophic Forgetting",
+    "Efficient Attention via Linear Complexity Approximations",
+    "Denoising Diffusion Probabilistic Models for Image Restoration",
+    "Self-Supervised Speech Representation Learning",
+    "Equivariant Neural Networks for Physical Simulations",
+    "Bayesian Optimization for Hyperparameter Tuning",
+    "Multi-Agent Reinforcement Learning in Cooperative Settings",
+    "Knowledge Distillation for Model Compression",
+    "Adversarial Robustness Through Certified Defenses",
+    "Neural Radiance Fields for Novel View Synthesis",
+    "Temporal Graph Networks for Dynamic Interaction Modeling",
+    "Data Augmentation Strategies for Low-Resource NLP",
+    "Hierarchical Reinforcement Learning with Temporal Abstraction",
+    "Attention Mechanisms for Sequential Decision Making",
+    "Uncertainty Quantification in Deep Neural Networks",
+    "Efficient Transformer Architectures for Long Sequences",
+    "Multi-Modal Fusion for Visual Question Answering",
+    "Domain Adaptation via Adversarial Training",
+    "Neural Program Synthesis from Input-Output Examples",
+    "Explainable AI Through Attention Visualization",
+    "Graph Transformers for Molecular Property Prediction",
+    "Few-Shot Learning via Prototypical Networks",
+    "Meta-Reinforcement Learning for Task Distribution",
+    "Causal Discovery from Observational Data",
+    "Self-Supervised Learning for Medical Imaging",
+    "Neural Architecture Search with Evolutionary Algorithms",
+    "Multimodal Pre-Training for Vision and Language",
+    "Efficient Neural Network Pruning Techniques",
+    "Gradient-Based Meta-Learning for Quick Adaptation",
+    "Contrastive Learning for Self-Supervised Representation",
+    "Neural Ordinary Differential Equations for Time Series",
+    "Adversarial Training for Distribution Robustness",
+    "Knowledge Graph Completion via Relation Prediction",
+    "Transformer-Based Models for Code Generation",
+    "Curriculum Learning for Complex Task Training",
+    "Neural Scene Representation and Rendering",
+    "Multi-Agent Communication with Emergent Protocols",
+    "Active Learning Strategies for Label Efficiency",
+    "Deep Learning for Combinatorial Optimization Problems",
+    "Variational Autoencoders for Anomaly Detection",
+    "Neural Machine Translation with Attention",
+    "Graph Neural Networks for Traffic Forecasting",
+    "Reinforcement Learning from Human Feedback",
+    "Diffusion Models for High-Resolution Image Synthesis",
+    "Vision Transformers for Dense Prediction Tasks",
+    "Neural Architecture Search Under Resource Constraints",
+    "Self-Supervised Speech Representation via Contrastive Learning",
+    "Probabilistic Forecasting with Deep Learning",
+    "Neural Tangent Kernel Theory and Applications",
+    "Multi-Objective Optimization in Neural Architecture Search",
+    "Geometric Deep Learning on Manifolds and Graphs",
+    "Neural Sequence-to-Sequence Models with Copy Mechanism",
 ]
 
 # Provably fictional DOI prefixes (99990+, 88880+, 77770+, 66660+ ranges are unregistered).

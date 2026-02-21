@@ -5,7 +5,7 @@ from collections.abc import Callable
 
 from hallmark.dataset.schema import BenchmarkEntry
 
-from ._pools import ML_BUZZWORDS, REAL_VENUES
+from ._pools import ML_BUZZWORD_WORDS, REAL_VENUES
 from .tier1 import (
     generate_fabricated_doi,
     generate_future_date,
@@ -85,7 +85,7 @@ def generate_tier2_batch(
             fake_v = rng.choice(REAL_VENUES)
             results.append(generate_preprint_as_published(source, fake_v, rng))
         elif method == "chimeric_title":
-            buzzword = rng.choice(ML_BUZZWORDS)
+            buzzword = rng.choice(ML_BUZZWORD_WORDS)
             fake_title = (
                 f"{buzzword} for {rng.choice(['Classification', 'Generation', 'Reasoning'])}"
             )

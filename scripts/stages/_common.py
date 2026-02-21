@@ -18,101 +18,13 @@ from hallmark.dataset.generator import (
     generate_wrong_venue,
     is_preprint_source,
 )
+from hallmark.dataset.generators._pools import CHIMERIC_TITLE_TEMPLATES, REAL_VENUES
 from hallmark.dataset.generators._registry import get_generator, get_generator_func
 from hallmark.dataset.generators.tier1 import _current_reference_year
 from hallmark.dataset.schema import BenchmarkEntry, HallucinationType
 
-# ML buzzwords for chimeric titles
-ML_BUZZWORDS = [
-    "Self-Attention Mechanisms for Low-Resource Temporal Reasoning",
-    "Cross-Modal Representation Learning in Heterogeneous Domains",
-    "Contrastive Self-Supervised Methods for Dense Prediction",
-    "Few-Shot Meta-Learning with Task-Adaptive Initialization",
-    "Diffusion-Based Generative Models for Molecular Design",
-    "Neural Architecture Search with Hardware Constraints",
-    "Multi-Task Transfer Learning Across Modalities",
-    "Graph Neural Network Architectures for Combinatorial Optimization",
-    "Prompt-Tuning Strategies for Instruction-Following Models",
-    "Retrieval-Augmented Generation for Long-Form Question Answering",
-    "Vision-Language Alignment via Contrastive Pre-Training",
-    "Causal Inference Methods for Treatment Effect Estimation",
-    "Federated Learning with Heterogeneous Client Distributions",
-    "Sparse Mixture-of-Experts for Efficient Inference",
-    "Test-Time Adaptation Under Distribution Shift",
-    "Token-Free Language Modeling with Character-Level Transformers",
-    "Reward Modeling for Alignment of Large Language Models",
-    "Low-Rank Adaptation for Parameter-Efficient Fine-Tuning",
-    "Continual Learning Without Catastrophic Forgetting",
-    "Efficient Attention via Linear Complexity Approximations",
-    "Denoising Diffusion Probabilistic Models for Image Restoration",
-    "Self-Supervised Speech Representation Learning",
-    "Equivariant Neural Networks for Physical Simulations",
-    "Bayesian Optimization for Hyperparameter Tuning",
-    "Multi-Agent Reinforcement Learning in Cooperative Settings",
-    "Knowledge Distillation for Model Compression",
-    "Adversarial Robustness Through Certified Defenses",
-    "Neural Radiance Fields for Novel View Synthesis",
-    "Temporal Graph Networks for Dynamic Interaction Modeling",
-    "Data Augmentation Strategies for Low-Resource NLP",
-    "Hierarchical Reinforcement Learning with Temporal Abstraction",
-    "Attention Mechanisms for Sequential Decision Making",
-    "Uncertainty Quantification in Deep Neural Networks",
-    "Efficient Transformer Architectures for Long Sequences",
-    "Multi-Modal Fusion for Visual Question Answering",
-    "Domain Adaptation via Adversarial Training",
-    "Neural Program Synthesis from Input-Output Examples",
-    "Explainable AI Through Attention Visualization",
-    "Graph Transformers for Molecular Property Prediction",
-    "Few-Shot Learning via Prototypical Networks",
-    "Meta-Reinforcement Learning for Task Distribution",
-    "Causal Discovery from Observational Data",
-    "Self-Supervised Learning for Medical Imaging",
-    "Neural Architecture Search with Evolutionary Algorithms",
-    "Multimodal Pre-Training for Vision and Language",
-    "Efficient Neural Network Pruning Techniques",
-    "Gradient-Based Meta-Learning for Quick Adaptation",
-    "Contrastive Learning for Self-Supervised Representation",
-    "Neural Ordinary Differential Equations for Time Series",
-    "Adversarial Training for Distribution Robustness",
-    "Knowledge Graph Completion via Relation Prediction",
-    "Transformer-Based Models for Code Generation",
-    "Curriculum Learning for Complex Task Training",
-    "Neural Scene Representation and Rendering",
-    "Multi-Agent Communication with Emergent Protocols",
-    "Active Learning Strategies for Label Efficiency",
-    "Deep Learning for Combinatorial Optimization Problems",
-    "Variational Autoencoders for Anomaly Detection",
-    "Neural Machine Translation with Attention",
-    "Graph Neural Networks for Traffic Forecasting",
-    "Reinforcement Learning from Human Feedback",
-    "Diffusion Models for High-Resolution Image Synthesis",
-    "Vision Transformers for Dense Prediction Tasks",
-    "Neural Architecture Search Under Resource Constraints",
-    "Self-Supervised Speech Representation via Contrastive Learning",
-    "Probabilistic Forecasting with Deep Learning",
-    "Neural Tangent Kernel Theory and Applications",
-    "Multi-Objective Optimization in Neural Architecture Search",
-    "Geometric Deep Learning on Manifolds and Graphs",
-    "Neural Sequence-to-Sequence Models with Copy Mechanism",
-]
-
-VENUES = [
-    "NeurIPS",
-    "ICML",
-    "ICLR",
-    "AAAI",
-    "ACL",
-    "CVPR",
-    "ECCV",
-    "EMNLP",
-    "AISTATS",
-    "UAI",
-    "IJCAI",
-    "COLT",
-    "KDD",
-    "WWW",
-    "SIGIR",
-]
+# Backward-compatible alias: callers (scale_up, expand_hidden) import ML_BUZZWORDS from here.
+ML_BUZZWORDS = CHIMERIC_TITLE_TEMPLATES
 
 # Keys of fabricated entries in real_world_incidents.jsonl
 FAKE_REALWORLD_KEYS = {
@@ -169,7 +81,7 @@ def generate_for_type(
     # Types that need a venue candidate (different from current source venue)
     def _pick_venue() -> str:
         current = source.venue
-        candidates = [v for v in VENUES if v != current]
+        candidates = [v for v in REAL_VENUES if v != current]
         return rng.choice(candidates)
 
     # Assemble kwargs based on what the generator's extra_args declare,
@@ -192,7 +104,7 @@ def generate_for_type(
     elif hall_type == HallucinationType.PREPRINT_AS_PUBLISHED:
         preprint_sources = [e for e in valid_entries if is_preprint_source(e)]
         effective_source = rng.choice(preprint_sources) if preprint_sources else source
-        entry = generate_preprint_as_published(effective_source, rng.choice(VENUES), rng)
+        entry = generate_preprint_as_published(effective_source, rng.choice(REAL_VENUES), rng)
 
     elif hall_type == HallucinationType.MERGED_CITATION:
         donor_b = rng.choice(valid_entries)

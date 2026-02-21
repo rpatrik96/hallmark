@@ -360,4 +360,4 @@ class TestGeneratorRegistry:
         assert "fake_title" in spec_chimeric.extra_args
 
         spec_author = get_generator(HallucinationType.AUTHOR_MISMATCH)
-        assert "donor" in spec_author.extra_args
+        assert "donor_entry" in spec_author.extra_args
