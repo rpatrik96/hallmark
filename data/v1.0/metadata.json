@@ -2,21 +2,21 @@
   "version": "1.0",
   "build_date": "2026-02-20",
   "seed": 8042,
-  "total_entries": 2531,
+  "total_entries": 2525,
   "splits": {
     "dev_public": {
       "file": "dev_public.jsonl",
-      "total": 1122,
+      "total": 1119,
       "valid": 486,
-      "hallucinated": 636,
+      "hallucinated": 633,
       "tier_distribution": {
         "1": 155,
-        "2": 295,
+        "2": 292,
         "3": 186
       },
       "type_distribution": {
         "arxiv_version_mismatch": 30,
-        "chimeric_title": 46,
+        "chimeric_title": 43,
         "fabricated_doi": 39,
         "future_date": 30,
         "hybrid_fabrication": 45,
@@ -33,28 +33,28 @@
       "generation_methods": {
         "adversarial": 60,
         "llm_generated": 113,
-        "perturbation": 417,
+        "perturbation": 414,
         "real_world": 46,
         "scraped": 486
       },
-      "count": 1122
+      "count": 1119
     },
     "test_public": {
       "file": "test_public.jsonl",
-      "total": 834,
+      "total": 831,
       "generation_methods": {
         "adversarial": 59,
         "llm_generated": 90,
-        "perturbation": 364,
+        "perturbation": 361,
         "real_world": 34,
         "scraped": 287
       },
-      "count": 834,
+      "count": 831,
       "valid": 287,
-      "hallucinated": 547,
+      "hallucinated": 544,
       "type_distribution": {
         "arxiv_version_mismatch": 28,
-        "chimeric_title": 27,
+        "chimeric_title": 24,
         "fabricated_doi": 29,
         "future_date": 29,
         "hybrid_fabrication": 40,
@@ -70,7 +70,7 @@
       },
       "tier_distribution": {
         "1": 134,
-        "2": 246,
+        "2": 243,
         "3": 167
       }
     },

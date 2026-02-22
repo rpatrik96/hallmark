@@ -20,7 +20,7 @@ HALLMARK draws on best practices from established benchmarks:
 ## Features
 
 - **Hallucination taxonomy**: 14 types across 3 difficulty tiers (Easy / Medium / Hard)
-- **2,531 annotated entries**: 773 valid (from DBLP) + 1,183 hallucinated with ground truth (public splits)
+- **2,525 annotated entries**: 773 valid (from DBLP) + 1,177 hallucinated with ground truth (public splits)
 - **6 sub-tests per entry**: DOI resolution, title matching, author consistency, venue verification, field completeness, cross-database agreement
 - **Evaluation metrics**: Detection Rate, F1, tier-weighted F1, detect@k, ECE
 - **Built-in baselines**: DOI-only, bibtex-updater, LLM-based (OpenAI, Anthropic, OpenRouter), ensemble, HaRC, verify-citations (CiteVerifier and hallucinator are available as wrapper modules but not registered in the default registry)
@@ -193,8 +193,8 @@ See [`examples/03_custom_baseline.py`](examples/03_custom_baseline.py) for a com
 
 | Split | Valid | Hallucinated | Total | Purpose |
 |-------|-------|-------------|-------|---------|
-| `dev_public` | 486 | 636 | 1,122 | Development and tuning |
-| `test_public` | 287 | 547 | 834 | Public leaderboard |
+| `dev_public` | 486 | 633 | 1,119 | Development and tuning |
+| `test_public` | 287 | 544 | 831 | Public leaderboard |
 | `test_hidden` | — | — | 453 | Anti-gaming evaluation |
 | `stress_test` | 1 | 121 | 122 | Stress-test types depth |
 
@@ -289,7 +289,7 @@ blind_test   = [e.to_blind() for e in test_entries]
 predictions = run_title_oracle(blind_test, reference_pool=dev_entries)
 ```
 
-## Baseline Results (dev_public, 1,122 entries)
+## Baseline Results (dev_public, 1,119 entries)
 
 | Baseline | Detection Rate | F1 | Tier-weighted F1 | FPR | ECE |
 |----------|:---:|:---:|:---:|:---:|:---:|
