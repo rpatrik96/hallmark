@@ -1,20 +1,20 @@
 {
   "tool_name": "bibtexupdater",
   "split_name": "dev_public",
-  "num_entries": 1068,
-  "num_hallucinated": 582,
+  "num_entries": 1119,
+  "num_hallucinated": 633,
   "num_valid": 486,
-  "detection_rate": 0.12371134020618557,
-  "false_positive_rate": 0.0,
-  "f1_hallucination": 0.22018348623853212,
-  "tier_weighted_f1": 0.13106796116504854,
+  "detection_rate": 0.9462875197472354,
+  "false_positive_rate": 0.17901234567901234,
+  "f1_hallucination": 0.9082638362395754,
+  "tier_weighted_f1": 0.9363008442056792,
   "detect_at_k": {},
   "temporal_robustness": null,
-  "cost_efficiency": 1.0413094639517624,
-  "mean_api_calls": 0.0,
-  "ece": 0.018492509363295866,
-  "auroc": 0.5618556701030928,
-  "auprc": 0.6012394300938261,
+  "cost_efficiency": 0.2177017962836422,
+  "mean_api_calls": 1.3440571939231456,
+  "ece": 0.29691404384057346,
+  "auroc": 0.8725271260377456,
+  "auprc": 0.8695723088887855,
   "num_uncertain": 0,
   "detection_rate_ci": null,
   "f1_hallucination_ci": null,
@@ -22,125 +22,121 @@
   "fpr_ci": null,
   "ece_ci": null,
   "per_tier_metrics": {
-    "0": {
-      "detection_rate": 0.0,
-      "false_positive_rate": 0.0,
-      "f1": 0.0,
-      "precision": 0.0,
-      "count": 486
-    },
     "1": {
-      "detection_rate": 0.4177215189873418,
-      "false_positive_rate": 0.0,
-      "f1": 0.5892857142857143,
-      "precision": 1.0,
-      "count": 158
+      "detection_rate": 0.9675324675324676,
+      "false_positive_rate": 0.17901234567901234,
+      "f1": 0.764102564102564,
+      "precision": 0.6313559322033898,
+      "num_hallucinated": 154,
+      "num_valid": 486
     },
     "2": {
-      "detection_rate": 0.01090909090909091,
-      "false_positive_rate": 0.0,
-      "f1": 0.02158273381294964,
-      "precision": 1.0,
-      "count": 275
+      "detection_rate": 0.9554794520547946,
+      "false_positive_rate": 0.17901234567901234,
+      "f1": 0.8480243161094225,
+      "precision": 0.7622950819672131,
+      "num_hallucinated": 292,
+      "num_valid": 486
     },
     "3": {
-      "detection_rate": 0.020134228187919462,
-      "false_positive_rate": 0.0,
-      "f1": 0.03947368421052631,
-      "precision": 1.0,
-      "count": 149
+      "detection_rate": 0.9144385026737968,
+      "false_positive_rate": 0.17901234567901234,
+      "f1": 0.7685393258426966,
+      "precision": 0.6627906976744186,
+      "num_hallucinated": 187,
+      "num_valid": 486
     }
   },
   "per_type_metrics": {
     "arxiv_version_mismatch": {
-      "detection_rate": 0.0,
+      "detection_rate": 0.9666666666666667,
       "false_positive_rate": 0.0,
-      "f1": 0.0,
+      "f1": 0.983050847457627,
       "count": 30
     },
     "chimeric_title": {
-      "detection_rate": 0.0,
+      "detection_rate": 0.9767441860465116,
       "false_positive_rate": 0.0,
-      "f1": 0.0,
-      "count": 35
+      "f1": 0.988235294117647,
+      "count": 43
     },
     "fabricated_doi": {
-      "detection_rate": 0.5737704918032787,
+      "detection_rate": 0.9487179487179487,
       "false_positive_rate": 0.0,
-      "f1": 0.7291666666666666,
-      "count": 61
+      "f1": 0.9736842105263158,
+      "count": 39
     },
     "future_date": {
       "detection_rate": 1.0,
       "false_positive_rate": 0.0,
       "f1": 1.0,
-      "count": 31
+      "count": 30
     },
     "hybrid_fabrication": {
-      "detection_rate": 0.0,
+      "detection_rate": 0.9111111111111111,
       "false_positive_rate": 0.0,
-      "f1": 0.0,
-      "count": 46
+      "f1": 0.9534883720930233,
+      "count": 45
     },
     "merged_citation": {
-      "detection_rate": 0.0,
+      "detection_rate": 1.0,
       "false_positive_rate": 0.0,
-      "f1": 0.0,
+      "f1": 1.0,
       "count": 30
     },
     "near_miss_title": {
-      "detection_rate": 0.0,
+      "detection_rate": 0.926829268292683,
       "false_positive_rate": 0.0,
-      "f1": 0.0,
-      "count": 35
+      "f1": 0.9620253164556963,
+      "count": 41
     },
     "nonexistent_venue": {
-      "detection_rate": 0.0,
+      "detection_rate": 0.925,
       "false_positive_rate": 0.0,
-      "f1": 0.0,
-      "count": 32
+      "f1": 0.961038961038961,
+      "count": 40
     },
     "partial_author_list": {
-      "detection_rate": 0.0,
+      "detection_rate": 0.9,
       "false_positive_rate": 0.0,
-      "f1": 0.0,
+      "f1": 0.9473684210526316,
       "count": 30
     },
     "placeholder_authors": {
-      "detection_rate": 0.0,
+      "detection_rate": 1.0,
       "false_positive_rate": 0.0,
-      "f1": 0.0,
-      "count": 34
+      "f1": 1.0,
+      "count": 45
     },
     "plausible_fabrication": {
-      "detection_rate": 0.03571428571428571,
+      "detection_rate": 0.896551724137931,
       "false_positive_rate": 0.0,
-      "f1": 0.0689655172413793,
-      "count": 84
+      "f1": 0.9454545454545454,
+      "count": 116
     },
     "preprint_as_published": {
-      "detection_rate": 0.0,
+      "detection_rate": 1.0,
       "false_positive_rate": 0.0,
-      "f1": 0.0,
+      "f1": 1.0,
       "count": 31
     },
     "swapped_authors": {
-      "detection_rate": 0.04411764705882353,
+      "detection_rate": 0.9402985074626866,
       "false_positive_rate": 0.0,
-      "f1": 0.08450704225352113,
-      "count": 68
+      "f1": 0.9692307692307692,
+      "count": 67
     },
     "valid": {
       "detection_rate": 0.0,
-      "false_positive_rate": 0.0,
+      "false_positive_rate": 0.17901234567901234,
       "f1": 0.0,
       "count": 486
     },
     "wrong_venue": {
-      "detection_rate": 0.0,
+      "detection_rate": 0.9782608695652174,
       "false_positive_rate": 0.0,
-      "f1": 0.0,
-      "count": 35
+      "f1": 0.989010989010989,
+      "count": 46
     }
   }
 }

@@ -90,7 +90,7 @@ STATUS_TO_CONFIDENCE: dict[str, float] = {
 def run_bibtex_check(
     entries: list[BlindEntry],
     extra_args: list[str] | None = None,
-    timeout: float = 600.0,
+    timeout: float = 7200.0,
     rate_limit: int = 120,
     academic_only: bool = True,
     skip_prescreening: bool = False,
@@ -134,7 +134,7 @@ def run_bibtex_check(
 def _run_bibtex_check_subprocess(
     entries: list[BlindEntry],
     extra_args: list[str] | None = None,
-    timeout: float = 600.0,
+    timeout: float = 7200.0,
     rate_limit: int = 120,
     academic_only: bool = True,
 ) -> list[Prediction]:

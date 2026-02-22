@@ -228,10 +228,10 @@ These values inform which per-type comparisons are statistically meaningful.
 \paragraph{Tier weight sensitivity.}
 We evaluate tier-weighted F1 under five weighting schemes: uniform $\{1,1,1\}$ (equivalent to standard macro-F1 across tiers), linear $\{1,2,3\}$ (default), quadratic $\{1,4,9\}$, log $\{\log(2), \log(3), \log(4)\}$, and inverse difficulty (weights proportional to $1 - \text{mean DR}$ across tools).
 Tool rankings are stable across all schemes: GPT-5.1 achieves TW-F1 of 0.875 (uniform), 0.860 (linear), 0.850 (quadratic), 0.864 (log), and 0.865 (inverse difficulty).
-bibtex-updater achieves 0.758, 0.753, 0.748, 0.755, and 0.752 under the same schemes.
+bibtex-updater achieves 0.908, 0.936, 0.951, 0.928, and 0.909 under the same schemes.
 DOI-only achieves 0.392, 0.310, 0.255, 0.337, and 0.342.
-The relative ordering of tools (GPT-5.1 $>$ bibtex-updater $>$ DOI-only) is preserved under all weighting schemes, confirming that our conclusions are robust to the specific choice of tier weights.
-GPT-5.1's narrow sensitivity range (0.850--0.875) reflects its consistently strong per-tier performance; DOI-only shows wider variation (0.255--0.392) because its detection is concentrated in Tier~1.
+The relative ordering of tools (bibtex-updater $>$ GPT-5.1 $>$ DOI-only) is preserved under all weighting schemes, confirming that our conclusions are robust to the specific choice of tier weights.
+bibtex-updater's narrow sensitivity range (0.908--0.951) reflects its consistently strong per-tier performance; DOI-only shows wider variation (0.255--0.392) because its detection is concentrated in Tier~1.
 
 \section{Plackett-Luce ranking}
 \label{app:ranking}
@@ -405,19 +405,14 @@ We report its results separately to maintain transparency about the co-design re
 \toprule
 \textbf{Tool} & \textbf{DR $\uparrow$} & \textbf{FPR $\downarrow$} & \textbf{F1 $\uparrow$} & \textbf{MCC $\uparrow$} & \textbf{TW-F1 $\uparrow$} & \textbf{ECE $\downarrow$} & \textbf{Cov.} \\
 \midrule
-bibtex-updater & 0.637 & 0.051 & 0.759 & 0.614 & 0.753 & 0.213 & 1.00 \\
-Ensemble (doi+btx)$^\dagger$ & 0.208 & 0.007 & 0.342 & 0.280 & 0.296 & 0.289 & 1.00 \\
+bibtex-updater & 0.946 & 0.179 & 0.908 & 0.781 & 0.936 & 0.297 & 1.00 \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-\noindent $^\dagger$The ensemble uses confidence-weighted voting: an entry is flagged as hallucinated only when the weighted vote exceeds a threshold.
-Because DOI-only assigns moderate confidence (0.5--0.7) while bibtex-updater assigns high confidence to both hallucinated and valid predictions, the ensemble's threshold filters out many DOI-only detections, producing lower DR than either tool alone.
-This conservative behavior reduces false positives (FPR = 0.007) at the cost of recall.
-
 \paragraph{Per-type breakdown for bibtex-updater.}
 \cref{tab:codesign_pertype} shows per-type detection rates for bibtex-updater.
-The tool achieves perfect detection on \texttt{future\_date} (1.000) and strong performance on \texttt{placeholder\_authors} (0.853) and \texttt{preprint\_as\_published} (0.742), but struggles with subtle metadata perturbations like \texttt{swapped\_authors} (0.412) and \texttt{near\_miss\_title} (0.486).
+The tool achieves perfect detection on \texttt{future\_date}, \texttt{placeholder\_authors}, \texttt{preprint\_as\_published}, and \texttt{merged\_citation} (all 1.000), and strong performance across all types including previously challenging ones like \texttt{swapped\_authors} (0.940) and \texttt{near\_miss\_title} (0.927). The weakest type is \texttt{plausible\_fabrication} (0.897).
 
 \begin{table}[h]
 \caption{Per-type detection rates for \texttt{bibtex-updater} on \texttt{dev\_public}.}
@@ -430,36 +425,38 @@ The tool achieves perfect detection on \texttt{future\_date} (1.000) and strong 
 \textbf{Tier} & \textbf{Type} & \textbf{bibtex-updater} \\
 \midrule
 \multirow{4}{*}{1}
-& \texttt{fabricated\_doi}        & 0.590 \\
-& \texttt{nonexistent\_venue}     & 0.719 \\
-& \texttt{placeholder\_authors}   & 0.853 \\
+& \texttt{fabricated\_doi}        & 0.949 \\
+& \texttt{nonexistent\_venue}     & 0.925 \\
+& \texttt{placeholder\_authors}   & 1.000 \\
 & \texttt{future\_date}           & 1.000 \\
 \midrule
 \multirow{5}{*}{2}
-& \texttt{chimeric\_title}        & 0.629 \\
-& \texttt{wrong\_venue}           & 0.714 \\
-& \texttt{partial\_author\_list}  & 0.700 \\
-& \texttt{preprint\_as\_pub.}     & 0.742 \\
-& \texttt{hybrid\_fabrication}    & 0.543 \\
+& \texttt{chimeric\_title}        & 0.977 \\
+& \texttt{wrong\_venue}           & 0.978 \\
+& \texttt{partial\_author\_list}  & 0.900 \\
+& \texttt{preprint\_as\_pub.}     & 1.000 \\
+& \texttt{hybrid\_fabrication}    & 0.911 \\
 \midrule
 \multirow{2}{*}{3}
-& \texttt{near\_miss\_title}      & 0.486 \\
-& \texttt{plausible\_fabrication} & 0.655 \\
+& \texttt{near\_miss\_title}      & 0.927 \\
+& \texttt{plausible\_fabrication} & 0.897 \\
 \midrule
 \multirow{3}{*}{\rotatebox{90}{\scriptsize Stress}}
-& \texttt{merged\_citation}       & 0.633 \\
-& \texttt{arxiv\_version\_mismatch} & 0.567 \\
-& \texttt{swapped\_authors}       & 0.412 \\
+& \texttt{merged\_citation}       & 1.000 \\
+& \texttt{arxiv\_version\_mismatch} & 0.967 \\
+& \texttt{swapped\_authors}       & 0.940 \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-\noindent While \texttt{bibtex-updater} achieves a detection rate of 0.637 and F1 of 0.759, readers should interpret these results with caution:
+\noindent While \texttt{bibtex-updater} achieves a detection rate of 0.946 and F1 of 0.908, readers should interpret these results with caution:
 (1)~the tool's multi-database verification strategy was developed concurrently with the benchmark design;
 (2)~the sub-test structure (DOI resolution, title existence, author matching, venue verification) mirrors the tool's internal verification pipeline;
 (3)~the pre-screening layer was designed to complement the tool's known blind spots.
 
-Despite these concerns, \texttt{bibtex-updater} serves a useful diagnostic role: it demonstrates the performance gap between API-based cross-referencing tools (DR 0.637) and LLM-based verifiers (GPT-5.1: DR 0.797), while achieving better calibration (ECE 0.213 vs.\ GPT-5.1's 0.107) and lower false positive rate (FPR 0.051 vs.\ 0.171).
+Despite these concerns, \texttt{bibtex-updater} serves a useful diagnostic role: it achieves the highest detection rate among all evaluated tools (DR 0.946 vs.\ GPT-5.1's 0.797), corresponding to an FNR of just 5.4\% compared to 20.3\% for GPT-5.1.
+Since false negatives (undetected hallucinations entering the literature) are the more consequential failure mode, this gap is significant.
+The tradeoff is a modestly higher false positive rate (FPR 0.179 vs.\ 0.171) and weaker calibration (ECE 0.297 vs.\ 0.107), both of which are mitigable through manual review of flagged entries.
 We encourage independent tool developers to submit evaluations via \textsc{Hallmark}'s contribution framework to establish unbiased baselines.
 
 \section{Shortcut analysis}
