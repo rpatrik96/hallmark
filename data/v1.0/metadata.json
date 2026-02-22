@@ -2,77 +2,76 @@
   "version": "1.0",
   "build_date": "2026-02-20",
   "seed": 8042,
-  "total_entries": 2434,
+  "total_entries": 2531,
   "splits": {
     "dev_public": {
       "file": "dev_public.jsonl",
-      "total": 1061,
-      "valid": 487,
-      "hallucinated": 574,
+      "total": 1122,
+      "valid": 486,
+      "hallucinated": 636,
       "tier_distribution": {
-        "1": 127,
-        "2": 272,
-        "3": 175
+        "1": 155,
+        "2": 295,
+        "3": 186
       },
       "type_distribution": {
         "arxiv_version_mismatch": 30,
-        "chimeric_title": 34,
-        "fabricated_doi": 31,
+        "chimeric_title": 46,
+        "fabricated_doi": 39,
         "future_date": 30,
         "hybrid_fabrication": 45,
         "merged_citation": 30,
-        "near_miss_title": 35,
-        "nonexistent_venue": 31,
+        "near_miss_title": 41,
+        "nonexistent_venue": 40,
         "partial_author_list": 30,
-        "placeholder_authors": 34,
-        "plausible_fabrication": 111,
+        "placeholder_authors": 45,
+        "plausible_fabrication": 116,
         "preprint_as_published": 31,
         "swapped_authors": 67,
-        "wrong_venue": 35
+        "wrong_venue": 46
       },
       "generation_methods": {
         "adversarial": 60,
-        "canary": 1,
-        "llm_generated": 108,
-        "perturbation": 360,
-        "real_world": 48,
+        "llm_generated": 113,
+        "perturbation": 417,
+        "real_world": 46,
         "scraped": 486
       },
-      "count": 1061
+      "count": 1122
     },
     "test_public": {
       "file": "test_public.jsonl",
-      "total": 798,
+      "total": 834,
       "generation_methods": {
         "adversarial": 59,
-        "llm_generated": 85,
-        "perturbation": 333,
+        "llm_generated": 90,
+        "perturbation": 364,
         "real_world": 34,
         "scraped": 287
       },
-      "count": 798,
+      "count": 834,
       "valid": 287,
-      "hallucinated": 511,
+      "hallucinated": 547,
       "type_distribution": {
         "arxiv_version_mismatch": 28,
-        "chimeric_title": 22,
-        "fabricated_doi": 27,
+        "chimeric_title": 27,
+        "fabricated_doi": 29,
         "future_date": 29,
         "hybrid_fabrication": 40,
         "merged_citation": 29,
-        "near_miss_title": 31,
-        "nonexistent_venue": 30,
+        "near_miss_title": 38,
+        "nonexistent_venue": 38,
         "partial_author_list": 29,
-        "placeholder_authors": 31,
-        "plausible_fabrication": 98,
+        "placeholder_authors": 36,
+        "plausible_fabrication": 103,
         "preprint_as_published": 29,
         "swapped_authors": 56,
-        "wrong_venue": 32
+        "wrong_venue": 36
       },
       "tier_distribution": {
-        "1": 119,
-        "2": 237,
-        "3": 155
+        "1": 134,
+        "2": 246,
+        "3": 167
       }
     },
     "stress_test": {
