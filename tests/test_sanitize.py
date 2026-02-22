@@ -1,7 +1,10 @@
-"""Tests for scripts.stages.sanitize helper functions."""
+"""Tests for scripts.stages.sanitize and scale_up helper functions."""
+
+import random
 
 from hallmark.dataset.schema import BenchmarkEntry
 from scripts.stages.sanitize import _drop_unknown_authors, _fix_mislabeled_llm_entries
+from scripts.stages.scale_up import fill_year_gaps
 
 
 def _make_entry(
@@ -11,6 +14,7 @@ def _make_entry(
     generation_method: str = "perturbation",
     difficulty_tier: int = 1,
     author: str = "Alice Smith",
+    year: str = "2022",
 ) -> BenchmarkEntry:
     kwargs: dict = {
         "bibtex_key": key,
@@ -18,7 +22,7 @@ def _make_entry(
         "fields": {
             "title": f"Paper {key}",
             "author": author,
-            "year": "2022",
+            "year": year,
             "booktitle": "NeurIPS",
         },
         "label": label,
@@ -148,3 +152,67 @@ class TestDropUnknownAuthors:
         filtered, dropped = _drop_unknown_authors([])
         assert filtered == []
         assert dropped == 0
+
+
+class TestFillYearGaps:
+    def test_generates_entries_for_valid_only_years(self):
+        """When year=2026 only appears in VALID, hallucinated entries are generated."""
+        entries = [
+            _make_entry("v1", label="VALID", year="2022"),
+            _make_entry("v2", label="VALID", year="2026"),
+            _make_entry("v3", label="VALID", year="2026"),
+            _make_entry("h1", year="2022"),
+            # No hallucinated entries with year=2026
+        ]
+        rng = random.Random(42)
+        existing_keys = {e.bibtex_key for e in entries}
+        new_entries = fill_year_gaps(entries, "dev", rng, existing_keys, "2026-02-22")
+        assert len(new_entries) > 0
+        # All new entries should have year=2026
+        for e in new_entries:
+            assert e.fields["year"] == "2026"
+        # All should be HALLUCINATED
+        for e in new_entries:
+            assert e.label == "HALLUCINATED"
+
+    def test_no_entries_when_no_gap(self):
+        """When both labels appear for all years, no entries are generated."""
+        entries = [
+            _make_entry("v1", label="VALID", year="2022"),
+            _make_entry("h1", year="2022"),
+            _make_entry("v2", label="VALID", year="2023"),
+            _make_entry("h2", year="2023"),
+        ]
+        rng = random.Random(42)
+        existing_keys = {e.bibtex_key for e in entries}
+        new_entries = fill_year_gaps(entries, "dev", rng, existing_keys, "2026-02-22")
+        assert len(new_entries) == 0
+
+    def test_does_not_fill_hallucinated_only_years(self):
+        """Years only in HALLUCINATED (e.g., future_date) are left alone."""
+        entries = [
+            _make_entry("v1", label="VALID", year="2022"),
+            _make_entry("h1", year="2022"),
+            _make_entry("h2", year="2035"),  # future_date, only in hallucinated
+        ]
+        rng = random.Random(42)
+        existing_keys = {e.bibtex_key for e in entries}
+        new_entries = fill_year_gaps(entries, "dev", rng, existing_keys, "2026-02-22")
+        assert len(new_entries) == 0
+
+    def test_unique_keys(self):
+        """All generated entries have unique keys."""
+        entries = [
+            _make_entry("v1", label="VALID", year="2026"),
+            _make_entry("v2", label="VALID", year="2026"),
+            _make_entry("v3", label="VALID", year="2026"),
+            _make_entry("h1", year="2022"),
+        ]
+        rng = random.Random(42)
+        existing_keys = {e.bibtex_key for e in entries}
+        new_entries = fill_year_gaps(entries, "dev", rng, existing_keys, "2026-02-22")
+        all_keys = [e.bibtex_key for e in new_entries]
+        assert len(all_keys) == len(set(all_keys)), "Duplicate keys generated"
+        # No overlap with existing keys
+        for k in all_keys:
+            assert k not in {e.bibtex_key for e in entries}
