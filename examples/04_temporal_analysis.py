@@ -13,7 +13,7 @@ than on newer entries, it may be relying on memorization rather than verificatio
 from hallmark.dataset.loader import filter_by_date_range, load_split
 from hallmark.dataset.schema import Prediction
 from hallmark.evaluation.metrics import build_confusion_matrix
-from hallmark.evaluation.temporal import DEFAULT_SEGMENTS, temporal_analysis
+from hallmark.evaluation.temporal import default_segments, temporal_analysis
 
 
 def simulate_baseline(entries):
@@ -43,7 +43,7 @@ def main():
 
     # Show temporal segments
     print("=== Temporal Segments ===\n")
-    for seg in DEFAULT_SEGMENTS:
+    for seg in default_segments():
         print(f"  {seg.name}: {seg.start} to {seg.end}")
 
     # Run temporal analysis

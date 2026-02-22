@@ -43,14 +43,6 @@ def default_segments() -> list[TemporalSegment]:
     ]
 
 
-# Deprecated: frozen at import time; use default_segments() for date-relative segments.
-DEFAULT_SEGMENTS = [
-    TemporalSegment("historical", date(2015, 1, 1), date(2023, 12, 31)),
-    TemporalSegment("recent", date(2024, 1, 1), date(2025, 12, 31)),
-    TemporalSegment("future", date(2026, 1, 1), date(2030, 12, 31)),
-]
-
-
 @dataclass
 class TemporalAnalysis:
     """Results of temporal segmentation analysis."""

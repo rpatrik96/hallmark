@@ -13,8 +13,23 @@ from hallmark.dataset.schema import (
 )
 
 from ._helpers import _clone_entry
-from ._pools import FAKE_AUTHORS, FAKE_DOI_PREFIXES, FAKE_VENUES
+from ._pools import FAKE_AUTHORS, FAKE_DOI_PREFIXES, FAKE_VENUES, VALID_CONFERENCES, VALID_JOURNALS
 from ._registry import register_generator
+
+
+def _ensure_venue(entry_fields: dict[str, str], rng: random.Random) -> None:
+    """Ensure entry has at least one venue field (booktitle or journal).
+
+    Some source entries lack a venue field. Without this guard, fabricated
+    entries can be trivially detected by the absence of any venue signal.
+    """
+    has_venue = bool(entry_fields.get("booktitle") or entry_fields.get("journal"))
+    if not has_venue:
+        # Pick a real venue to avoid a venue-absence fingerprint
+        if rng.random() < 0.15:
+            entry_fields["journal"] = rng.choice(VALID_JOURNALS)
+        else:
+            entry_fields["booktitle"] = rng.choice(VALID_CONFERENCES)
 
 
 def _current_reference_year() -> int:
@@ -52,6 +67,7 @@ def generate_fabricated_doi(
         seq = "".join(rng.choices(string.digits, k=7))
         fake_suffix = f"{conf}/{seq}"
     new_entry.fields["doi"] = f"{fake_prefix}/{fake_suffix}"
+    _ensure_venue(new_entry.fields, rng)
     new_entry.label = "HALLUCINATED"
     new_entry.hallucination_type = HallucinationType.FABRICATED_DOI.value
     new_entry.difficulty_tier = DifficultyTier.EASY.value
@@ -109,6 +125,7 @@ def generate_placeholder_authors(
     rng = rng or random.Random()
     new_entry = _clone_entry(entry)
     new_entry.fields["author"] = rng.choice(FAKE_AUTHORS)
+    _ensure_venue(new_entry.fields, rng)
     new_entry.label = "HALLUCINATED"
     new_entry.hallucination_type = HallucinationType.PLACEHOLDER_AUTHORS.value
     new_entry.difficulty_tier = DifficultyTier.EASY.value
@@ -143,6 +160,7 @@ def generate_future_date(
     base_year = reference_year if reference_year is not None else _current_reference_year()
     future_year = str(base_year + rng.randint(4, 10))
     new_entry.fields["year"] = future_year
+    _ensure_venue(new_entry.fields, rng)
     new_entry.label = "HALLUCINATED"
     new_entry.hallucination_type = HallucinationType.FUTURE_DATE.value
     new_entry.difficulty_tier = DifficultyTier.EASY.value

@@ -116,8 +116,8 @@ def check_year_bounds(entry: BlindEntry, reference_year: int | None = None) -> P
     Args:
         entry: Benchmark entry to check.
         reference_year: Year to use as the upper bound for "future" detection.
-            When None, defaults to the current calendar year. Pass an explicit
-            value for reproducible evaluation runs.
+            When None, defaults to the benchmark reference year (2026). Pass an
+            explicit value for reproducible evaluation runs.
 
     Returns:
         HALLUCINATED (0.95) if year is in the future
@@ -249,10 +249,12 @@ def check_author_heuristics(entry: BlindEntry) -> PreScreenResult:
     )
 
 
-# Registry of all checks (excluding check_year_bounds which takes an extra arg)
+# Registry of checks that share the common (BlindEntry) -> PreScreenResult interface.
+# check_year_bounds is NOT included here — it takes an additional reference_year parameter
+# and is special-cased in prescreen_entry(). The type annotation reflects the common
+# interface for all checks in this list.
 ALL_CHECKS: list[Callable[[BlindEntry], PreScreenResult]] = [
     check_doi_resolves,
-    check_year_bounds,
     check_author_heuristics,
 ]
 
@@ -269,13 +271,25 @@ def prescreen_entry(entry: BlindEntry, reference_year: int | None = None) -> lis
         List of results, one per check.
     """
     results = []
+
+    # Run check_year_bounds separately — it takes an extra reference_year parameter.
+    try:
+        results.append(check_year_bounds(entry, reference_year=reference_year))
+    except Exception as e:
+        logger.error(f"Check check_year_bounds failed for {entry.bibtex_key}: {e}")
+        results.append(
+            PreScreenResult(
+                label="UNKNOWN",
+                confidence=0.0,
+                reason=f"Check failed with error: {type(e).__name__}",
+                check_name="check_year_bounds",
+            )
+        )
+
+    # Run all standard checks (common BlindEntry -> PreScreenResult interface).
     for check_fn in ALL_CHECKS:
         try:
-            if check_fn is check_year_bounds:
-                result = check_year_bounds(entry, reference_year=reference_year)
-            else:
-                result = check_fn(entry)
-            results.append(result)
+            results.append(check_fn(entry))
         except Exception as e:
             logger.error(f"Check {check_fn.__name__} failed for {entry.bibtex_key}: {e}")
             results.append(

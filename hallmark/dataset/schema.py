@@ -556,6 +556,11 @@ class EvaluationResult:
         )
         for ci_field in ci_fields:
             if ci_field in data and isinstance(data[ci_field], list):
+                if len(data[ci_field]) != 2:
+                    raise ValueError(
+                        f"CI field '{ci_field}' must have exactly 2 elements "
+                        f"(lower, upper), got {len(data[ci_field])}"
+                    )
                 data[ci_field] = tuple(data[ci_field])
         known = {f.name for f in fields(cls)}
         unknown = set(data.keys()) - known

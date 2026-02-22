@@ -375,7 +375,8 @@ def per_tier_metrics(
             "false_positive_rate": cm.false_positive_rate,
             "f1": cm.f1,
             "precision": cm.precision,
-            "count": len(hall_e),  # report hallucinated-only count per tier
+            "num_hallucinated": len(hall_e),
+            "num_valid": len(valid_entries),
         }
     return result
 
@@ -1552,6 +1553,7 @@ def evaluate(
     compute_ci: bool = False,
     n_bootstrap: int = 10_000,
     ci_seed: int = 42,
+    strict: bool = False,
 ) -> EvaluationResult:
     """Run full evaluation and return aggregated results.
 
@@ -1572,6 +1574,8 @@ def evaluate(
         compute_ci: If True, compute bootstrap confidence intervals (requires numpy).
         n_bootstrap: Number of bootstrap resamples for CIs (default 10_000).
         ci_seed: Random seed for bootstrap CI computation (default 42).
+        strict: If True, raise ValueError when coverage < 1.0 (missing predictions).
+            Mirrors the CLI's ``--strict`` flag.
 
     Returns:
         EvaluationResult with primary metrics (DR, FPR, F1, TW-F1, ECE),
@@ -1636,7 +1640,35 @@ def evaluate(
     # (keys not in entries) do not push coverage above 1.0.
     coverage = len(entry_keys & pred_keys) / len(entries) if entries else 1.0
 
+    if strict and coverage < 1.0:
+        missing = len(entries) - len(entry_keys & pred_keys)
+        raise ValueError(
+            f"Strict mode: coverage is {coverage:.1%} (expected 100%). "
+            f"Missing predictions for {missing} entries."
+        )
+
     cm = build_confusion_matrix(entries, pred_map)
+
+    # Warn if the confidence convention looks inverted: HALLMARK uses P(predicted label
+    # is correct), so VALID predictions with confidence < 0.5 suggest the caller may be
+    # passing P(HALLUCINATED) instead.
+    import warnings
+
+    valid_preds = [
+        pred_map[e.bibtex_key]
+        for e in entries
+        if e.label == "VALID"
+        and e.bibtex_key in pred_map
+        and pred_map[e.bibtex_key].label == "VALID"
+    ]
+    if valid_preds and sum(1 for p in valid_preds if p.confidence < 0.5) > len(valid_preds) * 0.7:
+        warnings.warn(
+            "Most VALID predictions have confidence < 0.5. "
+            "HALLMARK uses P(predicted label is correct) as confidence, "
+            "not P(HALLUCINATED). Check your confidence convention.",
+            UserWarning,
+            stacklevel=2,
+        )
     tw_f1 = tier_weighted_f1(entries, pred_map)
     tier_metrics = per_tier_metrics(entries, pred_map)
     type_metrics = per_type_metrics(entries, pred_map, compute_ci=compute_ci)

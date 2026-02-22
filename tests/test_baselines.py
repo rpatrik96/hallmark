@@ -230,8 +230,8 @@ class TestEnsemble:
         }
         result = ensemble_predict(entries, strat_preds)
         assert len(result) == 1
-        # All excluded → total_weight = 0.0 → hall_fraction = 0.0 → VALID
-        assert result[0].label == "VALID"
+        # All excluded → total_weight = 0.0 → UNCERTAIN (no usable signal)
+        assert result[0].label == "UNCERTAIN"
 
     def test_weighted_vote_uncertain_mixed_with_hallucinated(self):
         """Majority HALLUCINATED overrides UNCERTAIN vote."""

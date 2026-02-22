@@ -11,8 +11,22 @@ from hallmark.dataset.schema import (
 )
 
 from ._helpers import _clone_entry
-from ._pools import HYBRID_FAKE_AUTHORS, HYBRID_SWAP_WORDS
+from ._pools import HYBRID_FAKE_AUTHORS, HYBRID_SWAP_WORDS, VALID_CONFERENCES, VALID_JOURNALS
 from ._registry import register_generator
+
+
+def _ensure_venue(entry_fields: dict[str, str], rng: random.Random) -> None:
+    """Ensure entry has at least one venue field (booktitle or journal).
+
+    Some source entries lack a venue field. Without this guard, fabricated
+    entries can be trivially detected by the absence of any venue signal.
+    """
+    has_venue = bool(entry_fields.get("booktitle") or entry_fields.get("journal"))
+    if not has_venue:
+        if rng.random() < 0.15:
+            entry_fields["journal"] = rng.choice(VALID_JOURNALS)
+        else:
+            entry_fields["booktitle"] = rng.choice(VALID_CONFERENCES)
 
 
 @register_generator(
@@ -26,8 +40,10 @@ def generate_chimeric_title(
     rng: random.Random | None = None,
 ) -> BenchmarkEntry:
     """Tier 2: Keep real author but replace title with a fabricated one."""
+    rng = rng or random.Random()
     new_entry = _clone_entry(entry)
     new_entry.fields["title"] = fake_title
+    _ensure_venue(new_entry.fields, rng)
     new_entry.label = "HALLUCINATED"
     new_entry.hallucination_type = HallucinationType.CHIMERIC_TITLE.value
     new_entry.difficulty_tier = DifficultyTier.MEDIUM.value
@@ -87,8 +103,10 @@ def generate_swapped_authors(
     rng: random.Random | None = None,
 ) -> BenchmarkEntry:
     """Tier 2: Correct title but authors from a different paper."""
+    rng = rng or random.Random()
     new_entry = _clone_entry(entry)
     new_entry.fields["author"] = donor_entry.fields.get("author", "Unknown Author")
+    _ensure_venue(new_entry.fields, rng)
     new_entry.label = "HALLUCINATED"
     new_entry.hallucination_type = HallucinationType.AUTHOR_MISMATCH.value
     new_entry.difficulty_tier = DifficultyTier.MEDIUM.value
@@ -245,6 +263,7 @@ def generate_partial_author_list(
             f"found {len(authors)} author(s); need at least 2 to drop one."
         )
 
+    _ensure_venue(new_entry.fields, rng)
     new_entry.label = "HALLUCINATED"
     new_entry.hallucination_type = HallucinationType.PARTIAL_AUTHOR_LIST.value
     new_entry.difficulty_tier = DifficultyTier.MEDIUM.value
@@ -299,6 +318,7 @@ def generate_hybrid_fabrication(
         # Short titles: prepend modifier to guarantee title change
         new_entry.fields["title"] = "Improved " + title
 
+    _ensure_venue(new_entry.fields, rng)
     new_entry.label = "HALLUCINATED"
     new_entry.hallucination_type = HallucinationType.HYBRID_FABRICATION.value
     new_entry.difficulty_tier = DifficultyTier.MEDIUM.value

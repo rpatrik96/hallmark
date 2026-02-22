@@ -213,6 +213,8 @@ def generate_plausible_fabrication(
     )
     n, s = rng.choice(PLAUSIBLE_NOUNS), rng.choice(PLAUSIBLE_SETTINGS)
 
+    m2 = rng.choice(PLAUSIBLE_METHODS)
+    d2 = rng.choice(PLAUSIBLE_DOMAINS)
     title_template = rng.choice(
         [
             # "Method via Technique for Domain"
@@ -238,7 +240,7 @@ def generate_plausible_fabrication(
             # "Understanding Noun in Domain through Method"
             f"Understanding {n} in {d} through {m}",
             # "Unifying Method and Technique for Domain"
-            f"Unifying {m} and {rng.choice(PLAUSIBLE_METHODS)} for {d}",
+            f"Unifying {m} and {m2} for {d}",
             # Standard NeurIPS-style with colon
             f"{d}: {p} {n} via {m}",
             # Question-style title
@@ -250,11 +252,37 @@ def generate_plausible_fabrication(
             # "A Theoretical Analysis of..."
             f"A Theoretical Analysis of {m} for {d}",
             # "Bridging X and Y..."
-            f"Bridging {m} and {rng.choice(PLAUSIBLE_METHODS)} for {d}",
+            f"Bridging {m} and {m2} for {d}",
             # "Revisiting..."
             f"Revisiting {m} for {p} {d}",
             # Simple clean pattern
             f"{m} in {s}: Applications to {d}",
+            # Natural observation-style: "X Does Not Y"
+            f"{m} Does Not Require {n} for {d}",
+            # "Is X Enough for Y?" — common debate framing
+            f"Is {m} Sufficient for {p} {d}?",
+            # "The Role of X in Y"
+            f"The Role of {n} in {m} for {d}",
+            # "How X Affects Y" — empirical framing
+            f"How {m} Affects {n} in {d}",
+            # "An Empirical Study of..."
+            f"An Empirical Study of {m} on {d}",
+            # "X Meets Y" — combination framing
+            f"{m} Meets {d}: A Study of {n}",
+            # Comparative framing
+            f"Comparing {m} and {m2} for {d}",
+            # "A Unified View of X and Y"
+            f"A Unified View of {m} and {m2}",
+            # "Towards Better X: Y in Z"
+            f"Towards Better {n}: {m} in {d}",
+            # "What X Can Learn from Y"
+            f"What {d} Can Learn from {d2}",
+            # "Dissecting X: Y for Z"
+            f"Dissecting {m}: {n} for {d}",
+            # "Scaling X to Y"
+            f"Scaling {m} to {d} in {s}",
+            # "Lessons from X for Y"
+            f"Lessons from {m} for {p} {d}",
         ]
     )
     new_entry.fields["title"] = title_template

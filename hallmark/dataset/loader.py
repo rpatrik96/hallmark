@@ -119,30 +119,70 @@ def load_metadata(
 def filter_by_tier(
     entries: list[BenchmarkEntry],
     tier: int | DifficultyTier,
+    *,
+    include_valid: bool = True,
 ) -> list[BenchmarkEntry]:
-    """Filter entries to a specific difficulty tier."""
+    """Filter entries to a specific difficulty tier.
+
+    Args:
+        entries: List of benchmark entries.
+        tier: Difficulty tier to filter to (1, 2, or 3).
+        include_valid: If True (default), include VALID entries alongside
+            entries of the requested tier. Set to False to return only
+            HALLUCINATED entries matching the specified tier.
+    """
     tier_val = tier.value if isinstance(tier, DifficultyTier) else tier
-    return [e for e in entries if e.difficulty_tier == tier_val or e.label == "VALID"]
+    if include_valid:
+        return [e for e in entries if e.difficulty_tier == tier_val or e.label == "VALID"]
+    return [e for e in entries if e.difficulty_tier == tier_val]
 
 
 def filter_by_type(
     entries: list[BenchmarkEntry],
     hallucination_type: str,
+    *,
+    include_valid: bool = True,
 ) -> list[BenchmarkEntry]:
     """Filter entries to a specific hallucination type (plus all valid entries).
 
     Emits a warning if no hallucinated entries match the requested type,
     since only VALID entries will be returned in that case.
+
+    Args:
+        entries: List of benchmark entries.
+        hallucination_type: Hallucination type string to filter to.
+        include_valid: If True (default), include VALID entries alongside
+            entries of the requested type. Set to False to return only
+            HALLUCINATED entries matching the specified type.
     """
-    if not any(
+    from hallmark.dataset.schema import HallucinationType
+
+    hallucinated_match = any(
         e.hallucination_type == hallucination_type for e in entries if e.label == "HALLUCINATED"
-    ):
+    )
+    if not hallucinated_match:
         warnings.warn(
             f"No hallucinated entries match type '{hallucination_type}'. "
             "Only VALID entries will be returned.",
             stacklevel=2,
         )
-    return [e for e in entries if e.hallucination_type == hallucination_type or e.label == "VALID"]
+        # Check if user used the enum member name instead of the value
+        for ht in HallucinationType:
+            if ht.name.lower() == hallucination_type.lower() and ht.value != hallucination_type:
+                warnings.warn(
+                    f"No entries found for '{hallucination_type}'. "
+                    f"Did you mean '{ht.value}'? "
+                    f"(The enum member is {ht.name} but the data value is '{ht.value}')",
+                    UserWarning,
+                    stacklevel=2,
+                )
+                break
+
+    if include_valid:
+        return [
+            e for e in entries if e.hallucination_type == hallucination_type or e.label == "VALID"
+        ]
+    return [e for e in entries if e.hallucination_type == hallucination_type]
 
 
 def _normalize_date(d: str) -> str:

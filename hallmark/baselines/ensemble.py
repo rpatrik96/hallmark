@@ -109,8 +109,19 @@ def _weighted_vote(
         total_time += pred.wall_clock_seconds
         total_api_calls += pred.api_calls
 
-    hall_fraction = hall_weight / total_weight if total_weight > 0 else 0.0
-    is_hallucinated = hall_fraction >= config.voting_threshold
+    if total_weight == 0:
+        return Prediction(
+            bibtex_key=entry.bibtex_key,
+            label="UNCERTAIN",
+            confidence=0.5,
+            reason=f"Ensemble ({config.method}): all strategies missing or UNCERTAIN; "
+            + "; ".join(reasons),
+            wall_clock_seconds=total_time,
+            api_calls=total_api_calls,
+        )
+
+    hall_fraction = hall_weight / total_weight
+    is_hallucinated = hall_fraction > config.voting_threshold
 
     confidence = hall_fraction if is_hallucinated else (1.0 - hall_fraction)
     confidence = max(0.0, min(1.0, confidence))

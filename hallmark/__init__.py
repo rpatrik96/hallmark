@@ -7,7 +7,14 @@ try:
 except Exception:
     __version__ = "0.0.0.dev0"
 
-from hallmark.dataset.loader import load_split
+from hallmark.baselines.registry import list_baselines
+from hallmark.dataset.loader import (
+    filter_by_date_range,
+    filter_by_tier,
+    filter_by_type,
+    get_statistics,
+    load_split,
+)
 from hallmark.dataset.schema import (
     BenchmarkEntry,
     BlindEntry,
@@ -27,6 +34,11 @@ __all__ = [
     "Prediction",
     "__version__",
     "evaluate",
+    "filter_by_date_range",
+    "filter_by_tier",
+    "filter_by_type",
+    "get_statistics",
+    "list_baselines",
     "load_predictions",
     "load_split",
     "save_predictions",

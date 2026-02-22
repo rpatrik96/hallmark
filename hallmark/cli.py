@@ -244,6 +244,61 @@ def main(argv: list[str] | None = None) -> int:
     # --- list-baselines ---
     subparsers.add_parser("list-baselines", help="List available baselines and their status")
 
+    # --- inspect ---
+    inspect_parser = subparsers.add_parser(
+        "inspect", help="Browse and filter dataset entries interactively"
+    )
+    inspect_parser.add_argument(
+        "--split",
+        default="dev_public",
+        choices=_SPLIT_CHOICES,
+        help="Benchmark split to inspect",
+    )
+    inspect_parser.add_argument(
+        "--limit",
+        type=int,
+        default=10,
+        metavar="N",
+        help="Maximum number of entries to display (default: 10)",
+    )
+    inspect_parser.add_argument(
+        "--type",
+        type=str,
+        default=None,
+        metavar="TYPE",
+        help='Filter to a specific hallucination type (e.g., "fabricated_doi")',
+    )
+    inspect_parser.add_argument(
+        "--tier",
+        type=int,
+        choices=[1, 2, 3],
+        default=None,
+        help="Filter to a specific difficulty tier (1, 2, or 3)",
+    )
+    inspect_parser.add_argument(
+        "--key",
+        type=str,
+        default=None,
+        metavar="BIBTEX_KEY",
+        help="Show only the entry with this exact bibtex_key",
+    )
+    inspect_parser.add_argument(
+        "--title",
+        type=str,
+        default=None,
+        metavar="SUBSTRING",
+        help="Filter entries whose title contains this substring (case-insensitive)",
+    )
+    inspect_parser.add_argument(
+        "--label",
+        type=str,
+        default=None,
+        choices=["HALLUCINATED", "VALID"],
+        help="Filter entries by label",
+    )
+    inspect_parser.add_argument("--data-dir", type=str, help="Override data directory")
+    inspect_parser.add_argument("--version", default="v1.0", help="Dataset version")
+
     # --- validate-results ---
     val_parser = subparsers.add_parser(
         "validate-results", help="Validate pre-computed reference results"
@@ -339,6 +394,8 @@ def main(argv: list[str] | None = None) -> int:
         return _cmd_leaderboard(args)
     elif args.command == "list-baselines":
         return _cmd_list_baselines()
+    elif args.command == "inspect":
+        return _cmd_inspect(args)
     elif args.command == "diagnose":
         return _cmd_diagnose(args)
     elif args.command == "history-append":
@@ -555,7 +612,7 @@ def _cmd_evaluate(args: argparse.Namespace) -> int:
                     continue
                 print(
                     f"    Tier {tier}: DR={metrics['detection_rate']:.3f} "
-                    f"F1={metrics['f1']:.3f} (n={metrics['count']:.0f})"
+                    f"F1={metrics['f1']:.3f} (n={metrics['num_hallucinated']:.0f})"
                 )
 
         # Generation method breakdown
@@ -981,6 +1038,65 @@ def _cmd_leaderboard(args: argparse.Namespace) -> int:
                 " (paired bootstrap, p > 0.05, Holm-Bonferroni correction)."
             )
         print()
+    return 0
+
+
+def _cmd_inspect(args: argparse.Namespace) -> int:
+    """Browse and filter dataset entries."""
+    try:
+        entries = load_split(
+            split=args.split,
+            version=args.version,
+            data_dir=args.data_dir,
+        )
+    except FileNotFoundError as e:
+        logging.error(str(e))
+        return 1
+
+    # Apply filters
+    if args.key is not None:
+        entries = [e for e in entries if e.bibtex_key == args.key]
+    if args.label is not None:
+        entries = [e for e in entries if e.label == args.label]
+    if args.tier is not None:
+        entries = filter_by_tier(entries, args.tier, include_valid=(args.label != "HALLUCINATED"))
+    if args.type is not None:
+        entries = filter_by_type(entries, args.type, include_valid=(args.label != "HALLUCINATED"))
+    if args.title is not None:
+        needle = args.title.lower()
+        entries = [e for e in entries if needle in e.title.lower()]
+
+    total = len(entries)
+    shown = entries[: args.limit]
+
+    print(f"\n{'=' * 70}")
+    print(f"  HALLMARK Inspect: {args.split}  ({total} matching, showing {len(shown)})")
+    print(f"{'=' * 70}")
+
+    for entry in shown:
+        print(f"\n  key:    {entry.bibtex_key}")
+        print(f"  label:  {entry.label}", end="")
+        if entry.hallucination_type:
+            print(f"  |  type: {entry.hallucination_type}", end="")
+        if entry.difficulty_tier is not None:
+            print(f"  |  tier: {entry.difficulty_tier}", end="")
+        print()
+        title = entry.title or "(no title)"
+        print(f"  title:  {title[:80]}{'...' if len(title) > 80 else ''}")
+        authors = entry.author or "(no authors)"
+        print(f"  author: {authors[:80]}{'...' if len(authors) > 80 else ''}")
+        year = entry.year or "(no year)"
+        venue = entry.venue or "(no venue)"
+        print(f"  year:   {year}  |  venue: {venue[:60]}")
+        if entry.subtests:
+            subtest_str = "  ".join(
+                f"{k}={'T' if v is True else 'F' if v is False else '?'}"
+                for k, v in entry.subtests.items()
+            )
+            print(f"  tests:  {subtest_str}")
+        print(f"  {'─' * 66}")
+
+    print(f"{'=' * 70}\n")
     return 0
 
 
