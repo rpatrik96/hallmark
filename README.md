@@ -20,7 +20,7 @@ HALLMARK draws on best practices from established benchmarks:
 ## Features
 
 - **Hallucination taxonomy**: 14 types across 3 difficulty tiers (Easy / Medium / Hard)
-- **2,554 annotated entries**: 980 valid (from DBLP) + 1,574 hallucinated with ground truth
+- **2,434 annotated entries**: 775 valid (from DBLP) + 1,206 hallucinated with ground truth (public splits)
 - **6 sub-tests per entry**: DOI resolution, title matching, author consistency, venue verification, field completeness, cross-database agreement
 - **Evaluation metrics**: Detection Rate, F1, tier-weighted F1, detect@k, ECE
 - **Built-in baselines**: DOI-only, bibtex-updater, LLM-based (OpenAI, Anthropic, OpenRouter), ensemble, HaRC, verify-citations (CiteVerifier and hallucinator are available as wrapper modules but not registered in the default registry)
@@ -193,10 +193,10 @@ See [`examples/03_custom_baseline.py`](examples/03_custom_baseline.py) for a com
 
 | Split | Valid | Hallucinated | Total | Purpose |
 |-------|-------|-------------|-------|---------|
-| `dev_public` | 486 | 577 | 1,063 | Development and tuning |
-| `test_public` | 294 | 542 | 836 | Public leaderboard |
-| `test_hidden` | 200 | 253 | 453 | Anti-gaming evaluation |
-| `stress_test` | 0 | 202 | 202 | Stress-test types depth |
+| `dev_public` | 487 | 574 | 1,061 | Development and tuning |
+| `test_public` | 287 | 511 | 798 | Public leaderboard |
+| `test_hidden` | — | — | 453 | Anti-gaming evaluation |
+| `stress_test` | 1 | 121 | 122 | Stress-test types depth |
 
 > **stress_test design note**: The `stress_test` split is all-hallucinated by design. It contains
 > challenging edge cases (merged citations, partial author lists, arXiv version mismatches) intended
@@ -289,7 +289,7 @@ blind_test   = [e.to_blind() for e in test_entries]
 predictions = run_title_oracle(blind_test, reference_pool=dev_entries)
 ```
 
-## Baseline Results (dev_public, 1,063 entries)
+## Baseline Results (dev_public, 1,061 entries)
 
 | Baseline | Detection Rate | F1 | Tier-weighted F1 | FPR | ECE |
 |----------|:---:|:---:|:---:|:---:|:---:|
@@ -417,7 +417,7 @@ hallmark/
 ├── .github/workflows/
 │   ├── tests.yml              # CI: test suite across Python versions
 │   └── baselines.yml          # CI: weekly free baseline evaluation
-├── tests/                     # Test suite (298 tests)
+├── tests/                     # Test suite (558 tests)
 ├── figures/                   # Evaluation figures
 └── examples/                  # Usage examples
 ```
