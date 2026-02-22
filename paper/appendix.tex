@@ -166,7 +166,7 @@ We conclude that the scaled entries are consistent with the original distributio
 \end{table}
 
 \noindent All main hallucination types have $\geq$30 instances per public split.
-Entries marked --- indicate insufficient coverage for per-type breakdowns (HaRC: 1.9\%, verify-citations: 6.6\%).
+Entries marked --- indicate insufficient coverage for per-type breakdowns (HaRC: 1.8\%, verify-citations: 6.3\%).
 DOI-only with pre-screening (\cref{app:prescreening}) achieves non-zero detection across all types because the pre-screening layer catches entries via DOI resolution, year bounds, and author heuristics independently of the hallucination type.
 Without pre-screening, DOI-only detects only \texttt{fabricated\_doi} entries.
 GPT-5.1 achieves ${\geq}67\%$ detection on 9 of 11 main types, with near-perfect detection of \texttt{nonexistent\_venue} (0.969), \texttt{future\_date} (0.968), and \texttt{placeholder\_authors} (0.941).
@@ -248,7 +248,7 @@ The estimated parameters are normalized to sum to 1, yielding a probability-like
 
 This approach handles the key challenge of incomplete data: tools evaluated on different subsets of entries can still be compared through their shared pairwise comparisons, weighted by the structure of the Plackett-Luce likelihood.
 
-For \textsc{Hallmark}, this allows us to rank HaRC (20/1,063 entries) and verify-citations (71/1,063 entries) alongside complete-coverage baselines by leveraging the pairwise comparisons available on the entries each tool did evaluate.
+For \textsc{Hallmark}, this allows us to rank HaRC (20/1,119 entries) and verify-citations (71/1,119 entries) alongside complete-coverage baselines by leveraging the pairwise comparisons available on the entries each tool did evaluate.
 
 \section{Pre-screening layer specification}
 \label{app:prescreening}
@@ -367,7 +367,7 @@ Following \citet{gebru2021datasheets}, we provide a datasheet for the \textsc{Ha
 \textsc{Hallmark} was created to provide a standardized benchmark for evaluating citation hallucination detection tools, motivated by the NeurIPS 2025 incident and subsequent audits.
 
 \paragraph{Composition.}
-The dataset contains 2,554 BibTeX entries: 980 valid entries scraped from DBLP and arXiv and 1,574 hallucinated entries generated through perturbation, LLM generation, adversarial crafting, and real-world collection across 14 hallucination types.
+The dataset contains 2,525 BibTeX entries: 973 valid entries scraped from DBLP and arXiv and 1,551 hallucinated entries generated through perturbation, LLM generation, adversarial crafting, and real-world collection across 14 hallucination types.
 Each entry includes 6 binary sub-test labels.
 
 \paragraph{Collection process.}
@@ -468,7 +468,7 @@ We encourage independent tool developers to submit evaluations via \textsc{Hallm
 To assess whether metadata features alone predict hallucination labels---indicating potential dataset shortcuts---we train a logistic regression classifier on eight entry-level features: presence of DOI, field count, author count, title length (characters), title word count, year (numeric), BibTeX entry type, and presence of a \texttt{booktitle} field.
 We evaluate via 5-fold cross-validation on the \texttt{dev\_public} split.
 
-The logistic regression achieves a cross-validated accuracy of 56.2\% (majority-class baseline: 54.3\%), a margin of 1.9pp.
+The logistic regression achieves a cross-validated accuracy of 58.5\% (majority-class baseline: 56.6\%), a margin of 1.9pp.
 Since this margin is below 5pp, metadata features provide negligible predictive signal beyond class prevalence.
 This confirms that tools must inspect citation content (DOIs, titles, authors, venues) rather than relying on surface-level metadata patterns to detect hallucinations.
 

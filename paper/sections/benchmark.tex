@@ -66,7 +66,7 @@ The dataset contains two classes of entries: \emph{valid} references scraped fro
 \paragraph{Valid entries.}
 We scraped BibTeX records from DBLP~\citep{dblp} for papers published at major ML venues (NeurIPS, ICML, ICLR, AAAI, CVPR) between 2021 and 2023.
 Each entry was verified by confirming DOI resolution, title existence in at least two databases, and author-venue consistency.
-We retained 980 valid entries across all splits.
+We retained 973 valid entries across all splits.
 
 \paragraph{Hallucinated entries.}
 We generated hallucinated entries using four methods:
@@ -112,12 +112,12 @@ This enables practitioners to assess whether a tool detects template-based pertu
 \toprule
 \textbf{Split} & \textbf{Valid} & \textbf{Halluc.} & \textbf{Total} & \textbf{Tier 1} & \textbf{Tier 2} & \textbf{Tier 3} & \textbf{Types} \\
 \midrule
-\texttt{dev\_public}   & 486 & 577 & 1,063 & 156 & 274 & 147 & 14 \\
-\texttt{test\_public}  & 294 & 542 & 836 & 150 & 257 & 135 & 14 \\
-\texttt{stress\_test}  & 0 & 202 & 202 & --- & 140 & 62 & 3 \\
+\texttt{dev\_public}   & 486 & 633 & 1,119 & 155 & 292 & 186 & 14 \\
+\texttt{test\_public}  & 287 & 544 & 831 & 134 & 243 & 167 & 14 \\
+\texttt{stress\_test}  & 0 & 121 & 122\textsuperscript{\textdagger} & --- & 85 & 36 & 3 \\
 \texttt{test\_hidden}  & 200 & 253 & 453 & 69 & 115 & 69 & 14 \\
 \midrule
-\textbf{Total}         & 980 & 1,574 & 2,554 & 375 & 786 & 413 & 14 \\
+\textbf{Total}         & 973 & 1,551 & 2,525 & 358 & 735 & 458 & 14 \\
 \bottomrule
 \end{tabular}
 \end{table}

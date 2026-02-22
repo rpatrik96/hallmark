@@ -61,7 +61,7 @@ def main():
                 continue
             print(
                 f"    Tier {tier}: DR={metrics['detection_rate']:.3f} "
-                f"F1={metrics['f1']:.3f} (n={metrics['count']:.0f})"
+                f"F1={metrics['f1']:.3f} (n={metrics['num_hallucinated']:.0f})"
             )
 
 

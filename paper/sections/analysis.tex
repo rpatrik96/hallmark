@@ -18,7 +18,7 @@ Confidence calibration is critical for venue deployment, where reviewers need to
 \label{sec:cost}
 \cref{fig:cost} plots detection rate against API cost per entry.
 DOI-only is cheapest (1 API call) but achieves only 25.6\% detection rate.
-HaRC and verify-citations query multiple APIs but are bottlenecked by rate limiting, completing only 1.9\% and 6.7\% of entries respectively---making them impractical for venue-scale deployment.
+HaRC and verify-citations query multiple APIs but are bottlenecked by rate limiting, completing only 1.8\% and 6.3\% of entries respectively---making them impractical for venue-scale deployment.
 GPT-5.1 achieves $3{\times}$ the detection rate of DOI-only at full coverage, though at higher per-entry cost (\$0.21/entry).
 This cost--accuracy tradeoff highlights the need for tools that balance comprehensive verification with practical throughput (see \cref{app:codesign} for bibtex-updater's cost analysis).
 

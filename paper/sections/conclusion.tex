@@ -2,7 +2,7 @@
 \label{sec:conclusion}
 
 Citation hallucination is a growing threat to scientific integrity.
-We contribute \textsc{Hallmark}, the first standardized benchmark for citation verification tools: 14 hallucination types across 3 difficulty tiers, 2,554 annotated entries with 6 sub-tests each, tier-weighted metrics (rewarding detection of hard hallucinations), calibration assessment via ECE (measuring confidence accuracy), and principled ranking under incomplete data via Plackett-Luce.
+We contribute \textsc{Hallmark}, the first standardized benchmark for citation verification tools: 14 hallucination types across 3 difficulty tiers, 2,525 annotated entries with 6 sub-tests each, tier-weighted metrics (rewarding detection of hard hallucinations), calibration assessment via ECE (measuring confidence accuracy), and principled ranking under incomplete data via Plackett-Luce.
 
 Our evaluation of four tools reveals a stark capability gap: API-based tools detect at most 26\% of hallucinations due to rate limiting and metadata coverage gaps, while a zero-shot LLM verifier (GPT-5.1) achieves 80\% detection rate---demonstrating that language models can identify the very hallucinations they produce.
 No single tool covers all 14 types, and venue-level hallucinations remain a blind spot where bibliographic APIs lack structured data, providing concrete targets for both tool developers and database maintainers.

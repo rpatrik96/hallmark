@@ -154,9 +154,9 @@ def _max_confidence(
     if best_pred is None:
         return Prediction(
             bibtex_key=entry.bibtex_key,
-            label="VALID",
+            label="UNCERTAIN",
             confidence=0.5,
-            reason="No predictions available",
+            reason="Ensemble (max_confidence): all strategies missing or UNCERTAIN",
         )
 
     return Prediction(
@@ -205,9 +205,9 @@ def _mean_confidence(
     if not hall_confidences and not valid_confidences:
         return Prediction(
             bibtex_key=entry.bibtex_key,
-            label="VALID",
+            label="UNCERTAIN",
             confidence=0.5,
-            reason="No predictions available",
+            reason="Ensemble (mean_confidence): all strategies missing or UNCERTAIN",
         )
 
     # Compute per-prediction hallucination scores on a common [0, 1] scale:

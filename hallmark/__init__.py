@@ -7,7 +7,7 @@ try:
 except Exception:
     __version__ = "0.0.0.dev0"
 
-from hallmark.baselines.registry import list_baselines
+from hallmark.baselines.registry import check_available, list_baselines, run_baseline
 from hallmark.dataset.loader import (
     filter_by_date_range,
     filter_by_tier,
@@ -33,6 +33,7 @@ __all__ = [
     "HallucinationType",
     "Prediction",
     "__version__",
+    "check_available",
     "evaluate",
     "filter_by_date_range",
     "filter_by_tier",
@@ -41,5 +42,6 @@ __all__ = [
     "list_baselines",
     "load_predictions",
     "load_split",
+    "run_baseline",
     "save_predictions",
 ]

@@ -98,7 +98,7 @@ class ConfusionMatrix:
 
         MCC is insensitive to class imbalance, making it suitable for
         cross-split comparisons where hallucination prevalence differs
-        (e.g., dev_public=54.3% vs test_public=64.8%).
+        (e.g., dev_public=56.6% vs test_public=65.5%).
         """
         denom_sq = (
             (self.tp + self.fp) * (self.tp + self.fn) * (self.tn + self.fp) * (self.tn + self.fn)
@@ -142,11 +142,19 @@ def build_confusion_matrix(
         predictions: Tool's predictions — either a dict keyed by bibtex_key
             or a list of Prediction objects (converted internally).
     """
-    if isinstance(predictions, list):
-        predictions = {p.bibtex_key: p for p in predictions}
+    # When predictions is a list (e.g. bootstrap resamples), iterate in lockstep
+    # to preserve duplicate entries. Dict conversion would deduplicate by bibtex_key.
+    use_lockstep = isinstance(predictions, list)
+    if not use_lockstep:
+        pred_map_cm: dict[str, Prediction] = (
+            predictions if isinstance(predictions, dict) else {p.bibtex_key: p for p in predictions}
+        )
     cm = ConfusionMatrix()
-    for entry in entries:
-        pred = predictions.get(entry.bibtex_key)
+    for idx, entry in enumerate(entries):
+        if use_lockstep:
+            pred = predictions[idx] if idx < len(predictions) else None  # type: ignore[index]
+        else:
+            pred = pred_map_cm.get(entry.bibtex_key)
         if pred is None:
             # Missing prediction treated as "VALID" (conservative)
             if entry.label == "HALLUCINATED":
@@ -1738,7 +1746,7 @@ def evaluate(
         f1_hallucination_ci = all_cis["f1_hallucination"]
         tier_weighted_f1_ci = all_cis["tier_weighted_f1"]
         fpr_ci = all_cis["false_positive_rate"]
-        ece_ci = all_cis["ece"]
+        ece_ci = all_cis["ece"] if ece_score is not None else None
         mcc_ci = all_cis["mcc"]
 
     f1_hallucination = cm.f1

@@ -24,7 +24,7 @@ where H denotes the hallucinated class, and TW-F1 is their harmonic mean.\footno
 
 \textbf{Matthews Correlation Coefficient (MCC)}~\citep{matthews1975} provides a prevalence-invariant summary of binary classification quality.
 Unlike F1, MCC uses all four confusion matrix cells and remains informative even when class ratios shift: MCC $= 1$ indicates perfect prediction, $0$ random, and $-1$ total disagreement.
-This is important for \textsc{Hallmark} because class ratios differ across splits (dev: 54.3\% hallucinated, test: 64.8\%), making cross-split F1 comparisons unreliable.
+This is important for \textsc{Hallmark} because class ratios differ across splits (dev: 56.6\% hallucinated, test: 65.5\%), making cross-split F1 comparisons unreliable.
 We report MCC alongside F1 for all evaluations.
 
 \textbf{Expected Calibration Error (ECE)}~\citep{naeini2015} measures how well a tool's confidence scores reflect its actual accuracy.
@@ -63,6 +63,6 @@ A CI workflow runs all free baselines weekly on the dev split, ensuring results 
 Rate-limited baselines use pre-computed reference results validated by checksum, enabling CI to verify consistency without re-running expensive API calls.
 
 \paragraph{Stress-test evaluation.}
-The \texttt{stress\_test} split contains only hallucinated entries (202 entries, 100\% hallucinated).
+The \texttt{stress\_test} split contains 122 entries (121 hallucinated, 99.2\%; 1 canary entry excluded during evaluation).
 Because no valid entries exist, FPR is undefined and F1 reduces to a function of recall alone.
 We report only Detection Rate for this split; F1 and FPR are omitted.

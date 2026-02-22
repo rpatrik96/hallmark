@@ -61,7 +61,7 @@ def main():
         m = tier_m.get(tier, {})
         dr = m.get("detection_rate", 0)
         f1 = m.get("f1", 0)
-        n = m.get("count", 0)
+        n = m.get("num_hallucinated", 0)
         print(f"  Tier {tier}: DR={dr:.3f}  F1={f1:.3f}  (n={n:.0f})")
 
     # Per-type analysis
