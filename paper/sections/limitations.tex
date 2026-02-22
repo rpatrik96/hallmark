@@ -7,7 +7,7 @@ A two-proportion $z$-test with $n=30$ per type achieves 80\% power to detect a d
 Hallucination prevalence differs across main splits (56.6\% in dev, 65.5\% in test, 55.8\% in hidden) due to the constraint that each of 14 types requires $\geq 30$ instances per main split.
 We emphasize prevalence-independent metrics (Detection Rate, FPR) as primary; prevalence-sensitive metrics (F1) should be compared within splits only.
 The benchmark covers only English-language BibTeX references.
-The majority of hallucinated entries are synthetically generated via perturbation, though the benchmark includes 284 LLM-generated entries (produced by prompting GPT-5.1 to generate plausible citations and verifying against CrossRef with automated type classification) and 97 curated entries from GPTZero's NeurIPS 2025 analysis plus 13 real-world entries harvested from documented incidents (GhostCite, HalluCitation).
+The majority of hallucinated entries are synthetically generated via perturbation, though the benchmark includes 280 LLM-generated entries (produced by prompting GPT-5.1 to generate plausible citations and verifying against CrossRef with automated type classification) and 108 real-world entries curated from GPTZero's NeurIPS 2025 analysis and documented incidents (GhostCite, HalluCitation).
 The real-world sample remains small and type-skewed (55\% \texttt{plausible\_fabrication}).
 Future versions should expand real-world coverage as more documented incidents become available.
 Baseline performance depends on bibliographic API availability and coverage; results may shift as APIs evolve.

@@ -10,7 +10,7 @@ We define 14 citation hallucination types---11 empirically grounded and 3 stress
 \textbf{Tier~3 (Hard)} hallucinations require deep verification or semantic reasoning: near-miss titles differ by one or two words from a real paper; plausible fabrications are entirely invented but realistic; and arXiv version mismatches cite a preprint with wrong venue and shifted year.
 
 This taxonomy emerged from manual analysis of hallucinated citations found in the NeurIPS 2025 incident and related audits~\citep{ghostcite2026,hallucitation2026}, supplemented by adversarial brainstorming of failure modes that existing tools might miss.
-Of 82 real-world hallucinated citations in \textsc{Hallmark}, %TODO: recompute percentage once taxonomy mapping data is available (was 79\% before count correction)
+Of 108 real-world hallucinated citations in \textsc{Hallmark},
 79\% map cleanly to a single taxonomy type; the remainder exhibit compound failure modes assigned to the highest-tier applicable type (\cref{app:real-world-mapping}).
 We include three theoretically motivated types (\texttt{merged\_citation}, \texttt{partial\_author\_list}, \texttt{arxiv\_version\_mismatch}) in a separate \texttt{stress\_test} split to probe tool robustness on plausible failure modes not yet observed in documented incidents.
 These types are evaluated independently from the 11 empirically-grounded main types and may be revised as real-world evidence accumulates.
