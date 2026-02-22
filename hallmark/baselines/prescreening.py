@@ -265,7 +265,7 @@ def prescreen_entry(entry: BlindEntry, reference_year: int | None = None) -> lis
     Args:
         entry: Benchmark entry to check.
         reference_year: Optional year for reproducible year-bound checks.
-            When None, uses the current calendar year.
+            When None, defaults to the benchmark reference year (2026).
 
     Returns:
         List of results, one per check.
@@ -419,7 +419,7 @@ def prescreen_entries(
     Args:
         entries: Benchmark entries to check.
         reference_year: Optional year for reproducible year-bound checks.
-            When None, uses the current calendar year.
+            When None, defaults to the benchmark reference year (2026).
 
     Returns:
         Dictionary mapping bibtex_key to list of PreScreenResults.

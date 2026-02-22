@@ -512,6 +512,7 @@ def _cmd_evaluate(args: argparse.Namespace) -> int:
         tool_name=tool_name,
         split_name=args.split,
         compute_ci=args.ci,
+        strict=args.strict,
     )
 
     if result.coverage < 1.0:
