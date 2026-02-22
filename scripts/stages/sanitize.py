@@ -87,7 +87,14 @@ def _strip_dblp_suffixes(entries: list[BenchmarkEntry]) -> int:
 
 
 def _fix_bibtex_type(entries: list[BenchmarkEntry]) -> int:
-    """Normalize article/misc -> inproceedings for hallucinated entries."""
+    """Normalize article/misc -> inproceedings for hallucinated entries.
+
+    This prevents bibtex_type from leaking labels: VALID entries include
+    ~35 article-type entries with no journal/volume/number fields, while
+    hallucinated entries would have those fields if kept as article type.
+    Until VALID article entries are enriched with journal metadata, this
+    conversion is necessary to avoid creating a new leakage vector.
+    """
     fixed = 0
     for entry in entries:
         if entry.label != "HALLUCINATED":

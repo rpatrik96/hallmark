@@ -70,7 +70,8 @@ def generate_nonexistent_venue(
 ) -> BenchmarkEntry:
     """Tier 1: Replace venue with an invented conference/journal name.
 
-    Note: Always uses booktitle (normalized to inproceedings per P0.2).
+    Preserves source bibtex_type: article entries use journal field,
+    inproceedings entries use booktitle field.
     """
     rng = rng or random.Random()
     new_entry = _clone_entry(entry)
