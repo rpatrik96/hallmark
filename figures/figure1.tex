@@ -1,0 +1,173 @@
+% HALLMARK Overview Figure (Figure 1)
+% Two-row layout: pipeline on top, taxonomy + scatter plot on bottom
+\begin{figure}[t]
+\centering
+\begin{tikzpicture}[
+    % Global styles
+    node distance=0.4cm,
+    box/.style={
+        rectangle, rounded corners=3pt, draw=#1!60, fill=#1!8,
+        minimum height=0.7cm, text width=2.1cm, align=center,
+        font=\scriptsize\sffamily, line width=0.6pt,
+    },
+    pipelinebox/.style={
+        rectangle, rounded corners=3pt, draw=gray!70, fill=gray!5,
+        minimum height=0.75cm, text width=1.8cm, align=center,
+        font=\scriptsize\sffamily, line width=0.6pt,
+    },
+    arrow/.style={-{Stealth[length=4pt]}, thick, gray!70},
+    tierblock/.style={
+        rectangle, rounded corners=2pt, draw=#1!50, fill=#1!12,
+        minimum height=0.55cm, text width=4.8cm, align=left,
+        font=\tiny\ttfamily, line width=0.5pt, inner sep=3pt,
+    },
+    tierlabel/.style={
+        font=\tiny\sffamily\bfseries, #1,
+    },
+    sublabel/.style={
+        font=\tiny\sffamily, gray!80!black,
+    },
+]
+
+% =============================================
+% ROW 1: Pipeline (top)
+% =============================================
+
+% Pipeline boxes
+\node[pipelinebox] (source) {%
+    \textbf{Source Papers}\\[-1pt]
+    {\tiny DBLP 2021--2023}\\[-1pt]
+    {\tiny 486 valid entries}
+};
+
+\node[pipelinebox, right=0.35cm of source] (generation) {%
+    \textbf{Generation}\\[-1pt]
+    {\tiny Perturbation, LLM,}\\[-1pt]
+    {\tiny real-world, adversarial}
+};
+
+\node[pipelinebox, right=0.35cm of generation] (dataset) {%
+    \textbf{Benchmark}\\[-1pt]
+    {\tiny 2,525 entries}\\[-1pt]
+    {\tiny 6 sub-tests each}
+};
+
+\node[pipelinebox, right=0.35cm of dataset] (tools) {%
+    \textbf{Tool Evaluation}\\[-1pt]
+    {\tiny 9 tools: 3 API,}\\[-1pt]
+    {\tiny 6 LLMs}
+};
+
+\node[pipelinebox, right=0.35cm of tools] (metrics) {%
+    \textbf{Metrics}\\[-1pt]
+    {\tiny DR, FPR, TW-F1,}\\[-1pt]
+    {\tiny ECE, MCC}
+};
+
+% Pipeline arrows
+\draw[arrow] (source) -- (generation);
+\draw[arrow] (generation) -- (dataset);
+\draw[arrow] (dataset) -- (tools);
+\draw[arrow] (tools) -- (metrics);
+
+% Pipeline label
+\node[above=0.15cm of dataset, font=\footnotesize\sffamily\bfseries, gray!60!black]
+    {Benchmark Pipeline};
+
+% =============================================
+% ROW 2 LEFT: Taxonomy (bottom-left)
+% =============================================
+
+% Position taxonomy below the pipeline, left-aligned
+\coordinate (taxstart) at ([yshift=-0.9cm, xshift=-0.15cm]source.south west);
+
+% Tier label
+\node[font=\scriptsize\sffamily\bfseries, gray!60!black, anchor=south west]
+    at ([yshift=0.08cm]taxstart) {Hallucination Taxonomy};
+
+% Tier 1 block
+\node[tierblock=tier1, anchor=north west] (t1) at ([yshift=-0.12cm]taxstart) {%
+    fabricated\_doi\quad nonexistent\_venue\quad placeholder\_authors\quad future\_date%
+};
+\node[tierlabel=tier1!80!black, anchor=east] at ([xshift=-0.15cm]t1.west) {%
+    \rotatebox{90}{\tiny Tier 1}%
+};
+\node[sublabel, anchor=west] at (t1.east) {\hspace{2pt}4 types};
+
+% Tier 2 block
+\node[tierblock=tier2, anchor=north west, below=1.5pt of t1.south west] (t2) {%
+    chimeric\_title\quad wrong\_venue\quad author\_mismatch\quad preprint\_as\_pub.%
+    \newline hybrid\_fabrication%
+};
+\node[tierlabel=tier2!80!black, anchor=east] at ([xshift=-0.15cm]t2.west) {%
+    \rotatebox{90}{\tiny Tier 2}%
+};
+\node[sublabel, anchor=west] at (t2.east) {\hspace{2pt}5 types};
+
+% Tier 3 block
+\node[tierblock=tier3, anchor=north west, below=1.5pt of t2.south west] (t3) {%
+    near\_miss\_title\quad plausible\_fabrication%
+};
+\node[tierlabel=tier3!80!black, anchor=east] at ([xshift=-0.15cm]t3.west) {%
+    \rotatebox{90}{\tiny Tier 3}%
+};
+\node[sublabel, anchor=west] at (t3.east) {\hspace{2pt}2 types};
+
+% Difficulty arrow
+\draw[{Stealth[length=3pt]}-{Stealth[length=3pt]}, thick, gray!50]
+    ([xshift=0.35cm]t1.north east) -- ([xshift=0.35cm]t3.south east)
+    node[midway, right=2pt, font=\tiny\sffamily, gray!70!black, rotate=-90] {Difficulty};
+
+% Connecting arrow from generation to taxonomy
+\draw[arrow, dashed, gray!40]
+    ([yshift=-0.05cm]generation.south) -- ([yshift=0.15cm]t1.north);
+
+% =============================================
+% ROW 2 RIGHT: Sub-tests + key results
+% =============================================
+
+% Position below tools/metrics
+\coordinate (resultstart) at ([yshift=-0.9cm]tools.south);
+
+% Sub-test box
+\node[rectangle, rounded corners=2pt, draw=hallmark-blue!40, fill=hallmark-blue!5,
+      minimum height=0.55cm, text width=4.2cm, align=left,
+      font=\tiny\sffamily, line width=0.5pt, inner sep=3pt,
+      anchor=north] (subtests) at (resultstart) {%
+    \textbf{\scriptsize 6 Sub-tests per entry}\\[1pt]
+    \textcolor{hallmark-green}{\ding{51}}\,doi\_resolves \enspace
+    \textcolor{hallmark-green}{\ding{51}}\,title\_exists\\[1pt]
+    \textcolor{hallmark-red}{\ding{55}}\,authors\_match \enspace
+    \textcolor{hallmark-green}{\ding{51}}\,venue\_correct\\[1pt]
+    \textcolor{hallmark-green}{\ding{51}}\,year\_correct \enspace
+    \textcolor{hallmark-red}{\ding{55}}\,fields\_complete%
+};
+
+% Key results box below sub-tests
+\node[rectangle, rounded corners=2pt, draw=gray!40, fill=white,
+      text width=4.2cm, align=left,
+      font=\tiny\sffamily, line width=0.5pt, inner sep=3pt,
+      anchor=north, below=3pt of subtests.south] (results) {%
+    \textbf{\scriptsize Key Finding: Recall--Precision Spectrum}\\[1pt]
+    \textcolor{tier1!70!black}{DOI-only:}\hfill DR\,=\,26\%, FPR\,=\,20\%\\
+    \textcolor{hallmark-blue}{GPT-5.1:}\hfill DR\,=\,80\%, FPR\,=\,17\%\\
+    \textcolor{tier3!80!black}{DeepSeek-V3.2:}\hfill DR\,=\,88\%, FPR\,=\,73\%\\
+    \textcolor{tier2!80!black}{Gemini Flash:}\hfill DR\,=\,48\%, FPR\,=\,10\%\\[1pt]
+    {\tiny\itshape LLMs: 48--88\% DR \quad API tools: ${\leq}$26\% DR}%
+};
+
+% Connecting arrow from dataset to subtests
+\draw[arrow, dashed, gray!40]
+    ([yshift=-0.05cm]dataset.south) -- ([yshift=0.15cm]subtests.north);
+
+\end{tikzpicture}
+\caption{%
+Overview of \textsc{Hallmark}.
+\textbf{Top:} The benchmark pipeline---real papers sourced from DBLP are transformed via perturbation, LLM generation, and real-world collection into 2,525 annotated BibTeX entries, each with six diagnostic sub-tests.
+Nine verification tools (3 citation-database, 6 LLMs) are evaluated using tier-weighted metrics.
+\textbf{Bottom left:} The three-tier hallucination taxonomy with 11 main types, ordered by the verification effort required to detect them.
+\textbf{Bottom right:} Each entry undergoes six binary sub-tests that reveal \emph{why} a tool detects (or misses) a hallucination.
+LLMs achieve 48--88\% detection rates with a pronounced recall--precision tradeoff, while API tools are limited to ${\leq}$26\% detection.%
+}
+\label{fig:overview}
+\end{figure}
