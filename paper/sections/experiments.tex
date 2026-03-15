@@ -5,7 +5,7 @@
 \label{sec:baselines}
 
 We evaluate three independent external citation verification tools (HaRC, verify-citations, GPT-5.1) and two open-weight LLMs accessed via OpenRouter (Qwen3-235B, DeepSeek-V3.2), plus DOI-only, an internal lower-bound baseline, on the \texttt{dev\_public} split.
-We additionally evaluate \texttt{bibtex-updater}~\citep{bibtexupdater} (DR\,=\,0.946), a tool co-developed by the authors; results are reported separately in \cref{app:codesign} due to co-design bias concerns.
+We additionally evaluate \texttt{bibtex-updater}~\citep{bibtexupdater} (DR\,=\,0.946) and a \emph{tool-augmented} variant that injects bibtex-updater's structured output into GPT-5.1's prompt; both are co-developed by the authors and reported separately in \cref{app:codesign} due to co-design bias concerns.
 
 \paragraph{DOI-only.}
 A minimal baseline that checks whether each entry's DOI field resolves via the CrossRef API.

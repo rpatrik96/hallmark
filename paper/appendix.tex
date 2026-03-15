@@ -533,6 +533,70 @@ Since false negatives (undetected hallucinations entering the literature) are th
 The tradeoff is a modestly higher false positive rate (FPR 0.179 vs.\ 0.171) and weaker calibration (ECE 0.297 vs.\ 0.107), both of which are mitigable through manual review of flagged entries.
 We encourage independent tool developers to submit evaluations via \textsc{Hallmark}'s contribution framework to establish unbiased baselines.
 
+\paragraph{Tool-augmented LLM baseline.}
+\label{app:tool_augmented}
+To test whether combining LLM reasoning with API-backed verification is greater than the sum of its parts, we augment GPT-5.1 with \texttt{bibtex-updater}'s structured output.
+For each entry, we first run \texttt{bibtex-check} to obtain the verification status, mismatched fields, confidence score, and APIs consulted, then inject this evidence into an augmented prompt that instructs the model to use the tool findings as evidence while applying its own judgment.
+\cref{tab:tool_augmented} compares the augmented model against its components.
+
+\begin{table}[h]
+\caption{Tool-augmented GPT-5.1 vs.\ standalone components on \texttt{dev\_public}. The augmented model improves precision and calibration over GPT-5.1 alone but does not match bibtex-updater's detection rate.}
+\label{tab:tool_augmented}
+\centering
+\small
+\begin{tabular}{lcccccc}
+\toprule
+\textbf{Baseline} & \textbf{DR $\uparrow$} & \textbf{FPR $\downarrow$} & \textbf{F1 $\uparrow$} & \textbf{MCC $\uparrow$} & \textbf{TW-F1 $\uparrow$} & \textbf{ECE $\downarrow$} \\
+\midrule
+GPT-5.1 (standalone)        & 0.797 & 0.171 & 0.822 & 0.636 & 0.846 & 0.107 \\
+bibtex-updater (standalone)  & 0.946 & 0.179 & 0.908 & 0.781 & 0.936 & 0.297 \\
+GPT-5.1 + bibtex-updater     & 0.818 & 0.144 & 0.846 & 0.670 & 0.856 & \textbf{0.086} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The augmented model improves over standalone GPT-5.1 on every metric except AUROC (0.876 vs.\ 0.886): detection rate rises by 2.1pp, FPR drops by 2.7pp, and ECE improves to 0.086---the best calibration of any baseline.
+However, it falls well short of bibtex-updater's standalone detection rate (81.8\% vs.\ 94.6\%).
+
+\cref{tab:tool_augmented_pertype} reveals why.
+On the two types where bibtex-updater excels and GPT-5.1 struggles---\texttt{author\_mismatch} and \texttt{near\_miss\_title}---the augmented model shows \emph{no improvement}: \texttt{author\_mismatch} remains at 63.3\% (vs.\ bibtex-updater's 94.0\%) and \texttt{near\_miss\_title} actually \emph{degrades} from 62.9\% to 48.7\%.
+The LLM overrides tool-detected metadata mismatches, treating them as potential API artifacts rather than genuine hallucination signals.
+Where the augmented model does improve is on types requiring semantic judgment: \texttt{chimeric\_title} rises to 95.2\% (from 92.3\%) and \texttt{plausible\_fabrication} to 84.3\% (from 82.1\%), suggesting the tool evidence helps the LLM \emph{confirm} its existing suspicions rather than revise its judgment.
+
+\begin{table}[h]
+\caption{Per-type detection rates for tool-augmented GPT-5.1 vs.\ standalone components. The augmented model fails to transfer bibtex-updater's strength on metadata-based types.}
+\label{tab:tool_augmented_pertype}
+\centering
+\small
+\setlength{\tabcolsep}{3pt}
+\begin{tabular}{llccc}
+\toprule
+\textbf{Tier} & \textbf{Type} & \textbf{GPT-5.1} & \textbf{BTU} & \textbf{Augmented} \\
+\midrule
+\multirow{4}{*}{1}
+& \texttt{fabricated\_doi}        & 0.973 & 0.949 & 0.973 \\
+& \texttt{nonexistent\_venue}     & 0.970 & 0.925 & 0.941 \\
+& \texttt{placeholder\_authors}   & 0.941 & 1.000 & 0.977 \\
+& \texttt{future\_date}           & 1.000 & 1.000 & 1.000 \\
+\midrule
+\multirow{5}{*}{2}
+& \texttt{chimeric\_title}        & 0.923 & 0.977 & 0.952 \\
+& \texttt{wrong\_venue}           & 0.833 & 0.978 & 0.806 \\
+& \texttt{author\_mismatch}       & 0.632 & 0.940 & 0.633 \\
+& \texttt{preprint\_as\_pub.}     & 0.840 & 1.000 & 0.724 \\
+& \texttt{hybrid\_fabrication}    & 0.673 & 0.911 & 0.773 \\
+\midrule
+\multirow{2}{*}{3}
+& \texttt{near\_miss\_title}      & 0.629 & 0.927 & 0.487 \\
+& \texttt{plausible\_fabrication} & 0.821 & 0.897 & 0.843 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+These results demonstrate that na\"ive evidence injection---presenting tool output as LLM context---is insufficient to realize the complementarity between parametric and retrieval-based verification.
+The LLM treats tool evidence as \emph{advisory} rather than \emph{authoritative}, defaulting to its own judgment when conflicts arise.
+More structured integration strategies---such as forcing acceptance of tool-detected field mismatches, weighted ensembling, or agentic tool-use where the LLM iteratively queries APIs---may better combine the complementary strengths.
+
 \section{Shortcut analysis}
 \label{app:shortcuts}
 

@@ -47,6 +47,19 @@ results/*.json
 results/*.csv
 !results/history.jsonl
 
+# LaTeX auxiliary files
+*.aux
+*.fdb_latexmk
+*.fls
+*.log
+*.synctex.gz
+*.bbl
+*.blg
+*.out
+
+# Results (CI artifacts, not tracked — except history log)
+results/*.jsonl
+
 # Temporary
 *.tmp
 *.bak

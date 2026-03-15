@@ -53,4 +53,13 @@ GPT-5.1 handles these types well (84\% and 83\% respectively) using parametric k
 Notably, GPT-5.1's Tier~3 detection rate (79\%) slightly exceeds its Tier~2 rate (76\%), which does not perfectly track the a priori difficulty ordering.
 LLMs have strong parametric knowledge for detecting plausible fabrications (Tier~3) through internal knowledge, but struggle with exact metadata recall needed for author matching and hybrid fabrication (Tier~2).
 These per-type gaps provide concrete targets for both tool developers (richer API metadata) and LLM-based approaches (retrieval-augmented verification).
+
+\paragraph{Tool-augmented LLM.}
+\label{sec:tool_augmented}
+To test whether combining LLM reasoning with API-backed verification closes these gaps, we inject bibtex-updater's structured output (verification status, mismatched fields, APIs consulted) into GPT-5.1's prompt before classification (\cref{app:codesign}).
+The augmented model improves over standalone GPT-5.1 on precision-oriented metrics---FPR drops from 17.1\% to 14.4\% and ECE from 0.107 to 0.086 (best calibration of all baselines)---but detection rate improves only modestly (79.7\% $\to$ 81.8\%).
+Critically, the types where bibtex-updater excels show no transfer: \texttt{author\_mismatch} remains at 63\% (vs.\ bibtex-updater's 94\%) and \texttt{near\_miss\_title} \emph{degrades} to 49\% (from 63\%).
+The LLM appears to override tool findings when they conflict with its parametric judgment, treating API-detected mismatches as potential artifacts rather than evidence of hallucination.
+This suggests that na\"ive evidence injection---presenting tool output as context---is insufficient; harder integration strategies (e.g., forcing the LLM to accept tool-detected field mismatches, or post-hoc ensembling) may be needed to realize the complementarity.
+
 \textsc{Hallmark}'s fine-grained analysis makes these gaps visible and measurable.
