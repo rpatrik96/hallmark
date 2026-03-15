@@ -33,7 +33,7 @@ These models test whether the strong LLM performance generalizes beyond propriet
 \cref{tab:results} presents the main results on the \texttt{dev\_public} split.
 
 \begin{table}[t]
-\caption{Results on \texttt{dev\_public} using independent tools only. Best values in \textbf{bold}. $^*$Partial evaluation due to API rate limiting. Coverage = fraction of entries processed. Results for bibtex-updater (co-designed by the authors) are reported separately in \cref{app:codesign}.}
+\caption{Results on \texttt{dev\_public} using independent tools only. Best values in \textbf{bold}. $^*$Partial evaluation due to API rate limiting. Coverage = fraction of entries processed. Metrics for partial-coverage tools ($^*$) are computed on completed entries only; with $n=20$ (HaRC) and $n=71$ (verify-citations), point estimates have wide confidence intervals and should be interpreted cautiously. Results for bibtex-updater (co-designed by the authors) are reported separately in \cref{app:codesign}.}
 \label{tab:results}
 \centering
 \small
@@ -56,7 +56,7 @@ Gemini~2.5~Flash       & 0.482          & 0.101          & 0.617          & 0.40
 \end{table}
 
 The results reveal four key insights about the current citation verification landscape.
-First, \emph{API tool coverage is the binding constraint}: DOI-only is the only API-based tool with full coverage, catching 25.6\% of hallucinations---limited by design to entries with resolvable DOIs---while multi-source tools (HaRC, verify-citations) were bottlenecked by rate limiting to 1.8\% and 6.3\% coverage respectively, preventing any conclusion about their detection quality at scale.
+First, \emph{API tool coverage was limited by infrastructure, not by design}: DOI-only is the only API-based tool with full coverage, catching 25.6\% of hallucinations---limited by design to entries with resolvable DOIs---while multi-source tools (HaRC, verify-citations) were bottlenecked by rate limiting to 1.8\% and 6.3\% coverage respectively, preventing any conclusion about their detection quality at scale.
 Second, \emph{LLMs dramatically outperform API-based tools}: five of six LLMs achieve ${\geq}69\%$ detection rate---a $3{\times}$+ improvement over DOI-only---demonstrating that language models can identify the very hallucinations they produce.
 Third, \emph{LLMs exhibit a recall--precision spectrum}: the six models span a wide range from conservative (Gemini~2.5~Flash: DR\,=\,48\%, FPR\,=\,10\%) to aggressive (DeepSeek-V3.2: DR\,=\,88\%, FPR\,=\,73\%).
 DeepSeek-R1's chain-of-thought reasoning does not improve over V3.2 (DR\,=\,87\% vs.\ 88\%) despite $5{\times}$ higher latency, suggesting that explicit reasoning provides diminishing returns for this task.
@@ -106,7 +106,7 @@ With $\geq$30 instances per type, per-type breakdowns provide statistically mean
 DOI-only detects \texttt{fabricated\_doi} reliably but misses all types that use valid DOIs.
 GPT-5.1 achieves ${\geq}67\%$ detection on 9 of 11 main types, with near-perfect detection of \texttt{nonexistent\_venue} (97\%) and \texttt{placeholder\_authors} (94\%).
 Its weakest types---\texttt{author\_mismatch} (63\%, stored as \texttt{swapped\_authors} in data files for backward compatibility) and \texttt{near\_miss\_title} (63\%)---involve subtle metadata perturbations that require exact bibliographic knowledge, providing concrete targets for future work.
-Per-type comparisons should be interpreted directionally: with $n \approx 30$ instances per type, the minimum detectable effect is ${\sim}25$pp, so small differences between tools on a single type are not reliable; tier-level comparisons have stronger statistical grounding.
+Per-type comparisons should be interpreted directionally: with $n \approx 30$ instances per type, the minimum detectable effect at 80\% power is approximately 30--35pp, so small differences between tools on a single type are not reliable; tier-level comparisons have stronger statistical grounding.
 
 \begin{figure}[t]
 \centering

@@ -18,7 +18,7 @@ We address this gap with four contributions:
 \begin{enumerate}
     \item \textbf{A hallucination taxonomy} of 14 types organized into three difficulty tiers (Easy, Medium, Hard), capturing the full spectrum from obviously fake DOIs to subtly plausible fabrications (\cref{sec:taxonomy}).
     \item \textbf{A benchmark dataset} of 2,525 BibTeX entries with six binary sub-tests per entry, enabling multi-criteria evaluation inspired by HumanEval~\citep{humaneval} (\cref{sec:dataset}).
-    \item \textbf{An evaluation protocol} with tier-weighted F1 (rewarding detection of harder hallucinations), expected calibration error (measuring confidence accuracy), and Plackett-Luce ranking~\citep{luce1959,plackett1975} for comparing tools with incomplete coverage (\cref{sec:evaluation}).
+    \item \textbf{An evaluation protocol} with tier-weighted F1 (rewarding detection of harder hallucinations), expected calibration error (measuring confidence accuracy), and Plackett-Luce ranking infrastructure~\citep{luce1959,plackett1975} for future evaluations with denser tool coverage (\cref{sec:evaluation}).
     \item \textbf{Open infrastructure}: a pip-installable Python package with a baseline registry, CI-integrated evaluation pipeline, and a community contribution system inspired by ONEBench~\citep{onebench2024} (\cref{sec:experiments}).
 \end{enumerate}
 
@@ -42,7 +42,8 @@ Mysterious Citations~\citep{mysterious2026} & HPC venues & --- & \ding{55} & \di
 \end{tabular}
 \end{table}
 
-We evaluate nine tools on \textsc{Hallmark}---three independent external systems (HaRC, verify-citations, GPT-5.1), five open-weight LLMs (DeepSeek-R1, DeepSeek-V3.2, Qwen3-235B, Mistral Large, Gemini~2.5~Flash), plus an internal DOI-only lower-bound baseline---revealing a stark capability gap: API-based tools detect at most 26\% of hallucinations due to rate limiting and metadata coverage gaps, while LLMs achieve 48--88\% detection rates, demonstrating that language models can identify the very hallucinations they produce.
+We evaluate nine tools on \textsc{Hallmark}---three independent external systems (HaRC, verify-citations, GPT-5.1), five open-weight LLMs (DeepSeek-R1, DeepSeek-V3.2, Qwen3-235B, Mistral Large, Gemini~2.5~Flash), plus an internal DOI-only lower-bound baseline---revealing a stark capability gap: DOI-only, the only API tool with full coverage, detects 26\% of hallucinations; multi-source tools (HaRC, verify-citations) were rate-limited to ${<}7\%$ coverage, preventing assessment of their detection quality at scale.
+LLMs achieve 48--88\% detection rates, demonstrating that language models can identify the very hallucinations they produce.
 The six LLMs span a pronounced recall--precision spectrum: aggressive models (DeepSeek-R1/V3.2) achieve 87--88\% detection at 64--73\% FPR, while conservative models (Gemini~2.5~Flash) achieve 48\% detection at only 10\% FPR, with GPT-5.1 offering the best balance (80\% DR, 17\% FPR).
 We additionally evaluate bibtex-updater, a tool co-developed by the authors, reporting results separately in \cref{app:codesign} to maintain transparency.
 These results demonstrate the value of a structured benchmark for identifying actionable improvement targets.

@@ -157,7 +157,7 @@ def fig_per_type_heatmap(results: list[dict], output_dir: Path) -> None:
             matrix[i, j] = m.get("detection_rate", 0.0)
 
     fig, ax = plt.subplots(figsize=(8, max(2, len(tools) * 0.6 + 1)))
-    im = ax.imshow(matrix, cmap="RdYlGn", vmin=0, vmax=1, aspect="auto")
+    im = ax.imshow(matrix, cmap="viridis", vmin=0, vmax=1, aspect="auto")
 
     ax.set_xticks(range(len(types)))
     ax.set_xticklabels([t.replace("_", "\n") for t in types], rotation=0, fontsize=7)
@@ -168,7 +168,7 @@ def fig_per_type_heatmap(results: list[dict], output_dir: Path) -> None:
     for i in range(len(tools)):
         for j in range(len(types)):
             val = matrix[i, j]
-            color = "white" if val < 0.4 or val > 0.8 else "black"
+            color = "white" if val < 0.45 else "black"
             ax.text(j, i, f"{val:.0%}", ha="center", va="center", fontsize=7, color=color)
 
     ax.set_title("Detection Rate by Hallucination Type")

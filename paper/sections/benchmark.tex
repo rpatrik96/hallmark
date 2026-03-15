@@ -91,6 +91,7 @@ Every entry undergoes automated validation checking field completeness, BibTeX w
 Sub-test labels are verified for logical consistency with entry metadata (e.g., \texttt{doi\_resolves} matches DOI field presence); automated verification achieves $>$98\% agreement across all splits.
 To prevent trivial shortcuts, we strip the \texttt{url} field from all entries: hallucinated entries would otherwise inherit the source paper's DBLP URL (enabling detection via URL resolution and metadata comparison), and stripping only from hallucinated entries would make URL presence a perfect label discriminator.
 Contributed entries pass through a validation pipeline that enforces the schema constraints programmatically before inclusion.
+To detect potential training data contamination, each split includes a canary string with a unique GUID; users can search model outputs or training corpora for this identifier.
 
 \paragraph{Scaling for statistical power.}
 To ensure per-type statistical validity, we scaled the hallucinated portion so that every main type has at least 30 instances per main split.

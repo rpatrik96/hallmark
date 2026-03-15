@@ -91,10 +91,10 @@ Systematic perturbations follow deterministic rules per hallucination type:
     \item \texttt{preprint\_as\_published}: Take an arXiv-only paper and add a fabricated venue field.
     \item \texttt{hybrid\_fabrication}: Keep a valid DOI but replace title and authors with fabricated metadata.
     \item \texttt{near\_miss\_title}: Modify 1--2 words via six strategies: synonym substitution (POS-safe pairs), plural/singular flipping, British/American spelling swap, abbreviation expansion/contraction (e.g., ``RL'' $\leftrightarrow$ ``Reinforcement Learning''), hyphenation toggling (e.g., ``self-supervised'' $\leftrightarrow$ ``self supervised''), and article removal.
-    \item \texttt{plausible\_fabrication}: LLM-generate a complete, realistic but nonexistent entry.
+    \item \texttt{plausible\_fabrication}: Template-based combinatorial generation of a complete, realistic but nonexistent entry (random author combinations, plausible titles, real venues). A separate set of 113 LLM-generated entries (\cref{tab:stratified_dr}) provides ecological validity but uses a different generation method.
     \item \texttt{merged\_citation}: Combine metadata from 2--3 real papers into one entry (e.g., authors from paper A, title from paper B, venue from paper C).
     \item \texttt{partial\_author\_list}: Take a real paper and drop one or more middle co-authors, keeping only the first and last.
-    \item \texttt{arxiv\_version\_mismatch}: Cite specific claims from superseded arXiv versions.
+    \item \texttt{arxiv\_version\_mismatch}: Cite an arXiv preprint with a reassigned venue and shifted publication year. Classified as a stress-test type since no real-world instances have been observed.
 \end{itemize}
 
 \paragraph{LLM-generated entries.}
@@ -257,7 +257,8 @@ Scraped (valid)  & --- & 486  & ---   & 0.387 \\
 \bottomrule
 \end{tabular}
 \par\vspace{2pt}
-{\footnotesize FPR is computed only on valid (scraped) entries. Hallucinated entries have no FPR; valid entries have no DR.}
+{\footnotesize FPR is computed only on valid (scraped) entries. Hallucinated entries have no FPR; valid entries have no DR.
+The ``Adversarial'' generation method in the data files covers \texttt{hybrid\_fabrication} and \texttt{plausible\_fabrication} entries that use template-based perturbation (real DOI + fabricated metadata, or combinatorial assembly of plausible fields), distinguishing them from ``Perturbation'' (simple single-field modifications) and ``LLM-generated'' (entries produced by language models).}
 \end{table}
 
 \paragraph{Cross-split validation.}

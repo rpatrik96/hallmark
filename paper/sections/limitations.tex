@@ -28,7 +28,9 @@ The rolling-update mechanism has been implemented and tested in CI but has not y
 
 \paragraph{Benchmark-tool co-design.}
 As the authors of both the benchmark and one evaluated tool (bibtex-updater), we acknowledge potential co-design bias.
-We mitigate this by reporting bibtex-updater results separately in \cref{app:codesign}, evaluating all tools with identical pre-screening infrastructure, releasing the full evaluation protocol for independent replication, and actively soliciting independent tool submissions via the benchmark's public leaderboard.
+The taxonomy was initially designed from a literature survey of citation error types observed in the NeurIPS 2025 incident and related audits; bibtex-updater was then developed to address these error types---not the reverse.
+The sub-tests reflect fundamental verification steps any citation-checking tool would need (DOI resolution, title lookup, author matching), not tool-specific internals.
+We mitigate residual co-design risk by reporting bibtex-updater results separately in \cref{app:codesign}, evaluating all tools with identical pre-screening infrastructure, releasing the full evaluation protocol for independent replication, and actively soliciting independent tool submissions via the benchmark's public leaderboard.
 
 \paragraph{Domain transfer.}
 \textsc{Hallmark} covers English-language ML references from five top venues (NeurIPS, ICML, ICLR, AAAI, CVPR).
