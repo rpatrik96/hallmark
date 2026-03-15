@@ -10,8 +10,8 @@ We define 14 citation hallucination types---11 empirically grounded and 3 stress
 \textbf{Tier~3 (Hard)} hallucinations require deep verification or semantic reasoning: near-miss titles differ by one or two words from a real paper; plausible fabrications are entirely invented but realistic; and arXiv version mismatches cite a preprint with wrong venue and shifted year.
 
 This taxonomy emerged from manual analysis of hallucinated citations found in the NeurIPS 2025 incident and related audits~\citep{ghostcite2026,hallucitation2026}, supplemented by adversarial brainstorming of failure modes that existing tools might miss.
-Of 108 real-world hallucinated citations in \textsc{Hallmark},
-79\% map cleanly to a single taxonomy type; the remainder exhibit compound failure modes assigned to the highest-tier applicable type (\cref{app:real-world-mapping}).
+The benchmark includes 108 real-world hallucinated citations across all splits.
+Of the 72 analyzed in detail (\cref{app:real-world-mapping}), 79\% map cleanly to a single taxonomy type; the remainder exhibit compound failure modes assigned to the highest-tier applicable type.
 We include three theoretically motivated types (\texttt{merged\_citation}, \texttt{partial\_author\_list}, \texttt{arxiv\_version\_mismatch}) in a separate \texttt{stress\_test} split to probe tool robustness on plausible failure modes not yet observed in documented incidents.
 These types are evaluated independently from the 11 empirically-grounded main types and may be revised as real-world evidence accumulates.
 
@@ -26,24 +26,24 @@ These types are evaluated independently from the 11 empirically-grounded main ty
 \textbf{Tier} & \textbf{Type} & \textbf{Description} & \textbf{D} & \textbf{T} & \textbf{A} & \textbf{V} & \textbf{F} & \textbf{X} \\
 \midrule
 \multirow{4}{*}{\rotatebox{90}{\textcolor{tier1}{\textbf{Easy}}}}
-& \texttt{fabricated\_doi} & DOI does not resolve & \ding{55} & ? & ? & ? & ? & \ding{55} \\
-& \texttt{nonexistent\_venue} & Invented conference/journal & ? & ? & ? & \ding{55} & ? & \ding{55} \\
-& \texttt{placeholder\_authors} & Generic/fake author names & ? & ? & \ding{55} & ? & ? & \ding{55} \\
-& \texttt{future\_date} & Year in the future & ? & ? & ? & ? & \ding{55} & \ding{55} \\
+& \texttt{fabricated\_doi} & DOI does not resolve & \ding{55} & \ding{51} & \ding{51} & \ding{51} & \ding{51} & \ding{55} \\
+& \texttt{nonexistent\_venue} & Invented conference/journal & ? & \ding{51} & \ding{51} & \ding{55} & \ding{51} & \ding{55} \\
+& \texttt{placeholder\_authors} & Generic/fake author names & ? & \ding{51} & \ding{55} & \ding{51} & \ding{51} & \ding{55} \\
+& \texttt{future\_date} & Year in the future & ? & \ding{51} & \ding{51} & \ding{51} & \ding{55} & \ding{55} \\
 \midrule
 \multirow{7}{*}{\rotatebox{90}{\textcolor{tier2}{\textbf{Medium}}}}
 & \texttt{chimeric\_title} & Real authors + fake title & \ding{51} & \ding{55} & \ding{51} & ? & \ding{51} & \ding{55} \\
 & \texttt{wrong\_venue} & Correct paper, wrong venue & \ding{51} & \ding{51} & \ding{51} & \ding{55} & \ding{51} & \ding{55} \\
 & \texttt{author\_mismatch} & Correct title, wrong authors & \ding{51} & \ding{51} & \ding{55} & \ding{51} & \ding{51} & \ding{55} \\
 & \texttt{preprint\_as\_published} & arXiv cited as venue paper & \ding{51} & \ding{51} & \ding{51} & \ding{55} & \ding{51} & \ding{55} \\
-& \texttt{hybrid\_fabrication} & Real DOI + fake metadata & \ding{51} & \ding{55} & \ding{55} & ? & \ding{51} & \ding{55} \\
-& \texttt{merged\_citation}\textsuperscript{\textcolor{blue}{$\triangle$}} & Metadata from 2+ papers & ? & \ding{51} & \ding{55} & \ding{51} & \ding{51} & \ding{55} \\
+& \texttt{hybrid\_fabrication} & Real DOI + fake metadata & ? & \ding{55} & \ding{55} & \ding{51} & \ding{51} & \ding{55} \\
+& \texttt{merged\_citation}\textsuperscript{\textcolor{blue}{$\triangle$}} & Metadata from 2+ papers & ? & \ding{51} & \ding{55} & \ding{55} & \ding{51} & \ding{55} \\
 & \texttt{partial\_author\_list}\textsuperscript{\dag\textcolor{blue}{$\triangle$}} & Subset of real authors & \ding{51} & \ding{51} & \ding{55} & \ding{51} & \ding{51} & \ding{55} \\
 \midrule
 \multirow{3}{*}{\rotatebox{90}{\textcolor{tier3}{\textbf{Hard}}}}
 & \texttt{near\_miss\_title} & Title off by 1--2 words & \ding{51} & \ding{55} & \ding{51} & \ding{51} & \ding{51} & \ding{55} \\
-& \texttt{plausible\_fabrication} & Entirely fabricated, realistic & \ding{55} & \ding{55} & \ding{55} & ? & ? & \ding{55} \\
-& \texttt{arxiv\_version\_mismatch}\textsuperscript{\textcolor{blue}{$\triangle$}} & Wrong version claims & \ding{51} & \ding{51} & \ding{51} & \ding{51} & \ding{51} & \ding{55} \\
+& \texttt{plausible\_fabrication} & Entirely fabricated, realistic & ? & \ding{55} & \ding{55} & \ding{51} & ? & \ding{55} \\
+& \texttt{arxiv\_version\_mismatch}\textsuperscript{\textcolor{blue}{$\triangle$}} & Wrong version claims & ? & \ding{51} & \ding{51} & \ding{55} & \ding{51} & \ding{55} \\
 \bottomrule
 \end{tabular}
 \par\vspace{2pt}

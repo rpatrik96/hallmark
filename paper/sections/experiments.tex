@@ -5,12 +5,12 @@
 \label{sec:baselines}
 
 We evaluate three independent external citation verification tools (HaRC, verify-citations, GPT-5.1) plus DOI-only, an internal lower-bound baseline, on the \texttt{dev\_public} split.
-We additionally report results for \texttt{bibtex-updater}, a tool developed by the authors, in \cref{app:codesign} to maintain transparency about the co-design relationship.
+We additionally evaluate \texttt{bibtex-updater}~\citep{bibtexupdater} (DR\,=\,0.946), a tool co-developed by the authors; results are reported separately in \cref{app:codesign} due to co-design bias concerns.
 
 \paragraph{DOI-only.}
 A minimal baseline that checks whether each entry's DOI field resolves via the CrossRef API.
 Entries with a non-resolving DOI are flagged as hallucinated; entries without a DOI field are conservatively assumed valid.
-Results in \cref{tab:results} include the shared pre-screening layer (\cref{sec:prescreening}); without pre-screening, overall detection rate drops by ${\sim}5$pp (from 25.6\% to 20.3\%), with the largest effect on Tier~1 (${\sim}18$pp).
+Results in \cref{tab:results} include the shared pre-screening layer (DOI format validation, year bounds, author heuristics; \cref{sec:prescreening}); without pre-screening, overall detection rate drops by ${\sim}5$pp (from 25.6\% to 20.3\%), with the largest effect on Tier~1 (${\sim}18$pp).
 This baseline tests the lower bound of what simple metadata checks can achieve.
 
 \paragraph{HaRC.}
@@ -46,7 +46,7 @@ GPT-5.1 (zero-shot) & \textbf{0.797} & 0.171          & \textbf{0.822} & \textbf
 \end{table}
 
 The results reveal three key insights about the current citation verification landscape.
-First, \emph{API-based tools are insufficient}: the best API-based tool (DOI-only) catches only 25.6\% of hallucinations because most types in \textsc{Hallmark} use valid DOIs, and multi-source tools (HaRC, verify-citations) completed only 1.8\% and 6.3\% of entries respectively due to rate limiting.
+First, \emph{API tool coverage is the binding constraint}: DOI-only is the only API-based tool with full coverage, catching 25.6\% of hallucinations---limited by design to entries with resolvable DOIs---while multi-source tools (HaRC, verify-citations) were bottlenecked by rate limiting to 1.8\% and 6.3\% coverage respectively, preventing any conclusion about their detection quality at scale.
 Second, \emph{LLMs dramatically outperform API-based tools}: GPT-5.1 achieves an 80\% detection rate---a $3{\times}$ improvement over DOI-only---demonstrating that language models can identify the very hallucinations they produce.
 Third, \emph{a capability gap remains}: even GPT-5.1 misses 20\% of hallucinations, with systematic weaknesses on subtle types like \texttt{author\_mismatch} (63\%) and \texttt{near\_miss\_title} (63\%), providing concrete improvement targets.
 Since Detection Rate and FPR are prevalence-independent, we emphasize these as primary metrics.\footnote{F1 is prevalence-sensitive: a benchmark with 50\% hallucination prevalence inflates F1 relative to real-world deployment where hallucination rates may be much lower. F1 values should only be compared within the same split, never across splits or with external results.}
@@ -59,6 +59,7 @@ Unlike API-dependent tools, the LLM baseline achieves full coverage (100\% of en
 HaRC and verify-citations completed only 1.8\% and 6.3\% of entries respectively due to API rate limiting.
 Their metrics reflect performance on the completed subset only and are not directly comparable to full-coverage tools.
 Plackett-Luce ranking (\cref{app:ranking}) provides a principled framework for comparing tools with heterogeneous coverage but requires substantially higher pairwise overlap than achieved here.
+With current tool coverage (HaRC: 1.8\%, verify-citations: 6.3\%), pairwise overlap is insufficient for stable parameter estimates; we report mean-score ranking as the primary comparison and provide Plackett-Luce infrastructure for future denser evaluations.
 
 We compute 95\% confidence intervals using stratified bootstrap (10{,}000 resamples, stratified by hallucination type).
 With $\geq$30 instances per type, per-type metrics have narrower confidence intervals than the original 10-instance design; we provide exact counts and power analysis in \cref{app:statistics}.
@@ -85,7 +86,8 @@ The tier structure exposes the capability gap between API-based and LLM-based ap
 With $\geq$30 instances per type, per-type breakdowns provide statistically meaningful comparisons.
 DOI-only detects \texttt{fabricated\_doi} reliably but misses all types that use valid DOIs.
 GPT-5.1 achieves ${\geq}67\%$ detection on 9 of 11 main types, with near-perfect detection of \texttt{nonexistent\_venue} (97\%) and \texttt{placeholder\_authors} (94\%).
-Its weakest types---\texttt{author\_mismatch} (63\%) and \texttt{near\_miss\_title} (63\%)---involve subtle metadata perturbations that require exact bibliographic knowledge, providing concrete targets for future work.
+Its weakest types---\texttt{author\_mismatch} (63\%, stored as \texttt{swapped\_authors} in data files for backward compatibility) and \texttt{near\_miss\_title} (63\%)---involve subtle metadata perturbations that require exact bibliographic knowledge, providing concrete targets for future work.
+Per-type comparisons should be interpreted directionally: with $n \approx 30$ instances per type, the minimum detectable effect is ${\sim}25$pp, so small differences between tools on a single type are not reliable; tier-level comparisons have stronger statistical grounding.
 
 \begin{figure}[t]
 \centering

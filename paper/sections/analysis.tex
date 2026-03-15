@@ -19,7 +19,7 @@ Confidence calibration is critical for venue deployment, where reviewers need to
 \cref{fig:cost} plots detection rate against API cost per entry.
 DOI-only is cheapest (1 API call) but achieves only 25.6\% detection rate.
 HaRC and verify-citations query multiple APIs but are bottlenecked by rate limiting, completing only 1.8\% and 6.3\% of entries respectively---making them impractical for venue-scale deployment.
-GPT-5.1 achieves $3{\times}$ the detection rate of DOI-only at full coverage, though at higher per-entry cost (\$0.21/entry).
+GPT-5.1 achieves $3{\times}$ the detection rate of DOI-only at full coverage, though at higher per-entry cost (\$0.21/entry; GPT-5.1 API pricing as of March 2026, including input and output tokens).
 This cost--accuracy tradeoff highlights the need for tools that balance comprehensive verification with practical throughput (see \cref{app:codesign} for bibtex-updater's cost analysis).
 
 \begin{figure}[t]
@@ -40,7 +40,7 @@ These results support using perturbation entries as controlled diagnostic tests 
 \paragraph{Temporal robustness.}
 \label{sec:temporal_robustness}
 To stress-test GPT-5.1 on papers beyond its likely training cutoff, we construct a 60-entry probe set (30 valid entries scraped from arXiv 2026 and DBLP 2024--2025, plus 30 hallucinated variants across all tiers).
-The false positive rate explodes from 17.1\% on the 2021--2023 baseline to 63.3\% on recent papers---a $3.7{\times}$ increase---while detection rate inflates to 96.7\% (from 79.7\%).
+The false positive rate rises sharply from 17.1\% on the 2021--2023 baseline to 63.3\% on recent papers (19 of 30 genuine recent papers flagged as hallucinated; 95\% Clopper-Pearson CI: [0.44, 0.80])---a $3.7{\times}$ increase---while detection rate inflates to 96.7\% (from 79.7\%).
 This asymmetry reveals that GPT-5.1 defaults to \texttt{HALLUCINATED} when it cannot confirm a paper from parametric memory, achieving near-perfect detection at the cost of flagging the majority of genuine recent publications.
 ECE doubles (0.107 $\to$ 0.238), confirming degraded calibration.
 Tier~1--2 hallucinations remain perfectly detected; the precision collapse is driven entirely by false positives on valid entries.
@@ -50,5 +50,7 @@ These results motivate including recent papers in the benchmark to expose tempor
 \label{sec:failure}
 API-based tools fail entirely on venue-level hallucinations (\texttt{preprint\_as\_published}, \texttt{wrong\_venue}) because bibliographic APIs do not reliably distinguish ``published at venue~X'' from ``available on arXiv.''
 GPT-5.1 handles these types well (84\% and 83\% respectively) using parametric knowledge, but struggles with subtle perturbations: \texttt{author\_mismatch} (63\%) and \texttt{near\_miss\_title} (63\%) require exact bibliographic recall that even large LLMs lack.
+Notably, GPT-5.1's Tier~3 detection rate (79\%) slightly exceeds its Tier~2 rate (76\%), which does not perfectly track the a priori difficulty ordering.
+LLMs have strong parametric knowledge for detecting plausible fabrications (Tier~3) through internal knowledge, but struggle with exact metadata recall needed for author matching and hybrid fabrication (Tier~2).
 These per-type gaps provide concrete targets for both tool developers (richer API metadata) and LLM-based approaches (retrieval-augmented verification).
 \textsc{Hallmark}'s fine-grained analysis makes these gaps visible and measurable.

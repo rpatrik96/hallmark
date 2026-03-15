@@ -42,6 +42,6 @@ Mysterious Citations~\citep{mysterious2026} & HPC venues & --- & \ding{55} & \di
 \end{tabular}
 \end{table}
 
-We evaluate four independent tools on \textsc{Hallmark}---a DOI-only baseline, HaRC, verify-citations, and a zero-shot LLM verifier (GPT-5.1)---revealing a stark capability gap: API-based tools detect at most 26\% of hallucinations due to rate limiting and metadata coverage gaps, while GPT-5.1 achieves an 80\% detection rate, demonstrating that language models can identify the very hallucinations they produce.
+We evaluate four tools on \textsc{Hallmark}---three independent external systems (HaRC, verify-citations, and a zero-shot LLM verifier, GPT-5.1) and an internal DOI-only lower-bound baseline---revealing a stark capability gap: API-based tools detect at most 26\% of hallucinations due to rate limiting and metadata coverage gaps, while GPT-5.1 achieves an 80\% detection rate, demonstrating that language models can identify the very hallucinations they produce.
 We additionally evaluate bibtex-updater, a tool co-developed by the authors, reporting results separately in \cref{app:codesign} to maintain transparency.
 These results demonstrate the value of a structured benchmark for identifying actionable improvement targets.

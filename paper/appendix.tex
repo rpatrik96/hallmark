@@ -65,8 +65,8 @@ We mapped 72 real-world hallucinated citations from three documented incident st
 \end{tabular}
 \end{table}
 
-\noindent Of the 72 real-world citations, 57 (79\%) map directly to existing taxonomy types.
-The remaining 15 exhibit compound failure modes (e.g., fabricated DOI \emph{and} wrong venue simultaneously); we assigned these to the highest-tier applicable type.
+\noindent Of the 72 real-world citations in this table, 57 (79\%) map directly to a single taxonomy type; the remaining 15 exhibit compound failure modes and are assigned to their highest-tier applicable type.
+The benchmark contains 108 real-world entries in total across all splits; this table covers the 72 drawn from three documented incident studies, while the remaining 36 were sourced from additional documented incidents.
 The dominance of \texttt{plausible\_fabrication} (55\%) reflects the predominant LLM failure mode: models generate coherent but entirely fictional references rather than subtly corrupting real ones.
 Three taxonomy types---\texttt{merged\_citation}, \texttt{partial\_author\_list}, and \texttt{arxiv\_version\_mismatch}---have zero real-world instances, motivating their designation as stress-test types (\cref{sec:taxonomy}).
 
@@ -179,6 +179,7 @@ Notably, DOI-only's deterministic year-bounds check achieves perfect detection o
 \paragraph{Bootstrap confidence intervals.}
 All aggregate metrics in \cref{tab:results} are accompanied by 95\% confidence intervals computed via stratified bootstrap with 10{,}000 resamples.
 Stratification by hallucination type ensures that the resampled datasets preserve the original type distribution, preventing bootstrap bias from underrepresented types.
+For reference, GPT-5.1 bootstrap 95\% CIs are: DR~[0.77, 0.83]; F1~[0.79, 0.85]; full intervals for all baselines and metrics are available in the released evaluation artifacts.
 
 \paragraph{Significance testing.}
 We use paired bootstrap tests~\citep{efron1994bootstrap} to compare tools pairwise.
@@ -233,6 +234,45 @@ DOI-only achieves 0.392, 0.310, 0.255, 0.337, and 0.342.
 The relative ordering of tools (bibtex-updater $>$ GPT-5.1 $>$ DOI-only) is preserved under all weighting schemes, confirming that our conclusions are robust to the specific choice of tier weights.
 bibtex-updater's narrow sensitivity range (0.908--0.951) reflects its consistently strong per-tier performance; DOI-only shows wider variation (0.255--0.392) because its detection is concentrated in Tier~1.
 
+\paragraph{Detection rate by generation method.}
+To assess whether GPT-5.1 exhibits self-recognition bias on LLM-generated entries, we stratify detection rate by the entry's generation method (\cref{tab:stratified_dr}).
+LLM-generated hallucinations are \emph{harder} for GPT-5.1 to detect (DR\,=\,0.611) than perturbation-based entries (DR\,=\,0.829), ruling out the concern that the model recognizes its own outputs.
+This is expected: LLM-generated entries are designed for ecological validity and lack the systematic structural patterns that perturbation introduces.
+Adversarial entries, despite being crafted to evade detection, are nearly perfectly detected (DR\,=\,0.983), suggesting that current adversarial strategies do not fool LLM verifiers.
+
+\begin{table}[h]
+\caption{GPT-5.1 detection rate on \texttt{dev\_public} stratified by generation method.}
+\label{tab:stratified_dr}
+\centering
+\small
+\begin{tabular}{lcccc}
+\toprule
+\textbf{Generation method} & \textbf{$n$ (hall.)} & \textbf{$n$ (valid)} & \textbf{DR} & \textbf{FPR} \\
+\midrule
+Adversarial      & 60  & ---  & 0.983 & --- \\
+Perturbation     & 414 & ---  & 0.829 & --- \\
+Real-world       & 46  & ---  & 0.891 & --- \\
+LLM-generated    & 113 & ---  & 0.611 & --- \\
+Scraped (valid)  & --- & 486  & ---   & 0.387 \\
+\bottomrule
+\end{tabular}
+\par\vspace{2pt}
+{\footnotesize FPR is computed only on valid (scraped) entries. Hallucinated entries have no FPR; valid entries have no DR.}
+\end{table}
+
+\paragraph{Cross-split validation.}
+We evaluate GPT-5.1 on \texttt{test\_public} (831 entries, 65.5\% hallucinated) to verify that findings generalize beyond \texttt{dev\_public}.
+Detection rate is consistent: DR\,=\,0.807 (test) vs.\ 0.818 (dev).
+Per-tier patterns are preserved: Tier~1 DR\,=\,0.985, Tier~2 DR\,=\,0.741, Tier~3 DR\,=\,0.760.
+FPR is elevated on both splits (dev: 0.390, test: 0.455), driven by GPT-5.1's increased tendency to flag uncertain entries as hallucinated (see model drift discussion below).
+MCC\,=\,0.361 (test) provides a prevalence-invariant comparison point.
+
+\paragraph{LLM model drift.}
+Repeating the GPT-5.1 evaluation on \texttt{dev\_public} one month after the original run reveals non-trivial model drift: DR shifts from 0.797 to 0.818 (+2.1pp) while FPR increases from 0.171 to 0.390 (+21.9pp).
+The model has become more aggressive---higher recall at the cost of substantially more false positives.
+This instability reinforces the need for versioned, reproducible benchmarks: LLM-based baselines should be re-evaluated periodically with saved predictions and model version identifiers.
+The original results in \cref{tab:results} use the first evaluation (February 2026); the stratified and cross-split analyses above use the March 2026 re-evaluation.
+
 \section{Plackett-Luce ranking}
 \label{app:ranking}
 
@@ -272,6 +312,36 @@ Each wrapper:
 (2)~invokes the tool,
 (3)~maps the tool's output to a \textsc{Hallmark} \texttt{Prediction} with label, confidence, and reason.
 
+\paragraph{LLM prompt template.}
+The LLM-based baselines (GPT-5.1, Claude, and OpenRouter models) use a zero-shot prompt with no few-shot examples.
+The exact template is:
+
+\begin{lstlisting}[basicstyle=\small\ttfamily, breaklines=true, frame=single, captionpos=b]
+You are a citation verification expert. Analyze the following
+BibTeX entry and determine if it is a VALID real publication
+or a HALLUCINATED (fabricated) citation.
+
+BibTeX entry:
+```bibtex
+{bibtex}
+```
+
+Consider:
+1. Is the title plausible and does it match known work by
+   these authors?
+2. Are the authors real researchers in this field?
+3. Is the venue (journal/conference) real?
+4. Does the year make sense?
+5. If a DOI is present, does it look properly formatted?
+
+Respond with JSON only:
+{
+    "label": "VALID" or "HALLUCINATED",
+    "confidence": 0.0 to 1.0,
+    "reason": "brief explanation"
+}
+\end{lstlisting}
+
 \paragraph{Timeout handling.}
 Each baseline is subject to a per-entry timeout (default: 60 seconds).
 Entries that timeout are assigned a default prediction of \texttt{VALID} with confidence 0.5, following the conservative assumption that unverifiable entries should not be flagged.
@@ -306,7 +376,7 @@ The precision collapse is driven entirely by false positives on \emph{valid} ent
 
 \begin{table}[h]
 \centering
-\caption{GPT-5.1 temporal robustness: full-dataset baseline (2021--2023 valid entries) vs.\ temporal probe (2024--2026 valid entries). The probe reveals a $3.7{\times}$ FPR increase driven by the model's inability to confirm recent publications.}
+\caption{GPT-5.1 temporal robustness: temporal probe baseline (a 60-entry subset with 2021--2023 valid entries) vs.\ temporal probe (2024--2026 valid entries). Per-tier DRs differ from \cref{tab:results} because the probe baseline uses a smaller, differently composed subset, not the full \texttt{dev\_public} split. The probe reveals a $3.7{\times}$ FPR increase driven by the model's inability to confirm recent publications.}
 \label{tab:temporal_probe}
 \small
 \begin{tabular}{lcc}
@@ -350,6 +420,10 @@ The generation pipeline now supports adaptive temporal scraping (\texttt{scrape\
     \item \textbf{CI workflows}: \texttt{tests.yml} (test suite across Python 3.10--3.13), \texttt{baselines.yml} (weekly baseline evaluation)
 \end{itemize}
 
+\paragraph{Hidden test set evaluation.}
+The hidden test set (\texttt{test\_hidden}, 453 entries) is distributed without ground-truth labels.
+Tool developers submit predictions via pull request; maintainers evaluate against held-out labels and report results on the public leaderboard.
+
 \paragraph{Installation.}
 \begin{verbatim}
 pip install hallmark                    # Core
@@ -361,7 +435,7 @@ pip install hallmark[all]               # Everything
 \section{Datasheet for \textsc{Hallmark}}
 \label{app:datasheet}
 
-Following \citet{gebru2021datasheets}, we provide a datasheet for the \textsc{Hallmark} dataset.
+Following \citet{gebru2021datasheets} and \citet{holland2020dataset}, we provide a datasheet for the \textsc{Hallmark} dataset.
 
 \paragraph{Motivation.}
 \textsc{Hallmark} was created to provide a standardized benchmark for evaluating citation hallucination detection tools, motivated by the NeurIPS 2025 incident and subsequent audits.
@@ -412,7 +486,7 @@ bibtex-updater & 0.946 & 0.179 & 0.908 & 0.781 & 0.936 & 0.297 & 1.00 \\
 
 \paragraph{Per-type breakdown for bibtex-updater.}
 \cref{tab:codesign_pertype} shows per-type detection rates for bibtex-updater.
-The tool achieves perfect detection on \texttt{future\_date}, \texttt{placeholder\_authors}, \texttt{preprint\_as\_published}, and \texttt{merged\_citation} (all 1.000), and strong performance across all types including previously challenging ones like \texttt{swapped\_authors} (0.940) and \texttt{near\_miss\_title} (0.927). The weakest type is \texttt{plausible\_fabrication} (0.897).
+The tool achieves perfect detection on \texttt{future\_date}, \texttt{placeholder\_authors}, \texttt{preprint\_as\_published}, and \texttt{merged\_citation} (all 1.000), and strong performance across all types including previously challenging ones like \texttt{author\_mismatch} (0.940) and \texttt{near\_miss\_title} (0.927). The weakest type is \texttt{plausible\_fabrication} (0.897).
 
 \begin{table}[h]
 \caption{Per-type detection rates for \texttt{bibtex-updater} on \texttt{dev\_public}.}
@@ -444,7 +518,7 @@ The tool achieves perfect detection on \texttt{future\_date}, \texttt{placeholde
 \multirow{3}{*}{\rotatebox{90}{\scriptsize Stress}}
 & \texttt{merged\_citation}       & 1.000 \\
 & \texttt{arxiv\_version\_mismatch} & 0.967 \\
-& \texttt{swapped\_authors}       & 0.940 \\
+& \texttt{author\_mismatch}       & 0.940 \\
 \bottomrule
 \end{tabular}
 \end{table}

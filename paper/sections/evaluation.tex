@@ -34,7 +34,7 @@ We partition predictions into $B=10$ equal-width confidence bins and compute:
 \text{ECE} = \sum_{b=1}^{B} \frac{|S_b|}{N} \left| \text{acc}(S_b) - \text{conf}(S_b) \right|, \label{eq:ece}
 \end{equation}
 where $S_b$ is the set of predictions in bin $b$, $\text{acc}(S_b)$ is the fraction of correct predictions, and $\text{conf}(S_b)$ is the mean confidence.
-Well-calibrated tools have ECE $\approx 0$; in practice, ECE $< 0.05$ indicates excellent calibration, $0.05$--$0.15$ is acceptable, and ECE $> 0.2$ signals that confidence scores are unreliable for downstream decision-making.
+Well-calibrated tools have ECE $\approx 0$; in practice, ECE $< 0.05$ indicates excellent calibration, $0.05$--$0.15$ is acceptable, and ECE $> 0.2$ signals that confidence scores are unreliable for downstream decision-making (thresholds follow the convention of~\citealt{naeini2015,guo2017calibration}).
 
 \paragraph{Diagnostic metrics.}
 \textbf{detect@$k$} is the fraction of hallucinations detected by at least one of $k$ verification strategies (union recall at $k$).

@@ -9,6 +9,8 @@ We emphasize prevalence-independent metrics (Detection Rate, FPR) as primary; pr
 The benchmark covers only English-language BibTeX references.
 The majority of hallucinated entries are synthetically generated via perturbation, though the benchmark includes 280 LLM-generated entries (produced by prompting GPT-5.1 to generate plausible citations and verifying against CrossRef with automated type classification) and 108 real-world entries curated from GPTZero's NeurIPS 2025 analysis and documented incidents (GhostCite, HalluCitation).
 The real-world sample remains small and type-skewed (55\% \texttt{plausible\_fabrication}).
+Real-world entries were curated by the paper authors; type assignment for the 15 entries (of 72 analyzed) with compound failure modes involved judgment calls.
+Multiple independent annotators were not used, and inter-annotator agreement was not measured; this is a limitation of the current dataset.
 Future versions should expand real-world coverage as more documented incidents become available.
 Baseline performance depends on bibliographic API availability and coverage; results may shift as APIs evolve.
 We did not evaluate commercial plagiarism detection tools (Turnitin, iThenticate), which focus on textual similarity rather than citation metadata verification.
@@ -22,6 +24,7 @@ LLM-based verifiers carry an implicit temporal bias: their parametric knowledge 
 Our temporal probe (\cref{sec:temporal_robustness}) shows GPT-5.1's false positive rate rises from 17\% to 63\% on 2024--2026 papers, meaning it flags most recent valid entries as hallucinated.
 Performance metrics therefore depend on the temporal overlap between an LLM's training data and the test entries.
 As models are updated, their effective cutoff shifts, making temporal robustness a moving target that benchmarks must track continuously.
+The rolling-update mechanism has been implemented and tested in CI but has not yet been exercised in a full evaluation cycle; we expect to exercise it at the first quarterly update.
 
 \paragraph{Benchmark-tool co-design.}
 As the authors of both the benchmark and one evaluated tool (bibtex-updater), we acknowledge potential co-design bias.
