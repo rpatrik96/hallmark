@@ -402,6 +402,26 @@ def _register_builtins() -> None:
             )
         )
 
+    # --- LLM: Tool-augmented (GPT-5.1 + bibtex-updater) ---
+    def _run_llm_tool_augmented(entries: list[BlindEntry], **kw: Any) -> list[Prediction]:
+        from hallmark.baselines.llm_tool_augmented import verify_tool_augmented
+
+        return verify_tool_augmented(entries, **kw)
+
+    register(
+        BaselineInfo(
+            name="llm_tool_augmented",
+            description="GPT-5.1 augmented with bibtex-updater verification evidence",
+            runner=_run_llm_tool_augmented,
+            pip_packages=["openai"],
+            cli_commands=["bibtex-check"],
+            requires_api_key=True,
+            is_free=False,
+            env_var="OPENAI_API_KEY",
+            confidence_type="probabilistic",
+        )
+    )
+
     # --- Title-match oracle (diagnostic baseline) ---
     # NOTE: This is NOT a legitimate detector.  It exploits label leakage by
     # looking up dev-split VALID titles.  Register it here so it appears in

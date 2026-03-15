@@ -216,6 +216,30 @@ def _run_bibtex_check_subprocess(
     return predictions
 
 
+def parse_jsonl_to_raw(jsonl_path: Path) -> dict[str, dict]:
+    """Parse bibtex-check JSONL output into raw record dicts (no Prediction conversion).
+
+    Returns:
+        Mapping from bibtex_key to the full raw record dict containing status,
+        mismatched_fields, api_sources, confidence, errors, etc.
+    """
+    records: dict[str, dict] = {}
+    with open(jsonl_path) as f:
+        for line in f:
+            line = line.strip()
+            if not line:
+                continue
+            try:
+                record = json.loads(line)
+            except json.JSONDecodeError:
+                logger.warning(f"Invalid JSON line in raw JSONL: {line[:100]}")
+                continue
+            key = record.get("key", "")
+            if key:
+                records[key] = record
+    return records
+
+
 def _parse_jsonl_output(
     jsonl_path: Path,
     total_elapsed: float,

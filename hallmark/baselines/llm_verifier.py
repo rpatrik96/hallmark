@@ -126,6 +126,7 @@ def _verify_entries(
     log_dir: Path | None = None,
     checkpoint_dir: Path | None = None,
     max_consecutive_failures: int = 3,
+    prompt_fn: Callable[[BlindEntry], str] | None = None,
 ) -> list[Prediction]:
     """Shared verification loop for all LLM providers.
 
@@ -139,6 +140,8 @@ def _verify_entries(
             completed predictions are saved after each entry and resumed on
             subsequent calls.
         max_consecutive_failures: Abort after this many consecutive API errors.
+        prompt_fn: Optional function that takes a BlindEntry and returns a prompt
+            string. When provided, overrides the default VERIFICATION_PROMPT.
     """
     checkpoint_path: Path | None = None
     completed: dict[str, Prediction] = {}
@@ -164,8 +167,11 @@ def _verify_entries(
             continue
 
         start = time.time()
-        bibtex = entry.to_bibtex()
-        prompt = VERIFICATION_PROMPT.format(bibtex=bibtex)
+        if prompt_fn is not None:
+            prompt = prompt_fn(entry)
+        else:
+            bibtex = entry.to_bibtex()
+            prompt = VERIFICATION_PROMPT.format(bibtex=bibtex)
 
         try:
             content = call_fn(prompt)
@@ -261,8 +267,15 @@ def _verify_with_openai_compatible(
         )
         return str(resp.choices[0].message.content).strip()
 
+    entry_prompt_fn: Callable[[BlindEntry], str] | None = kwargs.pop("prompt_fn", None)
     return _verify_entries(
-        entries, call_fn, source_prefix, model, log_dir=log_dir, checkpoint_dir=checkpoint_dir
+        entries,
+        call_fn,
+        source_prefix,
+        model,
+        log_dir=log_dir,
+        checkpoint_dir=checkpoint_dir,
+        prompt_fn=entry_prompt_fn,
     )
 
 
