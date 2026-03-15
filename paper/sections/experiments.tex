@@ -4,7 +4,7 @@
 \subsection{Evaluated tools}
 \label{sec:baselines}
 
-We evaluate three independent external citation verification tools (HaRC, verify-citations, GPT-5.1) plus DOI-only, an internal lower-bound baseline, on the \texttt{dev\_public} split.
+We evaluate three independent external citation verification tools (HaRC, verify-citations, GPT-5.1) and two open-weight LLMs accessed via OpenRouter (Qwen3-235B, DeepSeek-V3.2), plus DOI-only, an internal lower-bound baseline, on the \texttt{dev\_public} split.
 We additionally evaluate \texttt{bibtex-updater}~\citep{bibtexupdater} (DR\,=\,0.946), a tool co-developed by the authors; results are reported separately in \cref{app:codesign} due to co-design bias concerns.
 
 \paragraph{DOI-only.}
@@ -21,6 +21,11 @@ Due to Semantic Scholar API rate limiting, HaRC completed evaluation on only 20 
 \paragraph{verify-citations.}
 A pip-installable tool~\citep{verifycitations2025} that queries arXiv, ACL Anthology, Semantic Scholar, DBLP, Google Scholar, and DuckDuckGo.
 Like HaRC, it was rate-limited and completed 71 of 1,119 entries (6.3\%).
+
+\paragraph{Open-weight LLMs (OpenRouter).}
+We evaluate two open-weight models---Qwen3-235B~\citep{qwen3} and DeepSeek-V3.2~\citep{deepseekv3}---using the same zero-shot prompt as GPT-5.1, accessed via the OpenRouter API.
+These models test whether the strong LLM performance generalizes beyond proprietary frontier models.
+% TODO: Additional OpenRouter models (DeepSeek-R1, Mistral Large, Gemini 2.5 Flash) are pending and will be added to the final version.
 
 \subsection{Main results}
 \label{sec:main_results}
@@ -40,20 +45,26 @@ DOI-only            & 0.256          & 0.195          & 0.361          & 0.093  
 HaRC$^*$            & 0.155          & \textbf{0.000} & 0.268          & 0.234          & 0.188          & 0.361          & 0.02 \\
 verify-citations$^*$& 0.042          & 0.024          & 0.071          & 0.032          & 0.062          & 0.317          & 0.06 \\
 \midrule
-GPT-5.1 (zero-shot) & \textbf{0.797} & 0.171          & \textbf{0.822} & \textbf{0.636} & \textbf{0.846} & \textbf{0.107} & 1.00 \\
+GPT-5.1 (zero-shot)    & 0.797          & 0.171          & \textbf{0.822} & \textbf{0.636} & \textbf{0.846} & \textbf{0.107} & 1.00 \\
+Qwen3-235B             & 0.832          & 0.551          & 0.737          & 0.307          & 0.806          & 0.294          & 1.00 \\
+DeepSeek-V3.2          & \textbf{0.880} & 0.730          & 0.721          & 0.191          & 0.805          & 0.331          & 1.00 \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-The results reveal three key insights about the current citation verification landscape.
+The results reveal four key insights about the current citation verification landscape.
 First, \emph{API tool coverage is the binding constraint}: DOI-only is the only API-based tool with full coverage, catching 25.6\% of hallucinations---limited by design to entries with resolvable DOIs---while multi-source tools (HaRC, verify-citations) were bottlenecked by rate limiting to 1.8\% and 6.3\% coverage respectively, preventing any conclusion about their detection quality at scale.
-Second, \emph{LLMs dramatically outperform API-based tools}: GPT-5.1 achieves an 80\% detection rate---a $3{\times}$ improvement over DOI-only---demonstrating that language models can identify the very hallucinations they produce.
-Third, \emph{a capability gap remains}: even GPT-5.1 misses 20\% of hallucinations, with systematic weaknesses on subtle types like \texttt{author\_mismatch} (63\%) and \texttt{near\_miss\_title} (63\%), providing concrete improvement targets.
+Second, \emph{LLMs dramatically outperform API-based tools}: all three LLMs achieve ${\geq}80\%$ detection rate---a $3{\times}$+ improvement over DOI-only---demonstrating that language models can identify the very hallucinations they produce.
+Third, \emph{LLMs exhibit a recall--precision tradeoff}: open-weight models (Qwen3-235B, DeepSeek-V3.2) achieve higher detection rates (83--88\%) than GPT-5.1 (80\%), but at the cost of substantially higher false positive rates (55--73\% vs.\ 17\%).
+This aggressive over-flagging degrades their F1 (0.72--0.74 vs.\ 0.82), MCC (0.19--0.31 vs.\ 0.64), and calibration (ECE 0.29--0.33 vs.\ 0.11).
+GPT-5.1 remains the best-performing LLM overall, achieving the highest F1, MCC, and best-calibrated confidence estimates.
+Fourth, \emph{a capability gap remains}: even DeepSeek-V3.2, the highest-recall model, misses 12\% of hallucinations, with systematic weaknesses on subtle types, providing concrete improvement targets.
 Since Detection Rate and FPR are prevalence-independent, we emphasize these as primary metrics.\footnote{F1 is prevalence-sensitive: a benchmark with 50\% hallucination prevalence inflates F1 relative to real-world deployment where hallucination rates may be much lower. F1 values should only be compared within the same split, never across splits or with external results.}
 
 \paragraph{GPT-5.1 (zero-shot).}
 We evaluate GPT-5.1~\citep{openai2025gpt5} as a zero-shot citation verifier: each BibTeX entry is presented with a prompt asking the model to classify it as \texttt{VALID} or \texttt{HALLUCINATED} with a confidence score.
-Unlike API-dependent tools, the LLM baseline achieves full coverage (100\% of entries) and the lowest ECE (0.107), indicating well-calibrated confidence estimates.
+Unlike API-dependent tools, all LLM baselines achieve full coverage (100\% of entries).
+Among the three LLMs, GPT-5.1 achieves the best balance of recall and precision: its FPR (17\%) is $3$--$4{\times}$ lower than the open-weight models, yielding the highest F1 (0.822) and best calibration (ECE\,=\,0.107).
 
 \paragraph{Incomplete-coverage tools.}
 HaRC and verify-citations completed only 1.8\% and 6.3\% of entries respectively due to API rate limiting.
@@ -69,13 +80,16 @@ With $\geq$30 instances per type, per-type metrics have narrower confidence inte
 
 \cref{fig:tier} shows detection rates broken down by difficulty tier.
 DOI-only detection is concentrated in Tier~1, as expected, with near-zero performance on Tiers~2 and~3.
-GPT-5.1 achieves strong performance across all tiers (Tier~1: 87\%, Tier~2: 76\%, Tier~3: 79\%), with graceful degradation as difficulty increases---consistent with the tier design.
+All three LLMs achieve strong performance across tiers, with graceful degradation as difficulty increases---consistent with the tier design.
+GPT-5.1 achieves 87\%/76\%/79\% on Tiers~1/2/3 respectively.
+The open-weight models achieve near-perfect Tier~1 detection (Qwen3-235B: 97\%, DeepSeek-V3.2: 99\%), but this partly reflects their aggressive flagging behavior (high FPR) rather than superior discrimination.
+On the harder tiers, all three LLMs perform comparably (Tier~2: 76--86\%, Tier~3: 79--83\%), suggesting that the recall--precision tradeoff primarily manifests as over-flagging easy cases.
 The tier structure exposes the capability gap between API-based and LLM-based approaches: API tools lack the cross-referencing and semantic reasoning needed for Tier~2--3 hallucinations, while LLMs bring parametric knowledge that compensates for missing API coverage.
 
 \begin{figure}[t]
 \centering
 \includegraphics[width=0.7\linewidth]{figures/tier_detection_rates.pdf}
-\caption{Detection rate by difficulty tier. DOI-only detection is concentrated in Tier~1; GPT-5.1 achieves strong performance across all tiers with graceful degradation.}
+\caption{Detection rate by difficulty tier. DOI-only detection is concentrated in Tier~1; all LLMs achieve strong performance across tiers, with open-weight models showing near-perfect Tier~1 detection at the cost of high false positive rates.}
 \label{fig:tier}
 \end{figure}
 

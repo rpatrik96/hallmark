@@ -1,0 +1,337 @@
+{
+  "split": "dev_public",
+  "models": {
+    "llm_openai": "GPT-5.1",
+    "llm_openrouter_qwen": "Qwen3-235B",
+    "llm_openrouter_deepseek_v3": "DeepSeek-V3.2"
+  },
+  "type_detection_matrix": {
+    "fabricated_doi": {
+      "llm_openai": 0.7377049180327869,
+      "llm_openrouter_qwen": 1.0,
+      "llm_openrouter_deepseek_v3": 1.0
+    },
+    "nonexistent_venue": {
+      "llm_openai": 0.96875,
+      "llm_openrouter_qwen": 1.0,
+      "llm_openrouter_deepseek_v3": 1.0
+    },
+    "placeholder_authors": {
+      "llm_openai": 0.9411764705882353,
+      "llm_openrouter_qwen": 0.9111111111111111,
+      "llm_openrouter_deepseek_v3": 0.9777777777777777
+    },
+    "future_date": {
+      "llm_openai": 0.967741935483871,
+      "llm_openrouter_qwen": 1.0,
+      "llm_openrouter_deepseek_v3": 1.0
+    },
+    "chimeric_title": {
+      "llm_openai": 0.8571428571428571,
+      "llm_openrouter_qwen": 0.7906976744186046,
+      "llm_openrouter_deepseek_v3": 0.9767441860465116
+    },
+    "wrong_venue": {
+      "llm_openai": 0.8285714285714286,
+      "llm_openrouter_qwen": 0.8913043478260869,
+      "llm_openrouter_deepseek_v3": 0.8913043478260869
+    },
+    "swapped_authors": {
+      "llm_openai": 0.6323529411764706,
+      "llm_openrouter_qwen": 0.6268656716417911,
+      "llm_openrouter_deepseek_v3": 0.7761194029850746
+    },
+    "preprint_as_published": {
+      "llm_openai": 0.8387096774193549,
+      "llm_openrouter_qwen": 0.9032258064516129,
+      "llm_openrouter_deepseek_v3": 0.8387096774193549
+    },
+    "hybrid_fabrication": {
+      "llm_openai": 0.6956521739130435,
+      "llm_openrouter_qwen": 0.6363636363636364,
+      "llm_openrouter_deepseek_v3": 0.8
+    },
+    "near_miss_title": {
+      "llm_openai": 0.6285714285714286,
+      "llm_openrouter_qwen": 0.7073170731707317,
+      "llm_openrouter_deepseek_v3": 0.8536585365853658
+    },
+    "plausible_fabrication": {
+      "llm_openai": 0.8214285714285714,
+      "llm_openrouter_qwen": 0.8434782608695652,
+      "llm_openrouter_deepseek_v3": 0.7844827586206896
+    },
+    "merged_citation": {
+      "llm_openai": 0.9333333333333333,
+      "llm_openrouter_qwen": 0.9666666666666667,
+      "llm_openrouter_deepseek_v3": 1.0
+    },
+    "partial_author_list": {
+      "llm_openai": 0.7,
+      "llm_openrouter_qwen": 0.6,
+      "llm_openrouter_deepseek_v3": 0.8
+    },
+    "arxiv_version_mismatch": {
+      "llm_openai": 0.8666666666666667,
+      "llm_openrouter_qwen": 0.9666666666666667,
+      "llm_openrouter_deepseek_v3": 0.9
+    }
+  },
+  "tier_breakdown": {
+    "llm_openai": {
+      "1": {
+        "detection_rate": 0.8734177215189873,
+        "fpr": 0.0,
+        "f1": 0.9324324324324325
+      },
+      "2": {
+        "detection_rate": 0.76,
+        "fpr": 0.0,
+        "f1": 0.8636363636363636
+      },
+      "3": {
+        "detection_rate": 0.785234899328859,
+        "fpr": 0.0,
+        "f1": 0.8796992481203008
+      }
+    },
+    "llm_openrouter_qwen": {
+      "1": {
+        "detection_rate": 0.974025974025974,
+        "fpr": 0.551440329218107,
+        "f1": 0.5244755244755245
+      },
+      "2": {
+        "detection_rate": 0.7560137457044673,
+        "fpr": 0.551440329218107,
+        "f1": 0.564826700898588
+      },
+      "3": {
+        "detection_rate": 0.8333333333333334,
+        "fpr": 0.551440329218107,
+        "f1": 0.509031198686371
+      }
+    },
+    "llm_openrouter_deepseek_v3": {
+      "1": {
+        "detection_rate": 0.9935064935064936,
+        "fpr": 0.7304526748971193,
+        "f1": 0.4622356495468278
+      },
+      "2": {
+        "detection_rate": 0.8595890410958904,
+        "fpr": 0.7304526748971193,
+        "f1": 0.5590200445434298
+      },
+      "3": {
+        "detection_rate": 0.8181818181818182,
+        "fpr": 0.7304526748971193,
+        "f1": 0.44028776978417267
+      }
+    }
+  },
+  "generation_method": {
+    "llm_openrouter_qwen": {
+      "adversarial": {
+        "n": 60,
+        "detection_rate": 0.9166666666666666,
+        "false_positive_rate": 0.0,
+        "f1": 0.9565217391304348
+      },
+      "llm_generated": {
+        "n": 113,
+        "detection_rate": 0.6036036036036037,
+        "false_positive_rate": 0.0,
+        "f1": 0.752808988764045
+      },
+      "perturbation": {
+        "n": 414,
+        "detection_rate": 0.8647342995169082,
+        "false_positive_rate": 0.0,
+        "f1": 0.9274611398963731
+      },
+      "real_world": {
+        "n": 46,
+        "detection_rate": 0.9782608695652174,
+        "false_positive_rate": 0.0,
+        "f1": 0.989010989010989
+      },
+      "scraped": {
+        "n": 486,
+        "detection_rate": 0.0,
+        "false_positive_rate": 0.551440329218107,
+        "f1": 0.0
+      }
+    },
+    "llm_openrouter_deepseek_v3": {
+      "adversarial": {
+        "n": 60,
+        "detection_rate": 1.0,
+        "false_positive_rate": 0.0,
+        "f1": 1.0
+      },
+      "llm_generated": {
+        "n": 113,
+        "detection_rate": 0.584070796460177,
+        "false_positive_rate": 0.0,
+        "f1": 0.7374301675977654
+      },
+      "perturbation": {
+        "n": 414,
+        "detection_rate": 0.9371980676328503,
+        "false_positive_rate": 0.0,
+        "f1": 0.9675810473815462
+      },
+      "real_world": {
+        "n": 46,
+        "detection_rate": 0.9347826086956522,
+        "false_positive_rate": 0.0,
+        "f1": 0.9662921348314606
+      },
+      "scraped": {
+        "n": 486,
+        "detection_rate": 0.0,
+        "false_positive_rate": 0.7304526748971193,
+        "f1": 0.0
+      }
+    }
+  },
+  "confidence_analysis": {
+    "llm_openrouter_qwen": {
+      "correct": {
+        "mean": 0.9598250336473755,
+        "median": 0.95,
+        "std": 0.01494166559071342,
+        "n": 743
+      },
+      "incorrect": {
+        "mean": 0.9573262032085561,
+        "median": 0.95,
+        "std": 0.01379046822724381,
+        "n": 374
+      },
+      "all_mean": 0.9589883616830798
+    },
+    "llm_openrouter_deepseek_v3": {
+      "correct": {
+        "mean": 0.9460901162790697,
+        "median": 0.95,
+        "std": 0.017742604616885593,
+        "n": 688
+      },
+      "incorrect": {
+        "mean": 0.9462180974477958,
+        "median": 0.95,
+        "std": 0.020579510164425028,
+        "n": 431
+      },
+      "all_mean": 0.9461394101876676
+    }
+  },
+  "agreement": {
+    "pairwise_agreement": {
+      "DeepSeek-V3.2 vs Qwen3-235B": {
+        "agreement_pct": 79.89276139410187,
+        "cohens_kappa": 0.4543982941210888,
+        "n": 1119
+      }
+    },
+    "consensus": {
+      "all_agree_correct": 603,
+      "all_agree_wrong": 291,
+      "any_disagree": 225,
+      "total_common": 1119,
+      "hard_entries_count": 50,
+      "hard_entries": [
+        "bab76a6e9e66",
+        "fc4aaf478a08",
+        "f49fa9331fd0",
+        "c39bb75de89c",
+        "d1168c0972e3",
+        "d1e09089ae24",
+        "ff2931c3228f",
+        "b232cea86084",
+        "bcf4882d14ea",
+        "d628305f4d99",
+        "db9d82ff3f94",
+        "db9a596a4d3f",
+        "eaa48be036ab",
+        "e9e08922a057",
+        "b67497cbd9ea",
+        "ee49e4bdd9f1",
+        "b71b4da9eb50",
+        "b92510540bf0",
+        "d7bd062b5e1b",
+        "a24129d1c5e5"
+      ]
+    }
+  },
+  "error_analysis": {
+    "llm_openrouter_qwen": {
+      "fn_by_type": {
+        "near_miss_title": 12,
+        "merged_citation": 1,
+        "partial_author_list": 12,
+        "wrong_venue": 5,
+        "swapped_authors": 25,
+        "chimeric_title": 9,
+        "hybrid_fabrication": 16,
+        "plausible_fabrication": 18,
+        "preprint_as_published": 3,
+        "placeholder_authors": 4,
+        "arxiv_version_mismatch": 1
+      },
+      "fn_by_method": {
+        "perturbation": 56,
+        "llm_generated": 44,
+        "adversarial": 5,
+        "real_world": 1
+      },
+      "fp_by_method": {
+        "scraped": 268
+      },
+      "fn_count": 106,
+      "fp_count": 268
+    },
+    "llm_openrouter_deepseek_v3": {
+      "fn_by_type": {
+        "near_miss_title": 6,
+        "wrong_venue": 5,
+        "arxiv_version_mismatch": 3,
+        "hybrid_fabrication": 9,
+        "swapped_authors": 15,
+        "plausible_fabrication": 25,
+        "chimeric_title": 1,
+        "partial_author_list": 6,
+        "preprint_as_published": 5,
+        "placeholder_authors": 1
+      },
+      "fn_by_method": {
+        "perturbation": 26,
+        "llm_generated": 47,
+        "real_world": 3
+      },
+      "fp_by_method": {
+        "scraped": 355
+      },
+      "fn_count": 76,
+      "fp_count": 355
+    }
+  },
+  "type_counts": {
+    "plausible_fabrication": 116,
+    "near_miss_title": 41,
+    "merged_citation": 30,
+    "arxiv_version_mismatch": 30,
+    "swapped_authors": 67,
+    "future_date": 30,
+    "wrong_venue": 46,
+    "partial_author_list": 30,
+    "placeholder_authors": 45,
+    "preprint_as_published": 31,
+    "chimeric_title": 43,
+    "fabricated_doi": 39,
+    "hybrid_fabrication": 45,
+    "nonexistent_venue": 40
+  }
+}

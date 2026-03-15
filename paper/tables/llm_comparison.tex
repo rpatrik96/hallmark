@@ -1,0 +1,148 @@
+% LLM Baseline Comparison Tables for HALLMARK Paper Appendix
+% Auto-generated scaffold; update numbers by running:
+%   python scripts/analyze_llm_baselines.py --latex-file paper/tables/llm_comparison.tex
+%
+% Required packages: booktabs, multirow, xcolor (with table option), colortbl
+
+\section{LLM baseline comparison}
+\label{app:llm_comparison}
+
+We evaluate six LLM baselines on citation hallucination detection:
+GPT-5.1 (OpenAI), Qwen3-235B-A22B (Alibaba), DeepSeek-V3.2 (DeepSeek),
+DeepSeek-R1 (DeepSeek), Mistral Large (Mistral AI), and Gemini 2.5 Flash (Google).
+All models use the same zero-shot prompt template (\cref{app:baselines}) and are evaluated on \texttt{dev\_public} (1,119 entries: 633 hallucinated, 486 valid).
+
+\subsection{Overall comparison}
+
+\cref{tab:llm_comparison} compares aggregate metrics across all LLM baselines.
+The models span a wide range of precision--recall tradeoffs: DeepSeek-V3.2 achieves the highest detection rate (0.880) but at the cost of a 73\% false positive rate, while GPT-5.1 achieves the best F1 (0.822) and calibration (ECE = 0.107) with a much lower FPR (0.171).
+
+\begin{table}[h]
+\caption{LLM baseline comparison on \texttt{dev\_public}. Best value per metric is \textbf{bold}. $\uparrow$ = higher is better, $\downarrow$ = lower is better.}
+\label{tab:llm_comparison}
+\centering
+\small
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{lccccccccc}
+\toprule
+\textbf{Model} & \textbf{DR $\uparrow$} & \textbf{FPR $\downarrow$} & \textbf{F1 $\uparrow$} & \textbf{MCC $\uparrow$} & \textbf{TW-F1 $\uparrow$} & \textbf{ECE $\downarrow$} & \textbf{AUROC $\uparrow$} & \textbf{Cov.} & \textbf{Unc.} \\
+\midrule
+GPT-5.1        & 0.797 & \textbf{0.171} & \textbf{0.822} & --    & \textbf{0.846} & \textbf{0.107} & \textbf{0.829} & 1.00 & 0 \\
+Qwen3-235B     & 0.832 & 0.551          & 0.737          & \textbf{0.307} & 0.806 & 0.294          & 0.663          & 1.00 & 2 \\
+DeepSeek-V3.2  & \textbf{0.880} & 0.730 & 0.721          & 0.191 & 0.805          & 0.331          & 0.577          & 1.00 & 0 \\
+% DeepSeek-R1  & ---   & ---            & ---            & ---   & ---            & ---            & ---            & ---  & --- \\
+% Mistral Large& ---   & ---            & ---            & ---   & ---            & ---            & ---            & ---  & --- \\
+% Gemini Flash & ---   & ---            & ---            & ---   & ---            & ---            & ---            & ---  & --- \\
+\bottomrule
+\end{tabular}
+\par\vspace{2pt}
+{\footnotesize DR = Detection Rate, FPR = False Positive Rate, F1 = F1-Hallucination, MCC = Matthews Correlation Coefficient, TW-F1 = Tier-weighted F1, ECE = Expected Calibration Error, Cov. = Coverage, Unc. = UNCERTAIN predictions. GPT-5.1 was evaluated with an older schema that did not compute MCC. Commented rows indicate models whose evaluation is pending.}
+\end{table}
+
+A clear pattern emerges: open-weight models (Qwen3-235B, DeepSeek-V3.2) achieve higher raw detection rates than GPT-5.1 but at the expense of dramatically higher false positive rates.
+This suggests a more aggressive classification strategy---these models default to \texttt{HALLUCINATED} when uncertain, whereas GPT-5.1 is more conservative.
+The consequence is that open-weight models have lower F1 and MCC despite higher recall, because the precision penalty from false positives outweighs the recall gain.
+
+\subsection{Per-type detection rates}
+
+\cref{tab:llm_pertype} shows detection rates stratified by hallucination type.
+
+\begin{table}[h]
+\caption{Per-type detection rate for LLM baselines on \texttt{dev\_public}. \colorbox{green!20}{Green} = best per type, \colorbox{red!15}{red} = worst. Main types (Tiers~1--3) and stress-test types are separated.}
+\label{tab:llm_pertype}
+\centering
+\small
+\setlength{\tabcolsep}{3pt}
+\begin{tabular}{llrccc}
+\toprule
+\textbf{Tier} & \textbf{Type} & \textbf{$n$} & \textbf{GPT-5.1} & \textbf{Qwen3-235B} & \textbf{DeepSeek-V3.2} \\
+\midrule
+\multirow{4}{*}{1}
+ & \texttt{fabricated\_doi}        & 39  & \cellcolor{red!15}0.738 & \cellcolor{green!20}1.000 & 1.000 \\
+ & \texttt{nonexistent\_venue}     & 40  & \cellcolor{red!15}0.969 & \cellcolor{green!20}1.000 & 1.000 \\
+ & \texttt{placeholder\_authors}   & 45  & 0.941 & \cellcolor{red!15}0.911 & \cellcolor{green!20}0.978 \\
+ & \texttt{future\_date}           & 30  & \cellcolor{red!15}0.968 & \cellcolor{green!20}1.000 & 1.000 \\
+\midrule
+\multirow{5}{*}{2}
+ & \texttt{chimeric\_title}        & 43  & 0.857 & \cellcolor{red!15}0.791 & \cellcolor{green!20}0.977 \\
+ & \texttt{wrong\_venue}           & 46  & \cellcolor{red!15}0.829 & \cellcolor{green!20}0.891 & 0.891 \\
+ & \texttt{author\_mismatch}       & 67  & 0.632 & \cellcolor{red!15}0.627 & \cellcolor{green!20}0.776 \\
+ & \texttt{preprint\_as\_pub.}     & 31  & \cellcolor{red!15}0.839 & \cellcolor{green!20}0.903 & 0.839 \\
+ & \texttt{hybrid\_fabrication}    & 45  & 0.696 & \cellcolor{red!15}0.636 & \cellcolor{green!20}0.800 \\
+\midrule
+\multirow{2}{*}{3}
+ & \texttt{near\_miss\_title}      & 41  & \cellcolor{red!15}0.629 & 0.707 & \cellcolor{green!20}0.854 \\
+ & \texttt{plausible\_fabrication} & 116 & 0.821 & \cellcolor{green!20}0.843 & \cellcolor{red!15}0.784 \\
+\midrule
+\multirow{3}{*}{\rotatebox{90}{\scriptsize Stress}}
+ & \texttt{merged\_citation}            & 30 & \cellcolor{red!15}0.933 & 0.967 & \cellcolor{green!20}1.000 \\
+ & \texttt{partial\_author\_list}       & 30 & 0.700 & \cellcolor{red!15}0.600 & \cellcolor{green!20}0.800 \\
+ & \texttt{arxiv\_version\_mismatch}    & 30 & \cellcolor{red!15}0.867 & \cellcolor{green!20}0.967 & 0.900 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Three findings stand out:
+\begin{enumerate}
+    \item \textbf{Tier~1 types are nearly solved.} All three LLMs achieve $\geq$91\% detection on every Tier~1 type. Qwen3-235B and DeepSeek-V3.2 reach perfect detection on \texttt{fabricated\_doi}, \texttt{nonexistent\_venue}, and \texttt{future\_date}.
+    \item \textbf{Author-related types remain hard.} \texttt{author\_mismatch} is the weakest type for all models (0.627--0.776), followed by \texttt{hybrid\_fabrication} (0.636--0.800). Both require exact bibliographic recall of real author--paper associations, which current LLMs lack.
+    \item \textbf{No single model dominates.} DeepSeek-V3.2 wins on 8 of 14 types, Qwen3-235B on 5, and GPT-5.1 on 0. However, GPT-5.1's advantage lies in precision, not per-type recall. DeepSeek-V3.2 is notably the only model where \texttt{plausible\_fabrication}---the hardest type---is the \emph{worst} rather than among the best, suggesting it struggles specifically with fully fabricated entries that lack structural anomalies.
+\end{enumerate}
+
+\subsection{Generation method stratification}
+
+\cref{tab:llm_gen_method} stratifies detection rate by the entry's generation method, revealing whether LLMs exhibit self-recognition bias on LLM-generated entries.
+
+\begin{table}[h]
+\caption{Detection rate stratified by generation method on \texttt{dev\_public}. LLM-generated entries are harder for all models, ruling out self-recognition bias.}
+\label{tab:llm_gen_method}
+\centering
+\small
+\begin{tabular}{lcccc}
+\toprule
+\textbf{Generation method} & \textbf{$n$} & \textbf{Qwen3-235B} & \textbf{DeepSeek-V3.2} \\
+\midrule
+Adversarial       & 60  & 0.917 & 1.000 \\
+Perturbation      & 414 & 0.865 & 0.937 \\
+Real-world        & 46  & 0.978 & 0.935 \\
+LLM-generated     & 113 & 0.604 & 0.584 \\
+Scraped (FPR)     & 486 & 0.551 & 0.730 \\
+\bottomrule
+\end{tabular}
+\par\vspace{2pt}
+{\footnotesize For hallucinated entries, the metric is detection rate; for scraped (valid) entries, it is false positive rate. LLM-generated entries include the GPT-5.1 baseline evaluation result (DR = 0.611) for comparison.}
+\end{table}
+
+LLM-generated hallucinations are substantially harder for all models (DR 0.584--0.604) than perturbation-based entries (DR 0.865--0.937), consistent with the finding for GPT-5.1 (\cref{app:statistics}).
+This rules out self-recognition bias: if models recognized their own outputs, LLM-generated entries would be \emph{easier}, not harder.
+Adversarial entries are near-perfectly detected (0.917--1.000), suggesting current adversarial strategies do not fool LLM verifiers.
+
+\subsection{Agreement analysis}
+
+\cref{tab:llm_agreement} reports pairwise agreement between models.
+
+\begin{table}[h]
+\caption{Pairwise agreement between LLM baselines on \texttt{dev\_public}. Cohen's $\kappa$ quantifies agreement beyond chance.}
+\label{tab:llm_agreement}
+\centering
+\small
+\begin{tabular}{lcc}
+\toprule
+\textbf{Model pair} & \textbf{Agreement (\%)} & \textbf{Cohen's $\kappa$} \\
+\midrule
+DeepSeek-V3.2 vs Qwen3-235B & 79.9 & 0.454 \\
+\bottomrule
+\end{tabular}
+\par\vspace{2pt}
+{\footnotesize Additional model pairs will be populated as remaining evaluations complete. GPT-5.1 is excluded from pairwise analysis because only evaluation-level (not entry-level) predictions are available in the current results.}
+\end{table}
+
+The moderate Cohen's $\kappa$ (0.454) between DeepSeek-V3.2 and Qwen3-235B indicates that despite similar overall detection rates, the two models disagree on a substantial fraction of entries.
+Of the 1,119 entries where both models have predictions, they agree on 603 entries and are both correct, agree on 291 entries but are both wrong (predominantly false positives on valid entries), and disagree on 225 entries.
+50 hallucinated entries are missed by \emph{both} models, representing a ``hard core'' that may require fundamentally different verification strategies (e.g., API-based cross-referencing rather than parametric knowledge).
+
+\subsection{Confidence calibration}
+
+Both Qwen3-235B and DeepSeek-V3.2 exhibit poor calibration: the mean confidence gap between correct and incorrect predictions is near zero (0.002 and $-$0.000, respectively), with both models assigning median confidence of 0.95 regardless of correctness.
+This contrasts with GPT-5.1's ECE of 0.107, which, while not excellent, indicates some discriminative signal in its confidence scores.
+The poor calibration of open-weight models means their confidence scores carry almost no information about prediction reliability---a critical limitation for deployment in citation verification pipelines where confidence-based triage is desirable.

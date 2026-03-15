@@ -4,7 +4,7 @@
 Citation hallucination is a growing threat to scientific integrity.
 We contribute \textsc{Hallmark}, the first benchmark focusing specifically on BibTeX metadata integrity verification: 14 hallucination types across 3 difficulty tiers, 2,525 annotated entries with 6 sub-tests each, tier-weighted metrics (rewarding detection of hard hallucinations), calibration assessment via ECE (measuring confidence accuracy), and Plackett-Luce ranking as infrastructure for future denser evaluations (mean-score ranking serves as the primary comparison given current sparse tool coverage).
 
-Our evaluation of four tools reveals a stark capability gap: API-based tools detect at most 26\% of hallucinations due to rate limiting and metadata coverage gaps, while a zero-shot LLM verifier (GPT-5.1) achieves 80\% detection rate---demonstrating that language models can identify the very hallucinations they produce.
+Our evaluation of six tools reveals a stark capability gap: API-based tools detect at most 26\% of hallucinations due to rate limiting and metadata coverage gaps, while zero-shot LLM verifiers achieve 80--88\% detection rates---demonstrating that language models can identify the very hallucinations they produce, though with a recall--precision tradeoff between proprietary and open-weight models.
 No single tool covers all 14 types, and venue-level hallucinations remain a blind spot where bibliographic APIs lack structured data, providing concrete targets for both tool developers and database maintainers.
 
 \textsc{Hallmark} is designed to grow: its community contribution system, temporal segmentation, and atomic evaluation design ensure that new entries and tools can be incorporated without invalidating prior results.
