@@ -105,8 +105,8 @@ The tier structure exposes the capability gap between API-based and LLM-based ap
 With $\geq$30 instances per type, per-type breakdowns provide statistically meaningful comparisons.
 DOI-only detects \texttt{fabricated\_doi} reliably but misses all types that use valid DOIs.
 GPT-5.1 achieves ${\geq}67\%$ detection on 9 of 11 main types, with near-perfect detection of \texttt{nonexistent\_venue} (97\%) and \texttt{placeholder\_authors} (94\%).
-Its weakest types---\texttt{author\_mismatch} (63\%, stored as \texttt{swapped\_authors} in data files for backward compatibility) and \texttt{near\_miss\_title} (63\%)---involve subtle metadata perturbations that require exact bibliographic knowledge, providing concrete targets for future work.
-Per-type comparisons should be interpreted directionally: with $n \approx 30$ instances per type, the minimum detectable effect at 80\% power is approximately 30--35pp, so small differences between tools on a single type are not reliable; tier-level comparisons have stronger statistical grounding.
+Its weakest types---\texttt{author\_mismatch}\footnote{Stored as \texttt{swapped\_authors} in data files for backward compatibility.} (63\%) and \texttt{near\_miss\_title} (63\%)---involve subtle metadata perturbations that require exact bibliographic knowledge, providing concrete targets for future work.
+Per-type comparisons should be interpreted directionally: with $n \approx 30$ instances per type, the minimum detectable effect at 80\% power is approximately 20--26pp (\cref{app:statistics}), so small differences between tools on a single type are not reliable; tier-level comparisons have stronger statistical grounding.
 
 \begin{figure}[t]
 \centering

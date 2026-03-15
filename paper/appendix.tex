@@ -253,7 +253,7 @@ Adversarial      & 60  & ---  & 0.983 & --- \\
 Perturbation     & 414 & ---  & 0.829 & --- \\
 Real-world       & 46  & ---  & 0.891 & --- \\
 LLM-generated    & 113 & ---  & 0.611 & --- \\
-Scraped (valid)  & --- & 486  & ---   & 0.387 \\
+Scraped (valid)  & --- & 486  & ---   & 0.390 \\
 \bottomrule
 \end{tabular}
 \par\vspace{2pt}
@@ -508,7 +508,7 @@ The tool achieves perfect detection on \texttt{future\_date}, \texttt{placeholde
 \multirow{5}{*}{2}
 & \texttt{chimeric\_title}        & 0.977 \\
 & \texttt{wrong\_venue}           & 0.978 \\
-& \texttt{partial\_author\_list}  & 0.900 \\
+& \texttt{author\_mismatch}       & 0.940 \\
 & \texttt{preprint\_as\_pub.}     & 1.000 \\
 & \texttt{hybrid\_fabrication}    & 0.911 \\
 \midrule
@@ -519,7 +519,7 @@ The tool achieves perfect detection on \texttt{future\_date}, \texttt{placeholde
 \multirow{3}{*}{\rotatebox{90}{\scriptsize Stress}}
 & \texttt{merged\_citation}       & 1.000 \\
 & \texttt{arxiv\_version\_mismatch} & 0.967 \\
-& \texttt{author\_mismatch}       & 0.940 \\
+& \texttt{partial\_author\_list}  & 0.900 \\
 \bottomrule
 \end{tabular}
 \end{table}
