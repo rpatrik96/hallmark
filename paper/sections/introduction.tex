@@ -42,7 +42,7 @@ Mysterious Citations~\citep{mysterious2026} & HPC venues & --- & \ding{55} & \di
 \end{tabular}
 \end{table}
 
-We evaluate six tools on \textsc{Hallmark}---three independent external systems (HaRC, verify-citations, GPT-5.1) and two open-weight LLMs (Qwen3-235B, DeepSeek-V3.2), plus an internal DOI-only lower-bound baseline---revealing a stark capability gap: API-based tools detect at most 26\% of hallucinations due to rate limiting and metadata coverage gaps, while LLMs achieve 80--88\% detection rates, demonstrating that language models can identify the very hallucinations they produce.
-Open-weight models achieve higher recall but at the cost of substantially higher false positive rates (55--73\% vs.\ 17\% for GPT-5.1), exposing a recall--precision tradeoff among LLM verifiers.
+We evaluate nine tools on \textsc{Hallmark}---three independent external systems (HaRC, verify-citations, GPT-5.1), five open-weight LLMs (DeepSeek-R1, DeepSeek-V3.2, Qwen3-235B, Mistral Large, Gemini~2.5~Flash), plus an internal DOI-only lower-bound baseline---revealing a stark capability gap: API-based tools detect at most 26\% of hallucinations due to rate limiting and metadata coverage gaps, while LLMs achieve 48--88\% detection rates, demonstrating that language models can identify the very hallucinations they produce.
+The six LLMs span a pronounced recall--precision spectrum: aggressive models (DeepSeek-R1/V3.2) achieve 87--88\% detection at 64--73\% FPR, while conservative models (Gemini~2.5~Flash) achieve 48\% detection at only 10\% FPR, with GPT-5.1 offering the best balance (80\% DR, 17\% FPR).
 We additionally evaluate bibtex-updater, a tool co-developed by the authors, reporting results separately in \cref{app:codesign} to maintain transparency.
 These results demonstrate the value of a structured benchmark for identifying actionable improvement targets.
