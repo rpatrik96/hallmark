@@ -31,12 +31,12 @@ logger = logging.getLogger(__name__)
 # Publication-quality settings
 plt.rcParams.update(
     {
-        "font.size": 10,
+        "font.size": 11,
         "font.family": "serif",
-        "axes.labelsize": 11,
-        "axes.titlesize": 12,
-        "xtick.labelsize": 9,
-        "ytick.labelsize": 9,
+        "axes.labelsize": 12,
+        "axes.titlesize": 13,
+        "xtick.labelsize": 10,
+        "ytick.labelsize": 10,
         "legend.fontsize": 9,
         "figure.dpi": 300,
         "savefig.bbox": "tight",
@@ -44,8 +44,19 @@ plt.rcParams.update(
     }
 )
 
-# Colorblind-safe palette (IBM Design Library)
-COLORS = ["#648FFF", "#785EF0", "#DC267F", "#FE6100", "#FFB000"]
+# Colorblind-safe palette (IBM Design Library, extended)
+COLORS = [
+    "#648FFF",  # blue
+    "#785EF0",  # purple
+    "#DC267F",  # magenta
+    "#FE6100",  # orange
+    "#FFB000",  # gold
+    "#44AA99",  # teal (Tol)
+    "#882255",  # wine (Tol)
+    "#DDCC77",  # sand (Tol)
+    "#117733",  # green (Tol)
+    "#999933",  # olive (Tol)
+]
 
 # Display names for tools in figures
 DISPLAY_NAMES = {
@@ -53,9 +64,31 @@ DISPLAY_NAMES = {
     "harc": "HaRC",
     "verify_citations": "verify-citations",
     "llm_openai": "GPT-5.1",
+    "llm_anthropic": "Claude Sonnet 4.5",
+    "llm_openrouter_deepseek_r1": "DeepSeek-R1",
+    "llm_openrouter_deepseek_v3": "DeepSeek-V3.2",
+    "llm_openrouter_qwen": "Qwen3-235B",
+    "llm_openrouter_mistral": "Mistral Large",
+    "llm_openrouter_gemini_flash": "Gemini Flash",
     "bibtexupdater": "bibtex-updater",
     "ensemble": "Ensemble",
     "doi_presence_heuristic": "DOI-heuristic",
+}
+
+# Tools excluded from tier detection rate chart (partial coverage, metrics not meaningful)
+_PARTIAL_COVERAGE_TOOLS = {"harc", "verify_citations"}
+
+# Tools shown in main results table (Table 5) — used to filter figures
+_MAIN_TABLE_TOOLS = {
+    "doi_only",
+    "harc",
+    "verify_citations",
+    "llm_openai",
+    "llm_openrouter_deepseek_r1",
+    "llm_openrouter_deepseek_v3",
+    "llm_openrouter_qwen",
+    "llm_openrouter_mistral",
+    "llm_openrouter_gemini_flash",
 }
 
 
@@ -64,9 +97,12 @@ def _display_name(tool_name: str) -> str:
 
 
 def load_results(results_dir: Path) -> list[dict]:
-    """Load all evaluation result JSONs (skips non-evaluation files)."""
+    """Load dev_public evaluation result JSONs (skips CI, test, no-prescreening variants)."""
     results = []
-    for path in sorted(results_dir.glob("*.json")):
+    for path in sorted(results_dir.glob("*_dev_public.json")):
+        # Skip CI bootstrap and no-prescreening variants
+        if "_ci." in path.name or "_no_prescreening" in path.name:
+            continue
         with open(path) as f:
             data = json.load(f)
         # Only include standard evaluation results (must have tool_name at top level)
@@ -76,55 +112,71 @@ def load_results(results_dir: Path) -> list[dict]:
 
 
 def fig_tier_detection_rates(results: list[dict], output_dir: Path) -> None:
-    """Bar chart: detection rate per tier, grouped by tool."""
-    fig, ax = plt.subplots(figsize=(6, 3.5))
+    """Bar chart: detection rate per tier, grouped by tool.
 
-    tools = [_display_name(r["tool_name"]) for r in results]
+    Excludes partial-coverage tools (HaRC, verify-citations) whose per-tier
+    metrics on a small subset are not meaningful.
+    """
+    # Filter to main-table full-coverage tools only
+    _tier_tools = _MAIN_TABLE_TOOLS - _PARTIAL_COVERAGE_TOOLS
+    filtered = [r for r in results if r["tool_name"] in _tier_tools]
+    if not filtered:
+        logger.warning("No full-coverage results for tier chart")
+        return
+
+    fig, ax = plt.subplots(figsize=(7, 3.8))
+
+    tools = [_display_name(r["tool_name"]) for r in filtered]
     tiers = [1, 2, 3]
     tier_labels = ["Tier 1\n(Easy)", "Tier 2\n(Medium)", "Tier 3\n(Hard)"]
 
+    n_tools = len(tools)
     x = np.arange(len(tiers))
-    width = 0.8 / max(len(tools), 1)
+    # Wider group span (0.85) and wider bars for readability
+    group_width = 0.85
+    width = group_width / max(n_tools, 1)
 
-    for i, result in enumerate(results):
+    for i, result in enumerate(filtered):
         tier_metrics = result.get("per_tier_metrics", {})
         rates = []
         for t in tiers:
             m = tier_metrics.get(str(t), {})
             rates.append(m.get("detection_rate", 0.0))
 
-        offset = (i - len(tools) / 2 + 0.5) * width
+        offset = (i - n_tools / 2 + 0.5) * width
         bars = ax.bar(
             x + offset,
             rates,
-            width * 0.9,
+            width * 0.88,
             label=_display_name(result["tool_name"]),
             color=COLORS[i % len(COLORS)],
             edgecolor="white",
             linewidth=0.5,
         )
-        # Add value labels
-        for bar, rate in zip(bars, rates, strict=True):
-            if rate > 0:
-                ax.text(
-                    bar.get_x() + bar.get_width() / 2,
-                    bar.get_height() + 0.02,
-                    f"{rate:.0%}",
-                    ha="center",
-                    va="bottom",
-                    fontsize=7,
-                )
+        # Add value labels only when few enough tools to avoid clutter
+        if n_tools <= 5:
+            for bar, rate in zip(bars, rates, strict=True):
+                if rate > 0:
+                    ax.text(
+                        bar.get_x() + bar.get_width() / 2,
+                        bar.get_height() + 0.02,
+                        f"{rate:.0%}",
+                        ha="center",
+                        va="bottom",
+                        fontsize=7,
+                    )
 
     ax.set_xlabel("Difficulty Tier")
     ax.set_ylabel("Detection Rate")
     ax.set_title("Detection Rate by Hallucination Difficulty")
     ax.set_xticks(x)
     ax.set_xticklabels(tier_labels)
-    ax.set_ylim(0, 1.15)
-    ax.legend(loc="upper right")
+    ax.set_ylim(0, 1.12)
+    ax.legend(loc="upper right", fontsize=8, ncol=2)
     ax.spines["top"].set_visible(False)
     ax.spines["right"].set_visible(False)
 
+    fig.tight_layout()
     path = output_dir / "tier_detection_rates.pdf"
     fig.savefig(path)
     plt.close(fig)
@@ -133,6 +185,7 @@ def fig_tier_detection_rates(results: list[dict], output_dir: Path) -> None:
 
 def fig_per_type_heatmap(results: list[dict], output_dir: Path) -> None:
     """Heatmap: detection rate per hallucination type per tool."""
+    results = [r for r in results if r["tool_name"] in _MAIN_TABLE_TOOLS]
     if not results:
         return
 
@@ -156,7 +209,7 @@ def fig_per_type_heatmap(results: list[dict], output_dir: Path) -> None:
             m = type_metrics.get(t, {})
             matrix[i, j] = m.get("detection_rate", 0.0)
 
-    fig, ax = plt.subplots(figsize=(8, max(2, len(tools) * 0.6 + 1)))
+    fig, ax = plt.subplots(figsize=(10, max(2.5, len(tools) * 0.55 + 1.2)))
     im = ax.imshow(matrix, cmap="viridis", vmin=0, vmax=1, aspect="auto")
 
     ax.set_xticks(range(len(types)))
@@ -174,6 +227,7 @@ def fig_per_type_heatmap(results: list[dict], output_dir: Path) -> None:
     ax.set_title("Detection Rate by Hallucination Type")
     fig.colorbar(im, ax=ax, label="Detection Rate", shrink=0.8)
 
+    fig.tight_layout()
     path = output_dir / "per_type_heatmap.pdf"
     fig.savefig(path)
     plt.close(fig)
@@ -181,40 +235,61 @@ def fig_per_type_heatmap(results: list[dict], output_dir: Path) -> None:
 
 
 def fig_cost_accuracy(results: list[dict], output_dir: Path) -> None:
-    """Scatter plot: F1 vs cost (entries/second)."""
-    fig, ax = plt.subplots(figsize=(5, 3.5))
+    """Scatter plot: F1 vs throughput (entries/second)."""
+    results = [r for r in results if r["tool_name"] in _MAIN_TABLE_TOOLS]
+    fig, ax = plt.subplots(figsize=(6, 4))
 
+    # Collect points for label adjustment
+    points = []
     for i, result in enumerate(results):
         f1 = result.get("f1_hallucination", 0)
         cost = result.get("cost_efficiency", None)
         if cost is None or cost == 0:
             continue
 
+        name = _display_name(result["tool_name"])
         ax.scatter(
             cost,
             f1,
-            s=100,
+            s=140,
             color=COLORS[i % len(COLORS)],
             edgecolors="black",
-            linewidth=0.5,
+            linewidth=0.7,
             zorder=3,
         )
+        points.append((cost, f1, name, i))
+
+    # Place labels with manual offset logic to avoid overlaps
+    # Sort by x to detect horizontal crowding
+    points.sort(key=lambda p: (p[0], p[1]))
+    placed: list[tuple[float, float]] = []
+    for cost, f1, name, _idx in points:
+        # Default offset
+        dx, dy = 10, 6
+        # Check for nearby labels and adjust
+        for px, py in placed:
+            if abs(cost - px) < 0.15 and abs(f1 - py) < 0.08:
+                dy = -14  # shift below
+                break
+        placed.append((cost, f1))
         ax.annotate(
-            _display_name(result["tool_name"]),
+            name,
             (cost, f1),
             textcoords="offset points",
-            xytext=(8, 4),
+            xytext=(dx, dy),
             fontsize=8,
+            arrowprops=dict(arrowstyle="-", color="gray", lw=0.5) if len(points) > 6 else None,
         )
 
     ax.set_xlabel("Throughput (entries/sec)")
     ax.set_ylabel("F1 (Hallucination)")
-    ax.set_title("Cost-Accuracy Tradeoff")
+    ax.set_title("Cost\u2013Accuracy Tradeoff")
     ax.set_ylim(0, 1.05)
     ax.spines["top"].set_visible(False)
     ax.spines["right"].set_visible(False)
     ax.grid(True, alpha=0.3)
 
+    fig.tight_layout()
     path = output_dir / "cost_accuracy.pdf"
     fig.savefig(path)
     plt.close(fig)
@@ -222,26 +297,28 @@ def fig_cost_accuracy(results: list[dict], output_dir: Path) -> None:
 
 
 def fig_overall_comparison(results: list[dict], output_dir: Path) -> None:
-    """Grouped bar chart: primary metrics comparison across tools."""
+    """Horizontal grouped bar chart: primary metrics comparison across tools."""
+    results = [r for r in results if r["tool_name"] in _MAIN_TABLE_TOOLS]
     if not results:
         return
-
-    fig, ax = plt.subplots(figsize=(7, 3.5))
 
     tools = [_display_name(r["tool_name"]) for r in results]
     metrics = ["detection_rate", "f1_hallucination", "tier_weighted_f1"]
     metric_labels = ["Detection Rate", "F1", "Tier-weighted F1"]
 
-    x = np.arange(len(tools))
-    width = 0.8 / len(metrics)
+    n_tools = len(tools)
+    fig, ax = plt.subplots(figsize=(7, max(3.5, n_tools * 0.55 + 1.2)))
+
+    y = np.arange(n_tools)
+    height = 0.8 / len(metrics)
 
     for i, (metric, label) in enumerate(zip(metrics, metric_labels, strict=True)):
         values = [r.get(metric, 0) for r in results]
-        offset = (i - len(metrics) / 2 + 0.5) * width
-        bars = ax.bar(
-            x + offset,
+        offset = (i - len(metrics) / 2 + 0.5) * height
+        bars = ax.barh(
+            y + offset,
             values,
-            width * 0.9,
+            height * 0.88,
             label=label,
             color=COLORS[i % len(COLORS)],
             edgecolor="white",
@@ -250,23 +327,25 @@ def fig_overall_comparison(results: list[dict], output_dir: Path) -> None:
         for bar, val in zip(bars, values, strict=True):
             if val > 0:
                 ax.text(
-                    bar.get_x() + bar.get_width() / 2,
-                    bar.get_height() + 0.02,
+                    val + 0.01,
+                    bar.get_y() + bar.get_height() / 2,
                     f"{val:.2f}",
-                    ha="center",
-                    va="bottom",
+                    ha="left",
+                    va="center",
                     fontsize=7,
                 )
 
-    ax.set_ylabel("Score")
+    ax.set_xlabel("Score")
     ax.set_title("Baseline Comparison")
-    ax.set_xticks(x)
-    ax.set_xticklabels(tools)
-    ax.set_ylim(0, 1.2)
-    ax.legend(loc="upper right")
+    ax.set_yticks(y)
+    ax.set_yticklabels(tools)
+    ax.set_xlim(0, 1.15)
+    ax.legend(loc="lower right", fontsize=8)
     ax.spines["top"].set_visible(False)
     ax.spines["right"].set_visible(False)
+    ax.invert_yaxis()  # best tool at top
 
+    fig.tight_layout()
     path = output_dir / "overall_comparison.pdf"
     fig.savefig(path)
     plt.close(fig)
