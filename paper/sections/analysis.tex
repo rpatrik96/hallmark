@@ -10,8 +10,8 @@ We report results both with and without pre-screening to maintain transparency a
 
 \paragraph{Calibration.}
 \label{sec:calibration}
-GPT-5.1 achieves the lowest ECE (0.107), followed by DOI-only (0.143).
-HaRC (0.361) and verify-citations (0.317) show weaker calibration, with confidence scores poorly reflecting actual accuracy.
+Among full-coverage tools, GPT-5.1 achieves the lowest ECE (0.107), followed by DOI-only (0.143).
+The open-weight LLMs show higher ECE (0.25--0.33), reflecting the miscalibration inherent in their aggressive flagging behavior.
 Confidence calibration is critical for venue deployment, where reviewers need to trust flagged entries without manual verification---a tool reporting 80\% confidence regardless of correctness provides no actionable signal to a program committee.
 
 \paragraph{Cost--accuracy tradeoff.}

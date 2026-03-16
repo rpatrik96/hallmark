@@ -184,8 +184,13 @@ def fig_tier_detection_rates(results: list[dict], output_dir: Path) -> None:
 
 
 def fig_per_type_heatmap(results: list[dict], output_dir: Path) -> None:
-    """Heatmap: detection rate per hallucination type per tool."""
-    results = [r for r in results if r["tool_name"] in _MAIN_TABLE_TOOLS]
+    """Heatmap: detection rate per hallucination type per tool.
+
+    Excludes partial-coverage tools (HaRC, verify-citations) whose per-type
+    metrics on a small subset are not meaningful — consistent with the tier chart.
+    """
+    _heatmap_tools = _MAIN_TABLE_TOOLS - _PARTIAL_COVERAGE_TOOLS
+    results = [r for r in results if r["tool_name"] in _heatmap_tools]
     if not results:
         return
 
@@ -297,8 +302,13 @@ def fig_cost_accuracy(results: list[dict], output_dir: Path) -> None:
 
 
 def fig_overall_comparison(results: list[dict], output_dir: Path) -> None:
-    """Horizontal grouped bar chart: primary metrics comparison across tools."""
-    results = [r for r in results if r["tool_name"] in _MAIN_TABLE_TOOLS]
+    """Horizontal grouped bar chart: primary metrics comparison across tools.
+
+    Excludes partial-coverage tools (HaRC, verify-citations) whose metrics
+    on a small subset are not meaningful for visual comparison.
+    """
+    _comparison_tools = _MAIN_TABLE_TOOLS - _PARTIAL_COVERAGE_TOOLS
+    results = [r for r in results if r["tool_name"] in _comparison_tools]
     if not results:
         return
 
