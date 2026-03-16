@@ -436,11 +436,14 @@ GPT-5.1            & 0.797 & 0.959 & +0.162 & 0.171 & 0.726 & \textbf{+0.555} \\
 Mistral Large      & 0.691 & 0.953 & +0.262 & 0.258 & 0.770 & \textbf{+0.512} \\
 Qwen3-235B         & 0.832 & 0.986 & +0.154 & 0.551 & 0.785 & +0.234 \\
 DeepSeek-V3.2      & 0.880 & 0.980 & +0.100 & 0.730 & 0.757 & +0.026 \\
-DeepSeek-R1        & 0.871 & ---   & ---    & 0.640 & ---   & --- \\
+DeepSeek-R1$^\dagger$ & 0.871 & 0.000 & $-$0.871 & 0.640 & 0.844 & +0.204 \\
 \bottomrule
 \end{tabular}
 \end{table}
 
+\noindent{\footnotesize $^\dagger$DeepSeek-R1 classified nearly all 2024--2025 entries as \texttt{UNCERTAIN}, yielding DR\,=\,0 (no hallucinations confidently detected) and FPR\,=\,0.844 (the few non-uncertain predictions were false positives). Its chain-of-thought reasoning explicitly identifies uncertainty about post-training papers but defaults to over-flagging.}
+
+\medskip
 The supplement confirms three findings from the probe, now with substantially greater statistical power.
 First, \textbf{FPR explodes on recent papers}: GPT-5.1's FPR rises from 17.1\% to 72.6\% ($4.2{\times}$), consistent with the probe's $3.7{\times}$ estimate.
 The three most conservative models---Gemini Flash, GPT-5.1, and Mistral Large---all show FPR increases exceeding 47pp.
