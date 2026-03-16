@@ -7,7 +7,7 @@ We contribute \textsc{Hallmark}, the first benchmark focusing specifically on Bi
 Our evaluation of nine tools reveals a stark capability gap: DOI-only, the only API tool with full coverage, detects 26\% of hallucinations; multi-source tools (HaRC, verify-citations) were rate-limited to ${<}7\%$ coverage, preventing assessment of their detection quality at scale.
 Zero-shot LLM verifiers achieve 48--88\% detection rates---demonstrating that language models can identify the very hallucinations they produce, with a pronounced recall--precision spectrum across six LLMs from conservative (Gemini~2.5~Flash: 48\% DR, 10\% FPR) to aggressive (DeepSeek-V3.2: 88\% DR, 73\% FPR).
 No single tool covers all 14 types, and venue-level hallucinations remain a blind spot where bibliographic APIs lack structured data, providing concrete targets for both tool developers and database maintainers.
-A 480-entry temporal supplement confirms that this parametric verification breaks down sharply on papers beyond training cutoffs---FPR rises $4{\times}$ and F1 collapses to near-random---establishing temporal robustness as a first-order deployment concern.
+A 480-entry temporal supplement confirms that this parametric verification breaks down sharply on papers beyond training cutoffs---FPR rises $4{\times}$ and F1 collapses to near-chance-level---establishing temporal robustness as a first-order deployment concern.
 
 \textsc{Hallmark} is designed to grow: its community contribution system, temporal segmentation, and atomic evaluation design ensure that new entries and tools can be incorporated without invalidating prior results.
 We release the full benchmark and evaluation infrastructure as open-source software to support continued progress on this critical problem.

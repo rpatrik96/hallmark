@@ -39,16 +39,16 @@ These results support using perturbation entries as controlled diagnostic tests 
 
 \paragraph{Temporal robustness.}
 \label{sec:temporal_robustness}
-To test whether LLM verifiers degrade on papers beyond their training cutoff, we construct a 60-entry probe set (30 valid entries scraped from arXiv 2026 and DBLP 2024--2025, plus 30 hallucinated variants across all tiers) and evaluate all seven LLM-based baselines (\cref{tab:temporal_multi}).
-The FPR explosion is \emph{universal}: every model's false positive rate increases on recent papers, with multipliers ranging from $1.3{\times}$ (DeepSeek-V3, already aggressive at 73\% baseline FPR) to $9.2{\times}$ (Gemini Flash, the most conservative baseline at 10\% baseline FPR).
-Models with low baseline FPR suffer the largest relative degradation---a strong negative correlation ($r = -0.82$) between baseline FPR and FPR multiplier---because conservative models rely more heavily on parametric memory confirmation, which fails on unfamiliar papers.
+To test whether LLM verifiers degrade on papers beyond their training cutoff, we construct a 60-entry probe set (30 valid entries scraped from arXiv 2026 and DBLP 2024--2025, plus 30 hallucinated variants across all tiers) and evaluate all six LLM baselines plus the tool-augmented variant (\cref{tab:temporal_multi}).
+The FPR explosion is \emph{universal}: every model's false positive rate increases on recent papers, with multipliers ranging from $1.3{\times}$ (DeepSeek-V3.2, already aggressive at 73\% baseline FPR) to $9.2{\times}$ (Gemini Flash, the most conservative baseline at 10\% baseline FPR).
+Models with low baseline FPR suffer the largest relative degradation---a strong negative correlation ($r = -0.82$, $p = 0.02$, $n = 7$) between baseline FPR and FPR multiplier---because conservative models rely more heavily on parametric memory confirmation, which fails on unfamiliar papers.
 Detection rates simultaneously inflate to ${\geq}96.7\%$ across all models, confirming a universal ``flag everything unfamiliar'' failure mode rather than model-specific miscalibration.
 Augmenting GPT-5.1 with bibtex-updater's API verification does not help: FPR reaches 100\% because the tool's databases also lack recent papers.
 These results motivate including recent valid entries in temporal benchmarks and monitoring FPR as the key deployment metric (\cref{app:temporal}).
 
 A larger-scale temporal supplement ($n{=}480$: 330 valid entries from 2024--2025 DBLP proceedings, 150 hallucinated) confirms the probe findings with greater statistical power (\cref{app:temporal_supplement}).
 GPT-5.1's FPR rises from 17.1\% to 72.6\% ($4.2{\times}$), consistent with the probe's $3.7{\times}$ multiplier but measured over $11{\times}$ more valid entries.
-All five evaluated models show the same pattern: F1 collapses to ${\approx}0.53$ and MCC to ${\approx}0.25$ (near-random), confirming that the inflated detection rates are an artifact of indiscriminate flagging rather than improved verification.
+All five evaluated models show the same pattern: F1 collapses to ${\approx}0.53$ and MCC to ${\approx}0.25$ (near-chance-level; MCC\,=\,0 corresponds to random), confirming that the inflated detection rates are an artifact of indiscriminate flagging rather than improved verification.
 
 \paragraph{Failure modes and improvement targets.}
 \label{sec:failure}

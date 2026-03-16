@@ -7,6 +7,7 @@ Each entry undergoes six sub-tests (binary or not-applicable) inspired by HumanE
 \textsc{Hallmark} provides tier-weighted metrics that reward detection of hard hallucinations, expected calibration error for confidence assessment, and Plackett-Luce ranking infrastructure for future evaluations with denser tool coverage.
 We validate the benchmark by evaluating nine tools---three independent external systems, five open-weight LLMs, and an internal lower-bound baseline---revealing a stark capability gap: DOI-only, the only citation-database tool with full coverage, detects 26\% of hallucinations; multi-source tools (HaRC, verify-citations) were rate-limited to ${<}7\%$ coverage, preventing assessment of their detection quality at scale.
 Zero-shot LLM verifiers achieve 48--88\% detection rates---demonstrating that language models can identify the very hallucinations they produce, though with a pronounced recall--precision spectrum across models.
+However, a 480-entry temporal supplement reveals that LLM false positive rates increase 3--5$\times$ on papers from 2024--2025, establishing temporal robustness as a first-order deployment concern.
 The benchmark, evaluation infrastructure, and all data are open-source, pip-installable, and designed for community adoption.
 Code and data: \url{https://github.com/anonymous/hallmark}.
 \end{abstract}
