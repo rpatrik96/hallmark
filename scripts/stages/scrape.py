@@ -12,6 +12,7 @@ import random
 from pathlib import Path
 
 from hallmark.dataset.schema import BenchmarkEntry, load_entries
+from hallmark.dataset.text_utils import parse_bibtex_fields
 
 logger = logging.getLogger(__name__)
 
@@ -69,17 +70,6 @@ def stage_scrape_valid(
     return entries
 
 
-def _parse_bibtex_fields(raw: str) -> dict[str, str]:
-    """Extract key=value fields from a raw BibTeX string."""
-    import re
-
-    fields: dict[str, str] = {}
-    # Match field = {value} or field = "value"
-    for m in re.finditer(r"(\w+)\s*=\s*\{([^}]*)\}", raw):
-        fields[m.group(1).lower()] = m.group(2).strip()
-    return fields
-
-
 def stage_load_journal_articles(path: Path) -> list[BenchmarkEntry]:
     """Load journal articles as additional valid entries.
 
@@ -102,7 +92,7 @@ def stage_load_journal_articles(path: Path) -> list[BenchmarkEntry]:
 
             # Handle journal article format: has 'bibtex' key instead of 'fields'
             if "bibtex" in data and "fields" not in data:
-                fields = _parse_bibtex_fields(data["bibtex"])
+                fields = parse_bibtex_fields(data["bibtex"])
                 # Convert journal -> booktitle for consistency
                 if "journal" in fields and "booktitle" not in fields:
                     fields["booktitle"] = fields.pop("journal")

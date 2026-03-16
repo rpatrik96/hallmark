@@ -1,198 +1,14 @@
 #!/usr/bin/env python3
-"""Scrape valid journal articles from DBLP to diversify benchmark beyond conference papers.  [data-collection]
+"""CLI wrapper to scrape journal articles from DBLP.  [data-collection]
 
-This addresses P1.5: Add valid journal articles to eliminate article/misc type as shortcut.
+Delegates all logic to hallmark.dataset.scraper.scrape_journal_articles().
 """
 
 from __future__ import annotations
 
 import argparse
-import json
-import re
-import ssl
 import sys
-import time
-import urllib.parse
-import urllib.request
 from pathlib import Path
-from typing import Any
-
-# SSL context with certifi fallback for macOS
-try:
-    import certifi
-
-    _SSL_CTX = ssl.create_default_context(cafile=certifi.where())
-except ImportError:
-    _SSL_CTX = ssl.create_default_context()
-
-
-def fetch_dblp_journal(
-    journal_name: str, num_entries: int, start_year: int, end_year: int
-) -> list[dict[str, Any]]:
-    """Fetch journal articles from DBLP API.
-
-    Args:
-        journal_name: Journal name or abbreviation (e.g., 'JMLR', 'TMLR')
-        num_entries: Target number of entries to fetch
-        start_year: Start of year range
-        end_year: End of year range (inclusive)
-
-    Returns:
-        List of DBLP publication records
-    """
-    base_url = "https://dblp.org/search/publ/api"
-    entries = []
-
-    # Use DBLP stream query for precise venue matching
-    # Maps short names to DBLP stream IDs
-    stream_map: dict[str, str] = {
-        "JMLR": "journals/jmlr",
-        "TMLR": "journals/tmlr",
-        "Mach. Learn.": "journals/ml",
-    }
-    stream_id = stream_map.get(journal_name, "")
-
-    print(
-        f"Fetching {num_entries} entries from {journal_name} ({start_year}-{end_year})...",
-        file=sys.stderr,
-    )
-
-    # DBLP doesn't support year ranges — query each year individually
-    per_year = max(1, num_entries // (end_year - start_year + 1))
-    for year in range(start_year, end_year + 1):
-        if stream_id:
-            query = f"stream:{stream_id}: year:{year}"
-        else:
-            query = f"venue:{journal_name} year:{year}"
-
-        url = f"{base_url}?q={urllib.parse.quote(query, safe='/.')}&format=json&h={per_year}"
-
-        try:
-            req = urllib.request.Request(url)
-            req.add_header(
-                "User-Agent",
-                "HALLMARK-Benchmark/1.0 (mailto:research@example.com)",
-            )
-
-            with urllib.request.urlopen(req, timeout=30, context=_SSL_CTX) as response:
-                data = json.loads(response.read().decode())
-
-            year_count = 0
-            if "result" in data and "hits" in data["result"]:
-                hits = data["result"]["hits"].get("hit", [])
-                for hit in hits:
-                    if "info" in hit:
-                        entries.append(hit["info"])
-                        year_count += 1
-
-            print(f"  → {year}: {year_count} entries", file=sys.stderr)
-
-        except urllib.error.HTTPError as e:
-            print(f"  ✗ {year}: HTTP error {e.code}: {e.reason}", file=sys.stderr)
-        except urllib.error.URLError as e:
-            print(f"  ✗ {year}: URL error: {e.reason}", file=sys.stderr)
-        except Exception as e:
-            print(f"  ✗ {year}: Unexpected error: {e}", file=sys.stderr)
-
-        time.sleep(0.5)
-
-    print(f"  → Total: {len(entries)} entries", file=sys.stderr)
-    return entries
-
-
-def convert_to_benchmark_entry(dblp_entry: dict[str, Any], seq_id: int) -> dict[str, Any]:
-    """Convert DBLP entry to HALLMARK BenchmarkEntry format.
-
-    Args:
-        dblp_entry: DBLP publication record
-        seq_id: Sequential ID for bibtex key
-
-    Returns:
-        HALLMARK BenchmarkEntry dict
-    """
-    # Extract authors (DBLP returns list of dicts with 'text' field or plain strings)
-    authors_raw = dblp_entry.get("authors", {}).get("author", [])
-    if isinstance(authors_raw, dict):
-        authors_raw = [authors_raw]
-    authors = []
-    for author in authors_raw:
-        name = author.get("text", "") if isinstance(author, dict) else str(author)
-        # Strip DBLP disambiguation suffixes (e.g., "Alekh Agarwal 0002")
-
-        name = re.sub(r"\s+\d{4}$", "", name)
-        authors.append(name)
-    author_str = " and ".join(authors) if authors else "Unknown Author"
-
-    # Extract venue (journal name)
-    venue = dblp_entry.get("venue", "Unknown Journal")
-
-    # Extract DOI (may be missing)
-    doi = dblp_entry.get("doi", "")
-
-    # Extract year
-    year_str = dblp_entry.get("year", "")
-
-    # Extract title
-    title = dblp_entry.get("title", "Untitled")
-
-    # Extract volume, number, pages if available
-    volume = dblp_entry.get("volume", "")
-    number = dblp_entry.get("number", "")
-    pages = dblp_entry.get("pages", "")
-
-    # Construct BibTeX string
-    bibtex_lines = [
-        f"@article{{hallmark_journal_{seq_id:04d},",
-        f"  title = {{{title}}},",
-        f"  author = {{{author_str}}},",
-        f"  journal = {{{venue}}},",
-        f"  year = {{{year_str}}},",
-    ]
-
-    if volume:
-        bibtex_lines.append(f"  volume = {{{volume}}},")
-    if number:
-        bibtex_lines.append(f"  number = {{{number}}},")
-    if pages:
-        bibtex_lines.append(f"  pages = {{{pages}}},")
-    if doi:
-        bibtex_lines.append(f"  doi = {{{doi}}},")
-
-    # Add URL (DBLP provides 'url' or 'ee' fields)
-    url = dblp_entry.get("ee", dblp_entry.get("url", ""))
-    if url:
-        # DBLP 'ee' can be list; take first if so
-        if isinstance(url, list):
-            url = url[0] if url else ""
-        bibtex_lines.append(f"  url = {{{url}}},")
-
-    bibtex_lines.append("}")
-    bibtex_str = "\n".join(bibtex_lines)
-
-    # Build subtests
-    subtests = {
-        "doi_resolves": bool(doi),
-        "title_exists": True,
-        "authors_match": True,
-        "venue_correct": True,
-        "fields_complete": bool(authors and title and venue and year_str),
-        "cross_db_agreement": bool(doi),  # If DOI exists, CrossRef can verify
-    }
-
-    return {
-        "bibtex_key": f"hallmark_journal_{seq_id:04d}",
-        "bibtex_type": "article",
-        "bibtex": bibtex_str,
-        "label": "VALID",
-        "generation_method": "scraped",
-        "source": f"DBLP:{venue}",
-        "subtests": subtests,
-        "metadata": {
-            "dblp_key": dblp_entry.get("key", ""),
-            "original_venue": venue,
-            "has_doi": bool(doi),
-        },
-    }
 
 
 def main() -> None:
@@ -221,7 +37,7 @@ def main() -> None:
         "--num-per-journal",
         type=int,
         default=40,
-        help="Number of entries to fetch per journal (default: 40)",
+        help="Number of entries to fetch per journal per year (default: 40)",
     )
     parser.add_argument(
         "--start-year",
@@ -238,57 +54,44 @@ def main() -> None:
 
     args = parser.parse_args()
 
-    # Target journals
-    journals = [
-        "JMLR",  # Journal of Machine Learning Research
-        "TMLR",  # Transactions on Machine Learning Research
-        "Mach. Learn.",  # Machine Learning (Springer)
-    ]
+    from hallmark.dataset.schema import save_entries
+    from hallmark.dataset.scraper import ScraperConfig, scrape_journal_articles
 
-    all_entries = []
-    seq_id = 0
+    config = ScraperConfig(
+        rate_limit_delay=args.rate_limit,
+        verify_against_crossref=False,
+        verify_against_s2=False,
+    )
 
-    for journal in journals:
-        dblp_entries = fetch_dblp_journal(
-            journal_name=journal,
-            num_entries=args.num_per_journal,
-            start_year=args.start_year,
-            end_year=args.end_year,
-        )
+    years = list(range(args.start_year, args.end_year + 1))
+    entries = scrape_journal_articles(
+        journals=["JMLR", "MLJ", "TMLR"],
+        years=years,
+        max_per_journal_year=args.num_per_journal,
+        config=config,
+    )
 
-        for dblp_entry in dblp_entries:
-            benchmark_entry = convert_to_benchmark_entry(dblp_entry, seq_id)
-            all_entries.append(benchmark_entry)
-            seq_id += 1
-
-        # Rate limiting between journals
-        if journal != journals[-1]:  # Don't sleep after last journal
-            time.sleep(args.rate_limit)
-
-    print(f"\nTotal entries collected: {len(all_entries)}", file=sys.stderr)
+    print(f"\nTotal entries collected: {len(entries)}", file=sys.stderr)
 
     if args.dry_run:
+        import json
+
         print("\n=== DRY RUN: Preview of first 3 entries ===\n", file=sys.stderr)
-        for entry in all_entries[:3]:
-            print(json.dumps(entry, indent=2))
+        for entry in entries[:3]:
+            print(json.dumps(entry.to_dict(), indent=2))
             print()
-        print(f"(showing 3/{len(all_entries)} entries)", file=sys.stderr)
+        print(f"(showing 3/{len(entries)} entries)", file=sys.stderr)
     else:
-        # Save to JSONL
         args.output.parent.mkdir(parents=True, exist_ok=True)
-        with open(args.output, "w", encoding="utf-8") as f:
-            for entry in all_entries:
-                f.write(json.dumps(entry, ensure_ascii=False) + "\n")
+        save_entries(entries, args.output)
+        print(f"Saved {len(entries)} entries to {args.output}", file=sys.stderr)
 
-        print(f"✓ Saved {len(all_entries)} entries to {args.output}", file=sys.stderr)
-
-        # Print summary statistics
-        if all_entries:
-            with_doi = sum(1 for e in all_entries if e["metadata"]["has_doi"])
-            pct = 100 * with_doi / len(all_entries)
+        if entries:
+            with_doi = sum(1 for e in entries if e.fields.get("doi"))
+            pct = 100 * with_doi / len(entries)
             print("\nSummary:", file=sys.stderr)
             print(
-                f"  Entries with DOI: {with_doi}/{len(all_entries)} ({pct:.1f}%)",
+                f"  Entries with DOI: {with_doi}/{len(entries)} ({pct:.1f}%)",
                 file=sys.stderr,
             )
         else:

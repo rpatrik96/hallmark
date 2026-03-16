@@ -7,171 +7,14 @@ This addresses P1.7: Verify that valid entries are truly valid by checking again
 from __future__ import annotations
 
 import argparse
-import difflib
 import json
 import random
-import ssl
 import sys
-import time
-import urllib.parse
-import urllib.request
 from pathlib import Path
 from typing import Any
 
-# SSL context with certifi fallback for macOS
-try:
-    import certifi
-
-    _SSL_CTX = ssl.create_default_context(cafile=certifi.where())
-except ImportError:
-    _SSL_CTX = ssl.create_default_context()
-
-
-def normalize_title(title: str) -> str:
-    """Normalize title for comparison.
-
-    Args:
-        title: Raw title string
-
-    Returns:
-        Normalized title (lowercase, stripped punctuation)
-    """
-    # Remove common punctuation and extra whitespace
-    normalized = title.lower()
-    for char in ".,;:!?\"'()[]{}":
-        normalized = normalized.replace(char, " ")
-    # Collapse whitespace
-    return " ".join(normalized.split())
-
-
-def title_similarity(title1: str, title2: str) -> float:
-    """Compute similarity between two titles.
-
-    Args:
-        title1: First title
-        title2: Second title
-
-    Returns:
-        Similarity score in [0, 1]
-    """
-    norm1 = normalize_title(title1)
-    norm2 = normalize_title(title2)
-    return difflib.SequenceMatcher(None, norm1, norm2).ratio()
-
-
-def extract_last_names(author_str: str) -> set[str]:
-    """Extract last names from BibTeX author field.
-
-    Args:
-        author_str: BibTeX author string (e.g., "Smith, John and Doe, Jane")
-
-    Returns:
-        Set of last names (lowercased)
-    """
-    last_names = set()
-
-    # Split by "and"
-    authors = author_str.split(" and ")
-
-    for author in authors:
-        author = author.strip()
-        if not author:
-            continue
-
-        # Handle "Last, First" format
-        if "," in author:
-            last_name = author.split(",")[0].strip()
-        else:
-            # Handle "First Last" format (take last token)
-            tokens = author.split()
-            last_name = tokens[-1] if tokens else ""
-
-        if last_name:
-            last_names.add(last_name.lower())
-
-    return last_names
-
-
-def query_crossref_by_doi(doi: str) -> dict[str, Any] | None:
-    """Query CrossRef API by DOI.
-
-    Args:
-        doi: DOI string
-
-    Returns:
-        CrossRef metadata dict or None on failure
-    """
-    url = f"https://api.crossref.org/works/{urllib.parse.quote(doi, safe='')}"
-
-    try:
-        req = urllib.request.Request(url)
-        req.add_header("User-Agent", "HALLMARK-Benchmark/1.0 (mailto:research@example.com)")
-
-        with urllib.request.urlopen(req, timeout=30, context=_SSL_CTX) as response:
-            data = json.loads(response.read().decode())
-            message = data.get("message")
-            return message if isinstance(message, dict) else None
-
-    except urllib.error.HTTPError as e:
-        if e.code == 404:
-            return None
-        print(f"    CrossRef HTTP error {e.code}: {e.reason}", file=sys.stderr)
-        return None
-    except Exception as e:
-        print(f"    CrossRef error: {e}", file=sys.stderr)
-        return None
-
-
-def query_crossref_by_title(title: str) -> dict[str, Any] | None:
-    """Query CrossRef API by title search.
-
-    Args:
-        title: Paper title
-
-    Returns:
-        Top search result metadata or None on failure
-    """
-    params = {
-        "query.bibliographic": title,
-        "rows": "1",
-    }
-    url = f"https://api.crossref.org/works?{urllib.parse.urlencode(params)}"
-
-    try:
-        req = urllib.request.Request(url)
-        req.add_header("User-Agent", "HALLMARK-Benchmark/1.0 (mailto:research@example.com)")
-
-        with urllib.request.urlopen(req, timeout=30, context=_SSL_CTX) as response:
-            data = json.loads(response.read().decode())
-            items = data.get("message", {}).get("items", [])
-            return items[0] if items else None
-
-    except Exception as e:
-        print(f"    CrossRef search error: {e}", file=sys.stderr)
-        return None
-
-
-def extract_bibtex_field(bibtex: str, field: str) -> str:
-    """Extract field value from BibTeX string.
-
-    Args:
-        bibtex: BibTeX entry string
-        field: Field name (e.g., "title", "author", "doi")
-
-    Returns:
-        Field value or empty string if not found
-    """
-    # Simple regex-free parsing: look for "field = {value},"
-    lines = bibtex.split("\n")
-    for line in lines:
-        line = line.strip()
-        if line.lower().startswith(f"{field.lower()} = "):
-            # Extract value between { and }
-            start = line.find("{")
-            end = line.rfind("}")
-            if start != -1 and end != -1 and end > start:
-                return line[start + 1 : end]
-    return ""
+from hallmark.dataset.api_clients import CrossRefClient
+from hallmark.dataset.text_utils import extract_last_names, parse_bibtex_fields, title_similarity
 
 
 def verify_entry(entry: dict[str, Any], rate_limit: float) -> dict[str, Any]:
@@ -195,9 +38,10 @@ def verify_entry(entry: dict[str, Any], rate_limit: float) -> dict[str, Any]:
     # Fall back to BibTeX string parsing if fields are empty
     if not title:
         bibtex = entry.get("bibtex", entry.get("raw_bibtex", ""))
-        title = extract_bibtex_field(bibtex, "title")
-        author = extract_bibtex_field(bibtex, "author")
-        doi = extract_bibtex_field(bibtex, "doi")
+        parsed = parse_bibtex_fields(bibtex)
+        title = parsed.get("title", "")
+        author = parsed.get("author", "")
+        doi = parsed.get("doi", "")
 
     result = {
         "bibtex_key": bibtex_key,
@@ -209,12 +53,11 @@ def verify_entry(entry: dict[str, Any], rate_limit: float) -> dict[str, Any]:
         "details": "",
     }
 
-    # Rate limiting
-    time.sleep(rate_limit)
+    client = CrossRefClient(rate_limit=rate_limit)
 
     if doi:
         # Verify by DOI
-        crossref_data = query_crossref_by_doi(doi)
+        crossref_data = client.query_by_doi(doi)
         if crossref_data is None:
             result["details"] = f"DOI {doi} not found in CrossRef"
             return result
@@ -249,7 +92,8 @@ def verify_entry(entry: dict[str, Any], rate_limit: float) -> dict[str, Any]:
 
     else:
         # Verify by title search
-        crossref_data = query_crossref_by_title(title)
+        items = client.query_by_title(title, rows=1)
+        crossref_data = items[0] if items else None
         if crossref_data is None:
             result["details"] = "No CrossRef search results"
             return result

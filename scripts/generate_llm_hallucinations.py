@@ -25,9 +25,7 @@ import json as json_mod
 import logging
 import os
 import re
-import ssl
 import sys
-import time
 import urllib.parse
 import urllib.request
 from abc import ABC, abstractmethod
@@ -35,37 +33,29 @@ from collections import defaultdict
 from datetime import date
 from pathlib import Path
 
-import requests
-
 # Add parent directory to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from hallmark.contribution.validate_entry import validate_entry
+from hallmark.dataset.api_clients import CrossRefClient, get_ssl_context
 from hallmark.dataset.schema import (
     HALLUCINATION_TIER_MAP,
     BenchmarkEntry,
     GenerationMethod,
     HallucinationType,
 )
+from hallmark.dataset.text_utils import (
+    authors_match_fuzzy,
+    parse_bibtex_entry,
+    title_jaccard,
+)
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
 logger = logging.getLogger(__name__)
 
-# CrossRef API configuration
-CROSSREF_API = "https://api.crossref.org/works"
-CROSSREF_HEADERS = {
-    "User-Agent": "HALLMARK-Benchmark/1.0",
-    "mailto": os.environ.get("CROSSREF_EMAIL", "hallmark-benchmark@example.com"),
-}
-RATE_LIMIT_DELAY = 1.0  # seconds between requests
-
-# SSL context for macOS
-try:
-    import certifi
-
-    _SSL_CTX = ssl.create_default_context(cafile=certifi.where())
-except ImportError:
-    _SSL_CTX = ssl.create_default_context()
+# Module-level SSL context and CrossRef client
+_SSL_CTX = get_ssl_context()
+_crossref = CrossRefClient(rate_limit=1.0)
 
 
 # ---------------------------------------------------------------------------
@@ -314,133 +304,6 @@ DEFAULT_MODELS: dict[str, str] = {
 }
 
 
-def _title_jaccard(title_a: str, title_b: str) -> float:
-    """Word-level Jaccard similarity between two titles."""
-    words_a = set(title_a.lower().split())
-    words_b = set(title_b.lower().split())
-    if not words_a or not words_b:
-        return 0.0
-    return len(words_a & words_b) / len(words_a | words_b)
-
-
-def _extract_lastnames(author_str: str) -> set[str]:
-    """Extract last names from a BibTeX-style author string.
-
-    Handles both "Last, First" and "First Last" formats.
-    """
-    names: set[str] = set()
-    for part in author_str.split(" and "):
-        part = part.strip()
-        if not part:
-            continue
-        if "," in part:
-            # "Last, First" format
-            names.add(part.split(",")[0].strip().lower())
-        else:
-            # "First Last" format — last token is the last name
-            tokens = part.split()
-            if tokens:
-                names.add(tokens[-1].strip().lower())
-    return names
-
-
-def _authors_match_fuzzy(bib_authors: str, cr_authors: list[dict]) -> bool:
-    """Fuzzy author match using Jaccard similarity on last names.
-
-    Returns True if >= 50% of last names overlap between the BibTeX
-    author string and the CrossRef author list.
-    """
-    bib_lastnames = _extract_lastnames(bib_authors)
-    cr_lastnames = {a.get("family", "").lower() for a in cr_authors if a.get("family")}
-    if not bib_lastnames or not cr_lastnames:
-        return False
-    overlap = len(bib_lastnames & cr_lastnames) / len(bib_lastnames | cr_lastnames)
-    return overlap >= 0.5
-
-
-def verify_title_in_crossref(title: str) -> dict | None:
-    """Verify if a title exists in CrossRef API.
-
-    Returns the best match if found and title similarity > 0.5,
-    None otherwise. This prevents misclassification from CrossRef
-    returning unrelated papers for fuzzy title queries.
-    """
-    time.sleep(RATE_LIMIT_DELAY)
-    try:
-        params = {"query.bibliographic": title, "rows": 3}
-        response = requests.get(CROSSREF_API, params=params, headers=CROSSREF_HEADERS, timeout=10)
-        response.raise_for_status()
-        data = response.json()
-
-        for item in data["message"]["items"]:
-            cr_title = item.get("title", [""])[0] if item.get("title") else ""
-            if _title_jaccard(title, cr_title) > 0.5:
-                return item
-        return None
-    except Exception as e:
-        logger.warning(f"CrossRef API error for '{title[:50]}...': {e}")
-        return None
-
-
-def verify_doi_in_crossref(doi: str) -> dict | None:
-    """Verify if a DOI exists in CrossRef API."""
-    time.sleep(RATE_LIMIT_DELAY)
-    try:
-        url = f"https://api.crossref.org/works/{doi}"
-        response = requests.get(url, headers=CROSSREF_HEADERS, timeout=10)
-        response.raise_for_status()
-        data = response.json()
-        return data["message"]
-    except Exception:
-        return None
-
-
-def parse_bibtex_entry(bibtex_str: str) -> dict | None:
-    """Parse a single BibTeX entry string into a dictionary.
-
-    Simple parser that extracts key fields without full bibtexparser dependency.
-    """
-    try:
-        # Extract entry type and key
-        match = re.match(r"@(\w+)\{([^,]+),", bibtex_str, re.IGNORECASE)
-        if not match:
-            return None
-
-        entry_type = match.group(1).lower()
-        key = match.group(2).strip()
-
-        # Extract fields using a brace-counting parser to handle nested braces
-        # e.g. title = {A {Transformer} Model} would be truncated by a naive regex
-        fields: dict[str, str] = {}
-        field_pattern = re.compile(r"(\w+)\s*=\s*")
-        for fm in field_pattern.finditer(bibtex_str):
-            field_name = fm.group(1).lower()
-            start = fm.end()
-            if start >= len(bibtex_str):
-                continue
-            delim = bibtex_str[start]
-            if delim == "{":
-                depth = 1
-                i = start + 1
-                while i < len(bibtex_str) and depth > 0:
-                    if bibtex_str[i] == "{":
-                        depth += 1
-                    elif bibtex_str[i] == "}":
-                        depth -= 1
-                    i += 1
-                if depth == 0:
-                    fields[field_name] = bibtex_str[start + 1 : i - 1].strip()
-            elif delim == '"':
-                end = bibtex_str.find('"', start + 1)
-                if end != -1:
-                    fields[field_name] = bibtex_str[start + 1 : end].strip()
-
-        return {"type": entry_type, "key": key, "fields": fields}
-    except Exception as e:
-        logger.debug(f"Failed to parse BibTeX: {e}")
-        return None
-
-
 def classify_hallucination(entry_dict: dict, crossref_data: dict | None) -> tuple[str, str, dict]:
     """Classify what type of hallucination this is based on what's wrong.
 
@@ -497,7 +360,7 @@ def classify_hallucination(entry_dict: dict, crossref_data: dict | None) -> tupl
 
         # Check for fabricated DOI
         if doi:
-            doi_data = verify_doi_in_crossref(doi)
+            doi_data = _crossref.query_by_doi(doi)
             if doi_data is None:
                 return (
                     HallucinationType.FABRICATED_DOI.value,
@@ -563,7 +426,7 @@ def classify_hallucination(entry_dict: dict, crossref_data: dict | None) -> tupl
 
     # Check for author mismatch using fuzzy last-name matching
     cr_author_list = crossref_data.get("author", [])
-    if cr_author_list and not _authors_match_fuzzy(authors, cr_author_list):
+    if cr_author_list and not authors_match_fuzzy(authors, cr_author_list):
         subtests["authors_match"] = False
         if doi and doi.lower() == cr_doi.lower():
             subtests["doi_resolves"] = True
@@ -581,7 +444,7 @@ def classify_hallucination(entry_dict: dict, crossref_data: dict | None) -> tupl
         cr_venue_lower = cr_venue.lower()
         # Check if neither is a substring of the other (accounts for abbreviations)
         if venue_lower not in cr_venue_lower and cr_venue_lower not in venue_lower:
-            venue_jaccard = _title_jaccard(venue, cr_venue)
+            venue_jaccard = title_jaccard(venue, cr_venue)
             if venue_jaccard < 0.3:
                 if doi and doi.lower() == cr_doi.lower():
                     subtests["doi_resolves"] = True
@@ -662,7 +525,7 @@ Output only the BibTeX entries, nothing else."""
             continue
 
         logger.info(f"  Verifying: {title[:60]}...")
-        crossref_data = verify_title_in_crossref(title)
+        crossref_data = _crossref.verify_title(title, min_similarity=0.5)
 
         # If no match or significant differences, it's a hallucination
         hall_type, explanation, subtests = classify_hallucination(parsed, crossref_data)
@@ -796,7 +659,7 @@ def generate_targeted_type(
 
         # Verify and classify
         title = parsed["fields"].get("title", "")
-        crossref_data = verify_title_in_crossref(title) if title else None
+        crossref_data = _crossref.verify_title(title, min_similarity=0.5) if title else None
 
         detected_type, explanation, subtests = classify_hallucination(parsed, crossref_data)
 
