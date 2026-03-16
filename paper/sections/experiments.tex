@@ -4,7 +4,8 @@
 \subsection{Evaluated tools}
 \label{sec:baselines}
 
-We evaluate three independent external citation verification tools (HaRC, verify-citations, GPT-5.1) and five open-weight LLMs accessed via OpenRouter (DeepSeek-R1, DeepSeek-V3.2, Qwen3-235B, Mistral Large, Gemini~2.5~Flash), plus DOI-only, an internal lower-bound baseline, on the \texttt{dev\_public} split.
+We evaluate seven full-coverage tools on the \texttt{dev\_public} split: DOI-only (a lower-bound baseline), GPT-5.1~\citep{openai2025gpt5}, and five open-weight LLMs accessed via OpenRouter (DeepSeek-R1, DeepSeek-V3.2, Qwen3-235B, Mistral Large, Gemini~2.5~Flash).
+We also attempted evaluation of two dedicated multi-source citation verification tools (HaRC, verify-citations); both were severely rate-limited, as detailed below.
 We additionally evaluate \texttt{bibtex-updater}~\citep{bibtexupdater} (DR\,=\,0.946) and a \emph{tool-augmented} variant that injects bibtex-updater's structured output into GPT-5.1's prompt; both are co-developed by the authors and reported separately in \cref{app:codesign} due to co-design bias concerns.
 
 \paragraph{DOI-only.}
@@ -33,7 +34,7 @@ These models test whether the strong LLM performance generalizes beyond propriet
 \cref{tab:results} presents the main results on the \texttt{dev\_public} split.
 
 \begin{table}[t]
-\caption{Results on \texttt{dev\_public} using independent tools only. Best values in \textbf{bold}. $^*$Partial evaluation due to API rate limiting. Coverage = fraction of entries processed. Metrics for partial-coverage tools ($^*$) are computed on completed entries only; with $n=20$ (HaRC) and $n=71$ (verify-citations), point estimates have wide confidence intervals and should be interpreted cautiously. Results for bibtex-updater (co-designed by the authors) are reported separately in \cref{app:codesign}.}
+\caption{Results on \texttt{dev\_public} using independent tools only. Best values among full-coverage tools in \textbf{bold}. $^*$Partial evaluation due to API rate limiting; metrics are computed on completed entries only ($n=20$ for HaRC, $n=71$ for verify-citations) and have wide confidence intervals---these rows are included to document tool availability, not for direct comparison. Coverage = fraction of entries processed. Results for bibtex-updater (co-designed by the authors) are reported separately in \cref{app:codesign}.}
 \label{tab:results}
 \centering
 \small
@@ -41,10 +42,12 @@ These models test whether the strong LLM performance generalizes beyond propriet
 \toprule
 \textbf{Tool} & \textbf{DR $\uparrow$} & \textbf{FPR $\downarrow$} & \textbf{F1 $\uparrow$} & \textbf{MCC $\uparrow$} & \textbf{TW-F1 $\uparrow$} & \textbf{ECE $\downarrow$} & \textbf{Cov.} \\
 \midrule
-DOI-only            & 0.256          & 0.195          & 0.361          & 0.093          & 0.314          & 0.143 & 1.00 \\
-HaRC$^*$            & 0.155          & \textbf{0.000} & 0.268          & 0.234          & 0.188          & 0.361          & 0.02 \\
+\multicolumn{8}{l}{\emph{Partial coverage (rate-limited; not directly comparable)}} \\
+HaRC$^*$            & 0.155          & 0.000          & 0.268          & 0.234          & 0.188          & 0.361          & 0.02 \\
 verify-citations$^*$& 0.042          & 0.024          & 0.071          & 0.032          & 0.062          & 0.317          & 0.06 \\
 \midrule
+\multicolumn{8}{l}{\emph{Full coverage}} \\
+DOI-only            & 0.256          & 0.195          & 0.361          & 0.093          & 0.314          & 0.143 & 1.00 \\
 GPT-5.1 (zero-shot)    & 0.797          & 0.171          & \textbf{0.822} & \textbf{0.636} & \textbf{0.846} & \textbf{0.107} & 1.00 \\
 DeepSeek-R1            & 0.871          & 0.640          & 0.737          & 0.273          & 0.814          & 0.247          & 1.00 \\
 DeepSeek-V3.2          & \textbf{0.880} & 0.730          & 0.721          & 0.191          & 0.805          & 0.331          & 1.00 \\
@@ -55,14 +58,13 @@ Gemini~2.5~Flash       & 0.482          & 0.101          & 0.617          & 0.40
 \end{tabular}
 \end{table}
 
-The results reveal four key insights about the current citation verification landscape.
-First, \emph{API tool coverage was limited by infrastructure, not by design}: DOI-only is the only API-based tool with full coverage, catching 25.6\% of hallucinations---limited by design to entries with resolvable DOIs---while multi-source tools (HaRC, verify-citations) were bottlenecked by rate limiting to 1.8\% and 6.3\% coverage respectively, preventing any conclusion about their detection quality at scale.
-Second, \emph{LLMs dramatically outperform API-based tools}: five of six LLMs achieve ${\geq}69\%$ detection rate---a $3{\times}$+ improvement over DOI-only---demonstrating that language models can identify the very hallucinations they produce.
-Third, \emph{LLMs exhibit a recall--precision spectrum}: the six models span a wide range from conservative (Gemini~2.5~Flash: DR\,=\,48\%, FPR\,=\,10\%) to aggressive (DeepSeek-V3.2: DR\,=\,88\%, FPR\,=\,73\%).
+The full-coverage results reveal three key insights.
+First, \emph{LLMs dramatically outperform the DOI-only baseline}: five of six LLMs achieve ${\geq}69\%$ detection rate---a $3{\times}$+ improvement over DOI-only (25.6\%)---demonstrating that language models can identify the very hallucinations they produce.
+Second, \emph{LLMs exhibit a recall--precision spectrum}: the six models span a wide range from conservative (Gemini~2.5~Flash: DR\,=\,48\%, FPR\,=\,10\%) to aggressive (DeepSeek-V3.2: DR\,=\,88\%, FPR\,=\,73\%).
 DeepSeek-R1's chain-of-thought reasoning does not improve over V3.2 (DR\,=\,87\% vs.\ 88\%) despite $5{\times}$ higher latency, suggesting that explicit reasoning provides diminishing returns for this task.
 The aggressive over-flagging of open-weight models degrades their F1 (0.62--0.74 vs.\ 0.82), MCC (0.19--0.43 vs.\ 0.64), and calibration (ECE 0.25--0.33 vs.\ 0.11).
 GPT-5.1 remains the best-performing LLM overall, achieving the highest F1, MCC, and best-calibrated confidence estimates.
-Fourth, \emph{a capability gap remains}: even DeepSeek-V3.2, the highest-recall model, misses 12\% of hallucinations, with systematic weaknesses on subtle types, providing concrete improvement targets.
+Third, \emph{a capability gap remains}: even DeepSeek-V3.2, the highest-recall model, misses 12\% of hallucinations, with systematic weaknesses on subtle types, providing concrete improvement targets.
 Since Detection Rate and FPR are prevalence-independent, we emphasize these as primary metrics.\footnote{F1 is prevalence-sensitive: a benchmark with 50\% hallucination prevalence inflates F1 relative to real-world deployment where hallucination rates may be much lower. F1 values should only be compared within the same split, never across splits or with external results.}
 
 \paragraph{GPT-5.1 (zero-shot).}
@@ -73,6 +75,7 @@ Among the six LLMs, GPT-5.1 achieves the best balance of recall and precision: i
 \paragraph{Incomplete-coverage tools.}
 HaRC and verify-citations completed only 1.8\% and 6.3\% of entries respectively due to API rate limiting.
 Their metrics reflect performance on the completed subset only and are not directly comparable to full-coverage tools.
+Moreover, the completed entries are not a random sample: entries that resolved within the timeout budget are likely biased toward those with faster API lookups (e.g., entries whose DOIs resolve immediately), so the point estimates may not generalize even to the tools' own full-coverage behavior.
 Plackett-Luce ranking (\cref{app:ranking}) provides a principled framework for comparing tools with heterogeneous coverage but requires substantially higher pairwise overlap than achieved here.
 With current tool coverage (HaRC: 1.8\%, verify-citations: 6.3\%), pairwise overlap is insufficient for stable parameter estimates; we report mean-score ranking as the primary comparison and provide Plackett-Luce infrastructure for future denser evaluations.
 
@@ -111,6 +114,6 @@ Per-type comparisons should be interpreted directionally: with $n \approx 30$ in
 \begin{figure}[t]
 \centering
 \includegraphics[width=0.85\linewidth]{figures/per_type_heatmap.pdf}
-\caption{Per-type detection rate across evaluated tools. Each cell shows the detection rate for a specific hallucination type. GPT-5.1 covers most types; \texttt{author\_mismatch} and \texttt{near\_miss\_title} remain challenging.}
+\caption{Per-type detection rate across full-coverage tools (HaRC and verify-citations excluded due to partial coverage). Each cell shows the detection rate for a specific hallucination type. GPT-5.1 covers most types; \texttt{author\_mismatch} and \texttt{near\_miss\_title} remain challenging.}
 \label{fig:heatmap}
 \end{figure}
