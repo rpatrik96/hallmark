@@ -6,44 +6,21 @@ Each scraped entry is verified against at least 2 databases.
 
 from __future__ import annotations
 
-import json
 import logging
 import time
 from dataclasses import dataclass
 from datetime import date
 
-import httpx
-
+from hallmark.dataset.api_clients import (
+    ARXIV_API_BASE,
+    CrossRefClient,
+    DBLPClient,
+    SemanticScholarClient,
+    _request_with_retry,
+)
 from hallmark.dataset.schema import VALID_SUBTESTS, BenchmarkEntry, GenerationMethod
 
 logger = logging.getLogger(__name__)
-
-
-def _request_with_retry(
-    client: httpx.Client,
-    method: str,
-    url: str,
-    max_retries: int = 3,
-    **kwargs: object,
-) -> httpx.Response | None:
-    """Make an HTTP request with exponential backoff on transient failures.
-
-    Returns the response on success, or None after exhausting retries.
-    """
-    delay = 1.0
-    for attempt in range(max_retries + 1):
-        try:
-            resp = client.request(method, url, **kwargs)  # type: ignore[arg-type]
-            resp.raise_for_status()
-            return resp
-        except (httpx.HTTPStatusError, httpx.TransportError) as e:
-            if attempt == max_retries:
-                logger.error(f"Request failed after {max_retries + 1} attempts: {url}: {e}")
-                return None
-            logger.warning(f"Attempt {attempt + 1} failed for {url}: {e}, retrying in {delay}s")
-            time.sleep(delay)
-            delay *= 2
-    return None
 
 
 # DBLP venue keys for major conferences
@@ -64,13 +41,6 @@ DBLP_VENUE_KEYS = {
     "MLJ": "journals/ml",
     "TMLR": "journals/tmlr",
 }
-
-DBLP_API_BASE = "https://dblp.org/search/publ/api"
-CROSSREF_API_BASE = "https://api.crossref.org/works"
-S2_API_BASE = "https://api.semanticscholar.org/graph/v1"
-
-
-ARXIV_API_BASE = "https://export.arxiv.org/api/query"
 
 # Default arXiv ML categories
 ARXIV_ML_CATEGORIES = [
@@ -114,33 +84,15 @@ def scrape_dblp_venue(
     returns 0 results for 2024+).
     """
     config = config or ScraperConfig()
-    query = f"stream:{venue_key}: year:{year}"
-
-    params: dict[str, str | int] = {
-        "q": query,
-        "format": "json",
-        "h": min(max_results, 1000),
-    }
-
-    with httpx.Client(timeout=config.timeout) as client:
-        resp = _request_with_retry(
-            client,
-            "GET",
-            DBLP_API_BASE,
-            params=params,
-            headers={"User-Agent": config.user_agent},
-        )
-        if resp is None:
-            logger.error(f"DBLP query failed for {venue_key}/{year} after retries")
-            return []
-        try:
-            data = resp.json()
-        except json.JSONDecodeError as e:
-            logger.error(f"DBLP JSON decode failed for {venue_key}/{year}: {e}")
-            return []
-
-    hits = data.get("result", {}).get("hits", {}).get("hit", [])
-    return [h.get("info", {}) for h in hits if "info" in h]
+    client = DBLPClient(
+        user_agent=config.user_agent,
+        rate_limit=0.0,  # caller controls rate limiting
+        timeout=config.timeout,
+    )
+    hits = client.search_venue_year(venue_key, year, max_results=max_results)
+    if not hits:
+        logger.error(f"DBLP query failed or returned no results for {venue_key}/{year}")
+    return hits
 
 
 def dblp_hit_to_entry(
@@ -206,39 +158,21 @@ def dblp_hit_to_entry(
 def verify_entry_crossref(entry: BenchmarkEntry, config: ScraperConfig | None = None) -> bool:
     """Verify an entry against CrossRef."""
     config = config or ScraperConfig()
+    cr = CrossRefClient(
+        user_agent=config.user_agent,
+        rate_limit=0.0,  # caller controls rate limiting
+        timeout=config.timeout,
+    )
     doi = entry.fields.get("doi")
+    if doi and cr.verify_doi(doi):
+        return True
 
-    with httpx.Client(timeout=config.timeout) as client:
-        if doi:
-            resp = _request_with_retry(
-                client,
-                "GET",
-                f"{CROSSREF_API_BASE}/{doi}",
-                headers={"User-Agent": config.user_agent},
-            )
-            if resp is not None:
-                return True
+    title = entry.fields.get("title", "")
+    if not title:
+        return False
 
-        # Fallback to title search
-        title = entry.fields.get("title", "")
-        if not title:
-            return False
-
-        resp = _request_with_retry(
-            client,
-            "GET",
-            CROSSREF_API_BASE,
-            params={"query.title": title, "rows": 5},
-            headers={"User-Agent": config.user_agent},
-        )
-        if resp is not None:
-            try:
-                items = resp.json().get("message", {}).get("items", [])
-                return len(items) > 0
-            except json.JSONDecodeError:
-                pass
-
-    return False
+    items = cr.query_by_title(title, rows=5)
+    return len(items) > 0
 
 
 def verify_entry_s2(entry: BenchmarkEntry, config: ScraperConfig | None = None) -> bool:
@@ -248,22 +182,12 @@ def verify_entry_s2(entry: BenchmarkEntry, config: ScraperConfig | None = None) 
     if not title:
         return False
 
-    with httpx.Client(timeout=config.timeout) as client:
-        resp = _request_with_retry(
-            client,
-            "GET",
-            f"{S2_API_BASE}/paper/search",
-            params={"query": title, "limit": 5},
-            headers={"User-Agent": config.user_agent},
-        )
-        if resp is not None:
-            try:
-                papers = resp.json().get("data", [])
-                return len(papers) > 0
-            except json.JSONDecodeError:
-                pass
-
-    return False
+    s2 = SemanticScholarClient(
+        user_agent=config.user_agent,
+        rate_limit=0.0,  # caller controls rate limiting
+        timeout=config.timeout,
+    )
+    return s2.verify_title(title)
 
 
 def scrape_arxiv_recent(
@@ -286,6 +210,8 @@ def scrape_arxiv_recent(
         Scraper configuration (uses timeout and user_agent).
     """
     import xml.etree.ElementTree as ET
+
+    import httpx
 
     config = config or ScraperConfig()
     cats = categories or config.arxiv_categories or ARXIV_ML_CATEGORIES
@@ -399,6 +325,57 @@ def scrape_arxiv_recent(
 
     logger.info("Scraped %d arXiv entries (years %s)", len(all_entries), valid_years)
     return all_entries[:max_results]
+
+
+def scrape_journal_articles(
+    journals: list[str] | None = None,
+    years: list[int] | None = None,
+    max_per_journal_year: int = 40,
+    config: ScraperConfig | None = None,
+) -> list[BenchmarkEntry]:
+    """Scrape valid journal articles from DBLP.
+
+    Parameters
+    ----------
+    journals:
+        Short venue names to scrape. Must be keys in ``DBLP_VENUE_KEYS``.
+        Defaults to ["JMLR", "MLJ", "TMLR"].
+    years:
+        Years to scrape. Defaults to [2021, 2022, 2023].
+    max_per_journal_year:
+        Maximum DBLP hits to retrieve per journal+year combination.
+    config:
+        Scraper configuration. Verification flags and rate limiting are
+        respected; ``verify_against_crossref`` and ``verify_against_s2``
+        are NOT applied here (journal entries are taken as-is from DBLP).
+    """
+    config = config or ScraperConfig()
+    journals = journals or ["JMLR", "MLJ", "TMLR"]
+    years = years or [2021, 2022, 2023]
+    today = date.today().isoformat()
+
+    all_entries: list[BenchmarkEntry] = []
+
+    for journal in journals:
+        venue_key = DBLP_VENUE_KEYS.get(journal)
+        if not venue_key:
+            logger.warning("Unknown journal venue: %s, skipping", journal)
+            continue
+
+        for year in years:
+            logger.info("Scraping journal %s %d...", journal, year)
+            hits = scrape_dblp_venue(venue_key, year, max_per_journal_year, config)
+            time.sleep(config.rate_limit_delay)
+
+            for hit in hits:
+                entry = dblp_hit_to_entry(hit, journal, today)
+                if entry is not None:
+                    all_entries.append(entry)
+
+            logger.info("  %s %d: %d hits, %d total", journal, year, len(hits), len(all_entries))
+
+    logger.info("Scraped %d journal entries total", len(all_entries))
+    return all_entries
 
 
 def scrape_proceedings(
