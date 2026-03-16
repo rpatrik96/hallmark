@@ -427,16 +427,16 @@ The pattern is unambiguous: every model's FPR increases dramatically on recent p
 \label{tab:temporal_supplement}
 \small
 \setlength{\tabcolsep}{3pt}
-\begin{tabular}{lcccccc}
+\begin{tabular}{lcccccccc}
 \toprule
-\textbf{Model} & \textbf{DR\textsubscript{21--23}} & \textbf{DR\textsubscript{24--25}} & \textbf{$\Delta$DR} & \textbf{FPR\textsubscript{21--23}} & \textbf{FPR\textsubscript{24--25}} & \textbf{$\Delta$FPR} \\
+\textbf{Model} & \textbf{DR\textsubscript{21--23}} & \textbf{DR\textsubscript{24--25}} & \textbf{$\Delta$DR} & \textbf{FPR\textsubscript{21--23}} & \textbf{FPR\textsubscript{24--25}} & \textbf{$\Delta$FPR} & \textbf{F1\textsubscript{24--25}} & \textbf{MCC\textsubscript{24--25}} \\
 \midrule
-Gemini Flash       & 0.482 & 0.846 & +0.364 & 0.101 & 0.575 & \textbf{+0.473} \\
-GPT-5.1            & 0.797 & 0.959 & +0.162 & 0.171 & 0.726 & \textbf{+0.555} \\
-Mistral Large      & 0.691 & 0.953 & +0.262 & 0.258 & 0.770 & \textbf{+0.512} \\
-Qwen3-235B         & 0.832 & 0.986 & +0.154 & 0.551 & 0.785 & +0.234 \\
-DeepSeek-V3.2      & 0.880 & 0.980 & +0.100 & 0.730 & 0.757 & +0.026 \\
-DeepSeek-R1$^\dagger$ & 0.871 & 0.000 & $-$0.871 & 0.640 & 0.844 & +0.204 \\
+Gemini Flash       & 0.482 & 0.846 & +0.364 & 0.101 & 0.575 & \textbf{+0.473} & 0.544 & 0.265 \\
+GPT-5.1            & 0.797 & 0.959 & +0.162 & 0.171 & 0.726 & \textbf{+0.555} & 0.536 & 0.268 \\
+Mistral Large      & 0.691 & 0.953 & +0.262 & 0.258 & 0.770 & \textbf{+0.512} & 0.524 & 0.225 \\
+Qwen3-235B         & 0.832 & 0.986 & +0.154 & 0.551 & 0.785 & +0.234 & 0.530 & 0.259 \\
+DeepSeek-V3.2      & 0.880 & 0.980 & +0.100 & 0.730 & 0.757 & +0.026 & 0.538 & 0.273 \\
+DeepSeek-R1$^\dagger$ & 0.871 & 0.000 & $-$0.871 & 0.640 & 0.844 & +0.204 & 0.000 & 0.000 \\
 \bottomrule
 \end{tabular}
 \end{table}
