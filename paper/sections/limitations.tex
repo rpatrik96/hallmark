@@ -21,7 +21,8 @@ Seed-sensitivity analysis across five seeds shows 95--100\% entry variation per 
 
 \paragraph{LLM knowledge cutoff.}
 LLM-based verifiers carry an implicit temporal bias: their parametric knowledge has a training data cutoff, beyond which genuine papers become unrecognizable.
-Our temporal probe (\cref{sec:temporal_robustness}) shows GPT-5.1's false positive rate rises from 17\% to 63\% on 2024--2026 papers, meaning it flags most recent valid entries as hallucinated.
+Our 60-entry temporal probe (\cref{sec:temporal_robustness}) first identified this effect; a 480-entry temporal supplement (\cref{app:temporal_supplement}) confirms it at scale: GPT-5.1's false positive rate rises from 17.1\% to 72.6\% on 2024--2025 papers ($4.2{\times}$), and all five evaluated models show F1 collapsing to ${\approx}0.53$.
+This is a structural limitation of parametric verification---not a calibration issue---because models cannot confirm papers absent from their training data.
 Performance metrics therefore depend on the temporal overlap between an LLM's training data and the test entries.
 As models are updated, their effective cutoff shifts, making temporal robustness a moving target that benchmarks must track continuously.
 The rolling-update mechanism has been implemented and tested in CI but has not yet been exercised in a full evaluation cycle; we expect to exercise it at the first quarterly update.

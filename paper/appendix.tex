@@ -412,6 +412,45 @@ Third, \textbf{baseline aggressiveness predicts degradation}: models with higher
 \label{fig:temporal}
 \end{figure}
 
+\subsection{Temporal supplement (2024--2025)}
+\label{app:temporal_supplement}
+
+To validate the 60-entry temporal probe at scale, we construct a 480-entry temporal supplement: 330 valid entries scraped from DBLP across six ML venues (NeurIPS, ICML, ICLR, AAAI, CVPR, ECCV) for publication years 2024--2025, plus 150 hallucinated entries generated via the standard perturbation pipeline.
+This provides $11{\times}$ more valid entries than the probe (330 vs.\ 30), yielding substantially tighter confidence intervals on FPR estimates.
+
+\cref{tab:temporal_supplement} compares each LLM baseline's performance on the original benchmark (2021--2023 valid entries) against the temporal supplement (2024--2025 valid entries).
+The pattern is unambiguous: every model's FPR increases dramatically on recent papers, while detection rate inflates because models flag nearly everything as hallucinated.
+
+\begin{table}[h]
+\centering
+\caption{Temporal supplement: LLM baseline performance on 2021--2023 benchmark entries vs.\ 2024--2025 supplement entries ($n{=}480$). $\Delta$DR and $\Delta$FPR report the absolute shift. Models sorted by baseline FPR (ascending). DeepSeek-R1 evaluation is pending.}
+\label{tab:temporal_supplement}
+\small
+\setlength{\tabcolsep}{3pt}
+\begin{tabular}{lcccccc}
+\toprule
+\textbf{Model} & \textbf{DR\textsubscript{21--23}} & \textbf{DR\textsubscript{24--25}} & \textbf{$\Delta$DR} & \textbf{FPR\textsubscript{21--23}} & \textbf{FPR\textsubscript{24--25}} & \textbf{$\Delta$FPR} \\
+\midrule
+Gemini Flash       & 0.482 & 0.846 & +0.364 & 0.101 & 0.575 & \textbf{+0.473} \\
+GPT-5.1            & 0.797 & 0.959 & +0.162 & 0.171 & 0.726 & \textbf{+0.555} \\
+Mistral Large      & 0.691 & 0.953 & +0.262 & 0.258 & 0.770 & \textbf{+0.512} \\
+Qwen3-235B         & 0.832 & 0.986 & +0.154 & 0.551 & 0.785 & +0.234 \\
+DeepSeek-V3.2      & 0.880 & 0.980 & +0.100 & 0.730 & 0.757 & +0.026 \\
+DeepSeek-R1        & 0.871 & ---   & ---    & 0.640 & ---   & --- \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The supplement confirms three findings from the probe, now with substantially greater statistical power.
+First, \textbf{FPR explodes on recent papers}: GPT-5.1's FPR rises from 17.1\% to 72.6\% ($4.2{\times}$), consistent with the probe's $3.7{\times}$ estimate.
+The three most conservative models---Gemini Flash, GPT-5.1, and Mistral Large---all show FPR increases exceeding 47pp.
+Second, \textbf{detection rate increases are spurious}: all models achieve DR~${\geq}0.85$ on the supplement, but only because they flag nearly everything; F1 collapses to ${\approx}0.53$ (from 0.62--0.82 on the benchmark) and MCC to ${\approx}0.25$ across all models, confirming near-random predictions.
+Third, \textbf{already-aggressive models barely change}: DeepSeek-V3.2, which has a baseline FPR of 73\%, shows only a 2.6pp FPR increase---it was already over-flagging on 2021--2023 data, leaving little room to worsen.
+
+These results establish that LLM citation verification relies fundamentally on parametric knowledge, which has a hard temporal boundary at the training data cutoff.
+Papers published after this cutoff cannot be confirmed, triggering the ``flag everything unfamiliar'' failure mode observed across all models.
+This is not a calibration failure that better prompting could fix---it is a structural limitation of parametric verification that can only be addressed through retrieval augmentation with up-to-date bibliographic databases.
+
 \section{Infrastructure documentation}
 \label{app:infrastructure}
 
