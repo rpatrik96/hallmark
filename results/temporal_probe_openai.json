@@ -1,0 +1,157 @@
+{
+  "model_key": "openai",
+  "display_name": "GPT-5.1",
+  "model_id": "gpt-5.1",
+  "probe_metrics": {
+    "tool_name": "llm_openai_gpt-5.1",
+    "split_name": "temporal_probe_2025",
+    "num_entries": 60,
+    "num_hallucinated": 30,
+    "num_valid": 30,
+    "detection_rate": 0.9666666666666667,
+    "false_positive_rate": 0.6333333333333333,
+    "f1_hallucination": 0.7435897435897435,
+    "tier_weighted_f1": 0.838235294117647,
+    "detect_at_k": {},
+    "temporal_robustness": null,
+    "cost_efficiency": 0.33925295367825087,
+    "mean_api_calls": 1.0,
+    "ece": 0.2385,
+    "auroc": 0.5316666666666667,
+    "auprc": 0.5019177908835021,
+    "num_uncertain": 0,
+    "detection_rate_ci": null,
+    "f1_hallucination_ci": null,
+    "tier_weighted_f1_ci": null,
+    "fpr_ci": null,
+    "ece_ci": null,
+    "per_tier_metrics": {
+      "0": {
+        "detection_rate": 0.0,
+        "false_positive_rate": 0.6333333333333333,
+        "f1": 0.0,
+        "precision": 0.0,
+        "count": 30
+      },
+      "1": {
+        "detection_rate": 1.0,
+        "false_positive_rate": 0.0,
+        "f1": 1.0,
+        "precision": 1.0,
+        "count": 10
+      },
+      "2": {
+        "detection_rate": 1.0,
+        "false_positive_rate": 0.0,
+        "f1": 1.0,
+        "precision": 1.0,
+        "count": 10
+      },
+      "3": {
+        "detection_rate": 0.9,
+        "false_positive_rate": 0.0,
+        "f1": 0.9473684210526316,
+        "precision": 1.0,
+        "count": 10
+      }
+    },
+    "per_type_metrics": {
+      "chimeric_title": {
+        "detection_rate": 1.0,
+        "false_positive_rate": 0.0,
+        "f1": 1.0,
+        "count": 5
+      },
+      "fabricated_doi": {
+        "detection_rate": 1.0,
+        "false_positive_rate": 0.0,
+        "f1": 1.0,
+        "count": 4
+      },
+      "hybrid_fabrication": {
+        "detection_rate": 1.0,
+        "false_positive_rate": 0.0,
+        "f1": 1.0,
+        "count": 3
+      },
+      "near_miss_title": {
+        "detection_rate": 1.0,
+        "false_positive_rate": 0.0,
+        "f1": 1.0,
+        "count": 4
+      },
+      "nonexistent_venue": {
+        "detection_rate": 1.0,
+        "false_positive_rate": 0.0,
+        "f1": 1.0,
+        "count": 2
+      },
+      "placeholder_authors": {
+        "detection_rate": 1.0,
+        "false_positive_rate": 0.0,
+        "f1": 1.0,
+        "count": 4
+      },
+      "plausible_fabrication": {
+        "detection_rate": 0.8333333333333334,
+        "false_positive_rate": 0.0,
+        "f1": 0.9090909090909091,
+        "count": 6
+      },
+      "swapped_authors": {
+        "detection_rate": 1.0,
+        "false_positive_rate": 0.0,
+        "f1": 1.0,
+        "count": 1
+      },
+      "valid": {
+        "detection_rate": 0.0,
+        "false_positive_rate": 0.6333333333333333,
+        "f1": 0.0,
+        "count": 30
+      },
+      "wrong_venue": {
+        "detection_rate": 1.0,
+        "false_positive_rate": 0.0,
+        "f1": 1.0,
+        "count": 1
+      }
+    }
+  },
+  "full_baseline": {
+    "tool_name": "llm_openai",
+    "split_name": "dev_public",
+    "detection_rate": 0.7972508591065293,
+    "detection_rate_ci": [
+      0.7663,
+      0.8282
+    ],
+    "false_positive_rate": 0.17078189300411523,
+    "fpr_ci": [
+      0.1379,
+      0.2058
+    ],
+    "f1_hallucination": 0.8219663418954827,
+    "f1_hallucination_ci": [
+      0.7993,
+      0.8445
+    ],
+    "tier_weighted_f1": 0.8456876456876457,
+    "tier_weighted_f1_ci": [
+      0.7539,
+      0.8279
+    ],
+    "ece": 0.10682584269662922,
+    "n_bootstrap": 10000,
+    "confidence_level": 0.95
+  },
+  "probe_config": {
+    "n_valid": 30,
+    "n_hallucinated": 30,
+    "model": "gpt-5.1",
+    "years_scraped": [
+      2024,
+      2025
+    ]
+  }
+}

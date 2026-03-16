@@ -1,0 +1,128 @@
+{
+  "model_key": "tool_augmented",
+  "display_name": "GPT-5.1 + BTU",
+  "model_id": "gpt-5.1",
+  "probe_metrics": {
+    "tool_name": "temporal_probe_tool_augmented",
+    "split_name": "temporal_probe",
+    "num_entries": 60,
+    "num_hallucinated": 30,
+    "num_valid": 30,
+    "detection_rate": 1.0,
+    "false_positive_rate": 1.0,
+    "f1_hallucination": 0.7692307692307693,
+    "tier_weighted_f1": 0.88,
+    "mcc": 0.0,
+    "macro_f1": 0.38461538461538464,
+    "union_recall_at_k": {},
+    "temporal_robustness": null,
+    "cost_efficiency": 0.39211537014218734,
+    "mean_api_calls": 1.0,
+    "ece": 0.3325,
+    "auroc": 0.6083333333333334,
+    "auprc": 0.7068181818181819,
+    "num_uncertain": 44,
+    "detection_rate_ci": null,
+    "f1_hallucination_ci": null,
+    "tier_weighted_f1_ci": null,
+    "fpr_ci": null,
+    "ece_ci": null,
+    "mcc_ci": null,
+    "per_tier_metrics": {
+      "1": {
+        "detection_rate": 1.0,
+        "false_positive_rate": 1.0,
+        "f1": 0.5,
+        "precision": 0.3333333333333333,
+        "num_hallucinated": 10,
+        "num_valid": 30
+      },
+      "2": {
+        "detection_rate": 1.0,
+        "false_positive_rate": 1.0,
+        "f1": 0.4,
+        "precision": 0.25,
+        "num_hallucinated": 10,
+        "num_valid": 30
+      },
+      "3": {
+        "detection_rate": 1.0,
+        "false_positive_rate": 1.0,
+        "f1": 0.625,
+        "precision": 0.45454545454545453,
+        "num_hallucinated": 10,
+        "num_valid": 30
+      }
+    },
+    "per_type_metrics": {
+      "chimeric_title": {
+        "detection_rate": 1.0,
+        "false_positive_rate": 0.0,
+        "f1": 1.0,
+        "count": 1
+      },
+      "fabricated_doi": {
+        "detection_rate": 1.0,
+        "false_positive_rate": 0.0,
+        "f1": 1.0,
+        "count": 5
+      },
+      "hybrid_fabrication": {
+        "detection_rate": 0.0,
+        "false_positive_rate": 0.0,
+        "f1": 0.0,
+        "count": 3
+      },
+      "near_miss_title": {
+        "detection_rate": 1.0,
+        "false_positive_rate": 0.0,
+        "f1": 1.0,
+        "count": 4
+      },
+      "nonexistent_venue": {
+        "detection_rate": 1.0,
+        "false_positive_rate": 0.0,
+        "f1": 1.0,
+        "count": 2
+      },
+      "placeholder_authors": {
+        "detection_rate": 1.0,
+        "false_positive_rate": 0.0,
+        "f1": 1.0,
+        "count": 3
+      },
+      "plausible_fabrication": {
+        "detection_rate": 1.0,
+        "false_positive_rate": 0.0,
+        "f1": 1.0,
+        "count": 6
+      },
+      "swapped_authors": {
+        "detection_rate": 1.0,
+        "false_positive_rate": 0.0,
+        "f1": 1.0,
+        "count": 2
+      },
+      "valid": {
+        "detection_rate": 0.0,
+        "false_positive_rate": 1.0,
+        "f1": 0.0,
+        "count": 30
+      },
+      "wrong_venue": {
+        "detection_rate": 0.0,
+        "false_positive_rate": 0.0,
+        "f1": 0.0,
+        "count": 4
+      }
+    },
+    "coverage": 1.0,
+    "coverage_adjusted_f1": 0.7692307692307693
+  },
+  "full_baseline": {},
+  "probe_config": {
+    "n_valid": 30,
+    "n_hallucinated": 30,
+    "n_total": 60
+  }
+}

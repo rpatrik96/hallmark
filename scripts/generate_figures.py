@@ -274,90 +274,157 @@ def fig_overall_comparison(results: list[dict], output_dir: Path) -> None:
 
 
 def fig_temporal_robustness(results_dir: Path, output_dir: Path) -> None:
-    """Grouped bar chart: DR and FPR by temporal segment for GPT-5.1."""
-    probe_path = results_dir / "temporal_probe.json"
-    if not probe_path.exists():
-        logger.warning("temporal_probe.json not found, skipping temporal figure")
-        return
+    """Two-panel figure: DR and FPR (baseline vs probe) across all models."""
+    # Discover all temporal_probe_*.json files
+    probe_files = sorted(results_dir.glob("temporal_probe_*.json"))
+    # Exclude the probe set JSONL
+    probe_files = [p for p in probe_files if p.suffix == ".json"]
+    if not probe_files:
+        # Fallback: try legacy single-model file
+        legacy = results_dir / "temporal_probe.json"
+        if legacy.exists():
+            probe_files = [legacy]
+        else:
+            logger.warning("No temporal_probe_*.json found, skipping temporal figure")
+            return
 
-    with open(probe_path) as f:
-        data = json.load(f)
+    # Load all model results
+    models: list[dict] = []
+    for path in probe_files:
+        with open(path) as f:
+            data = json.load(f)
+        probe = data.get("probe_metrics", {})
+        baseline = data.get("full_baseline", {})
+        # Derive display name
+        display = data.get("display_name", None)
+        if display is None:
+            # Legacy format: extract from filename
+            stem = path.stem.replace("temporal_probe_", "").replace("temporal_probe", "GPT-5.1")
+            display = stem
+        models.append(
+            {
+                "name": display,
+                "dr_base": baseline.get("detection_rate", 0),
+                "dr_probe": probe.get("detection_rate", 0),
+                "fpr_base": baseline.get("false_positive_rate", 0),
+                "fpr_probe": probe.get("false_positive_rate", 0),
+                "ece_base": baseline.get("ece", 0),
+                "ece_probe": probe.get("ece", 0),
+            }
+        )
 
-    probe = data.get("probe_metrics", {})
-    baseline = data.get("full_baseline", {})
+    # Sort by baseline FPR (ascending)
+    models.sort(key=lambda m: m["fpr_base"])
 
-    # Metrics for baseline (2021-2023) vs probe (2024-2026)
-    segments = ["2021\u20132023\n(baseline)", "2024\u20132026\n(probe)"]
-    dr_values = [
-        baseline.get("detection_rate", 0),
-        probe.get("detection_rate", 0),
-    ]
-    fpr_values = [
-        baseline.get("false_positive_rate", 0),
-        probe.get("false_positive_rate", 0),
-    ]
+    n = len(models)
+    names = [m["name"] for m in models]
 
-    fig, ax = plt.subplots(figsize=(6, 3.5))
-    x = np.arange(len(segments))
-    width = 0.3
+    # Colorblind-safe viridis-derived palette
+    cmap = plt.colormaps.get_cmap("viridis").resampled(max(n, 2))
+    model_colors = [cmap(i / max(n - 1, 1)) for i in range(n)]
 
-    bars_dr = ax.bar(
+    fig, (ax_dr, ax_fpr) = plt.subplots(1, 2, figsize=(10, 4), sharey=False)
+
+    x = np.arange(n)
+    width = 0.35
+
+    # ── Left panel: Detection Rate ────────────────────────────────────
+    ax_dr.bar(
         x - width / 2,
-        dr_values,
+        [m["dr_base"] for m in models],
         width,
-        label="Detection Rate",
-        color=COLORS[0],
+        label="Baseline (2021\u20132023)",
+        color=[(*c[:3], 0.5) for c in model_colors],
         edgecolor="white",
         linewidth=0.5,
     )
-    bars_fpr = ax.bar(
+    bars_probe = ax_dr.bar(
         x + width / 2,
-        fpr_values,
+        [m["dr_probe"] for m in models],
         width,
-        label="False Positive Rate",
-        color=COLORS[2],
+        label="Probe (2024\u20132026)",
+        color=model_colors,
         edgecolor="white",
         linewidth=0.5,
     )
+    for bar, val in zip(bars_probe, [m["dr_probe"] for m in models], strict=True):
+        if val > 0:
+            ax_dr.text(
+                bar.get_x() + bar.get_width() / 2,
+                val + 0.02,
+                f"{val:.0%}",
+                ha="center",
+                va="bottom",
+                fontsize=7,
+            )
+    ax_dr.set_ylabel("Detection Rate")
+    ax_dr.set_title("(a) Detection Rate")
+    ax_dr.set_xticks(x)
+    ax_dr.set_xticklabels(names, rotation=30, ha="right", fontsize=8)
+    ax_dr.set_ylim(0, 1.15)
+    ax_dr.legend(loc="lower right", fontsize=8)
+    ax_dr.spines["top"].set_visible(False)
+    ax_dr.spines["right"].set_visible(False)
 
-    # Value labels
-    for bars in [bars_dr, bars_fpr]:
-        for bar in bars:
-            height = bar.get_height()
-            if height > 0:
-                ax.text(
-                    bar.get_x() + bar.get_width() / 2,
-                    height + 0.02,
-                    f"{height:.1%}",
-                    ha="center",
-                    va="bottom",
-                    fontsize=8,
-                )
-
-    ax.set_ylabel("Metric Value")
-    ax.set_title("GPT-5.1 Temporal Robustness")
-    ax.set_xticks(x)
-    ax.set_xticklabels(segments)
-    ax.set_ylim(0, 1.15)
-    ax.legend(loc="upper left")
-    ax.spines["top"].set_visible(False)
-    ax.spines["right"].set_visible(False)
-
-    # Annotation for the FPR explosion
-    ax.annotate(
-        f"{fpr_values[1] / max(fpr_values[0], 1e-9):.1f}\u00d7",
-        xy=(1 + width / 2, fpr_values[1]),
-        xytext=(1.35, fpr_values[1] - 0.1),
-        fontsize=9,
-        fontweight="bold",
-        color=COLORS[2],
-        arrowprops={"arrowstyle": "->", "color": COLORS[2], "lw": 1.2},
+    # ── Right panel: False Positive Rate ──────────────────────────────
+    ax_fpr.bar(
+        x - width / 2,
+        [m["fpr_base"] for m in models],
+        width,
+        label="Baseline (2021\u20132023)",
+        color=[(*c[:3], 0.5) for c in model_colors],
+        edgecolor="white",
+        linewidth=0.5,
     )
+    ax_fpr.bar(
+        x + width / 2,
+        [m["fpr_probe"] for m in models],
+        width,
+        label="Probe (2024\u20132026)",
+        color=model_colors,
+        edgecolor="white",
+        linewidth=0.5,
+    )
+    # Annotate FPR multiplier
+    for i, m in enumerate(models):
+        base_fpr = m["fpr_base"]
+        probe_fpr = m["fpr_probe"]
+        if base_fpr > 0.01:
+            mult = probe_fpr / base_fpr
+            ax_fpr.text(
+                i + width / 2,
+                probe_fpr + 0.02,
+                f"{mult:.1f}\u00d7",
+                ha="center",
+                va="bottom",
+                fontsize=7,
+                fontweight="bold",
+                color="red" if mult > 2.0 else "black",
+            )
+        elif probe_fpr > 0:
+            ax_fpr.text(
+                i + width / 2,
+                probe_fpr + 0.02,
+                f"{probe_fpr:.0%}",
+                ha="center",
+                va="bottom",
+                fontsize=7,
+            )
 
-    path = output_dir / "temporal_robustness.pdf"
-    fig.savefig(path)
+    ax_fpr.set_ylabel("False Positive Rate")
+    ax_fpr.set_title("(b) False Positive Rate")
+    ax_fpr.set_xticks(x)
+    ax_fpr.set_xticklabels(names, rotation=30, ha="right", fontsize=8)
+    ax_fpr.set_ylim(0, 1.15)
+    ax_fpr.legend(loc="upper left", fontsize=8)
+    ax_fpr.spines["top"].set_visible(False)
+    ax_fpr.spines["right"].set_visible(False)
+
+    fig.tight_layout()
+    out_path = output_dir / "temporal_robustness.pdf"
+    fig.savefig(out_path)
     plt.close(fig)
-    logger.info(f"Saved {path}")
+    logger.info(f"Saved {out_path}")
 
 
 def main() -> None:

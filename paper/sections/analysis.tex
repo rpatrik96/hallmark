@@ -39,12 +39,12 @@ These results support using perturbation entries as controlled diagnostic tests 
 
 \paragraph{Temporal robustness.}
 \label{sec:temporal_robustness}
-To stress-test GPT-5.1 on papers beyond its likely training cutoff, we construct a 60-entry probe set (30 valid entries scraped from arXiv 2026 and DBLP 2024--2025, plus 30 hallucinated variants across all tiers).
-The false positive rate rises sharply from 17.1\% on the 2021--2023 baseline to 63.3\% on recent papers (19 of 30 genuine recent papers flagged as hallucinated; 95\% Clopper-Pearson CI: [0.44, 0.80])---a $3.7{\times}$ increase---while detection rate inflates to 96.7\% (from 79.7\%).
-This asymmetry reveals that GPT-5.1 defaults to \texttt{HALLUCINATED} when it cannot confirm a paper from parametric memory, achieving near-perfect detection at the cost of flagging the majority of genuine recent publications.
-ECE doubles (0.107 $\to$ 0.238), confirming degraded calibration.
-Tier~1--2 hallucinations remain perfectly detected; the precision collapse is driven entirely by false positives on valid entries.
-These results motivate including recent papers in the benchmark to expose temporal bias (\cref{app:temporal}).
+To test whether LLM verifiers degrade on papers beyond their training cutoff, we construct a 60-entry probe set (30 valid entries scraped from arXiv 2026 and DBLP 2024--2025, plus 30 hallucinated variants across all tiers) and evaluate all seven LLM-based baselines (\cref{tab:temporal_multi}).
+The FPR explosion is \emph{universal}: every model's false positive rate increases on recent papers, with multipliers ranging from $1.3{\times}$ (DeepSeek-V3, already aggressive at 73\% baseline FPR) to $9.2{\times}$ (Gemini Flash, the most conservative baseline at 10\% baseline FPR).
+Models with low baseline FPR suffer the largest relative degradation---a strong negative correlation ($r = -0.82$) between baseline FPR and FPR multiplier---because conservative models rely more heavily on parametric memory confirmation, which fails on unfamiliar papers.
+Detection rates simultaneously inflate to ${\geq}96.7\%$ across all models, confirming a universal ``flag everything unfamiliar'' failure mode rather than model-specific miscalibration.
+Augmenting GPT-5.1 with bibtex-updater's API verification does not help: FPR reaches 100\% because the tool's databases also lack recent papers.
+These results motivate including recent valid entries in temporal benchmarks and monitoring FPR as the key deployment metric (\cref{app:temporal}).
 
 \paragraph{Failure modes and improvement targets.}
 \label{sec:failure}

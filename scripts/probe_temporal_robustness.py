@@ -1,7 +1,9 @@
-"""Probe GPT-5.1 temporal robustness on recent (2025-2026) papers.  [analysis]
+"""Multi-model temporal robustness probe.  [analysis]
 
 Scrapes fresh valid entries from DBLP and arXiv, generates hallucinated
-variants, runs GPT-5.1, and compares with the full-dataset baseline.
+variants, then evaluates multiple LLM baselines on the same probe set.
+Compares each model's temporal probe performance against its full-dataset
+baseline to quantify how much each model degrades on recent papers.
 """
 
 from __future__ import annotations
@@ -20,7 +22,11 @@ import httpx
 # Add project root to path
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from hallmark.baselines.llm_verifier import verify_with_openai
+from hallmark.baselines.llm_tool_augmented import verify_tool_augmented
+from hallmark.baselines.llm_verifier import (
+    verify_with_openai,
+    verify_with_openrouter,
+)
 from hallmark.dataset.generator import (
     generate_chimeric_title,
     generate_fabricated_doi,
@@ -56,6 +62,64 @@ ARXIV_ML_CATEGORIES = [
     "cs.AI",
     "stat.ML",
 ]
+
+# ── Model dispatch table ─────────────────────────────────────────────
+# Maps model key -> (verify_fn, model_id, api_key_env, baseline_results_file)
+MODEL_DISPATCH: dict[str, tuple[str, str, str, str | None]] = {
+    "openai": (
+        "openai",
+        "gpt-5.1",
+        "OPENAI_API_KEY",
+        "llm_openai_dev_public_ci.json",
+    ),
+    "deepseek_r1": (
+        "openrouter",
+        "deepseek/deepseek-r1",
+        "OPENROUTER_API_KEY",
+        "llm_openrouter_deepseek_r1_dev_public.json",
+    ),
+    "deepseek_v3": (
+        "openrouter",
+        "deepseek/deepseek-v3.2",
+        "OPENROUTER_API_KEY",
+        "llm_openrouter_deepseek_v3_dev_public.json",
+    ),
+    "qwen": (
+        "openrouter",
+        "qwen/qwen3-235b-a22b-2507",
+        "OPENROUTER_API_KEY",
+        "llm_openrouter_qwen_dev_public.json",
+    ),
+    "mistral": (
+        "openrouter",
+        "mistralai/mistral-large-2512",
+        "OPENROUTER_API_KEY",
+        "llm_openrouter_mistral_dev_public.json",
+    ),
+    "gemini_flash": (
+        "openrouter",
+        "google/gemini-2.5-flash",
+        "OPENROUTER_API_KEY",
+        "llm_openrouter_gemini_flash_dev_public.json",
+    ),
+    "tool_augmented": (
+        "tool_augmented",
+        "gpt-5.1",
+        "OPENAI_API_KEY",
+        None,
+    ),
+}
+
+# Display names for reporting
+DISPLAY_NAMES: dict[str, str] = {
+    "openai": "GPT-5.1",
+    "deepseek_r1": "DeepSeek-R1",
+    "deepseek_v3": "DeepSeek-V3",
+    "qwen": "Qwen3-235B",
+    "mistral": "Mistral Large",
+    "gemini_flash": "Gemini Flash",
+    "tool_augmented": "GPT-5.1 + BTU",
+}
 
 
 def scrape_arxiv_2026(
@@ -317,160 +381,259 @@ def generate_hallucinated_probe(
     return hallucinated
 
 
-def load_full_dataset_baseline() -> dict:
-    """Load the known full-dataset GPT-5.1 performance for comparison."""
-    # These are the known values from the recent evaluation
-    return {
-        "detection_rate": 0.80,
-        "f1_hallucination": None,  # Will load from results if available
-        "false_positive_rate": None,
+# ── Probe set persistence ─────────────────────────────────────────────
+
+
+def save_probe_set(entries: list[BenchmarkEntry], path: Path) -> None:
+    """Save probe entries to JSONL for reuse across models."""
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with open(path, "w") as f:
+        for entry in entries:
+            f.write(entry.to_json() + "\n")
+    logger.info(f"Saved {len(entries)} probe entries to {path}")
+
+
+def load_probe_set(path: Path) -> list[BenchmarkEntry]:
+    """Load cached probe entries from JSONL."""
+    entries: list[BenchmarkEntry] = []
+    with open(path) as f:
+        for line in f:
+            line = line.strip()
+            if line:
+                entries.append(BenchmarkEntry.from_json(line))
+    logger.info(f"Loaded {len(entries)} probe entries from {path}")
+    return entries
+
+
+# ── Model evaluation ──────────────────────────────────────────────────
+
+
+def load_baseline_metrics(results_dir: Path, baseline_file: str | None) -> dict:
+    """Load full-dataset baseline metrics for comparison."""
+    if baseline_file is None:
+        return {}
+    path = results_dir / baseline_file
+    if not path.exists():
+        logger.warning(f"Baseline file not found: {path}")
+        return {}
+    with open(path) as f:
+        return json.load(f)
+
+
+def run_model(
+    model_key: str,
+    probe_entries: list[BenchmarkEntry],
+    results_dir: Path,
+    checkpoint_dir: Path | None = None,
+) -> dict:
+    """Run a single model on the probe set and return the output data dict."""
+    import os
+
+    provider, model_id, env_var, baseline_file = MODEL_DISPATCH[model_key]
+    api_key = os.environ.get(env_var)
+    if not api_key:
+        logger.error(f"Missing {env_var} for {model_key}")
+        sys.exit(1)
+
+    display = DISPLAY_NAMES.get(model_key, model_key)
+    logger.info(f"\n{'=' * 70}")
+    logger.info(f"Running {display} ({model_id})")
+    logger.info(f"{'=' * 70}")
+
+    # Convert to blind entries for verification
+    blind_entries = [e.to_blind() for e in probe_entries]
+
+    # Dispatch to the right verify function
+    if provider == "openai":
+        predictions = verify_with_openai(
+            blind_entries,
+            model=model_id,
+            api_key=api_key,
+            checkpoint_dir=checkpoint_dir,
+        )
+    elif provider == "openrouter":
+        predictions = verify_with_openrouter(
+            blind_entries,
+            model=model_id,
+            api_key=api_key,
+            checkpoint_dir=checkpoint_dir,
+        )
+    elif provider == "tool_augmented":
+        predictions = verify_tool_augmented(
+            blind_entries,
+            model=model_id,
+            api_key=api_key,
+            checkpoint_dir=checkpoint_dir,
+        )
+    else:
+        raise ValueError(f"Unknown provider: {provider}")
+
+    # Evaluate
+    result = evaluate(
+        probe_entries,
+        predictions,
+        tool_name=f"temporal_probe_{model_key}",
+        split_name="temporal_probe",
+    )
+
+    # Load baseline
+    baseline = load_baseline_metrics(results_dir, baseline_file)
+
+    # Report
+    n_v = sum(1 for e in probe_entries if e.label == "VALID")
+    n_h = sum(1 for e in probe_entries if e.label == "HALLUCINATED")
+    logger.info(f"\n--- {display} Probe Results ---")
+    logger.info(f"  Detection Rate:    {result.detection_rate:.3f}")
+    logger.info(f"  FPR:               {result.false_positive_rate:.3f}")
+    logger.info(f"  F1-Hallucination:  {result.f1_hallucination:.3f}")
+    logger.info(
+        f"  ECE:               {result.ece:.3f}"
+        if result.ece is not None
+        else "  ECE:               N/A"
+    )
+
+    if baseline:
+        base_dr = baseline.get("detection_rate", "N/A")
+        base_fpr = baseline.get("false_positive_rate", "N/A")
+        logger.info(f"  Baseline DR:       {base_dr}")
+        logger.info(f"  Baseline FPR:      {base_fpr}")
+        if isinstance(base_fpr, (int, float)) and base_fpr > 0:
+            fpr_mult = result.false_positive_rate / base_fpr
+            logger.info(f"  FPR multiplier:    {fpr_mult:.1f}x")
+
+    # Build output
+    output = {
+        "model_key": model_key,
+        "display_name": display,
+        "model_id": model_id,
+        "probe_metrics": result.to_dict(),
+        "full_baseline": baseline if baseline else {},
+        "probe_config": {
+            "n_valid": n_v,
+            "n_hallucinated": n_h,
+            "n_total": len(probe_entries),
+        },
     }
+
+    return output
 
 
 def main() -> None:
     import argparse
 
-    parser = argparse.ArgumentParser(description="Probe GPT-5.1 temporal robustness")
-    parser.add_argument("--api-key", required=True, help="OpenAI API key")
-    parser.add_argument("--n-valid", type=int, default=30, help="Number of valid entries to scrape")
+    parser = argparse.ArgumentParser(description="Multi-model temporal robustness probe")
     parser.add_argument(
-        "--n-hallucinated", type=int, default=30, help="Number of hallucinated entries"
+        "--models",
+        default="all",
+        help="Comma-separated model keys or 'all' or 'none' (generate probe set only)",
     )
-    parser.add_argument("--model", default="gpt-5.1", help="OpenAI model to use")
-    parser.add_argument("--output", default="results/temporal_probe.json", help="Output file")
+    parser.add_argument(
+        "--probe-set",
+        default="results/temporal_probe_set.jsonl",
+        help="Path to cached probe set JSONL",
+    )
+    parser.add_argument(
+        "--results-dir",
+        default="results",
+        help="Directory containing baseline result JSONs",
+    )
+    parser.add_argument(
+        "--n-valid",
+        type=int,
+        default=30,
+        help="Number of valid entries to scrape",
+    )
+    parser.add_argument(
+        "--n-hallucinated",
+        type=int,
+        default=30,
+        help="Number of hallucinated entries",
+    )
+    parser.add_argument(
+        "--checkpoint-dir",
+        default="results/temporal_checkpoints",
+        help="Directory for checkpoint files",
+    )
     args = parser.parse_args()
 
-    # Step 1: Scrape recent valid entries
-    logger.info("=== Step 1: Scraping recent valid entries from DBLP ===")
-    valid_entries = scrape_recent_entries(args.n_valid)
-    if len(valid_entries) < 10:
-        logger.error(f"Only scraped {len(valid_entries)} valid entries — insufficient for probe")
-        sys.exit(1)
+    results_dir = Path(args.results_dir)
+    probe_set_path = Path(args.probe_set)
+    checkpoint_dir = Path(args.checkpoint_dir)
 
-    # Step 2: Generate hallucinated variants
-    logger.info("\n=== Step 2: Generating hallucinated entries ===")
-    hallucinated_entries = generate_hallucinated_probe(valid_entries, args.n_hallucinated)
+    # ── Step 1: Load or generate probe set ────────────────────────────
+    if probe_set_path.exists():
+        logger.info("=== Loading cached probe set ===")
+        probe_entries = load_probe_set(probe_set_path)
+    else:
+        logger.info("=== Step 1: Scraping recent valid entries ===")
+        valid_entries = scrape_recent_entries(args.n_valid)
+        if len(valid_entries) < 10:
+            logger.error(f"Only scraped {len(valid_entries)} valid entries — insufficient")
+            sys.exit(1)
 
-    # Combine
-    probe_entries = valid_entries + hallucinated_entries
-    n_v, n_h = len(valid_entries), len(hallucinated_entries)
-    logger.info(f"\nProbe set: {n_v} valid + {n_h} hallucinated = {len(probe_entries)} total")
+        logger.info("\n=== Step 2: Generating hallucinated entries ===")
+        hallucinated_entries = generate_hallucinated_probe(valid_entries, args.n_hallucinated)
 
-    # Step 3: Run GPT-5.1
-    logger.info("\n=== Step 3: Running GPT-5.1 on probe set ===")
-    predictions = verify_with_openai(probe_entries, model=args.model, api_key=args.api_key)
+        probe_entries = valid_entries + hallucinated_entries
+        save_probe_set(probe_entries, probe_set_path)
 
-    # Step 4: Evaluate
-    logger.info("\n=== Step 4: Evaluating ===")
-    result = evaluate(
-        probe_entries,
-        predictions,
-        tool_name=f"llm_openai_{args.model}",
-        split_name="temporal_probe_2025",
-    )
+    n_v = sum(1 for e in probe_entries if e.label == "VALID")
+    n_h = sum(1 for e in probe_entries if e.label == "HALLUCINATED")
+    logger.info(f"Probe set: {n_v} valid + {n_h} hallucinated = {len(probe_entries)} total")
 
-    # Load full-dataset baseline for comparison
-    full_baseline_dr = 0.80  # Known from earlier evaluation
-    # Try to load actual results
-    results_path = Path("results/llm_openai_dev_public_ci.json")
-    full_baseline = {}
-    if results_path.exists():
-        with open(results_path) as f:
-            full_baseline = json.load(f)
+    # ── Step 2: Determine which models to run ─────────────────────────
+    if args.models == "none":
+        logger.info("Probe set generated. Exiting (--models none).")
+        return
 
-    # Step 5: Report
-    logger.info("\n" + "=" * 70)
-    logger.info("TEMPORAL ROBUSTNESS PROBE RESULTS")
-    logger.info("=" * 70)
-    logger.info(f"Probe set: {len(probe_entries)} entries ({n_v} valid, {n_h} hallucinated)")
-    logger.info("  Years in probe: 2024-2026 (DBLP + arXiv)")
-    logger.info("")
+    if args.models == "all":
+        model_keys = list(MODEL_DISPATCH.keys())
+    else:
+        model_keys = [k.strip() for k in args.models.split(",")]
+        for k in model_keys:
+            if k not in MODEL_DISPATCH:
+                logger.error(f"Unknown model key: {k}. Valid: {list(MODEL_DISPATCH.keys())}")
+                sys.exit(1)
 
-    # Probe metrics
-    logger.info("--- Probe Metrics (2025 papers) ---")
-    logger.info(f"  Detection Rate:    {result.detection_rate:.3f}")
-    logger.info(f"  FPR:               {result.false_positive_rate:.3f}")
-    logger.info(f"  F1-Hallucination:  {result.f1_hallucination:.3f}")
-    logger.info(f"  Tier-weighted F1:  {result.tier_weighted_f1:.3f}")
-    logger.info(f"  ECE:               {result.ece:.3f}")
+    # ── Step 3: Run each model ────────────────────────────────────────
+    for model_key in model_keys:
+        output_path = results_dir / f"temporal_probe_{model_key}.json"
 
-    # Full-dataset comparison
-    logger.info("")
-    logger.info("--- Full Dataset Baseline (2021-2023 papers) ---")
-    full_dr = full_baseline.get("detection_rate", full_baseline_dr)
-    full_fpr = full_baseline.get("false_positive_rate", "N/A")
-    full_f1 = full_baseline.get("f1_hallucination", "N/A")
-    logger.info(f"  Detection Rate:    {full_dr}")
-    logger.info(f"  FPR:               {full_fpr}")
-    logger.info(f"  F1-Hallucination:  {full_f1}")
-
-    # Discrepancy analysis
-    logger.info("")
-    logger.info("--- Discrepancy Analysis ---")
-    dr_diff = result.detection_rate - float(full_dr) if isinstance(full_dr, (int, float)) else None
-    if dr_diff is not None:
-        if dr_diff < -0.05:
-            verdict = "PROBE WORSE"
-        elif dr_diff > 0.05:
-            verdict = "PROBE BETTER"
-        else:
-            verdict = "COMPARABLE"
-        logger.info(f"  DR difference:     {dr_diff:+.3f} ({verdict})")
-        if abs(dr_diff) > 0.05:
-            logger.info(
-                "  >>> SIGNIFICANT DISCREPANCY DETECTED — benchmark extension may be warranted"
-            )
-        else:
-            logger.info(
-                "  >>> No significant discrepancy — benchmark extension NOT needed for temporal coverage"
-            )
-
-    # Per-tier breakdown
-    logger.info("")
-    logger.info("--- Per-Tier Breakdown (Probe) ---")
-    for tier, metrics in sorted(result.per_tier_metrics.items()):
-        if tier == 0:
-            continue  # Skip valid entries tier
-        dr = metrics["detection_rate"]
-        f1 = metrics["f1"]
-        cnt = metrics["count"]
-        logger.info(f"  Tier {tier}: DR={dr:.3f}, F1={f1:.3f}, count={cnt:.0f}")
-
-    # Per-type breakdown
-    logger.info("")
-    logger.info("--- Per-Type Breakdown (Probe) ---")
-    for h_type, metrics in sorted(result.per_type_metrics.items()):
-        if h_type == "valid":
+        # Skip if already completed
+        if output_path.exists():
+            logger.info(f"Skipping {model_key} — {output_path} already exists")
             continue
-        logger.info(
-            f"  {h_type:30s}: DR={metrics['detection_rate']:.3f}, count={metrics['count']:.0f}"
-        )
 
-    # Save results
-    output_path = Path(args.output)
-    output_path.parent.mkdir(parents=True, exist_ok=True)
-    output_data = {
-        "probe_metrics": result.to_dict(),
-        "full_baseline": full_baseline if full_baseline else {"detection_rate": full_baseline_dr},
-        "discrepancy": {
-            "dr_diff": dr_diff,
-            "significant": abs(dr_diff) > 0.05 if dr_diff is not None else None,
-            "recommendation": (
-                "EXTEND benchmark with 2025+ entries"
-                if dr_diff is not None and abs(dr_diff) > 0.05
-                else "No extension needed — performance is comparable"
-            ),
-        },
-        "probe_config": {
-            "n_valid": len(valid_entries),
-            "n_hallucinated": len(hallucinated_entries),
-            "model": args.model,
-            "years_scraped": [2024, 2025],
-        },
-    }
-    with open(output_path, "w") as f:
-        json.dump(output_data, f, indent=2, ensure_ascii=False)
-    logger.info(f"\nResults saved to {output_path}")
+        output = run_model(model_key, probe_entries, results_dir, checkpoint_dir)
+
+        # Save per-model results
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+        with open(output_path, "w") as f:
+            json.dump(output, f, indent=2, ensure_ascii=False)
+        logger.info(f"Saved {output_path}")
+
+    # ── Summary ───────────────────────────────────────────────────────
+    logger.info(f"\n{'=' * 70}")
+    logger.info("TEMPORAL ROBUSTNESS SUMMARY")
+    logger.info(f"{'=' * 70}")
+    for model_key in model_keys:
+        output_path = results_dir / f"temporal_probe_{model_key}.json"
+        if not output_path.exists():
+            continue
+        with open(output_path) as f:
+            data = json.load(f)
+        pm = data["probe_metrics"]
+        bl = data.get("full_baseline", {})
+        display = data.get("display_name", model_key)
+        base_fpr = bl.get("false_positive_rate", None)
+        probe_fpr = pm.get("false_positive_rate", 0)
+        fpr_mult = f"{probe_fpr / base_fpr:.1f}x" if base_fpr and base_fpr > 0 else "N/A"
+        logger.info(
+            f"  {display:20s}  DR={pm['detection_rate']:.3f}  "
+            f"FPR={probe_fpr:.3f}  "
+            f"FPR mult={fpr_mult}  "
+            f"ECE={pm.get('ece') or 0:.3f}"
+        )
 
 
 if __name__ == "__main__":
