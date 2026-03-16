@@ -4,15 +4,16 @@
 \centering
 \begin{tikzpicture}[
     % Global styles
-    node distance=0.4cm,
+    scale=0.88, every node/.style={scale=0.88},
+    node distance=0.35cm,
     box/.style={
         rectangle, rounded corners=3pt, draw=#1!60, fill=#1!8,
-        minimum height=0.7cm, text width=2.1cm, align=center,
+        minimum height=0.65cm, text width=1.75cm, align=center,
         font=\scriptsize\sffamily, line width=0.6pt,
     },
     pipelinebox/.style={
         rectangle, rounded corners=3pt, draw=gray!70, fill=gray!5,
-        minimum height=0.75cm, text width=1.8cm, align=center,
+        minimum height=0.7cm, text width=1.55cm, align=center,
         font=\scriptsize\sffamily, line width=0.6pt,
     },
     arrow/.style={-{Stealth[length=4pt]}, thick, gray!70},
@@ -40,25 +41,25 @@
     {\tiny 486 valid entries}
 };
 
-\node[pipelinebox, right=0.35cm of source] (generation) {%
+\node[pipelinebox, right=0.25cm of source] (generation) {%
     \textbf{Generation}\\[-1pt]
     {\tiny Perturbation, LLM,}\\[-1pt]
     {\tiny real-world, adversarial}
 };
 
-\node[pipelinebox, right=0.35cm of generation] (dataset) {%
+\node[pipelinebox, right=0.25cm of generation] (dataset) {%
     \textbf{Benchmark}\\[-1pt]
     {\tiny 2,525 entries}\\[-1pt]
     {\tiny 6 sub-tests each}
 };
 
-\node[pipelinebox, right=0.35cm of dataset] (tools) {%
+\node[pipelinebox, right=0.25cm of dataset] (tools) {%
     \textbf{Tool Evaluation}\\[-1pt]
     {\tiny 9 tools: 3 API,}\\[-1pt]
     {\tiny 6 LLMs}
 };
 
-\node[pipelinebox, right=0.35cm of tools] (metrics) {%
+\node[pipelinebox, right=0.25cm of tools] (metrics) {%
     \textbf{Metrics}\\[-1pt]
     {\tiny DR, FPR, TW-F1,}\\[-1pt]
     {\tiny ECE, MCC}
@@ -131,7 +132,7 @@
 
 % Sub-test box
 \node[rectangle, rounded corners=2pt, draw=hallmark-blue!40, fill=hallmark-blue!5,
-      minimum height=0.55cm, text width=4.2cm, align=left,
+      minimum height=0.55cm, text width=3.8cm, align=left,
       font=\tiny\sffamily, line width=0.5pt, inner sep=3pt,
       anchor=north] (subtests) at (resultstart) {%
     \textbf{\scriptsize 6 Sub-tests per entry}\\[1pt]
@@ -145,7 +146,7 @@
 
 % Key results box below sub-tests
 \node[rectangle, rounded corners=2pt, draw=gray!40, fill=white,
-      text width=4.2cm, align=left,
+      text width=3.8cm, align=left,
       font=\tiny\sffamily, line width=0.5pt, inner sep=3pt,
       anchor=north, below=3pt of subtests.south] (results) {%
     \textbf{\scriptsize Key Finding: Recall--Precision Spectrum}\\[1pt]
