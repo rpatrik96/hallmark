@@ -503,6 +503,9 @@ class EvaluationResult:
     auprc: float | None = None  # Area Under Precision-Recall Curve
     num_uncertain: int = 0  # Count of UNCERTAIN predictions
 
+    # Tier 3 hard subset metric (Hardt benchmark science)
+    tier3_f1: float = 0.0  # F1 on Tier 3 (hard) hallucinations only
+
     # Confidence intervals (95% by default, via stratified bootstrap)
     detection_rate_ci: tuple[float, float] | None = None
     f1_hallucination_ci: tuple[float, float] | None = None
@@ -510,6 +513,7 @@ class EvaluationResult:
     fpr_ci: tuple[float, float] | None = None
     ece_ci: tuple[float, float] | None = None
     mcc_ci: tuple[float, float] | None = None
+    tier3_f1_ci: tuple[float, float] | None = None
 
     # Per-tier breakdown
     per_tier_metrics: dict[int, dict[str, float]] = field(default_factory=dict)
@@ -553,6 +557,7 @@ class EvaluationResult:
             "tier_weighted_f1_ci",
             "ece_ci",
             "mcc_ci",
+            "tier3_f1_ci",
         )
         for ci_field in ci_fields:
             if ci_field in data and isinstance(data[ci_field], list):
@@ -580,6 +585,7 @@ class EvaluationResult:
             "mcc": self.mcc,
             "coverage": self.coverage,
             "coverage_adjusted_f1": self.coverage_adjusted_f1,
+            "tier3_f1": self.tier3_f1,
         }
 
     @classmethod

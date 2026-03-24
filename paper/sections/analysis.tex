@@ -66,4 +66,19 @@ Critically, the types where bibtex-updater excels show no transfer: \texttt{auth
 The LLM appears to override tool findings when they conflict with its parametric judgment, treating API-detected mismatches as potential artifacts rather than evidence of hallucination.
 This suggests that na\"ive evidence injection---presenting tool output as context---is insufficient; harder integration strategies (e.g., forcing the LLM to accept tool-detected field mismatches, or post-hoc ensembling) may be needed to realize the complementarity.
 
+\paragraph{Water-filling effect.}
+\label{sec:water_filling}
+Hardt~\citep{hardt2025benchmarks} shows that rational tool builders concentrate effort on easy tasks with the highest marginal returns (Gibbard-Satterthwaite theorem applied to benchmarks).
+We quantify this \emph{water-filling} effect using the Gini coefficient of per-tier detection rates.
+Traditional API-based tools exhibit extreme water-filling: bibtex-updater's Tier~1/Tier~3 detection rate ratio exceeds 30$\times$ (Gini\,=\,0.65), and HaRC's exceeds 11$\times$.
+These tools resolve DOIs and check basic metadata (Tier~1) but lack the semantic reasoning for near-miss titles or plausible fabrications (Tier~3).
+LLM-based verifiers show near-uniform tier performance (ratio 1.1--1.5$\times$, Gini\,$<$\,0.05), confirming that parametric knowledge provides broad coverage across difficulty levels.
+We report a Tier~3 ``hard subset'' F1 alongside the aggregate to prevent easy-type inflation from masking poor hard-type performance.
+
+\paragraph{Factor structure.}
+\label{sec:factor_structure}
+To test whether \textsc{Hallmark} measures a single capability or multiple orthogonal skills, we compute PCA on the tool$\,\times\,$hallucination-type detection rate matrix (\cref{app:factor_analysis}).
+If the matrix is rank-1, all tools vary along a single axis (e.g., ``is it an LLM?'') and the benchmark collapses to a binary distinction.
+Preliminary analysis suggests that the first principal component captures the API-vs-LLM divide, while subsequent components capture recall--precision tradeoffs and tier-specific strengths---indicating that \textsc{Hallmark}'s tiered design adds orthogonal signal beyond a single factor.
+
 \textsc{Hallmark}'s fine-grained analysis makes these gaps visible and measurable.
