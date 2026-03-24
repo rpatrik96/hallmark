@@ -1752,6 +1752,10 @@ def evaluate(
     f1_hallucination = cm.f1
     coverage_adjusted_f1 = f1_hallucination * coverage
 
+    # Tier 3 hard subset F1
+    tier3_data = tier_metrics.get(3, {})
+    tier3_f1 = tier3_data.get("f1", 0.0)
+
     # Temporal robustness analysis
     temporal_robustness_value = None
     try:
@@ -1792,4 +1796,163 @@ def evaluate(
         mcc_ci=mcc_ci,
         coverage=coverage,
         coverage_adjusted_f1=coverage_adjusted_f1,
+        tier3_f1=tier3_f1,
     )
+
+
+# ---------------------------------------------------------------------------
+# Benchmark-science analysis functions (Hardt, 2025)
+# ---------------------------------------------------------------------------
+
+
+def per_tier_rankings(
+    entries: list[BenchmarkEntry],
+    tool_predictions: dict[str, list[Prediction]],
+    metric: str = "detection_rate",
+) -> dict[int, list[tuple[str, float]]]:
+    """Rank tools separately for each difficulty tier.
+
+    Args:
+        entries: benchmark entries
+        tool_predictions: {tool_name: [predictions]}
+        metric: key in per-tier dict ("detection_rate", "f1", "fpr")
+
+    Returns:
+        dict mapping tier (1, 2, 3) -> [(tool_name, metric_value)] sorted best-first
+    """
+    results: dict[int, list[tuple[str, float]]] = {}
+    for tier in (1, 2, 3):
+        tier_scores: list[tuple[str, float]] = []
+        for tool_name, preds in tool_predictions.items():
+            pred_map = {p.bibtex_key: p for p in preds}
+            tm = per_tier_metrics(entries, pred_map)
+            tier_data = tm.get(tier, {})
+            score = tier_data.get(metric, 0.0)
+            tier_scores.append((tool_name, score))
+        tier_scores.sort(key=lambda x: -x[1])
+        results[tier] = tier_scores
+    return results
+
+
+def per_type_rankings(
+    entries: list[BenchmarkEntry],
+    tool_predictions: dict[str, list[Prediction]],
+    metric: str = "detection_rate",
+) -> dict[str, list[tuple[str, float]]]:
+    """Rank tools separately for each hallucination type.
+
+    Returns:
+        dict mapping type_string -> [(tool_name, metric_value)] sorted best-first
+    """
+    results: dict[str, list[tuple[str, float]]] = {}
+    for tool_name, preds in tool_predictions.items():
+        pred_map = {p.bibtex_key: p for p in preds}
+        tm = per_type_metrics(entries, pred_map)
+        for htype, type_data in tm.items():
+            if htype not in results:
+                results[htype] = []
+            results[htype].append((tool_name, type_data.get(metric, 0.0)))
+
+    # Sort each type's ranking
+    for htype in results:
+        results[htype].sort(key=lambda x: -x[1])
+
+    return results
+
+
+def ranking_concordance(
+    per_tier_ranks: dict[int, list[tuple[str, float]]],
+) -> dict[str, float | bool]:
+    """Compute concordance between per-tier tool rankings via Kendall's tau.
+
+    Returns:
+        dict with tau_t1_t2, tau_t1_t3, tau_t2_t3, all_concordant, mean_tau.
+    """
+
+    def _tau(rank_a: list[str], rank_b: list[str]) -> float:
+        common = [x for x in rank_a if x in set(rank_b)]
+        if len(common) < 2:
+            return 0.0
+        idx_b = {name: i for i, name in enumerate(rank_b)}
+        order_b = [idx_b[x] for x in common]
+        n = len(order_b)
+        c, d = 0, 0
+        for i in range(n):
+            for j in range(i + 1, n):
+                if order_b[i] < order_b[j]:
+                    c += 1
+                else:
+                    d += 1
+        denom = n * (n - 1) / 2
+        return (c - d) / denom if denom > 0 else 0.0
+
+    def _order(ranking: list[tuple[str, float]]) -> list[str]:
+        return [name for name, _ in ranking]
+
+    pairs = [(1, 2), (1, 3), (2, 3)]
+    taus: dict[str, float] = {}
+    for t_a, t_b in pairs:
+        key = f"tau_t{t_a}_t{t_b}"
+        if t_a in per_tier_ranks and t_b in per_tier_ranks:
+            taus[key] = _tau(_order(per_tier_ranks[t_a]), _order(per_tier_ranks[t_b]))
+        else:
+            taus[key] = 0.0
+
+    tau_values = list(taus.values())
+    return {
+        **taus,
+        "all_concordant": all(t > 0 for t in tau_values),
+        "mean_tau": sum(tau_values) / len(tau_values) if tau_values else 0.0,
+    }
+
+
+def hard_subset_report(
+    entries: list[BenchmarkEntry],
+    predictions: list[Prediction],
+) -> dict[str, dict[str, float]]:
+    """Compute per-type metrics restricted to Tier 3 types only.
+
+    Returns a dict mapping each Tier 3 type to its detection rate and F1.
+    Also includes 'aggregate_tier3' with pooled metrics.
+    """
+    from hallmark.dataset.schema import HALLUCINATION_TIER_MAP, DifficultyTier
+
+    tier3_type_values = {
+        ht.value for ht, dt in HALLUCINATION_TIER_MAP.items() if dt == DifficultyTier.HARD
+    }
+
+    # Filter entries to Tier 3 hallucinated + all valid (for FPR)
+    tier3_entries = [
+        e
+        for e in entries
+        if e.label == "VALID"
+        or (e.label == "HALLUCINATED" and e.hallucination_type in tier3_type_values)
+    ]
+
+    pred_map = {p.bibtex_key: p for p in predictions}
+
+    # Per-type metrics for Tier 3 types
+    type_data = per_type_metrics(tier3_entries, pred_map)
+    result: dict[str, dict[str, float]] = {
+        k: v for k, v in type_data.items() if k in tier3_type_values
+    }
+
+    # Aggregate Tier 3 metrics
+    tier3_hallucinated = [e for e in tier3_entries if e.label == "HALLUCINATED"]
+    if tier3_hallucinated:
+        cm = build_confusion_matrix(tier3_entries, pred_map)
+        result["aggregate_tier3"] = {
+            "detection_rate": cm.detection_rate,
+            "f1": cm.f1,
+            "fpr": cm.false_positive_rate,
+            "num_entries": len(tier3_hallucinated),
+        }
+    else:
+        result["aggregate_tier3"] = {
+            "detection_rate": 0.0,
+            "f1": 0.0,
+            "fpr": 0.0,
+            "num_entries": 0,
+        }
+
+    return result

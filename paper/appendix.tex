@@ -392,6 +392,59 @@ GPT-5.1 + BTU      & ---   & 1.000 & ---   & 1.000 & ---           & 0.769 \\
 \end{tabular}
 \end{table}
 
+\section{Benchmark-science diagnostics}
+\label{app:benchmark_science}
+
+Following Hardt's framework for rigorous benchmark evaluation~\citep{hardt2025benchmarks}, we implement and report several diagnostic analyses that assess \textsc{Hallmark}'s structural properties beyond raw tool performance.
+
+\subsection{Aggregation sensitivity}
+\label{app:aggregation_sensitivity}
+
+TW-F1 aggregates performance across 14 hallucination types and 3 difficulty tiers into a single number.
+Arrow's impossibility theorem guarantees that any such aggregation is susceptible to artifacts~\citep{arrow1950}.
+To quantify this risk, we sample 1{,}000 weight vectors from a symmetric Dirichlet distribution over the 3-tier simplex and compute TW-F1 for each tool under each weighting.
+We report the \emph{concordance fraction} (fraction of weight samples that preserve the default ranking), per-tool TW-F1 ranges, and the minimum Kendall's $\tau$ between any sampled ranking and the default.
+Additionally, we verify that \textsc{Hallmark}'s score-based ranking satisfies independence of irrelevant alternatives (IIA) by construction: each tool's TW-F1 is computed independently, so adding or removing a tool cannot change other tools' scores.
+The Plackett-Luce ranking also satisfies IIA via the Luce choice axiom~\citep{luce1959}, providing a robust alternative for multi-tool comparison.
+
+\subsection{Water-filling analysis}
+\label{app:water_filling}
+
+We quantify the \emph{water-filling effect}---the tendency of tools to concentrate detection on easy types---using three metrics:
+(1) the Gini coefficient of per-tier detection rates ($G = 0$: uniform; $G \to 1$: concentrated);
+(2) the Tier~1/Tier~3 detection rate ratio; and
+(3) normalized Shannon entropy of the tier distribution.
+A tool is flagged as ``water-filling'' if its Gini exceeds 0.3 or its T1/T3 ratio exceeds 3.
+This analysis is implemented in \texttt{hallmark.evaluation.water\_filling} and can be run via the evaluation CLI.
+
+\subsection{Factor analysis}
+\label{app:factor_analysis}
+
+To assess whether \textsc{Hallmark} measures one capability or many, we construct a tool\,$\times$\,hallucination-type detection rate matrix and compute its singular value decomposition.
+The \emph{effective rank} (number of principal components needed to explain 90\% of variance) indicates how many independent axes of tool variation the benchmark captures.
+A rank-1 matrix would indicate a single dominant factor; higher rank indicates the benchmark distinguishes multiple capabilities.
+We also run tier-stratified PCA to test whether the difficulty hierarchy adds orthogonal signal.
+Implementation: \texttt{hallmark.evaluation.factor\_analysis}.
+
+\subsection{Statistical power audit}
+\label{app:power_audit}
+
+For each hallucination subtype, we compute the minimum detectable effect (MDE) at the current sample size using a two-proportion $z$-test formula:
+$\text{MDE} = (z_{\alpha/2} + z_\beta) \sqrt{2 p_0 (1-p_0) / n}$,
+where $p_0 = 0.5$ (maximum-variance baseline), $\alpha = 0.05$, and power $1-\beta = 0.80$.
+Subtypes with MDE $> 0.20$ are flagged as underpowered---they cannot reliably distinguish tools whose detection rates differ by fewer than 20 percentage points.
+We also report the sample size required for detecting 5, 10, 15, and 20 percentage point differences.
+This analysis follows Hardt's observation that sample requirements grow quadratically in $1/\delta$~\citep{hardt2025benchmarks}.
+Implementation: \texttt{hallmark.evaluation.power}.
+
+\subsection{Test set reuse budget}
+\label{app:reuse_budget}
+
+Dwork et al.~\citep{dwork2015} show that adaptive reuse of a holdout set degrades statistical guarantees from $O(1/\sqrt{n})$ (single use) to $O(\sqrt{k \log n / n})$ ($k$ adaptive queries).
+We track every evaluation against each split in \texttt{results/history.jsonl} and compute the \emph{budget ratio} (adaptive bound / non-adaptive bound) to monitor statistical degradation.
+The hidden split (453 entries) is reserved for final evaluation; the dev split is intended for iterative development and its budget is expected to be consumed.
+Implementation: \texttt{hallmark.evaluation.reuse\_tracker}.
+
 Importantly, the degradation is asymmetric across tiers.
 Tier~1 (fabricated DOIs, nonexistent venues) and Tier~2 (wrong venues, swapped authors) hallucinations are detected at ${\geq}96\%$ by all models, matching or exceeding baseline performance---these types contain structural anomalies that do not require temporal knowledge.
 The precision collapse is driven entirely by false positives on \emph{valid} entries, not by missed hallucinations.

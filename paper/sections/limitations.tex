@@ -4,6 +4,7 @@
 At 2,525 entries (1,551 hallucinated, with at least 30 instances per type per public split), the dataset provides statistical power per type but remains small relative to the full diversity of possible citation hallucinations.
 With $\geq$30 instances per type per split, per-type 95\% Clopper-Pearson confidence intervals have width $\leq 0.24$ at detection rates near 0 or 1 (e.g., DR $= 0.90$ with $n=30$ yields CI $[0.74, 0.98]$); at DR $= 0.50$ the width increases to $\approx 0.37$.
 A two-proportion $z$-test with $n=30$ per type achieves 80\% power to detect a detection rate difference of $\geq 0.20$ between tools ($\alpha = 0.05$, two-sided).
+Hardt~\citep{hardt2025benchmarks} formalizes this: sample requirements grow quadratically with the inverse of the effect size to detect, and the six smallest subtypes (future\_date through chimeric\_title, $n \leq 68$ in test) can only reliably distinguish detection rate differences exceeding 25 percentage points.
 Hallucination prevalence differs across main splits (56.6\% in dev, 65.5\% in test, 55.8\% in hidden) due to the constraint that each of 14 types requires $\geq 30$ instances per main split.
 We emphasize prevalence-independent metrics (Detection Rate, FPR) as primary; prevalence-sensitive metrics (F1) should be compared within splits only.
 The benchmark covers only English-language BibTeX references.
@@ -37,6 +38,13 @@ We mitigate residual co-design risk by reporting bibtex-updater results separate
 \textsc{Hallmark} covers English-language ML references from five top venues (NeurIPS, ICML, ICLR, AAAI, CVPR).
 Practitioners in other fields can use the evaluation framework with domain-specific valid entries; the hallucination taxonomy and sub-test definitions are domain-agnostic.
 We provide reweighting utilities to adjust hallucination type prevalence to observed real-world distributions.
+
+\paragraph{External validity and test set reuse.}
+Hardt~\citep{hardt2025benchmarks} argues that benchmark validity rests on whether model rankings generalize beyond the specific test set.
+While \textsc{Hallmark} tool rankings show internal consistency (per-tier concordance and stable Plackett-Luce rankings), external validity---whether rankings on our synthetic hallucinations predict performance on real citation errors---remains an open question.
+The 108 real-world entries provide an initial signal but are insufficient for definitive rank-correlation analysis; curating a dedicated external validation set from retraction databases and systematic audits is a priority for future work.
+We also note that repeated evaluation against the dev split consumes statistical budget: Dwork et al.~\citep{dwork2015} show that $k$ adaptive queries degrade accuracy guarantees from $O(1/\sqrt{n})$ to $O(\sqrt{k \log n / n})$.
+The codebase tracks evaluation history and reports remaining budget to encourage principled test set management.
 
 \paragraph{DOI-presence distributional artifact.}
 Approximately 38\% of valid entries in the dev split lack DOI fields.
