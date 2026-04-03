@@ -3,82 +3,57 @@
 
 \paragraph{Pre-screening effect.}
 \label{sec:prescreening}
-\textsc{Hallmark} includes an optional pre-screening layer---DOI format validation, year-range bounds checking, and author-name heuristics---that runs before invoking external tools.
-This is benchmark infrastructure available to \emph{all} baselines, not a tool-specific feature.
+\textsc{Hallmark} includes an optional pre-screening layer---DOI format validation, year-range bounds, and author-name heuristics---available to all baselines.
 Pre-screening provides incremental lift (${\sim}5$pp overall, ${\sim}18$pp on Tier~1) by catching obvious formatting issues before external API calls.
-We report results both with and without pre-screening to maintain transparency about which detections come from the tool versus benchmark infrastructure.
+We report results both with and without pre-screening for transparency.
 
 \paragraph{Calibration.}
 \label{sec:calibration}
-Among full-coverage tools, GPT-5.1 achieves the lowest ECE (0.107), followed by DOI-only (0.143).
-The open-weight LLMs show higher ECE (0.25--0.33), reflecting the miscalibration inherent in their aggressive flagging behavior.
-Confidence calibration is critical for venue deployment, where reviewers need to trust flagged entries without manual verification---a tool reporting 80\% confidence regardless of correctness provides no actionable signal to a program committee.
+GPT-5.1 achieves the lowest ECE (0.107); open-weight LLMs show ECE 0.25--0.33, reflecting miscalibration from aggressive flagging.
+Confidence calibration is critical for venue deployment, where reviewers need to trust flagged entries without manual verification.
 
 \paragraph{Cost--accuracy tradeoff.}
 \label{sec:cost}
-\cref{fig:cost} plots detection rate against API cost per entry.
-DOI-only is cheapest (1 API call) but achieves only 25.6\% detection rate.
-HaRC and verify-citations query multiple APIs but are bottlenecked by rate limiting, completing only 1.8\% and 6.3\% of entries respectively---making them impractical for venue-scale deployment.
-GPT-5.1 achieves $3{\times}$ the detection rate of DOI-only at full coverage, though at higher per-entry cost (\$0.21/entry; GPT-5.1 API pricing as of March 2026, including input and output tokens).
-This cost--accuracy tradeoff highlights the need for tools that balance comprehensive verification with practical throughput (see \cref{app:codesign} for bibtex-updater's cost analysis).
+\cref{fig:cost} plots detection rate against cost.
+DOI-only is cheapest (1 API call) but achieves only 25.6\% DR.
+HaRC and verify-citations are bottlenecked by rate limiting ($<$7\% coverage).
+GPT-5.1 achieves $3{\times}$ the detection rate at \$0.21/entry.
 
 \begin{figure}[t]
 \centering
 \includegraphics[width=0.65\linewidth]{figures/cost_accuracy.pdf}
-\caption{Cost--accuracy tradeoff across evaluated tools. Rate-limited tools (HaRC, verify-citations) are impractical for venue-scale deployment. See \cref{app:codesign} for bibtex-updater analysis.}
+\caption{Cost--accuracy tradeoff. Rate-limited tools (HaRC, verify-citations) are impractical for venue-scale deployment.}
 \label{fig:cost}
 \end{figure}
 
 \paragraph{Synthetic vs.\ real-world representativeness.}
 \label{sec:synth_vs_real}
-To validate that perturbation-generated entries behave similarly to real-world hallucinations, we compare feature distributions (author count, title length, year) across the seven hallucination types that have both real-world and synthetic instances.
-Kolmogorov-Smirnov tests show that 4 of 7 types are statistically indistinguishable ($p > 0.05$ on all features).
-The three divergent types (\texttt{near\_miss\_title}, \texttt{plausible\_fabrication}, \texttt{chimeric\_title}) differ primarily in author count---real-world entries average 1.5--2.0 authors versus 3.3--4.7 for synthetic entries, reflecting that real LLM hallucinations tend to fabricate shorter author lists.
-Title length and year distributions match across all types.
-These results support using perturbation entries as controlled diagnostic tests while motivating continued expansion of the real-world sample.
+KS tests comparing feature distributions across the seven types with both real-world and synthetic instances show 4 of 7 are statistically indistinguishable ($p > 0.05$).
+The three divergent types differ primarily in author count (real: 1.5--2.0 vs.\ synthetic: 3.3--4.7), reflecting that real LLM hallucinations fabricate shorter author lists.
+These results support using perturbation entries as controlled diagnostics while motivating expansion of the real-world sample.
 
 \paragraph{Temporal robustness.}
 \label{sec:temporal_robustness}
-To test whether LLM verifiers degrade on papers beyond their training cutoff, we construct a 60-entry probe set (30 valid entries scraped from arXiv 2026 and DBLP 2024--2025, plus 30 hallucinated variants across all tiers) and evaluate all six LLM baselines plus the tool-augmented variant (\cref{tab:temporal_multi}).
-The FPR explosion is \emph{universal}: every model's false positive rate increases on recent papers, with multipliers ranging from $1.3{\times}$ (DeepSeek-V3.2, already aggressive at 73\% baseline FPR) to $9.2{\times}$ (Gemini Flash, the most conservative baseline at 10\% baseline FPR).
-Models with low baseline FPR suffer the largest relative degradation---a strong negative correlation ($r = -0.82$, $p = 0.02$, $n = 7$) between baseline FPR and FPR multiplier---because conservative models rely more heavily on parametric memory confirmation, which fails on unfamiliar papers.
-Detection rates simultaneously inflate to ${\geq}96.7\%$ across all models, confirming a universal ``flag everything unfamiliar'' failure mode rather than model-specific miscalibration.
-Augmenting GPT-5.1 with bibtex-updater's API verification does not help: FPR reaches 100\% because the tool's databases also lack recent papers.
-These results motivate including recent valid entries in temporal benchmarks and monitoring FPR as the key deployment metric (\cref{app:temporal}).
+A 480-entry temporal supplement (330 valid from 2024--2025 DBLP, 150 hallucinated) reveals that LLM verifiers degrade sharply on papers beyond their training cutoff (\cref{app:temporal_supplement}).
+GPT-5.1's FPR rises from 17.1\% to 72.6\% ($4.2{\times}$); all five models show F1 collapsing to ${\approx}0.53$ (near-chance).
+Detection rates simultaneously inflate to ${\geq}96.7\%$, confirming a universal ``flag everything unfamiliar'' failure mode.
+Models with low baseline FPR suffer the largest relative degradation ($r = -0.82$, $p = 0.02$, $n = 7$), because conservative models rely more heavily on parametric memory confirmation.
+Augmenting GPT-5.1 with API verification does not help: databases also lack recent papers.
+A 60-entry probe first identified this pattern (\cref{app:temporal}); the supplement confirms it with $11{\times}$ more valid entries.
 
-A larger-scale temporal supplement ($n{=}480$: 330 valid entries from 2024--2025 DBLP proceedings, 150 hallucinated) confirms the probe findings with greater statistical power (\cref{app:temporal_supplement}).
-GPT-5.1's FPR rises from 17.1\% to 72.6\% ($4.2{\times}$), consistent with the probe's $3.7{\times}$ multiplier but measured over $11{\times}$ more valid entries.
-All five evaluated models show the same pattern: F1 collapses to ${\approx}0.53$ and MCC to ${\approx}0.25$ (near-chance-level; MCC\,=\,0 corresponds to random), confirming that the inflated detection rates are an artifact of indiscriminate flagging rather than improved verification.
-
-\paragraph{Failure modes and improvement targets.}
+\paragraph{Failure modes.}
 \label{sec:failure}
-API-based tools fail entirely on venue-level hallucinations (\texttt{preprint\_as\_published}, \texttt{wrong\_venue}) because bibliographic APIs do not reliably distinguish ``published at venue~X'' from ``available on arXiv.''
-GPT-5.1 handles these types well (84\% and 83\% respectively) using parametric knowledge, but struggles with subtle perturbations: \texttt{author\_mismatch} (63\%) and \texttt{near\_miss\_title} (63\%) require exact bibliographic recall that even large LLMs lack.
-Notably, GPT-5.1's Tier~3 detection rate (79\%) slightly exceeds its Tier~2 rate (76\%), which does not perfectly track the a priori difficulty ordering.
-LLMs have strong parametric knowledge for detecting plausible fabrications (Tier~3) through internal knowledge, but struggle with exact metadata recall needed for author matching and hybrid fabrication (Tier~2).
-These per-type gaps provide concrete targets for both tool developers (richer API metadata) and LLM-based approaches (retrieval-augmented verification).
-
-\paragraph{Tool-augmented LLM.}
-\label{sec:tool_augmented}
-To test whether combining LLM reasoning with API-backed verification closes these gaps, we inject bibtex-updater's structured output (verification status, mismatched fields, APIs consulted) into GPT-5.1's prompt before classification (\cref{app:codesign}).
-The augmented model improves over standalone GPT-5.1 on precision-oriented metrics---FPR drops from 17.1\% to 14.4\% and ECE from 0.107 to 0.086 (best calibration of all baselines)---but detection rate improves only modestly (79.7\% $\to$ 81.8\%).
-Critically, the types where bibtex-updater excels show no transfer: \texttt{author\_mismatch} remains at 63\% (vs.\ bibtex-updater's 94\%) and \texttt{near\_miss\_title} \emph{degrades} to 49\% (from 63\%).
-The LLM appears to override tool findings when they conflict with its parametric judgment, treating API-detected mismatches as potential artifacts rather than evidence of hallucination.
-This suggests that na\"ive evidence injection---presenting tool output as context---is insufficient; harder integration strategies (e.g., forcing the LLM to accept tool-detected field mismatches, or post-hoc ensembling) may be needed to realize the complementarity.
+API tools fail on venue-level hallucinations (\texttt{preprint\_as\_published}, \texttt{wrong\_venue}) because bibliographic APIs do not distinguish venue publication from arXiv availability.
+GPT-5.1 handles these (83--84\%) but struggles with \texttt{author\_mismatch} (63\%) and \texttt{near\_miss\_title} (63\%), which require exact bibliographic recall.
+Combining bibtex-updater output with GPT-5.1 improves calibration (ECE: 0.107$\to$0.086) but not detection (DR: 79.7\%$\to$81.8\%)---the LLM overrides tool findings when they conflict with parametric judgment (\cref{app:codesign}).
 
 \paragraph{Water-filling effect.}
 \label{sec:water_filling}
-Hardt~\citep{hardt2025benchmarks} shows that rational tool builders concentrate effort on easy tasks with the highest marginal returns (Gibbard-Satterthwaite theorem applied to benchmarks).
-We quantify this \emph{water-filling} effect using the Gini coefficient of per-tier detection rates.
-Traditional API-based tools exhibit extreme water-filling: bibtex-updater's Tier~1/Tier~3 detection rate ratio exceeds 30$\times$ (Gini\,=\,0.65), and HaRC's exceeds 11$\times$.
-These tools resolve DOIs and check basic metadata (Tier~1) but lack the semantic reasoning for near-miss titles or plausible fabrications (Tier~3).
-LLM-based verifiers show near-uniform tier performance (ratio 1.1--1.5$\times$, Gini\,$<$\,0.05), confirming that parametric knowledge provides broad coverage across difficulty levels.
-We report a Tier~3 ``hard subset'' F1 alongside the aggregate to prevent easy-type inflation from masking poor hard-type performance.
+Benchmark optimization creates incentives to focus on easy subtasks: if Tier~1 hallucinations are easier to detect and contribute equally to the aggregate, tool developers have no incentive to invest in Tier~3.
+We quantify this using the Gini coefficient of per-tier detection rates~\citep{hardt2025benchmarks}.
+API tools show extreme concentration (Tier~1/3 ratio $>$30$\times$, Gini\,=\,0.65); LLMs show near-uniform performance (ratio 1.1--1.5$\times$, Gini\,$<$\,0.05).
+We report Tier~3 F1 alongside the aggregate to prevent easy-type inflation.
 
 \paragraph{Factor structure.}
 \label{sec:factor_structure}
-To test whether \textsc{Hallmark} measures a single capability or multiple orthogonal skills, we compute PCA on the tool$\,\times\,$hallucination-type detection rate matrix (\cref{app:factor_analysis}).
-If the matrix is rank-1, all tools vary along a single axis (e.g., ``is it an LLM?'') and the benchmark collapses to a binary distinction.
-Preliminary analysis suggests that the first principal component captures the API-vs-LLM divide, while subsequent components capture recall--precision tradeoffs and tier-specific strengths---indicating that \textsc{Hallmark}'s tiered design adds orthogonal signal beyond a single factor.
-
-\textsc{Hallmark}'s fine-grained analysis makes these gaps visible and measurable.
+PCA on the tool$\,\times\,$type detection rate matrix (\cref{app:factor_analysis}) shows the first component captures the API-vs-LLM divide, while subsequent components capture recall--precision tradeoffs and tier-specific strengths---indicating that the tiered design adds orthogonal signal beyond a single factor.

@@ -1,51 +1,27 @@
 \section{Limitations}
 \label{sec:limitations}
 
-At 2,525 entries (1,551 hallucinated, with at least 30 instances per type per public split), the dataset provides statistical power per type but remains small relative to the full diversity of possible citation hallucinations.
-With $\geq$30 instances per type per split, per-type 95\% Clopper-Pearson confidence intervals have width $\leq 0.24$ at detection rates near 0 or 1 (e.g., DR $= 0.90$ with $n=30$ yields CI $[0.74, 0.98]$); at DR $= 0.50$ the width increases to $\approx 0.37$.
-A two-proportion $z$-test with $n=30$ per type achieves 80\% power to detect a detection rate difference of $\geq 0.20$ between tools ($\alpha = 0.05$, two-sided).
-Hardt~\citep{hardt2025benchmarks} formalizes this: sample requirements grow quadratically with the inverse of the effect size to detect, and the six smallest subtypes (future\_date through chimeric\_title, $n \leq 68$ in test) can only reliably distinguish detection rate differences exceeding 25 percentage points.
-Hallucination prevalence differs across main splits (56.6\% in dev, 65.5\% in test, 55.8\% in hidden) due to the constraint that each of 14 types requires $\geq 30$ instances per main split.
-We emphasize prevalence-independent metrics (Detection Rate, FPR) as primary; prevalence-sensitive metrics (F1) should be compared within splits only.
-The benchmark covers only English-language BibTeX references.
-The majority of hallucinated entries are synthetically generated via perturbation, though the benchmark includes 280 LLM-generated entries (produced by prompting GPT-5.1 to generate plausible citations and verifying against CrossRef with automated type classification) and 108 real-world entries curated from GPTZero's NeurIPS 2025 analysis and documented incidents (GhostCite, HalluCitation).
-The real-world sample remains small and type-skewed (55\% \texttt{plausible\_fabrication}).
-Real-world entries were curated by the paper authors; type assignment for the 15 entries (of 72 analyzed) with compound failure modes involved judgment calls.
-Multiple independent annotators were not used, and inter-annotator agreement was not measured; this is a limitation of the current dataset.
-Future versions should expand real-world coverage as more documented incidents become available.
-Baseline performance depends on bibliographic API availability and coverage; results may shift as APIs evolve.
-We did not evaluate commercial plagiarism detection tools (Turnitin, iThenticate), which focus on textual similarity rather than citation metadata verification.
-Valid entries are drawn from 2021--2023 ML venues and may not generalize to other fields or time periods.
-The community contribution system is designed to address these coverage limitations over time.
-All synthetic entries are generated with a fixed seed for reproducibility.
-Seed-sensitivity analysis across five seeds shows 95--100\% entry variation per generator, confirming that the pools are large enough to avoid deterministic repetition.
+\paragraph{Dataset scale and coverage.}
+At 2,525 entries with $\geq$30 per type per split, the dataset provides meaningful per-type comparisons (95\% CI width $\leq 0.24$; MDE $\geq 20$pp at 80\% power) but remains small relative to the full diversity of citation hallucinations.
+Hallucination prevalence differs across splits (56.6--65.5\%), so we emphasize prevalence-independent metrics (DR, FPR).
+The benchmark covers only English-language BibTeX references from five ML venues (2021--2023); the taxonomy and sub-tests are domain-agnostic, and practitioners can supply domain-specific entries.
+Approximately 38\% of valid entries lack DOI fields; per-type metrics enable assessment of this residual artifact.
 
-\paragraph{LLM knowledge cutoff.}
-LLM-based verifiers carry an implicit temporal bias: their parametric knowledge has a training data cutoff, beyond which genuine papers become unrecognizable.
-Our 60-entry temporal probe (\cref{sec:temporal_robustness}) first identified this effect; a 480-entry temporal supplement (\cref{app:temporal_supplement}) confirms it at scale: GPT-5.1's false positive rate rises from 17.1\% to 72.6\% on 2024--2025 papers ($4.2{\times}$), and all five evaluated models show F1 collapsing to ${\approx}0.53$.
-This is a structural limitation of parametric verification---not a calibration issue---because models cannot confirm papers absent from their training data.
-Performance metrics therefore depend on the temporal overlap between an LLM's training data and the test entries.
-As models are updated, their effective cutoff shifts, making temporal robustness a moving target that benchmarks must track continuously.
-The rolling-update mechanism has been implemented and tested in CI but has not yet been exercised in a full evaluation cycle; we expect to exercise it at the first quarterly update.
+\paragraph{Synthetic--real gap.}
+The majority of hallucinated entries are perturbation-generated; the benchmark also includes 280 LLM-generated and 108 real-world entries.
+The real-world sample is small and type-skewed (55\% \texttt{plausible\_fabrication}), and type assignment for 15 compound-failure-mode entries involved judgment calls without inter-annotator agreement measurement.
+Expanding real-world coverage from retraction databases and systematic audits is a priority.
 
-\paragraph{Benchmark-tool co-design.}
-As the authors of both the benchmark and one evaluated tool (bibtex-updater), we acknowledge potential co-design bias.
-The taxonomy was initially designed from a literature survey of citation error types observed in the NeurIPS 2025 incident and related audits; bibtex-updater was then developed to address these error types---not the reverse.
-The sub-tests reflect fundamental verification steps any citation-checking tool would need (DOI resolution, title lookup, author matching), not tool-specific internals.
-We mitigate residual co-design risk by reporting bibtex-updater results separately in \cref{app:codesign}, evaluating all tools with identical pre-screening infrastructure, releasing the full evaluation protocol for independent replication, and actively soliciting independent tool submissions via the benchmark's public leaderboard.
+\paragraph{Temporal fragility.}
+LLM verifiers carry an implicit temporal bias: parametric knowledge has a training cutoff beyond which genuine papers become unrecognizable.
+A 480-entry temporal supplement (\cref{app:temporal_supplement}) confirms that GPT-5.1's FPR rises from 17.1\% to 72.6\% on 2024--2025 papers, and all models show F1 collapsing to ${\approx}0.53$.
+This is structural---not a calibration issue---and makes temporal robustness a moving target benchmarks must track continuously.
 
-\paragraph{Domain transfer.}
-\textsc{Hallmark} covers English-language ML references from five top venues (NeurIPS, ICML, ICLR, AAAI, CVPR).
-Practitioners in other fields can use the evaluation framework with domain-specific valid entries; the hallucination taxonomy and sub-test definitions are domain-agnostic.
-We provide reweighting utilities to adjust hallucination type prevalence to observed real-world distributions.
+\paragraph{Benchmark--tool co-design.}
+The taxonomy was designed from documented incidents before bibtex-updater was developed; the sub-tests reflect fundamental verification steps (DOI resolution, title lookup, author matching), not tool-specific internals.
+We mitigate residual risk by reporting bibtex-updater separately (\cref{app:codesign}), using identical pre-screening infrastructure for all tools, and releasing the full protocol for independent replication.
 
-\paragraph{External validity and test set reuse.}
-Hardt~\citep{hardt2025benchmarks} argues that benchmark validity rests on whether model rankings generalize beyond the specific test set.
-While \textsc{Hallmark} tool rankings show internal consistency (per-tier concordance and stable Plackett-Luce rankings), external validity---whether rankings on our synthetic hallucinations predict performance on real citation errors---remains an open question.
-The 108 real-world entries provide an initial signal but are insufficient for definitive rank-correlation analysis; curating a dedicated external validation set from retraction databases and systematic audits is a priority for future work.
-We also note that repeated evaluation against the dev split consumes statistical budget: Dwork et al.~\citep{dwork2015} show that $k$ adaptive queries degrade accuracy guarantees from $O(1/\sqrt{n})$ to $O(\sqrt{k \log n / n})$.
-The codebase tracks evaluation history and reports remaining budget to encourage principled test set management.
-
-\paragraph{DOI-presence distributional artifact.}
-Approximately 38\% of valid entries in the dev split lack DOI fields.
-While DOI presence carries some signal for the \texttt{fabricated\_doi} hallucination type (which contains DOIs by definition), per-type metrics (\cref{sec:per_type}) enable practitioners to assess tool performance separately on types with and without this residual artifact.
+\paragraph{External validity.}
+Whether rankings on synthetic hallucinations predict performance on real citation errors remains open~\citep{hardt2025benchmarks}.
+The 108 real-world entries provide an initial signal; a dedicated external validation set is future work.
+Repeated evaluation against the dev split consumes statistical budget~\citep{dwork2015}; the codebase tracks evaluation history and reports remaining budget.

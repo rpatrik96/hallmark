@@ -6,7 +6,7 @@
 
 We define 14 citation hallucination types---11 empirically grounded and 3 stress-test types---organized into three difficulty tiers based on the verification effort required (\cref{tab:taxonomy}).
 \textbf{Tier~1 (Easy)} hallucinations are detectable by a single API lookup---a fabricated DOI that does not resolve, a nonexistent venue name, placeholder author names, or a publication date in the future.
-\textbf{Tier~2 (Medium)} hallucinations require cross-referencing multiple metadata fields: a chimeric title pairs real authors with a fabricated title; a wrong venue assigns a real paper to the wrong conference; author mismatch attaches the wrong author list to a real title; preprint-as-published fabricates a venue acceptance for an arXiv-only paper; hybrid fabrication entries contain a DOI that resolves to a real paper, but the title and authors in the BibTeX entry do not match the paper the DOI references; merged citation combines metadata from two or more real papers into one entry; and partial author list cites a real paper with only a subset of its authors.
+\textbf{Tier~2 (Medium)} hallucinations require cross-referencing multiple metadata fields---e.g., a chimeric title pairs real authors with a fabricated title, wrong venue assigns a paper to the wrong conference, and hybrid fabrication uses a real DOI whose resolved record does not match the BibTeX metadata (\cref{tab:taxonomy}).
 \textbf{Tier~3 (Hard)} hallucinations require deep verification or semantic reasoning: near-miss titles differ by one or two words from a real paper; plausible fabrications are entirely invented but realistic; and arXiv version mismatches cite a preprint with wrong venue and shifted year.
 
 This taxonomy emerged from manual analysis of hallucinated citations found in the NeurIPS 2025 incident and related audits~\citep{ghostcite2026,hallucitation2026}, supplemented by adversarial brainstorming of failure modes that existing tools might miss.
@@ -52,11 +52,8 @@ These types are evaluated independently from the 11 empirically-grounded main ty
 \end{table}
 
 \paragraph{Verification decision tree.}
-The tier structure reflects a natural verification workflow.
-\textbf{Tier~1} hallucinations are caught by single-field lookups: Does the DOI resolve? Does the venue exist? Are the author names plausible?
-\textbf{Tier~2} requires cross-referencing: the DOI resolves, but do the authors listed actually match the resolved record? Is the claimed venue consistent with the retrieved paper? Are the listed authors a complete match or only a partial subset?
-\textbf{Tier~3} demands semantic reasoning or provenance checking: the title \emph{almost} matches a real paper, or the cited claim appears only in a superseded preprint version.
-This hierarchy directly informs tool design---a tool that only performs DOI lookups will catch Tier~1 but miss Tier~2 and~3 entirely.
+The tiers reflect a natural workflow: Tier~1 requires single-field lookups (DOI resolution, venue existence); Tier~2 requires cross-referencing (do authors match the resolved DOI record?); Tier~3 demands semantic reasoning (the title \emph{almost} matches a real paper).
+A tool that only performs DOI lookups catches Tier~1 but misses Tier~2--3 entirely.
 
 \subsection{Dataset construction}
 \label{sec:dataset}
@@ -75,34 +72,16 @@ We generated hallucinated entries using four methods:
 (3)~\emph{Adversarial crafting}: manually constructing entries designed to evade specific detection strategies.
 (4)~\emph{Real-world collection}: harvesting actual hallucinated citations from published papers identified in audits.
 
-These generation methods serve complementary purposes.
-Perturbation entries are \emph{controlled diagnostic tests}---each isolates a specific verification capability (e.g., DOI resolution, author matching), enabling fine-grained capability profiling.
-LLM-generated entries provide \emph{ecological validity}---produced by state-of-the-art language models, they reflect the coherent fabrication patterns that tools encounter in practice.
-Real-world entries provide \emph{ground truth validation}---extracted from documented incidents in published papers, they anchor the benchmark in empirical reality.
-Generation-method stratification enables practitioners to assess tool performance on each category independently.
-Verification is primarily algorithmic: perturbation-generated entries are validated by automated checks against DBLP and CrossRef (DOI resolution, title search, author matching), achieving $>$98\% agreement with ground truth labels.
-LLM-generated entries undergo additional automated filtering (title similarity $\geq 85\%$ and author Jaccard $\geq 0.5$ against bibliographic databases) to exclude entries that match real papers.
-Real-world and adversarial entries receive manual review to confirm hallucination status and type assignment.
-With $\geq 30$ instances per main type per public split, per-type 95\% Clopper-Pearson confidence intervals have width $\leq 0.24$ at detection rates near 0 or 1 (e.g., $[0.74, 0.98]$ at DR $= 0.90$, $n = 30$), providing meaningful per-type comparisons.
-The design prioritizes \emph{coverage}---ensuring all 11 main types have sufficient instances for per-type analysis---over volume.
+Perturbation entries are \emph{controlled diagnostic tests} isolating specific verification capabilities; LLM-generated entries provide \emph{ecological validity}; real-world entries anchor the benchmark in \emph{empirical reality}.
+Generation-method stratification enables assessment on each category independently.
+Verification is primarily algorithmic ($>$98\% agreement with ground truth); LLM-generated entries undergo additional filtering against bibliographic databases; real-world and adversarial entries receive manual review (\cref{app:dataset}).
+With $\geq 30$ instances per main type per split, per-type 95\% CIs have width $\leq 0.24$ (\cref{app:statistics}).
 
-\paragraph{Quality control.}
-Every entry undergoes automated validation checking field completeness, BibTeX well-formedness, and sub-test label consistency.
-Sub-test labels are verified for logical consistency with entry metadata (e.g., \texttt{doi\_resolves} matches DOI field presence); automated verification achieves $>$98\% agreement across all splits.
-To prevent trivial shortcuts, we strip the \texttt{url} field from all entries: hallucinated entries would otherwise inherit the source paper's DBLP URL (enabling detection via URL resolution and metadata comparison), and stripping only from hallucinated entries would make URL presence a perfect label discriminator.
-Contributed entries pass through a validation pipeline that enforces the schema constraints programmatically before inclusion.
-To detect potential training data contamination, each split includes a canary string with a unique GUID; users can search model outputs or training corpora for this identifier.
-
-\paragraph{Scaling for statistical power.}
-To ensure per-type statistical validity, we scaled the hallucinated portion so that every main type has at least 30 instances per main split.
-New entries were generated deterministically (seed-controlled) using the same perturbation generators as the original entries.
-
-\paragraph{Type distribution.}
-We use a uniform distribution across hallucination types to maximize per-type statistical power, recognizing that real-world type prevalence likely differs.
-Per-type metrics (\cref{sec:per_type}) enable prevalence-adjusted evaluation when empirical type frequencies become available.
-Practitioners with access to empirical prevalence data can reweight per-type performance by observed frequencies to compute domain-specific aggregate metrics.
-The evaluation API also supports \emph{generation-method stratification}, breaking down metrics by how entries were produced (perturbation, LLM-generated, real-world, adversarial).
-This enables practitioners to assess whether a tool detects template-based perturbations versus genuinely novel hallucinations---a critical distinction for real-world deployment.
+\paragraph{Quality control and design choices.}
+Every entry undergoes automated validation (field completeness, BibTeX well-formedness, sub-test consistency).
+We strip the \texttt{url} field from all entries to prevent trivial shortcuts, and include canary strings for contamination detection.
+We use uniform type distribution to maximize per-type power; reweighting utilities support prevalence-adjusted evaluation.
+The API supports generation-method stratification for assessing tool performance on perturbation vs.\ LLM-generated vs.\ real-world entries.
 
 \begin{table}[t]
 \caption{Dataset statistics by split. Tier distribution refers to hallucinated entries only. All main splits cover all 14 hallucination types with $n \geq 30$ per type; the stress-test split provides additional evaluation depth for three types.}
@@ -123,28 +102,11 @@ This enables practitioners to assess whether a tool detects template-based pertu
 \end{tabular}
 \end{table}
 
-\subsection{Sub-test design}
+\subsection{Sub-test design and temporal segmentation}
 \label{sec:subtests}
 
-Inspired by HumanEval's functional correctness tests~\citep{humaneval}, each \textsc{Hallmark} entry includes six sub-tests that decompose citation validity into independently verifiable dimensions.
-Each sub-test takes one of three values: \texttt{True} (verified pass), \texttt{False} (verified fail), or \texttt{null} (not applicable, e.g., \texttt{doi\_resolves} when no DOI field is present).
-\begin{enumerate}
-    \item \textbf{DOI resolves}: The DOI field, if present, resolves to a valid record.
-    \item \textbf{Title exists}: The title appears in at least one bibliographic database (DBLP, Semantic Scholar, CrossRef).
-    \item \textbf{Authors match}: The author list is consistent with the paper identified by DOI or title.
-    \item \textbf{Venue real}: The venue (journal or conference) exists and is correctly attributed.
-    \item \textbf{Fields complete}: All expected metadata fields are present and well-formed.
-    \item \textbf{Cross-DB agreement}: Metadata is consistent across multiple bibliographic databases.
-\end{enumerate}
+Each entry includes six sub-tests (values: True/False/N/A) that decompose citation validity into independently verifiable dimensions: (1)~\textbf{DOI resolves}, (2)~\textbf{Title exists} in bibliographic databases, (3)~\textbf{Authors match} the identified paper, (4)~\textbf{Venue real} and correctly attributed, (5)~\textbf{Fields complete}, (6)~\textbf{Cross-DB agreement}.
+Each hallucination type has a characteristic failure signature (\cref{tab:taxonomy}), enabling diagnostic analysis of \emph{why} a tool succeeds or fails.
 
-Sub-tests serve three purposes.
-First, they provide \emph{diagnostic power}: a tool that passes the DOI check but fails the author match reveals a specific verification gap.
-Second, they enable \emph{type-specific evaluation}: each hallucination type has a characteristic sub-test failure signature (\cref{tab:taxonomy}), and sub-test accuracy reveals whether a tool detects hallucinations for the right reasons.
-Third, they support \emph{partial credit}: tools that identify some inconsistencies but miss others receive differentiated scores rather than a flat binary outcome.
-
-\subsection{Temporal segmentation}
 \label{sec:temporal}
-
-Following LiveCodeBench~\citep{livecodebench2024}, \textsc{Hallmark} assigns entries to three temporal segments based on publication date: \emph{pre-2023}, \emph{2023--2024}, and \emph{2025+}.
-This enables robustness analysis across data periods: tools relying on static databases may degrade on newer entries where API coverage is incomplete, while live-API tools maintain consistent performance.
-Temporal segmentation also supports longitudinal analysis as new entries are added over time.
+Following LiveCodeBench~\citep{livecodebench2024}, entries are assigned to three temporal segments (\emph{pre-2023}, \emph{2023--2024}, \emph{2025+}) to enable temporal robustness analysis---critical given our finding that LLM verifiers degrade on recent papers (\cref{sec:temporal_robustness}).

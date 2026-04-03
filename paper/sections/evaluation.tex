@@ -7,72 +7,29 @@
 \textsc{Hallmark} reports five primary metrics and several diagnostic metrics.
 
 \paragraph{Primary metrics.}
-\textbf{Detection Rate (DR)} is recall on the hallucinated class: the fraction of hallucinated entries correctly flagged.
-The \textbf{False Negative Rate (FNR)} $= 1 - \text{DR}$ is the fraction of hallucinated entries that go undetected; in citation verification, false negatives (missed hallucinations entering the literature) are a more serious failure mode than false positives, which can be resolved through manual review.
-\textbf{False Positive Rate (FPR)} measures the fraction of valid entries incorrectly flagged as hallucinated---important for practical deployment where false alarms erode user trust, though less consequential than FNR since flagged entries receive human scrutiny.
+\textbf{Detection Rate (DR)} is recall on the hallucinated class.
+The \textbf{False Negative Rate (FNR)} $= 1 - \text{DR}$ captures missed hallucinations---a more serious failure mode than false positives, which can be resolved through manual review.
+\textbf{False Positive Rate (FPR)} measures valid entries incorrectly flagged; important for deployment where false alarms erode trust.
 \textbf{F1-Hallucination} is the harmonic mean of precision and recall on the hallucinated class.
 
-\textbf{Tier-weighted F1 (TW-F1)} addresses a key limitation of standard F1: it treats all hallucinations equally, though detecting a plausible fabrication is harder and arguably more valuable than catching a fabricated DOI.
-TW-F1 weights each hallucinated entry's contribution to precision and recall by its tier: Tier~1 entries contribute weight 1, Tier~2 weight 2, and Tier~3 weight 3.
-We use linear weights $\{1, 2, 3\}$ reflecting the empirical difficulty hierarchy: Tier~1 hallucinations are caught by single-field lookups, Tier~2 requires cross-referencing multiple metadata fields, and Tier~3 demands semantic reasoning or provenance checking.
-Tool rankings remain stable across uniform $\{1,1,1\}$, linear $\{1,2,3\}$, and quadratic $\{1,4,9\}$ weighting schemes (\cref{app:statistics}), confirming this choice does not bias conclusions.\footnote{Hardt~\citep{hardt2025benchmarks} shows that greater task diversity increases sensitivity to aggregation artifacts. We provide per-tier and per-type breakdowns as primary results to complement the aggregate TW-F1.}
-Formally, for entries $\{e_i\}$ with tier weights $w_i \in \{1,2,3\}$, predictions $\hat{y}_i$, and labels $y_i$:
-\begin{align}
-\text{TW-Precision} &= \frac{\sum_i w_i \cdot \mathbf{1}[\hat{y}_i = y_i = \text{H}]}{\sum_i w_i \cdot \mathbf{1}[\hat{y}_i = \text{H}]}, &
-\text{TW-Recall} &= \frac{\sum_i w_i \cdot \mathbf{1}[\hat{y}_i = y_i = \text{H}]}{\sum_i w_i \cdot \mathbf{1}[y_i = \text{H}]}, \label{eq:twf1}
-\end{align}
-where H denotes the hallucinated class, and TW-F1 is their harmonic mean.\footnote{Valid entries carry no difficulty tier, so false positives (valid entries predicted as hallucinated) contribute uniform weight 1.0 in the TW-Precision denominator regardless of their tier.}
-Because false positives carry uniform weight while true positives are tier-weighted, TW-F1 can be inflated by aggressive over-flagging; MCC provides a complementary prevalence-corrected view that penalizes both error types equally.
-
-\textbf{Matthews Correlation Coefficient (MCC)}~\citep{matthews1975} provides a prevalence-invariant summary of binary classification quality.
-Unlike F1, MCC uses all four confusion matrix cells and remains informative even when class ratios shift: MCC $= 1$ indicates perfect prediction, $0$ random, and $-1$ total disagreement.
-This is important for \textsc{Hallmark} because class ratios differ across splits (dev: 56.6\% hallucinated, test: 65.5\%), making cross-split F1 comparisons unreliable.
-We report MCC alongside F1 for all evaluations.
-
-\textbf{Expected Calibration Error (ECE)}~\citep{naeini2015} measures how well a tool's confidence scores reflect its actual accuracy.
-We partition predictions into $B=10$ equal-width confidence bins and compute:
-\begin{equation}
-\text{ECE} = \sum_{b=1}^{B} \frac{|S_b|}{N} \left| \text{acc}(S_b) - \text{conf}(S_b) \right|, \label{eq:ece}
-\end{equation}
-where $S_b$ is the set of predictions in bin $b$, $\text{acc}(S_b)$ is the fraction of correct predictions, and $\text{conf}(S_b)$ is the mean confidence.
-Well-calibrated tools have ECE $\approx 0$; in practice, ECE $< 0.05$ indicates excellent calibration, $0.05$--$0.15$ is acceptable, and ECE $> 0.2$ signals that confidence scores are unreliable for downstream decision-making (thresholds follow the convention of~\citealt{naeini2015,guo2017calibration}).
-Concretely, a tool with ECE\,=\,0.30 that reports 80\% confidence is actually correct only about 50\% of the time at that confidence level.
-We use equal-width binning following standard practice; adaptive (equal-mass) binning is available in the codebase and may reduce finite-sample bias when confidence scores cluster near 0 and 1.
+\textbf{Tier-weighted F1 (TW-F1)} weights each hallucinated entry's contribution to precision and recall by its tier (Tier~1: weight 1, Tier~2: 2, Tier~3: 3), rewarding detection of harder hallucinations.
+Linear weights reflect the empirical difficulty hierarchy; rankings remain stable across uniform, linear, and quadratic weighting schemes (\cref{app:statistics}).
+\textbf{Matthews Correlation Coefficient (MCC)}~\citep{matthews1975} provides a prevalence-invariant summary using all four confusion matrix cells---important because class ratios differ across splits (dev: 56.6\%, test: 65.5\% hallucinated).
+\textbf{Expected Calibration Error (ECE)}~\citep{naeini2015} measures how well confidence scores reflect actual accuracy: a tool with ECE\,=\,0.30 reporting 80\% confidence is actually correct only about 50\% of the time.
+ECE $< 0.05$ indicates excellent calibration; ECE $> 0.2$ signals unreliable confidence scores.
+Formal definitions of TW-F1 and ECE are provided in \cref{app:metric_details}.
 
 \paragraph{Diagnostic metrics.}
-\textbf{detect@$k$} is the fraction of hallucinations detected by at least one of $k$ verification strategies (union recall at $k$).
-Tools are ordered by ascending cost (API calls per entry), so detect@$k$ measures detection when adding the $k$-th cheapest tool to the ensemble.
-Unlike HumanEval's pass@$k$~\citep{humaneval}, which uses an unbiased stochastic estimator over random subsets of $n$ samples, detect@$k$ is deterministic and order-dependent: it evaluates a fixed, ordered set of $k$ strategies rather than estimating the probability that at least one random draw succeeds.
-\textbf{Per-tier and per-type breakdowns} reveal which categories each tool handles well or poorly.
-\textbf{Source-stratified metrics} disaggregate performance by which bibliographic APIs a tool queried, revealing API-specific blind spots.
-\textbf{Sub-test accuracy} measures per-sub-test correctness, showing whether a tool detects hallucinations for the right reasons.
+\textbf{detect@$k$} measures the fraction of hallucinations detected by at least one of $k$ verification strategies ordered by ascending cost.
+\textbf{Per-tier and per-type breakdowns} reveal category-specific strengths.
+\textbf{Sub-test accuracy} measures per-sub-test correctness, showing whether tools detect hallucinations for the right reasons.
 
 \subsection{Ranking with incomplete data}
 \label{sec:ranking}
 
-Not all tools can process all entries---rate-limited API access, timeouts, and tool-specific constraints mean evaluation matrices are typically sparse.
-Following ONEBench~\citep{onebench2024}, we adopt the Plackett-Luce model~\citep{luce1959,plackett1975} for ranking tools from incomplete data.
-
-The model assigns each tool $j$ a strength parameter $\theta_j > 0$; intuitively, $\theta_j$ represents a tool's overall ``skill''---higher $\theta_j$ means the tool is more likely to win any head-to-head comparison, analogous to Elo ratings in chess.
-Given a set of pairwise comparisons derived from the results matrix (tool $j$ beats tool $k$ on entry $i$ if it scores higher), we estimate $\{\theta_j\}$ via the Iterative Luce Spectral Ranking (ILSR) algorithm~\citep{maystre2015}.
-The resulting parameters yield a principled ranking even when different tools have been evaluated on different subsets of entries.
-We also report a simpler mean-score ranking as a baseline comparison.
-
-\paragraph{Aggregation robustness.}
-Multi-task aggregation is fundamentally limited: Arrow's impossibility theorem~\citep{arrow1950} guarantees that no ranked aggregation over three or more alternatives can simultaneously satisfy unanimity and independence of irrelevant alternatives (IIA) without being dictatorial~\citep{hardt2025benchmarks}.
-In benchmark terms, changing the weighting scheme or adding a new tool can shift existing rankings---a phenomenon documented in the OpenLLM Leaderboard, where normalization changes moved models by 40+ positions~\citep{hardt2025benchmarks}.
-The Plackett-Luce model mitigates this: it satisfies IIA by construction via the Luce choice axiom~\citep{luce1959}, making rankings invariant to tool addition or removal.
-We provide a Dirichlet sweep over the tier-weight simplex (\texttt{ranking\_sensitivity\_analysis}) to quantify how sensitive TW-F1 rankings are to the $\{1,2,3\}$ weight choice, and report per-tier rankings alongside aggregates so that readers can verify concordance (\cref{app:statistics}).
-
-\subsection{Baseline integration}
-\label{sec:baseline_integration}
-
-\textsc{Hallmark} provides a baseline registry that supports discovery, availability checking, and dispatch for all integrated tools.
-New baselines register via a decorator pattern, specifying their dependencies and whether they require API keys.
-A CI workflow runs all free baselines weekly on the dev split, ensuring results remain reproducible as APIs evolve.
-Rate-limited baselines use pre-computed reference results validated by checksum, enabling CI to verify consistency without re-running expensive API calls.
-
-\paragraph{Stress-test evaluation.}
-The \texttt{stress\_test} split contains 122 entries (121 hallucinated, 99.2\%; 1 canary entry---a known-valid sentinel used to detect data-processing errors---excluded during evaluation).
-Because no valid entries exist, FPR is undefined and F1 reduces to a function of recall alone.
-We report only Detection Rate for this split; F1 and FPR are omitted.
+Not all tools can process all entries---HaRC completed 1.8\% and verify-citations 6.3\% due to API rate limits.
+Standard averaging treats missing predictions as correct, biasing rankings toward low-coverage tools.
+We adopt the Plackett-Luce model~\citep{luce1959,plackett1975}---conceptually equivalent to Elo ratings---which estimates tool strength parameters from pairwise outcomes, enabling comparison even when tools were evaluated on different subsets.
+Plackett-Luce satisfies independence of irrelevant alternatives by construction, making rankings invariant to tool addition or removal~\citep{hardt2025benchmarks}.
+With current coverage (HaRC: 1.8\%, verify-citations: 6.3\%), pairwise overlap is insufficient for stable estimates; we use mean-score ranking as the primary comparison and provide Plackett-Luce infrastructure for future denser evaluations.
+Details are in \cref{app:ranking}.

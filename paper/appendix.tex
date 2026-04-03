@@ -173,6 +173,34 @@ GPT-5.1 achieves ${\geq}67\%$ detection on 9 of 11 main types, with near-perfect
 Its two weakest types---\texttt{author\_mismatch} (0.632) and \texttt{near\_miss\_title} (0.629)---require exact bibliographic recall that even large LLMs lack.
 Notably, DOI-only's deterministic year-bounds check achieves perfect detection on \texttt{future\_date} (1.000 vs.\ GPT-5.1's 0.968), suggesting that rule-based and LLM-based approaches are complementary.
 
+\section{Metric definitions and baseline integration}
+\label{app:metric_details}
+
+\paragraph{Tier-weighted F1.}
+For entries $\{e_i\}$ with tier weights $w_i \in \{1,2,3\}$, predictions $\hat{y}_i$, and labels $y_i$:
+\begin{align}
+\text{TW-Precision} &= \frac{\sum_i w_i \cdot \mathbf{1}[\hat{y}_i = y_i = \text{H}]}{\sum_i w_i \cdot \mathbf{1}[\hat{y}_i = \text{H}]}, &
+\text{TW-Recall} &= \frac{\sum_i w_i \cdot \mathbf{1}[\hat{y}_i = y_i = \text{H}]}{\sum_i w_i \cdot \mathbf{1}[y_i = \text{H}]}, \label{eq:twf1}
+\end{align}
+where H denotes the hallucinated class, and TW-F1 is their harmonic mean.
+Valid entries carry no difficulty tier, so false positives contribute uniform weight 1.0 in the TW-Precision denominator.
+Because false positives carry uniform weight while true positives are tier-weighted, TW-F1 can be inflated by aggressive over-flagging; MCC provides a complementary prevalence-corrected view.
+
+\paragraph{Expected Calibration Error.}
+We partition predictions into $B=10$ equal-width confidence bins and compute:
+\begin{equation}
+\text{ECE} = \sum_{b=1}^{B} \frac{|S_b|}{N} \left| \text{acc}(S_b) - \text{conf}(S_b) \right|, \label{eq:ece}
+\end{equation}
+where $S_b$ is the set of predictions in bin $b$, $\text{acc}(S_b)$ is the fraction of correct predictions, and $\text{conf}(S_b)$ is the mean confidence.
+Adaptive (equal-mass) binning is available in the codebase.
+
+\paragraph{Baseline integration.}
+\textsc{Hallmark} provides a baseline registry that supports discovery, availability checking, and dispatch for all integrated tools.
+New baselines register via a decorator pattern, specifying their dependencies and whether they require API keys.
+A CI workflow runs all free baselines weekly on the dev split, ensuring results remain reproducible as APIs evolve.
+Rate-limited baselines use pre-computed reference results validated by checksum.
+The \texttt{stress\_test} split contains 122 entries (121 hallucinated, 1 canary); because no valid entries exist, FPR is undefined and we report only Detection Rate.
+
 \section{Statistical analysis}
 \label{app:statistics}
 

@@ -1,13 +1,10 @@
 \begin{abstract}
 Citation hallucination---where language models generate plausible but fabricated references---poses a growing threat to scientific integrity.
-The NeurIPS 2025 incident, in which 53 accepted papers contained fabricated citations, and subsequent large-scale audits finding hundreds of affected publications across major venues, underscore the urgency of automated citation metadata verification.
-Yet no standardized benchmark exists to compare citation verification tools.
-We introduce \textsc{Hallmark} (\textbf{Hall}ucination bench\textbf{mark}), a benchmark for evaluating citation metadata verification systems, comprising 2,525 BibTeX entries spanning 14 hallucination types organized into three difficulty tiers.
-Each entry undergoes six sub-tests (binary or not-applicable) inspired by HumanEval's multi-criteria evaluation, enabling fine-grained diagnostic analysis beyond binary detection.
-\textsc{Hallmark} provides tier-weighted metrics that reward detection of hard hallucinations, expected calibration error for confidence assessment, and Plackett-Luce ranking infrastructure for future evaluations with denser tool coverage.
-We validate the benchmark by evaluating seven full-coverage tools---a DOI-only lower bound, five open-weight LLMs, and GPT-5.1---revealing a stark capability gap: DOI-only detects 26\% of hallucinations, while zero-shot LLM verifiers achieve 48--88\% detection rates, demonstrating that language models can identify the very hallucinations they produce, though with a pronounced recall--precision spectrum across models.
-Two dedicated citation verification tools (HaRC, verify-citations) were rate-limited to ${<}7\%$ coverage, preventing assessment of their detection quality but underscoring the infrastructure gap these tools face at scale.
-However, a 480-entry temporal supplement reveals that LLM false positive rates increase 3--5$\times$ on papers from 2024--2025, establishing temporal robustness as a first-order deployment concern.
-The benchmark, evaluation infrastructure, and all data are open-source, pip-installable, and designed for community adoption.
+The NeurIPS 2025 incident (53 accepted papers with fabricated citations) and subsequent large-scale audits underscore the urgency of automated citation metadata verification, yet no standardized benchmark exists to compare verification tools.
+We introduce \textsc{Hallmark} (\textbf{Hall}ucination bench\textbf{mark}), comprising 2,525 BibTeX entries spanning 14 hallucination types organized into three difficulty tiers.
+Each entry includes six independently verifiable sub-tests---DOI resolution, title existence, author matching, venue validity, field completeness, and cross-database agreement---decomposing binary detection into diagnosable failure modes.
+We evaluate seven full-coverage tools (a DOI-only baseline, five open-weight LLMs, and GPT-5.1), revealing that DOI-only detects 26\% of hallucinations while LLMs achieve 48--88\%, with a pronounced recall--precision spectrum.
+However, a 480-entry temporal supplement reveals that LLM false positive rates increase 3--5$\times$ on papers from 2024--2025 and F1 collapses to near-chance, establishing temporal robustness as a first-order deployment concern.
+The benchmark, evaluation infrastructure, and all data are open-source and pip-installable.
 Code and data: \url{https://github.com/anonymous/hallmark}.
 \end{abstract}

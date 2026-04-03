@@ -12,16 +12,14 @@ However, \emph{no standardized benchmark exists to compare these tools}: each is
 \input{figures/figure1}
 
 \paragraph{Scope.}
-\textsc{Hallmark} focuses on citation \emph{metadata} verification---detecting fabricated, inconsistent, or nonexistent bibliographic references.
-We do not address claim-level hallucination, where a real paper is cited but its claims are misrepresented.
-Claim verification requires full-text analysis and semantic understanding of paper content, representing an important but orthogonal challenge for future work.
+\textsc{Hallmark} focuses on citation \emph{metadata} verification---detecting fabricated, inconsistent, or nonexistent bibliographic references---not claim-level hallucination, which requires full-text analysis and represents an orthogonal challenge.
 
 We address this gap with four contributions:
 \begin{enumerate}
-    \item \textbf{A hallucination taxonomy} of 14 types organized into three difficulty tiers (Easy, Medium, Hard), capturing the full spectrum from obviously fake DOIs to subtly plausible fabrications (\cref{sec:taxonomy}).
-    \item \textbf{A benchmark dataset} of 2,525 BibTeX entries with six binary sub-tests per entry, enabling multi-criteria evaluation inspired by HumanEval~\citep{humaneval} (\cref{sec:dataset}).
-    \item \textbf{An evaluation protocol} with tier-weighted F1 (rewarding detection of harder hallucinations), expected calibration error (measuring confidence accuracy), and Plackett-Luce ranking infrastructure~\citep{luce1959,plackett1975} for future evaluations with denser tool coverage (\cref{sec:evaluation}).
-    \item \textbf{Open infrastructure}: a pip-installable Python package with a baseline registry, CI-integrated evaluation pipeline, and a community contribution system inspired by ONEBench~\citep{onebench2024} (\cref{sec:experiments}).
+    \item \textbf{A hallucination taxonomy} of 14 types across three difficulty tiers, from fabricated DOIs to plausible fabrications (\cref{sec:taxonomy}).
+    \item \textbf{A benchmark dataset} of 2,525 BibTeX entries with six diagnostic sub-tests per entry, enabling fine-grained failure analysis inspired by HumanEval~\citep{humaneval} (\cref{sec:dataset}).
+    \item \textbf{An evaluation protocol} with tier-weighted F1, calibration assessment, and Plackett-Luce ranking~\citep{luce1959,plackett1975} for incomplete data (\cref{sec:evaluation}).
+    \item \textbf{Open infrastructure}: pip-installable package with baseline registry, CI pipeline, and community contribution system (\cref{sec:experiments}).
 \end{enumerate}
 
 \begin{table}[t]
@@ -44,8 +42,5 @@ Mysterious Citations~\citep{mysterious2026} & HPC venues & --- & \ding{55} & \di
 \end{tabular}
 \end{table}
 
-We evaluate seven full-coverage tools on \textsc{Hallmark}---a DOI-only lower-bound baseline, GPT-5.1, and five open-weight LLMs (DeepSeek-R1, DeepSeek-V3.2, Qwen3-235B, Mistral Large, Gemini~2.5~Flash)---revealing a stark capability gap: DOI-only detects 26\% of hallucinations, while zero-shot LLM verifiers achieve 48--88\% detection rates, demonstrating that language models can identify the very hallucinations they produce.
-The six LLMs span a pronounced recall--precision spectrum: aggressive models (DeepSeek-R1/V3.2) achieve 87--88\% detection at 64--73\% FPR, while conservative models (Gemini~2.5~Flash) achieve 48\% detection at only 10\% FPR, with GPT-5.1 offering the best balance (80\% DR, 17\% FPR).
-We additionally attempted evaluation of two dedicated multi-source citation verification tools (HaRC, verify-citations), but both were rate-limited to ${<}7\%$ coverage, preventing assessment of their detection quality at scale and highlighting the infrastructure bottleneck facing API-based verification.
-We also evaluate bibtex-updater, a tool co-developed by the authors, reporting results separately in \cref{app:codesign} to maintain transparency.
-These results demonstrate the value of a structured benchmark for identifying actionable improvement targets.
+We validate the benchmark on seven full-coverage tools (\cref{sec:experiments}), revealing that DOI-only detects 26\% of hallucinations while zero-shot LLM verifiers achieve 48--88\%, with a pronounced recall--precision spectrum across models.
+A 480-entry temporal supplement exposes a critical deployment concern: LLM false positive rates increase 3--5$\times$ on papers from 2024--2025, collapsing F1 to near-chance (\cref{sec:temporal_robustness}).
