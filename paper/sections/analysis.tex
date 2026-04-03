@@ -12,6 +12,11 @@ We report results both with and without pre-screening for transparency.
 GPT-5.1 achieves the lowest ECE (0.107); open-weight LLMs show ECE 0.25--0.33, reflecting miscalibration from aggressive flagging.
 Confidence calibration is critical for venue deployment, where reviewers need to trust flagged entries without manual verification.
 
+\paragraph{Deployment PPV.}
+\label{sec:ppv}
+At venue-realistic prevalence ($\pi{\approx}2\%$), positive predictive value $\text{PPV} = \text{DR}\cdot\pi / (\text{DR}\cdot\pi + \text{FPR}\cdot(1{-}\pi))$ drops sharply: GPT-5.1 achieves only 8.7\% PPV (10 of 11 flagged entries are false alarms), and aggressive models fall below 3\% despite ${\geq}87\%$ DR (\cref{app:ppv}).
+\emph{FPR reduction, not DR maximization, is the critical deployment metric}.
+
 \paragraph{Cost--accuracy tradeoff.}
 \label{sec:cost}
 \cref{fig:cost} plots detection rate against cost.

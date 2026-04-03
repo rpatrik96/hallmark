@@ -1,0 +1,446 @@
+{
+  "@context": {
+    "@language": "en",
+    "@vocab": "https://schema.org/",
+    "citeAs": "cr:citeAs",
+    "column": "cr:column",
+    "conformsTo": "dct:conformsTo",
+    "cr": "http://mlcommons.org/croissant/",
+    "data": {
+      "@id": "cr:data",
+      "@type": "@json"
+    },
+    "dataType": {
+      "@id": "cr:dataType",
+      "@type": "@vocab"
+    },
+    "dct": "http://purl.org/dc/terms/",
+    "extract": "cr:extract",
+    "field": "cr:field",
+    "fileObject": "cr:fileObject",
+    "fileProperty": "cr:fileProperty",
+    "fileSet": "cr:fileSet",
+    "format": "cr:format",
+    "includes": "cr:includes",
+    "isLiveDataset": "cr:isLiveDataset",
+    "jsonPath": "cr:jsonPath",
+    "key": "cr:key",
+    "md5": "cr:md5",
+    "parentField": "cr:parentField",
+    "path": "cr:path",
+    "rai": "http://mlcommons.org/croissant/RAI/",
+    "recordSet": "cr:recordSet",
+    "references": "cr:references",
+    "regex": "cr:regex",
+    "repeated": "cr:repeated",
+    "replace": "cr:replace",
+    "sc": "https://schema.org/",
+    "separator": "cr:separator",
+    "source": "cr:source",
+    "subField": "cr:subField",
+    "transform": "cr:transform"
+  },
+  "@type": "sc:Dataset",
+  "conformsTo": "http://mlcommons.org/croissant/1.0",
+  "name": "HALLMARK",
+  "description": "HALLMARK (HALLucination benchMARK) is a benchmark for evaluating citation metadata verification systems. It contains 2,525 BibTeX entries spanning 14 hallucination types organized into 3 difficulty tiers, with 6 sub-tests per entry covering DOI resolution, title existence, author matching, venue correctness, field completeness, and cross-database agreement. The benchmark targets ML venue citations (NeurIPS, ICML, ICLR, AAAI, CVPR) from 2021-2023 and includes entries generated via systematic perturbation, LLM generation, adversarial crafting, and real-world hallucination collection.",
+  "url": "https://github.com/rpatrik96/hallmark",
+  "license": "https://spdx.org/licenses/MIT.html",
+  "version": "1.0",
+  "datePublished": "2026-02-20",
+  "inLanguage": "en",
+  "isLiveDataset": false,
+  "keywords": [
+    "benchmark",
+    "citations",
+    "hallucination",
+    "bibtex",
+    "verification",
+    "academic integrity",
+    "bibliographic metadata",
+    "machine learning"
+  ],
+  "creator": [
+    {
+      "@type": "Organization",
+      "name": "Anonymous",
+      "description": "Authors withheld for double-blind review"
+    }
+  ],
+  "distribution": [
+    {
+      "@type": "cr:FileObject",
+      "@id": "dev-public-file",
+      "name": "dev_public.jsonl",
+      "description": "Development split with ground-truth labels for model development and hyperparameter tuning.",
+      "contentUrl": "data/v1.0/dev_public.jsonl",
+      "encodingFormat": "application/jsonlines",
+      "sha256": ""
+    },
+    {
+      "@type": "cr:FileObject",
+      "@id": "test-public-file",
+      "name": "test_public.jsonl",
+      "description": "Public test split with ground-truth labels for evaluation and ablation studies.",
+      "contentUrl": "data/v1.0/test_public.jsonl",
+      "encodingFormat": "application/jsonlines",
+      "sha256": ""
+    },
+    {
+      "@type": "cr:FileObject",
+      "@id": "stress-test-file",
+      "name": "stress_test.jsonl",
+      "description": "Stress-test split focusing on theoretically-motivated hallucination types (merged_citation, partial_author_list, arxiv_version_mismatch) evaluated separately from the main benchmark.",
+      "contentUrl": "data/v1.0/stress_test.jsonl",
+      "encodingFormat": "application/jsonlines",
+      "sha256": ""
+    },
+    {
+      "@type": "cr:FileObject",
+      "@id": "dev-public-blind-file",
+      "name": "dev_public_blind.jsonl",
+      "description": "Blinded version of the development split (no ground-truth labels) for baseline runners.",
+      "contentUrl": "data/v1.0/dev_public_blind.jsonl",
+      "encodingFormat": "application/jsonlines",
+      "sha256": ""
+    },
+    {
+      "@type": "cr:FileObject",
+      "@id": "test-public-blind-file",
+      "name": "test_public_blind.jsonl",
+      "description": "Blinded version of the public test split (no ground-truth labels) for baseline runners.",
+      "contentUrl": "data/v1.0/test_public_blind.jsonl",
+      "encodingFormat": "application/jsonlines",
+      "sha256": ""
+    },
+    {
+      "@type": "cr:FileObject",
+      "@id": "stress-test-blind-file",
+      "name": "stress_test_blind.jsonl",
+      "description": "Blinded version of the stress-test split (no ground-truth labels) for baseline runners.",
+      "contentUrl": "data/v1.0/stress_test_blind.jsonl",
+      "encodingFormat": "application/jsonlines",
+      "sha256": ""
+    },
+    {
+      "@type": "cr:FileObject",
+      "@id": "metadata-file",
+      "name": "metadata.json",
+      "description": "Dataset metadata including split statistics, type distributions, and generation method breakdowns.",
+      "contentUrl": "data/v1.0/metadata.json",
+      "encodingFormat": "application/json",
+      "sha256": ""
+    }
+  ],
+  "recordSet": [
+    {
+      "@type": "cr:RecordSet",
+      "@id": "benchmark-entries",
+      "name": "BenchmarkEntry",
+      "description": "Each record is an atomic benchmark entry representing a BibTeX citation to be verified. Entries are either VALID (scraped from real proceedings) or HALLUCINATED (synthetically generated with specific corruption patterns). Each entry includes 6 sub-test ground-truth labels.",
+      "key": "bibtex_key",
+      "field": [
+        {
+          "@type": "cr:Field",
+          "@id": "benchmark-entries/bibtex_key",
+          "name": "bibtex_key",
+          "description": "Unique hex-hash identifier for the BibTeX entry.",
+          "dataType": "sc:Text",
+          "source": {
+            "fileObject": {
+              "@id": "dev-public-file"
+            },
+            "extract": {
+              "jsonPath": "$.bibtex_key"
+            }
+          }
+        },
+        {
+          "@type": "cr:Field",
+          "@id": "benchmark-entries/bibtex_type",
+          "name": "bibtex_type",
+          "description": "BibTeX entry type (e.g., inproceedings, article, book, misc).",
+          "dataType": "sc:Text",
+          "source": {
+            "fileObject": {
+              "@id": "dev-public-file"
+            },
+            "extract": {
+              "jsonPath": "$.bibtex_type"
+            }
+          }
+        },
+        {
+          "@type": "cr:Field",
+          "@id": "benchmark-entries/fields",
+          "name": "fields",
+          "description": "Dictionary of BibTeX fields (title, author, year, doi, url, booktitle, journal, etc.). The exact keys vary per entry.",
+          "dataType": "sc:Text",
+          "source": {
+            "fileObject": {
+              "@id": "dev-public-file"
+            },
+            "extract": {
+              "jsonPath": "$.fields"
+            }
+          }
+        },
+        {
+          "@type": "cr:Field",
+          "@id": "benchmark-entries/label",
+          "name": "label",
+          "description": "Ground-truth binary label: VALID or HALLUCINATED.",
+          "dataType": "sc:Text",
+          "source": {
+            "fileObject": {
+              "@id": "dev-public-file"
+            },
+            "extract": {
+              "jsonPath": "$.label"
+            }
+          }
+        },
+        {
+          "@type": "cr:Field",
+          "@id": "benchmark-entries/hallucination_type",
+          "name": "hallucination_type",
+          "description": "Type of hallucination from the 14-type taxonomy: fabricated_doi, nonexistent_venue, placeholder_authors, future_date (Tier 1/Easy); chimeric_title, wrong_venue, swapped_authors, preprint_as_published, hybrid_fabrication (Tier 2/Medium); near_miss_title, plausible_fabrication (Tier 3/Hard); merged_citation, partial_author_list, arxiv_version_mismatch (stress-test). Null for VALID entries.",
+          "dataType": "sc:Text",
+          "source": {
+            "fileObject": {
+              "@id": "dev-public-file"
+            },
+            "extract": {
+              "jsonPath": "$.hallucination_type"
+            }
+          }
+        },
+        {
+          "@type": "cr:Field",
+          "@id": "benchmark-entries/difficulty_tier",
+          "name": "difficulty_tier",
+          "description": "Difficulty tier (1=Easy, 2=Medium, 3=Hard). Null for VALID entries. Tier 1 is detectable by simple API lookup, Tier 2 requires cross-referencing metadata, Tier 3 requires deep verification or semantic reasoning.",
+          "dataType": "sc:Integer",
+          "source": {
+            "fileObject": {
+              "@id": "dev-public-file"
+            },
+            "extract": {
+              "jsonPath": "$.difficulty_tier"
+            }
+          }
+        },
+        {
+          "@type": "cr:Field",
+          "@id": "benchmark-entries/explanation",
+          "name": "explanation",
+          "description": "Human-readable explanation of what is wrong with the entry (or 'valid entry' for VALID entries).",
+          "dataType": "sc:Text",
+          "source": {
+            "fileObject": {
+              "@id": "dev-public-file"
+            },
+            "extract": {
+              "jsonPath": "$.explanation"
+            }
+          }
+        },
+        {
+          "@type": "cr:Field",
+          "@id": "benchmark-entries/generation_method",
+          "name": "generation_method",
+          "description": "How the entry was created: scraped (valid entry from proceedings), llm_generated (LLM-generated hallucination), perturbation (systematic perturbation of valid entry), adversarial (hand-crafted), or real_world (actual hallucination from published papers).",
+          "dataType": "sc:Text",
+          "source": {
+            "fileObject": {
+              "@id": "dev-public-file"
+            },
+            "extract": {
+              "jsonPath": "$.generation_method"
+            }
+          }
+        },
+        {
+          "@type": "cr:Field",
+          "@id": "benchmark-entries/source_conference",
+          "name": "source_conference",
+          "description": "Original venue for valid entries (e.g., NeurIPS, ICML, ICLR, AAAI, CVPR). May be null.",
+          "dataType": "sc:Text",
+          "source": {
+            "fileObject": {
+              "@id": "dev-public-file"
+            },
+            "extract": {
+              "jsonPath": "$.source_conference"
+            }
+          }
+        },
+        {
+          "@type": "cr:Field",
+          "@id": "benchmark-entries/source",
+          "name": "source",
+          "description": "Provenance identifier indicating where this entry came from (e.g., gptzero_neurips2025, llm_openai).",
+          "dataType": "sc:Text",
+          "source": {
+            "fileObject": {
+              "@id": "dev-public-file"
+            },
+            "extract": {
+              "jsonPath": "$.source"
+            }
+          }
+        },
+        {
+          "@type": "cr:Field",
+          "@id": "benchmark-entries/publication_date",
+          "name": "publication_date",
+          "description": "ISO date (YYYY-MM-DD) of the original publication.",
+          "dataType": "sc:Date",
+          "source": {
+            "fileObject": {
+              "@id": "dev-public-file"
+            },
+            "extract": {
+              "jsonPath": "$.publication_date"
+            }
+          }
+        },
+        {
+          "@type": "cr:Field",
+          "@id": "benchmark-entries/added_to_benchmark",
+          "name": "added_to_benchmark",
+          "description": "ISO date (YYYY-MM-DD) when the entry was added to the benchmark.",
+          "dataType": "sc:Date",
+          "source": {
+            "fileObject": {
+              "@id": "dev-public-file"
+            },
+            "extract": {
+              "jsonPath": "$.added_to_benchmark"
+            }
+          }
+        },
+        {
+          "@type": "cr:Field",
+          "@id": "benchmark-entries/subtests",
+          "name": "subtests",
+          "description": "Per-field sub-test ground truth (HumanEval-inspired). A dictionary with 6 keys: doi_resolves, title_exists, authors_match, venue_correct, fields_complete, cross_db_agreement. Values are three-valued: true (verified pass), false (verified fail), or null (not applicable, e.g., doi_resolves when entry has no DOI).",
+          "dataType": "sc:Text",
+          "source": {
+            "fileObject": {
+              "@id": "dev-public-file"
+            },
+            "extract": {
+              "jsonPath": "$.subtests"
+            }
+          }
+        },
+        {
+          "@type": "cr:Field",
+          "@id": "benchmark-entries/raw_bibtex",
+          "name": "raw_bibtex",
+          "description": "Optional raw BibTeX string. Null when the entry is reconstructed from structured fields.",
+          "dataType": "sc:Text",
+          "source": {
+            "fileObject": {
+              "@id": "dev-public-file"
+            },
+            "extract": {
+              "jsonPath": "$.raw_bibtex"
+            }
+          }
+        },
+        {
+          "@type": "cr:Field",
+          "@id": "benchmark-entries/schema_version",
+          "name": "schema_version",
+          "description": "Schema version for forward/backward compatibility. Currently '1.0'.",
+          "dataType": "sc:Text",
+          "source": {
+            "fileObject": {
+              "@id": "dev-public-file"
+            },
+            "extract": {
+              "jsonPath": "$.schema_version"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "@type": "cr:RecordSet",
+      "@id": "blind-entries",
+      "name": "BlindEntry",
+      "description": "Privacy-preserving view of benchmark entries for baseline runners. Contains only the fields needed for verification -- ground-truth labels, difficulty tiers, and generation metadata are excluded to prevent baselines from accessing oracle information.",
+      "key": "bibtex_key",
+      "field": [
+        {
+          "@type": "cr:Field",
+          "@id": "blind-entries/bibtex_key",
+          "name": "bibtex_key",
+          "description": "Unique hex-hash identifier for the BibTeX entry (matches benchmark-entries).",
+          "dataType": "sc:Text",
+          "source": {
+            "fileObject": {
+              "@id": "dev-public-blind-file"
+            },
+            "extract": {
+              "jsonPath": "$.bibtex_key"
+            }
+          }
+        },
+        {
+          "@type": "cr:Field",
+          "@id": "blind-entries/bibtex_type",
+          "name": "bibtex_type",
+          "description": "BibTeX entry type.",
+          "dataType": "sc:Text",
+          "source": {
+            "fileObject": {
+              "@id": "dev-public-blind-file"
+            },
+            "extract": {
+              "jsonPath": "$.bibtex_type"
+            }
+          }
+        },
+        {
+          "@type": "cr:Field",
+          "@id": "blind-entries/fields",
+          "name": "fields",
+          "description": "Dictionary of BibTeX fields (url field stripped to prevent metadata-comparison shortcuts).",
+          "dataType": "sc:Text",
+          "source": {
+            "fileObject": {
+              "@id": "dev-public-blind-file"
+            },
+            "extract": {
+              "jsonPath": "$.fields"
+            }
+          }
+        },
+        {
+          "@type": "cr:Field",
+          "@id": "blind-entries/raw_bibtex",
+          "name": "raw_bibtex",
+          "description": "Optional raw BibTeX string.",
+          "dataType": "sc:Text",
+          "source": {
+            "fileObject": {
+              "@id": "dev-public-blind-file"
+            },
+            "extract": {
+              "jsonPath": "$.raw_bibtex"
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "rai:dataCollection": "Valid entries were scraped from publicly available proceedings of major ML conferences (NeurIPS, ICML, ICLR, AAAI, CVPR) for publication years 2021-2023. Hallucinated entries were generated through four methods: (1) systematic perturbation of valid entries following a 14-type taxonomy, (2) LLM generation using multiple models (GPT-5.1, Claude Sonnet 4.5, DeepSeek-R1, DeepSeek-V3, Qwen, Gemini Flash), (3) adversarial hand-crafting to fool specific verification strategies, and (4) collection of real-world hallucinations from published papers identified by GPTZero analysis. No human subjects were involved in data collection.",
+  "rai:dataCollectionType": "Automated scraping of public bibliographic metadata and synthetic generation",
+  "rai:personalSensitiveInformation": "The dataset contains only publicly available bibliographic metadata (author names, paper titles, DOIs, venue names, publication years) from published academic papers. No private or sensitive personal information is included. Author names appear only as part of standard bibliographic citations that are already public record.",
+  "rai:dataPreprocessing": "Valid entries were deduplicated by DOI and title. BibTeX keys were replaced with hex hashes to prevent leakage of entry provenance. Fake DOI prefixes are enforced for fabricated entries. A canary/watermark string is embedded to detect data leakage into training corpora. Blind versions of each split strip ground-truth labels and the url field.",
+  "rai:dataSocialImpact": "This benchmark supports the detection of citation hallucinations in academic papers, a growing concern as LLM-assisted writing becomes prevalent. By providing a standardized evaluation framework, HALLMARK enables systematic comparison of verification tools, ultimately contributing to academic integrity and trust in scholarly communication. The benchmark does not enable generation of convincing fake citations at scale -- the hallucination taxonomy and generation methods are designed for evaluation, not production of deceptive content.",
+  "rai:dataLimitations": "The benchmark focuses on ML venue citations (NeurIPS, ICML, ICLR, AAAI, CVPR) from 2021-2023 and may not generalize to other academic domains, time periods, or publication types (e.g., books, theses). The hallucination taxonomy, while comprehensive for current patterns, may not cover future hallucination strategies. Verification tools that rely on external APIs (Crossref, Semantic Scholar) may produce different results over time as these databases are updated."
+}

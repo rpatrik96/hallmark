@@ -420,6 +420,36 @@ GPT-5.1 + BTU      & ---   & 1.000 & ---   & 1.000 & ---           & 0.769 \\
 \end{tabular}
 \end{table}
 
+\section{Deployment PPV analysis}
+\label{app:ppv}
+
+At venue-realistic prevalence ($\pi \approx 1$--$5\%$), positive predictive value drops sharply.
+\cref{tab:ppv} reports PPV $= \frac{\text{DR}\cdot\pi}{\text{DR}\cdot\pi + \text{FPR}\cdot(1-\pi)}$ for all full-coverage tools.
+
+\begin{table}[h]
+\caption{Positive predictive value at venue-realistic prevalence.}
+\label{tab:ppv}
+\centering
+\small
+\begin{tabular}{lcccc}
+\toprule
+\textbf{Tool} & \textbf{DR} & \textbf{FPR} & \textbf{PPV\textsubscript{2\%}} & \textbf{PPV\textsubscript{5\%}} \\
+\midrule
+DOI-only         & 0.256 & 0.195 & 2.6\% & 6.5\% \\
+GPT-5.1          & 0.797 & 0.171 & 8.7\% & 19.7\% \\
+DeepSeek-R1      & 0.871 & 0.640 & 2.7\% & 6.7\% \\
+DeepSeek-V3.2    & 0.880 & 0.730 & 2.4\% & 6.0\% \\
+Qwen3-235B       & 0.832 & 0.551 & 3.0\% & 7.4\% \\
+Mistral Large    & 0.691 & 0.258 & 5.2\% & 12.4\% \\
+Gemini~2.5~Flash & 0.482 & 0.101 & 8.9\% & 20.1\% \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+At $\pi{=}2\%$, GPT-5.1 achieves only 8.7\% PPV---roughly 10 of every 11 flagged entries are false alarms.
+Aggressive models (DeepSeek-R1/V3.2) fall below 3\% despite ${\geq}87\%$ DR.
+Gemini~2.5~Flash matches GPT-5.1's PPV (8.9\%) through its low FPR, despite half the detection rate.
+
 \section{Benchmark-science diagnostics}
 \label{app:benchmark_science}
 
