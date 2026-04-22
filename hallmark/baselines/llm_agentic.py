@@ -296,7 +296,7 @@ def _run_agentic_anthropic(
     for _call_idx in range(MAX_TOOL_CALLS + 1):
         resp = client.messages.create(
             model=model,
-            system=SYSTEM_PROMPT,
+            system=system_prompt,
             messages=messages,
             tools=anthropic_tools,
             tool_choice={"type": "auto"},

@@ -1187,3 +1187,70 @@ class TestSearchArxiv:
             results = search_arxiv("completely obscure title xyz")
 
         assert results == []
+
+
+# ---------------------------------------------------------------------------
+# Regression: agentic Anthropic loop must thread the system_prompt argument
+# through to the Anthropic messages.create(system=...) kwarg.  Previously
+# the loop hard-coded `system=SYSTEM_PROMPT`, silently ignoring the
+# BTU_SYSTEM_PROMPT threaded in by verify_agentic_btu_anthropic.
+# ---------------------------------------------------------------------------
+
+
+class TestAgenticBtuAnthropicSystemPrompt:
+    def test_uses_btu_system_prompt(self, tmp_path: Path) -> None:
+        """verify_agentic_btu_anthropic sends BTU_SYSTEM_PROMPT, not SYSTEM_PROMPT."""
+        from hallmark.baselines.llm_agentic import (
+            BTU_SYSTEM_PROMPT,
+            SYSTEM_PROMPT,
+            verify_agentic_btu_anthropic,
+        )
+
+        verdict = json.dumps({"label": "VALID", "confidence": 0.9, "reason": "BTU verified"})
+        resp = _make_anthropic_text_response(verdict)
+
+        mock_client = MagicMock()
+        mock_client.messages.create.return_value = resp
+        mock_anthropic = MagicMock()
+        mock_anthropic.Anthropic.return_value = mock_client
+
+        with patch.dict("sys.modules", {"anthropic": mock_anthropic}):
+            verify_agentic_btu_anthropic(
+                [_make_entry()],
+                model=ANTHROPIC_MODEL,
+                api_key="test-key",
+                cache_db_path=tmp_path / "cache.sqlite",
+            )
+
+        call_kwargs = mock_client.messages.create.call_args.kwargs
+        assert call_kwargs["system"] == BTU_SYSTEM_PROMPT
+        # And it must not be the generic multi-tool prompt
+        assert call_kwargs["system"] != SYSTEM_PROMPT
+
+    def test_non_btu_uses_generic_system_prompt(self, tmp_path: Path) -> None:
+        """verify_agentic_anthropic (multi-tool) still sends SYSTEM_PROMPT."""
+        from hallmark.baselines.llm_agentic import (
+            BTU_SYSTEM_PROMPT,
+            SYSTEM_PROMPT,
+            verify_agentic_anthropic,
+        )
+
+        verdict = json.dumps({"label": "VALID", "confidence": 0.9, "reason": "ok"})
+        resp = _make_anthropic_text_response(verdict)
+
+        mock_client = MagicMock()
+        mock_client.messages.create.return_value = resp
+        mock_anthropic = MagicMock()
+        mock_anthropic.Anthropic.return_value = mock_client
+
+        with patch.dict("sys.modules", {"anthropic": mock_anthropic}):
+            verify_agentic_anthropic(
+                [_make_entry()],
+                model=ANTHROPIC_MODEL,
+                api_key="test-key",
+                cache_db_path=tmp_path / "cache.sqlite",
+            )
+
+        call_kwargs = mock_client.messages.create.call_args.kwargs
+        assert call_kwargs["system"] == SYSTEM_PROMPT
+        assert call_kwargs["system"] != BTU_SYSTEM_PROMPT
