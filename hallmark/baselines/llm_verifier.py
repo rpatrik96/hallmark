@@ -105,6 +105,40 @@ OPENROUTER_MODELS: dict[str, str] = {
     "qwen": "qwen/qwen3-235b-a22b-2507",
     "mistral": "mistralai/mistral-large-2512",
     "gemini-flash": "google/gemini-2.5-flash",
+    # --- New entries (confirmed live via curl /api/v1/models + 5-token probe) ---
+    # meta-llama/llama-4-maverick: confirmed live 2026-04-22
+    "llama-4-maverick": "meta-llama/llama-4-maverick",
+    # google/gemini-2.5-pro: GA non-thinking tier (confirmed live 2026-04-22).
+    # gemini-3.1-pro-preview emits unbounded thinking tokens that overrun the
+    # 256-token max_completion_tokens budget, causing JSON parse failures;
+    # 2.5-pro is the closest reliable "Pro-tier" alternative without that issue.
+    "gemini-pro": "google/gemini-2.5-pro",
+    # qwen/qwen3.5-397b-a17b: confirmed live 2026-04-22
+    # (qwen/qwen3-max blocked — only available via Alibaba provider, not in allowed set)
+    "qwen-max": "qwen/qwen3.5-397b-a17b",
+}
+
+# Reference dict of OpenAI model IDs for documentation and kwarg overrides.
+# The llm_openai baseline defaults to "gpt-5.1"; pass model= to use any entry here.
+# Confirmed live via GET /v1/models on 2026-04-22: gpt-5.1, gpt-5.2, gpt-5.4,
+# gpt-5.4-mini. Listed for future use (not yet verified): gpt-5.1-mini, gpt-5.4-nano.
+OPENAI_MODELS: dict[str, str] = {
+    "gpt-5.1": "gpt-5.1",
+    "gpt-5.1-mini": "gpt-5.1-mini",
+    "gpt-5.2": "gpt-5.2",
+    "gpt-5.4": "gpt-5.4",
+    "gpt-5.4-mini": "gpt-5.4-mini",
+}
+
+# Reference dict of Anthropic model IDs for documentation and kwarg overrides.
+# The llm_anthropic baseline defaults to "claude-sonnet-4-6"; pass model= to override.
+# IDs sourced from Anthropic model reference (no live API verification performed).
+ANTHROPIC_MODELS: dict[str, str] = {
+    "claude-sonnet-4-5": "claude-sonnet-4-5-20250929",
+    "claude-sonnet-4-6": "claude-sonnet-4-6",
+    "claude-opus-4-6": "claude-opus-4-6",
+    "claude-opus-4-7": "claude-opus-4-7",
+    "claude-haiku-4-5": "claude-haiku-4-5",
 }
 
 
@@ -284,12 +318,18 @@ def _verify_with_openai_compatible(
     client_kwargs.setdefault("timeout", 120.0)
     client = openai.OpenAI(**client_kwargs)
 
+    # Raised from 256 to 1024 so that reasoning-capable Gemini/OpenAI models
+    # can emit hidden thinking tokens before the JSON verdict without the
+    # response being truncated mid-structure. Non-thinking models still emit
+    # ~50-80 tokens of actual content, so the increase has negligible cost.
+    max_completion_tokens = int(kwargs.pop("max_completion_tokens", 1024))
+
     def call_fn(prompt: str) -> str:
         resp = client.chat.completions.create(
             model=model,
             messages=[{"role": "user", "content": prompt}],
             temperature=0.0,
-            max_completion_tokens=256,
+            max_completion_tokens=max_completion_tokens,
             seed=42,
         )
         return str(resp.choices[0].message.content).strip()
@@ -366,13 +406,16 @@ def verify_with_openrouter(
 
 def verify_with_anthropic(
     entries: list[BlindEntry],
-    model: str = "claude-sonnet-4-5-20250929",
+    model: str = "claude-sonnet-4-6",
     api_key: str | None = None,
     log_dir: Path | None = None,
     checkpoint_dir: Path | None = None,
     cutoff_aware: bool = False,
 ) -> list[Prediction]:
     """Verify entries using Anthropic API.
+
+    The default model is ``claude-sonnet-4-6``.  Pass ``model=`` with a value
+    from :data:`ANTHROPIC_MODELS` to override.
 
     When ``cutoff_aware`` is True, the default prompt is extended with
     :data:`CUTOFF_AWARE_ADDENDUM`.
@@ -445,6 +488,33 @@ def _parse_llm_response(content: str, bibtex_key: str) -> Prediction:
                 break
 
     if data is None:
+        # Salvage path: truncated JSON from verbose reasoning models (e.g.,
+        # Gemini 2.5 Pro) often contains a parseable label+confidence before
+        # the response is cut off. Regex-extract them rather than giving up.
+        import re
+
+        label_match = re.search(
+            r'"label"\s*:\s*"(VALID|HALLUCINATED|UNCERTAIN)"',
+            original_content,
+            re.IGNORECASE,
+        )
+        conf_match = re.search(r'"confidence"\s*:\s*([0-9]*\.?[0-9]+)', original_content)
+        if label_match is not None:
+            from typing import Literal, cast
+
+            salvaged_label = cast(
+                Literal["VALID", "HALLUCINATED", "UNCERTAIN"],
+                label_match.group(1).upper(),
+            )
+            salvaged_conf = float(conf_match.group(1)) if conf_match else 0.5
+            salvaged_conf = max(0.0, min(1.0, salvaged_conf))
+            return Prediction(
+                bibtex_key=bibtex_key,
+                label=salvaged_label,
+                confidence=salvaged_conf,
+                reason="[Salvaged] label/confidence extracted from truncated JSON",
+            )
+
         logger.warning(f"Failed to parse LLM response for {bibtex_key}")
         return Prediction(
             bibtex_key=bibtex_key,

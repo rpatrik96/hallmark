@@ -13,7 +13,10 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 from hallmark.baselines.llm_verifier import (
+    ANTHROPIC_MODELS,
     CUTOFF_AWARE_ADDENDUM,
+    OPENAI_MODELS,
+    OPENROUTER_MODELS,
     VERIFICATION_PROMPT,
     _build_verification_prompt,
     _parse_llm_response,
@@ -222,3 +225,299 @@ class TestCutoffAwareRegistry:
         assert ablation.requires_api_key is True
         assert ablation.is_free is False
         assert ablation.confidence_type == "probabilistic"
+
+
+# ---------------------------------------------------------------------------
+# Expanded model registry (new baselines: Llama 4, Gemini Pro, Qwen-Max)
+# ---------------------------------------------------------------------------
+
+
+class TestExpandedModelRegistry:
+    """Tests for the three new OpenRouter baselines and two new reference dicts."""
+
+    def test_llama_4_maverick_registered(self) -> None:
+        from hallmark.baselines.registry import get_registry
+
+        assert "llm_openrouter_llama_4_maverick" in get_registry()
+
+    def test_gemini_pro_registered(self) -> None:
+        from hallmark.baselines.registry import get_registry
+
+        assert "llm_openrouter_gemini_pro" in get_registry()
+
+    def test_qwen_max_registered(self) -> None:
+        from hallmark.baselines.registry import get_registry
+
+        assert "llm_openrouter_qwen_max" in get_registry()
+
+    def test_new_models_share_openrouter_env_var(self) -> None:
+        """All three new baselines must require OPENROUTER_API_KEY."""
+        from hallmark.baselines.registry import get_registry
+
+        reg = get_registry()
+        for name in (
+            "llm_openrouter_llama_4_maverick",
+            "llm_openrouter_gemini_pro",
+            "llm_openrouter_qwen_max",
+        ):
+            assert reg[name].env_var == "OPENROUTER_API_KEY", f"{name} has wrong env_var"
+
+    def test_openrouter_models_includes_new_entries(self) -> None:
+        assert "llama-4-maverick" in OPENROUTER_MODELS
+        assert "gemini-pro" in OPENROUTER_MODELS
+        assert "qwen-max" in OPENROUTER_MODELS
+
+    def test_cutoff_aware_qwen_key_still_present(self) -> None:
+        """The 'qwen' key must remain — _CUTOFF_AWARE_OPENROUTER references it."""
+        assert "qwen" in OPENROUTER_MODELS
+
+    def test_openai_models_dict_exists(self) -> None:
+        assert isinstance(OPENAI_MODELS, dict)
+        assert "gpt-5.1" in OPENAI_MODELS
+
+    def test_anthropic_models_dict_exists(self) -> None:
+        assert isinstance(ANTHROPIC_MODELS, dict)
+        assert "claude-sonnet-4-6" in ANTHROPIC_MODELS
+
+    def test_anthropic_default_model_refreshed(self) -> None:
+        """Default should now be claude-sonnet-4-6."""
+        import inspect
+
+        assert (
+            inspect.signature(verify_with_anthropic).parameters["model"].default
+            == "claude-sonnet-4-6"
+        )
+
+    def test_llama_4_maverick_end_to_end_model_id(self) -> None:
+        """Registered runner passes the correct Llama 4 model ID to the API call."""
+        from hallmark.baselines.registry import run_baseline
+        from hallmark.dataset.schema import BenchmarkEntry
+
+        entry = BenchmarkEntry(
+            bibtex_key="test2024",
+            bibtex_type="article",
+            fields={
+                "title": "Test Paper",
+                "author": "Smith, John",
+                "year": "2024",
+            },
+            raw_bibtex="@article{test2024, title={Test Paper}}",
+            label="VALID",
+        )
+
+        captured_model: list[str] = []
+
+        mock_resp = MagicMock()
+        mock_resp.choices[
+            0
+        ].message.content = '{"label": "VALID", "confidence": 0.9, "reason": "ok"}'
+
+        mock_client = MagicMock()
+
+        def _capture_create(**kwargs: object) -> MagicMock:
+            captured_model.append(str(kwargs.get("model", "")))
+            return mock_resp
+
+        mock_client.chat.completions.create.side_effect = _capture_create
+
+        mock_openai = MagicMock()
+        mock_openai.OpenAI.return_value = mock_client
+
+        import os
+
+        with (
+            patch.dict("sys.modules", {"openai": mock_openai}),
+            patch.dict(os.environ, {"OPENROUTER_API_KEY": "test-key"}),
+        ):
+            run_baseline("llm_openrouter_llama_4_maverick", [entry])
+
+        assert len(captured_model) == 1
+        assert captured_model[0] == OPENROUTER_MODELS["llama-4-maverick"]
+
+
+# ---------------------------------------------------------------------------
+# Auto-injection of per-baseline API key from env_var (registry fix)
+# ---------------------------------------------------------------------------
+
+
+class TestApiKeyAutoInjection:
+    """run_baseline must inject api_key from the baseline's declared env_var.
+
+    Previously, openai-SDK-based OpenRouter baselines silently 401ed from the
+    CLI because the SDK defaulted to OPENAI_API_KEY (which is for api.openai.com,
+    not openrouter.ai). run_baseline now reads info.env_var and forwards it.
+    """
+
+    def test_openrouter_baseline_uses_openrouter_api_key(self) -> None:
+        from hallmark.baselines.registry import run_baseline
+        from hallmark.dataset.schema import BenchmarkEntry
+
+        entry = BenchmarkEntry(
+            bibtex_key="k",
+            bibtex_type="article",
+            fields={"title": "t", "author": "a", "year": "2024"},
+            raw_bibtex="@article{k,title={t}}",
+            label="VALID",
+        )
+
+        mock_resp = MagicMock()
+        mock_resp.choices[
+            0
+        ].message.content = '{"label": "VALID", "confidence": 0.9, "reason": "ok"}'
+        captured_api_key: list[str] = []
+
+        def _capture_openai(**kwargs: object) -> MagicMock:
+            captured_api_key.append(str(kwargs.get("api_key", "")))
+            client = MagicMock()
+            client.chat.completions.create.return_value = mock_resp
+            return client
+
+        mock_openai = MagicMock()
+        mock_openai.OpenAI.side_effect = _capture_openai
+
+        import os
+
+        # Both keys set to distinguishable values; OPENROUTER must win for
+        # an llm_openrouter_* baseline.
+        with (
+            patch.dict("sys.modules", {"openai": mock_openai}),
+            patch.dict(
+                os.environ,
+                {
+                    "OPENROUTER_API_KEY": "or-sentinel",
+                    "OPENAI_API_KEY": "openai-sentinel",
+                },
+            ),
+        ):
+            run_baseline("llm_openrouter_llama_4_maverick", [entry])
+
+        assert captured_api_key == ["or-sentinel"], (
+            f"Expected OPENROUTER_API_KEY to be forwarded; got {captured_api_key}"
+        )
+
+    def test_openai_baseline_uses_openai_api_key(self) -> None:
+        from hallmark.baselines.registry import run_baseline
+        from hallmark.dataset.schema import BenchmarkEntry
+
+        entry = BenchmarkEntry(
+            bibtex_key="k",
+            bibtex_type="article",
+            fields={"title": "t", "author": "a", "year": "2024"},
+            raw_bibtex="@article{k,title={t}}",
+            label="VALID",
+        )
+
+        mock_resp = MagicMock()
+        mock_resp.choices[
+            0
+        ].message.content = '{"label": "VALID", "confidence": 0.9, "reason": "ok"}'
+        captured_api_key: list[str] = []
+
+        def _capture_openai(**kwargs: object) -> MagicMock:
+            captured_api_key.append(str(kwargs.get("api_key", "")))
+            client = MagicMock()
+            client.chat.completions.create.return_value = mock_resp
+            return client
+
+        mock_openai = MagicMock()
+        mock_openai.OpenAI.side_effect = _capture_openai
+
+        import os
+
+        with (
+            patch.dict("sys.modules", {"openai": mock_openai}),
+            patch.dict(
+                os.environ,
+                {
+                    "OPENROUTER_API_KEY": "or-sentinel",
+                    "OPENAI_API_KEY": "openai-sentinel",
+                },
+            ),
+        ):
+            run_baseline("llm_openai", [entry])
+
+        assert captured_api_key == ["openai-sentinel"]
+
+    def test_explicit_api_key_kwarg_overrides_env(self) -> None:
+        """Explicit api_key= passed to run_baseline must not be clobbered by env."""
+        from hallmark.baselines.registry import run_baseline
+        from hallmark.dataset.schema import BenchmarkEntry
+
+        entry = BenchmarkEntry(
+            bibtex_key="k",
+            bibtex_type="article",
+            fields={"title": "t", "author": "a", "year": "2024"},
+            raw_bibtex="@article{k,title={t}}",
+            label="VALID",
+        )
+
+        mock_resp = MagicMock()
+        mock_resp.choices[
+            0
+        ].message.content = '{"label": "VALID", "confidence": 0.9, "reason": "ok"}'
+        captured_api_key: list[str] = []
+
+        def _capture_openai(**kwargs: object) -> MagicMock:
+            captured_api_key.append(str(kwargs.get("api_key", "")))
+            client = MagicMock()
+            client.chat.completions.create.return_value = mock_resp
+            return client
+
+        mock_openai = MagicMock()
+        mock_openai.OpenAI.side_effect = _capture_openai
+
+        import os
+
+        with (
+            patch.dict("sys.modules", {"openai": mock_openai}),
+            patch.dict(os.environ, {"OPENROUTER_API_KEY": "or-from-env"}),
+        ):
+            run_baseline(
+                "llm_openrouter_llama_4_maverick",
+                [entry],
+                api_key="explicit-kwarg",
+            )
+
+        assert captured_api_key == ["explicit-kwarg"]
+
+
+# ---------------------------------------------------------------------------
+# Salvage parser for truncated JSON (verbose reasoning models)
+# ---------------------------------------------------------------------------
+
+
+class TestSalvageParser:
+    """_parse_llm_response must salvage label+confidence from truncated JSON."""
+
+    def test_salvages_label_from_truncated_response(self) -> None:
+        # Simulates Gemini 2.5 Pro hitting max_completion_tokens mid-"reason"
+        truncated = (
+            '```json\n{\n  "label": "HALLUCINATED",\n  "confidence": 0.92,\n  '
+            '"reason": "The DOI 10.1234/fake does not resolve and the authors are'
+        )
+        pred = _parse_llm_response(truncated, "k")
+        assert pred.label == "HALLUCINATED"
+        assert pred.confidence == pytest.approx(0.92)
+        assert "Salvaged" in pred.reason
+
+    def test_salvages_valid_label(self) -> None:
+        truncated = '{"label":"VALID","confidence":1.0,"reason":"The DOI'
+        pred = _parse_llm_response(truncated, "k")
+        assert pred.label == "VALID"
+        assert pred.confidence == pytest.approx(1.0)
+
+    def test_complete_json_still_parses_normally(self) -> None:
+        """Complete JSON must go through the fast path, not the salvage path."""
+        complete = '{"label": "HALLUCINATED", "confidence": 0.8, "reason": "all checks fail"}'
+        pred = _parse_llm_response(complete, "k")
+        assert pred.label == "HALLUCINATED"
+        assert pred.confidence == pytest.approx(0.8)
+        assert pred.reason == "all checks fail"
+        assert "Salvaged" not in pred.reason
+
+    def test_unrecoverable_response_falls_back(self) -> None:
+        """Content with no parseable label at all still falls back to UNCERTAIN."""
+        garbage = "I cannot answer this question."
+        pred = _parse_llm_response(garbage, "k")
+        assert pred.label == "UNCERTAIN"
+        assert "Error fallback" in pred.reason

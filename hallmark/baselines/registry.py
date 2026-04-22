@@ -171,6 +171,18 @@ def run_baseline(
     merged_kwargs = {**info.runner_kwargs, **kwargs}
     if split is not None:
         merged_kwargs.setdefault("split", split)
+
+    # Auto-inject the per-baseline API key from its declared env var so the
+    # openai SDK doesn't fall back to OPENAI_API_KEY for OpenRouter endpoints
+    # (which would silently 401). Only applied when the runner wasn't already
+    # given an explicit api_key, and only for API-key-gated baselines.
+    if info.requires_api_key and info.env_var and "api_key" not in merged_kwargs:
+        import os
+
+        env_key = os.environ.get(info.env_var)
+        if env_key:
+            merged_kwargs["api_key"] = env_key
+
     blind_entries = _to_blind(entries)
     return info.runner(blind_entries, **merged_kwargs)
 
@@ -363,7 +375,10 @@ def _register_builtins() -> None:
     register(
         BaselineInfo(
             name="llm_anthropic",
-            description="Claude citation verification via Anthropic API",
+            description=(
+                "Claude Sonnet 4.6 citation verification via Anthropic API"
+                " (default; override via model= kwarg)"
+            ),
             runner=_run_llm_anthropic,
             pip_packages=["anthropic"],
             requires_api_key=True,
@@ -441,8 +456,8 @@ def _register_builtins() -> None:
         BaselineInfo(
             name="llm_anthropic_cutoff_aware",
             description=(
-                "Claude Sonnet 4.5 with cutoff-aware prompt addendum — ablation for "
-                "temporal robustness analysis"
+                "Claude Sonnet 4.6 with cutoff-aware prompt addendum — ablation for "
+                "temporal robustness analysis (default; override via model= kwarg)"
             ),
             runner=_run_llm_anthropic_cutoff_aware,
             pip_packages=["anthropic"],
