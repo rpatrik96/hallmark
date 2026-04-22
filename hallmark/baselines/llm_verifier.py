@@ -73,6 +73,32 @@ Respond with JSON only:
     "reason": "brief explanation"
 }}"""
 
+# Addendum appended to VERIFICATION_PROMPT when cutoff_aware=True. Tests the
+# H2 hypothesis: when explicitly reminded of the training cutoff, do LLMs route
+# post-cutoff citations to UNCERTAIN rather than over-flagging them as
+# HALLUCINATED?  The wording deliberately permits UNCERTAIN as a third label
+# and instructs the model not to guess.
+CUTOFF_AWARE_ADDENDUM = (
+    "Note: your training data has a knowledge cutoff. If the citation could "
+    "post-date your training data, or if you cannot recall the paper with "
+    "confidence, respond with UNCERTAIN rather than HALLUCINATED or VALID. "
+    "Do not guess."
+)
+
+
+def _build_verification_prompt(entry: BlindEntry, *, cutoff_aware: bool = False) -> str:
+    """Return the verification prompt string for a single entry.
+
+    When ``cutoff_aware`` is True, the :data:`CUTOFF_AWARE_ADDENDUM` is
+    appended to the default prompt so the model is explicitly told that
+    UNCERTAIN is a valid output for post-cutoff citations.
+    """
+    prompt = VERIFICATION_PROMPT.format(bibtex=entry.to_bibtex())
+    if cutoff_aware:
+        prompt = prompt + "\n\n" + CUTOFF_AWARE_ADDENDUM
+    return prompt
+
+
 OPENROUTER_MODELS: dict[str, str] = {
     "deepseek-r1": "deepseek/deepseek-r1",
     "deepseek-v3": "deepseek/deepseek-v3.2",
@@ -239,6 +265,7 @@ def _verify_with_openai_compatible(
     source_prefix: str,
     log_dir: Path | None = None,
     checkpoint_dir: Path | None = None,
+    cutoff_aware: bool = False,
     **kwargs: Any,
 ) -> list[Prediction]:
     """Verification via OpenAI-SDK-compatible providers."""
@@ -268,6 +295,11 @@ def _verify_with_openai_compatible(
         return str(resp.choices[0].message.content).strip()
 
     entry_prompt_fn: Callable[[BlindEntry], str] | None = kwargs.pop("prompt_fn", None)
+    if entry_prompt_fn is None and cutoff_aware:
+
+        def entry_prompt_fn(entry: BlindEntry) -> str:
+            return _build_verification_prompt(entry, cutoff_aware=True)
+
     return _verify_entries(
         entries,
         call_fn,
@@ -285,9 +317,15 @@ def verify_with_openai(
     api_key: str | None = None,
     log_dir: Path | None = None,
     checkpoint_dir: Path | None = None,
+    cutoff_aware: bool = False,
     **kwargs: Any,
 ) -> list[Prediction]:
-    """Verify entries using OpenAI API."""
+    """Verify entries using OpenAI API.
+
+    When ``cutoff_aware`` is True, the default prompt is extended with
+    :data:`CUTOFF_AWARE_ADDENDUM`, explicitly telling the model to route
+    post-cutoff citations to UNCERTAIN.
+    """
     return _verify_with_openai_compatible(
         entries,
         model=model,
@@ -296,6 +334,7 @@ def verify_with_openai(
         source_prefix="openai",
         log_dir=log_dir,
         checkpoint_dir=checkpoint_dir,
+        cutoff_aware=cutoff_aware,
     )
 
 
@@ -305,9 +344,14 @@ def verify_with_openrouter(
     api_key: str | None = None,
     log_dir: Path | None = None,
     checkpoint_dir: Path | None = None,
+    cutoff_aware: bool = False,
     **kwargs: Any,
 ) -> list[Prediction]:
-    """Verify entries using OpenRouter API (100+ models via OpenAI-compatible endpoint)."""
+    """Verify entries using OpenRouter API (100+ models via OpenAI-compatible endpoint).
+
+    When ``cutoff_aware`` is True, the default prompt is extended with
+    :data:`CUTOFF_AWARE_ADDENDUM`.
+    """
     return _verify_with_openai_compatible(
         entries,
         model=model,
@@ -316,6 +360,7 @@ def verify_with_openrouter(
         source_prefix="openrouter",
         log_dir=log_dir,
         checkpoint_dir=checkpoint_dir,
+        cutoff_aware=cutoff_aware,
     )
 
 
@@ -325,8 +370,13 @@ def verify_with_anthropic(
     api_key: str | None = None,
     log_dir: Path | None = None,
     checkpoint_dir: Path | None = None,
+    cutoff_aware: bool = False,
 ) -> list[Prediction]:
-    """Verify entries using Anthropic API."""
+    """Verify entries using Anthropic API.
+
+    When ``cutoff_aware`` is True, the default prompt is extended with
+    :data:`CUTOFF_AWARE_ADDENDUM`.
+    """
     try:
         import anthropic
     except ImportError:
@@ -347,8 +397,20 @@ def verify_with_anthropic(
         )
         return str(resp.content[0].text).strip()
 
+    prompt_fn: Callable[[BlindEntry], str] | None = None
+    if cutoff_aware:
+
+        def prompt_fn(entry: BlindEntry) -> str:
+            return _build_verification_prompt(entry, cutoff_aware=True)
+
     return _verify_entries(
-        entries, call_fn, "anthropic", model, log_dir=log_dir, checkpoint_dir=checkpoint_dir
+        entries,
+        call_fn,
+        "anthropic",
+        model,
+        log_dir=log_dir,
+        checkpoint_dir=checkpoint_dir,
+        prompt_fn=prompt_fn,
     )
 
 

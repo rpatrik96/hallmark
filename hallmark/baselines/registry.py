@@ -402,6 +402,93 @@ def _register_builtins() -> None:
             )
         )
 
+    # --- LLM: Cutoff-aware prompt ablation ---------------------------------
+    # These variants append the CUTOFF_AWARE_ADDENDUM to the default prompt,
+    # explicitly telling the model to route post-cutoff citations to UNCERTAIN
+    # rather than over-flag them as HALLUCINATED.  They test H2 from the
+    # temporal-analysis appendix ("if told about the cutoff, do LLMs actually
+    # route post-cutoff citations to UNCERTAIN?") as a separate hypothesis
+    # from H1 ("LLMs do not know their own cutoff").  DeepSeek variants are
+    # intentionally omitted because they already saturate at UNCERTAIN in the
+    # default prompt (see DeepSeek-R1 note in the temporal-analysis appendix).
+    def _run_llm_openai_cutoff_aware(entries: list[BlindEntry], **kw: Any) -> list[Prediction]:
+        from hallmark.baselines.llm_verifier import verify_with_openai
+
+        return verify_with_openai(entries, cutoff_aware=True, **kw)
+
+    register(
+        BaselineInfo(
+            name="llm_openai_cutoff_aware",
+            description=(
+                "GPT-5.1 with cutoff-aware prompt addendum (explicitly allows UNCERTAIN "
+                "for post-cutoff citations) — ablation for temporal robustness analysis"
+            ),
+            runner=_run_llm_openai_cutoff_aware,
+            pip_packages=["openai"],
+            requires_api_key=True,
+            is_free=False,
+            env_var="OPENAI_API_KEY",
+            confidence_type="probabilistic",
+        )
+    )
+
+    def _run_llm_anthropic_cutoff_aware(entries: list[BlindEntry], **kw: Any) -> list[Prediction]:
+        from hallmark.baselines.llm_verifier import verify_with_anthropic
+
+        return verify_with_anthropic(entries, cutoff_aware=True, **kw)
+
+    register(
+        BaselineInfo(
+            name="llm_anthropic_cutoff_aware",
+            description=(
+                "Claude Sonnet 4.5 with cutoff-aware prompt addendum — ablation for "
+                "temporal robustness analysis"
+            ),
+            runner=_run_llm_anthropic_cutoff_aware,
+            pip_packages=["anthropic"],
+            requires_api_key=True,
+            is_free=False,
+            env_var="ANTHROPIC_API_KEY",
+            confidence_type="probabilistic",
+        )
+    )
+
+    # Cutoff-aware OpenRouter variants — only the subset of models used in the
+    # temporal paper subsection (Gemini 2.5 Flash, Qwen3-235B).  Mistral is
+    # also omitted because it behaves similarly to Qwen.
+    _CUTOFF_AWARE_OPENROUTER = {
+        "gemini-flash": OPENROUTER_MODELS["gemini-flash"],
+        "qwen": OPENROUTER_MODELS["qwen"],
+    }
+    for friendly_name, model_id in _CUTOFF_AWARE_OPENROUTER.items():
+        baseline_name = f"llm_openrouter_{friendly_name.replace('-', '_')}_cutoff_aware"
+
+        def _make_openrouter_cutoff_aware_runner(
+            mid: str,
+        ) -> Callable[..., list[Prediction]]:
+            def _run(entries: list[BlindEntry], **kw: Any) -> list[Prediction]:
+                from hallmark.baselines.llm_verifier import verify_with_openrouter
+
+                return verify_with_openrouter(entries, model=mid, cutoff_aware=True, **kw)
+
+            return _run
+
+        register(
+            BaselineInfo(
+                name=baseline_name,
+                description=(
+                    f"OpenRouter ({model_id}) with cutoff-aware prompt addendum — "
+                    "ablation for temporal robustness analysis"
+                ),
+                runner=_make_openrouter_cutoff_aware_runner(model_id),
+                pip_packages=["openai"],
+                requires_api_key=True,
+                is_free=False,
+                env_var="OPENROUTER_API_KEY",
+                confidence_type="probabilistic",
+            )
+        )
+
     # --- LLM: Tool-augmented (GPT-5.1 + bibtex-updater) ---
     def _run_llm_tool_augmented(entries: list[BlindEntry], **kw: Any) -> list[Prediction]:
         from hallmark.baselines.llm_tool_augmented import verify_tool_augmented

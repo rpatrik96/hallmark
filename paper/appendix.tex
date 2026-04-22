@@ -678,6 +678,69 @@ These results establish that LLM citation verification relies fundamentally on p
 Papers published after this cutoff cannot be confirmed, triggering the ``flag everything unfamiliar'' failure mode observed across all models.
 This is not a calibration failure that better prompting could fix---it is a structural limitation of parametric verification that can only be addressed through retrieval augmentation with up-to-date bibliographic databases.
 
+\subsection*{Robustness check: cutoff-aware prompting}
+\label{app:cutoff-aware}
+
+The temporal results above establish \textbf{H1}: LLMs do not know their own cutoff---post-cutoff FPR explodes because the model treats unfamiliar papers as suspicious.
+A separate hypothesis remains untested: \textbf{H2}, that LLMs can route post-cutoff citations to \texttt{UNCERTAIN} \emph{if explicitly reminded of the cutoff}.
+H1 and H2 are orthogonal: H1 failing does not imply H2 must fail (the model may have latent metacognitive capacity that the default prompt does not elicit), and H2 failing would upgrade H1 from ``epistemic miscalibration'' to ``structural blindness to temporal uncertainty.''
+We pre-register this ablation before running it.
+
+\paragraph{Prompt addendum.}
+Each cutoff-aware variant appends the following text to the default verification prompt, verbatim:
+
+\begin{lstlisting}[basicstyle=\footnotesize\ttfamily,breaklines=true,frame=single]
+Note: your training data has a knowledge cutoff. If the citation could
+post-date your training data, or if you cannot recall the paper with
+confidence, respond with UNCERTAIN rather than HALLUCINATED or VALID.
+Do not guess.
+\end{lstlisting}
+
+\noindent No other element of the prompt, temperature ($T{=}0$), seed (42), or token budget (256) is changed, so any observed shift in predictions is attributable to the addendum alone.
+
+\paragraph{Subset of models.}
+We run the cutoff-aware variant on GPT-5.1, Claude Sonnet~4.5, Gemini~2.5~Flash, and Qwen3-235B---the four non-DeepSeek models already evaluated on the temporal supplement.
+DeepSeek-R1 and DeepSeek-V3.2 are omitted because they already saturate at \texttt{UNCERTAIN} (or near-\texttt{UNCERTAIN}) on 2024--2025 entries under the default prompt (\cref{tab:temporal_supplement}, footnote $\dagger$): there is zero headroom for the addendum to shift their behaviour, and any measured ``improvement'' would be dominated by noise in the few non-\texttt{UNCERTAIN} predictions.
+Mistral Large is additionally omitted because its FPR dynamics closely track Qwen3-235B; the four-model subset retains coverage over the ``conservative'' (Gemini Flash, GPT-5.1) and ``aggressive'' (Qwen3-235B, Claude Sonnet~4.5) poles of the FPR spectrum.
+
+\paragraph{Pre-registered interpretation.}
+We bind our interpretation of the empirical outcome to \cref{tab:cutoff-aware-preregistration} \emph{before running the ablation}.
+The thresholds (15\,pp FPR drop, 40\% \texttt{UNCERTAIN} rate) are chosen to distinguish metacognitive gain from loss of discrimination: a uniform \texttt{UNCERTAIN} inflation across pre-\emph{and} post-cutoff entries would mean the prompt merely made the model more timid, not more aware.
+
+\begin{table}[h]
+\centering
+\small
+\caption{Pre-registered interpretation of the cutoff-aware prompt ablation.  Rows map empirical outcomes to the stance we commit to taking in the paper.  ``FPR drop'' refers to the change on post-cutoff entries; \texttt{UNCERTAIN} rates are measured per segment.}
+\label{tab:cutoff-aware-preregistration}
+\begin{tabular}{ll}
+\toprule
+\textbf{Outcome} & \textbf{Interpretation} \\
+\midrule
+FPR drop ${<}15$\,pp \emph{and} pre-cutoff \texttt{UNCERTAIN} ${<}40\%$
+  & Strong H1 confirmation: the failure is epistemic, \\
+  & prompting cannot patch it. \\
+\addlinespace
+FPR drops substantially \emph{but} pre-cutoff \texttt{UNCERTAIN}
+  & Partial metacognition: the model loses \\
+  \quad inflates to ${\geq}40\%$
+  & discrimination, not gains awareness; reframe as \\
+  & ``reminder trades precision for abstention.'' \\
+\addlinespace
+FPR drops on post-cutoff specifically,
+  & H2 holds: reframe LLM-based verifiers as \\
+  \quad pre-cutoff \texttt{UNCERTAIN} stays low
+  & ``unreliable by default, mitigatable with explicit \\
+  & cutoff-aware prompting.'' \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\paragraph{Metrics.}
+We report four per-segment metrics (detection rate, FPR, \texttt{UNCERTAIN} rate, coverage), stratified by each model's training-data cutoff (\cref{tab:cutoffs}) into pre-cutoff and post-cutoff entries.
+The comparison is computed from cached predictions via \texttt{hallmark.evaluation.temporal.compare\_prompt\_variants}, so the ablation is reproducible from the released prediction dumps without re-running the API calls.
+
+\todo[inline]{Results are computed from cached predictions using \texttt{compare\_prompt\_variants}; the per-model table and outcome classification will be inserted here once the four ablation runs complete.}
+
 \section{Infrastructure documentation}
 \label{app:infrastructure}
 

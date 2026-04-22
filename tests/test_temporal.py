@@ -7,6 +7,7 @@ import pytest
 from hallmark.dataset.schema import BenchmarkEntry, Prediction
 from hallmark.evaluation.temporal import (
     TemporalSegment,
+    compare_prompt_variants,
     default_segments,
     parse_date,
     segment_entries,
@@ -352,3 +353,155 @@ class TestTemporalRobustnessDelta:
         assert result.robustness_delta == pytest.approx(hist_dr - fut_dr)
         # 0.75 - 0.25 = 0.50 → positive delta (historical performs better)
         assert result.robustness_delta > 0.0
+
+
+# ---------------------------------------------------------------------------
+# compare_prompt_variants — cutoff-aware prompt ablation scaffolding
+# ---------------------------------------------------------------------------
+
+
+class TestCompareVariants:
+    """Tests for the cached-prediction ablation harness.
+
+    The comparison is computed entirely from cached predictions — no live API
+    calls — so tests use synthetic Prediction dictionaries.
+    """
+
+    def _entries(self) -> list[BenchmarkEntry]:
+        """8 entries: 2 pre-cutoff H, 2 pre-cutoff V, 2 post-cutoff H, 2 post-cutoff V."""
+        return [
+            _entry_dated("pre_h1", "HALLUCINATED", "2022-05-01"),
+            _entry_dated("pre_h2", "HALLUCINATED", "2022-11-20"),
+            _entry_dated("pre_v1", "VALID", "2022-02-10"),
+            _entry_dated("pre_v2", "VALID", "2022-08-15"),
+            _entry_dated("post_h1", "HALLUCINATED", "2025-03-01"),
+            _entry_dated("post_h2", "HALLUCINATED", "2025-07-12"),
+            _entry_dated("post_v1", "VALID", "2025-01-05"),
+            _entry_dated("post_v2", "VALID", "2025-10-30"),
+        ]
+
+    def test_stratification_matches_cutoffs(self):
+        """Entries split into pre/post segments at each model's cutoff."""
+        entries = self._entries()
+        # Default prompt: over-flag post-cutoff VALIDs, perfect on pre-cutoff
+        default_preds = {
+            "modelA": {
+                "pre_h1": _pred("pre_h1", "HALLUCINATED"),
+                "pre_h2": _pred("pre_h2", "HALLUCINATED"),
+                "pre_v1": _pred("pre_v1", "VALID"),
+                "pre_v2": _pred("pre_v2", "VALID"),
+                "post_h1": _pred("post_h1", "HALLUCINATED"),
+                "post_h2": _pred("post_h2", "HALLUCINATED"),
+                "post_v1": _pred("post_v1", "HALLUCINATED"),  # FP
+                "post_v2": _pred("post_v2", "HALLUCINATED"),  # FP
+            }
+        }
+        cutoffs = {"modelA": date(2024, 1, 1)}
+
+        result = compare_prompt_variants(default_preds, {}, entries, cutoffs)
+
+        assert len(result["rows"]) == 1
+        row = result["rows"][0]
+        assert row["model"] == "modelA"
+        # Pre-cutoff: 2 H, 2 V, all correct → DR=1.0, FPR=0.0
+        pre = row["default"]["pre_cutoff"]
+        assert pre["detection_rate"] == pytest.approx(1.0)
+        assert pre["false_positive_rate"] == pytest.approx(0.0)
+        assert pre["num_entries"] == 4
+        # Post-cutoff: 2 H detected, 2 V mis-flagged → DR=1.0, FPR=1.0
+        post = row["default"]["post_cutoff"]
+        assert post["detection_rate"] == pytest.approx(1.0)
+        assert post["false_positive_rate"] == pytest.approx(1.0)
+        assert post["num_entries"] == 4
+
+    def test_uncertain_rate_computed_correctly(self):
+        """uncertain_rate = fraction of UNCERTAIN predictions per segment."""
+        entries = self._entries()
+        # Cutoff-aware prompt: post-cutoff VALIDs become UNCERTAIN instead of flagged
+        cutoff_aware_preds = {
+            "modelA": {
+                "pre_h1": _pred("pre_h1", "HALLUCINATED"),
+                "pre_h2": _pred("pre_h2", "HALLUCINATED"),
+                "pre_v1": _pred("pre_v1", "VALID"),
+                "pre_v2": _pred("pre_v2", "VALID"),
+                "post_h1": _pred("post_h1", "HALLUCINATED"),
+                "post_h2": _pred("post_h2", "UNCERTAIN", confidence=0.5),
+                "post_v1": _pred("post_v1", "UNCERTAIN", confidence=0.5),
+                "post_v2": _pred("post_v2", "UNCERTAIN", confidence=0.5),
+            }
+        }
+        default_preds = {
+            "modelA": {
+                "pre_h1": _pred("pre_h1", "HALLUCINATED"),
+                "pre_h2": _pred("pre_h2", "HALLUCINATED"),
+                "pre_v1": _pred("pre_v1", "VALID"),
+                "pre_v2": _pred("pre_v2", "VALID"),
+                "post_h1": _pred("post_h1", "HALLUCINATED"),
+                "post_h2": _pred("post_h2", "HALLUCINATED"),
+                "post_v1": _pred("post_v1", "HALLUCINATED"),
+                "post_v2": _pred("post_v2", "HALLUCINATED"),
+            }
+        }
+        cutoffs = {"modelA": date(2024, 1, 1)}
+
+        result = compare_prompt_variants(default_preds, cutoff_aware_preds, entries, cutoffs)
+        row = result["rows"][0]
+
+        # Default: no UNCERTAIN anywhere
+        assert row["default"]["pre_cutoff"]["uncertain_rate"] == pytest.approx(0.0)
+        assert row["default"]["post_cutoff"]["uncertain_rate"] == pytest.approx(0.0)
+        assert row["default"]["pre_cutoff"]["coverage"] == pytest.approx(1.0)
+
+        # Cutoff-aware: pre stays confident; post has 3/4 UNCERTAIN
+        ca = row["cutoff_aware"]
+        assert ca["pre_cutoff"]["uncertain_rate"] == pytest.approx(0.0)
+        assert ca["post_cutoff"]["uncertain_rate"] == pytest.approx(0.75)
+        assert ca["post_cutoff"]["coverage"] == pytest.approx(0.25)
+
+    def test_empty_cutoff_aware_returns_defaults_only(self):
+        """When cutoff_aware_preds is empty, rows still report default metrics."""
+        entries = self._entries()
+        default_preds = {"modelA": {e.bibtex_key: _pred(e.bibtex_key, "VALID") for e in entries}}
+        cutoffs = {"modelA": date(2024, 1, 1)}
+
+        result = compare_prompt_variants(default_preds, {}, entries, cutoffs)
+
+        assert len(result["rows"]) == 1
+        row = result["rows"][0]
+        # Default metrics are present and computable
+        assert row["default"]["pre_cutoff"]["num_entries"] == 4
+        assert row["default"]["post_cutoff"]["num_entries"] == 4
+        # Cutoff-aware block is None (graceful degrade)
+        assert row["cutoff_aware"]["pre_cutoff"] is None
+        assert row["cutoff_aware"]["post_cutoff"] is None
+
+    def test_iso_string_cutoff_accepted(self):
+        """Cutoffs may be given as ISO strings or date objects."""
+        entries = self._entries()
+        default_preds = {"modelA": {e.bibtex_key: _pred(e.bibtex_key, "VALID") for e in entries}}
+        # Pass as ISO string
+        cutoffs = {"modelA": "2024-01-01"}
+        result = compare_prompt_variants(default_preds, {}, entries, cutoffs)
+        assert result["rows"][0]["cutoff"] == "2024-01-01"
+
+    def test_model_without_cutoff_is_skipped(self):
+        """Models not present in the cutoffs dict are omitted from the output."""
+        entries = self._entries()
+        default_preds = {
+            "modelA": {e.bibtex_key: _pred(e.bibtex_key, "VALID") for e in entries},
+            "modelB": {e.bibtex_key: _pred(e.bibtex_key, "VALID") for e in entries},
+        }
+        cutoffs = {"modelA": date(2024, 1, 1)}  # modelB absent
+        result = compare_prompt_variants(default_preds, {}, entries, cutoffs)
+        model_names = {r["model"] for r in result["rows"]}
+        assert model_names == {"modelA"}
+
+    def test_columns_exposed(self):
+        """The returned dict advertises the column order for table rendering."""
+        result = compare_prompt_variants({}, {}, [], {})
+        assert result["columns"] == [
+            "detection_rate",
+            "false_positive_rate",
+            "uncertain_rate",
+            "coverage",
+        ]
