@@ -51,6 +51,8 @@ A 60-entry probe first identified this pattern (\cref{app:temporal}); the supple
 API tools fail on venue-level hallucinations (\texttt{preprint\_as\_published}, \texttt{wrong\_venue}) because bibliographic APIs do not distinguish venue publication from arXiv availability.
 GPT-5.1 handles these (83--84\%) but struggles with \texttt{author\_mismatch} (63\%) and \texttt{near\_miss\_title} (63\%), which require exact bibliographic recall.
 Combining bibtex-updater output with GPT-5.1 improves calibration (ECE: 0.107$\to$0.086) but not detection (DR: 79.7\%$\to$81.8\%)---the LLM overrides tool findings when they conflict with parametric judgment (\cref{app:codesign}).
+The augmented system (GPT-5.1 + bibtex-updater) achieves the best ECE on the full benchmark (0.086), nearly halving GPT-5.1's standalone calibration error, while trading only ${\sim}3$pp of detection rate (81.8\% vs.\ 79.7\%).
+This makes it the strongest option when calibration matters more than raw recall---for instance, in venue-scale deployment where reviewers act on confidence scores directly.
 
 \paragraph{Water-filling effect.}
 \label{sec:water_filling}

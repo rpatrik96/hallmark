@@ -383,6 +383,33 @@ CI validates these reference results by checksum rather than re-running the tool
 \section{Temporal analysis}
 \label{app:temporal}
 
+\paragraph{Training-data cutoffs of evaluated LLMs.}
+\label{app:cutoffs}
+The temporal evaluation assumes papers from calendar years 2024--2025 post-date most evaluated models' training data. \cref{tab:cutoffs} compiles vendor-disclosed training cutoffs (or the most recent reliable upper bound when no disclosure is available) for every LLM used as a baseline. Three observations frame the temporal results: (i) every evaluated model has a disclosed or inferred cutoff no later than mid-2025, so the 480-entry temporal supplement (drawn from 2024--2025 DBLP proceedings) is partially or fully out-of-distribution for all of them; (ii) the two closed-weight models with earliest cutoffs (GPT-5.1, Sep 2024) and the conservative open-weight Gemini 2.5 Flash (Jan 2025) are the models hardest-hit by the FPR explosion, consistent with their reliance on parametric confirmation; (iii) DeepSeek models do not publish an official cutoff in their technical reports, so we report the OpenRouter-surfaced metadata and flag this as a provenance gap that future versions of \textsc{Hallmark} should track via release-date probes.
+
+\begin{table}[h]
+\caption{Training-data cutoffs of LLM baselines evaluated in \textsc{Hallmark}. ``Disclosed'' indicates a vendor-published cutoff in an official model card, API documentation, system card, or technical report; ``Inferred'' indicates an upper bound derived from release date and predecessor disclosures. Anthropic distinguishes ``training data cutoff'' from ``reliable knowledge cutoff'' and we report the latter for Claude Sonnet~4.5.}
+\label{tab:cutoffs}
+\centering
+\small
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{lllc}
+\toprule
+\textbf{Model} & \textbf{Cutoff (reliable)} & \textbf{Source} & \textbf{Status} \\
+\midrule
+GPT-5.1              & Sep~2024 (GPT-5 family)   & OpenAI system card (GPT-5)         & Disclosed (family) \\
+Claude Sonnet~4.5    & Jan~2025 (reliable)       & Anthropic model overview table     & Disclosed \\
+Gemini~2.5~Flash     & Jan~2025                  & Vertex AI model documentation      & Disclosed \\
+DeepSeek-R1          & Jul~2024                  & OpenRouter model metadata          & Disclosed (via host) \\
+DeepSeek-V3.2        & ${\leq}$\,Oct~2024        & Release date; V3 tech report       & Inferred \\
+Qwen3-235B-A22B-2507 & Jun~2025                  & OpenRouter model metadata          & Disclosed (via host) \\
+Mistral Large~2512   & ${\leq}$\,mid-2025        & Release date; predecessor cutoff   & Inferred \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The implication for the temporal evaluation is that 2024--2025 DBLP papers are genuinely post-cutoff for the entire cohort, so the observed FPR explosion cannot be attributed to a subset of under-trained models; conversely, the longer-cutoff models (Qwen3-235B: Jun~2025; Claude Sonnet~4.5: Jan~2025) still exhibit the same collapse pattern, suggesting that training-data recency alone does not rescue LLM-based verifiers---the gap between ``seen during training'' and ``reliably recalled'' matters as much as the cutoff itself.
+
 \paragraph{Baseline temporal consistency.}
 We assign entries to three temporal segments: pre-2023 (papers published before January 2023), 2023--2024, and 2025+.
 For bibtex-updater, detection rates are consistent across segments ($\pm$2\%), indicating robust performance across publication periods.
@@ -625,7 +652,9 @@ The benchmark is maintained by the authors and accepts community contributions t
 \label{app:codesign}
 
 \texttt{bibtex-updater}~\citep{bibtexupdater} is a multi-database cross-referencing tool developed by the authors of this benchmark.
-We report its results separately to maintain transparency about the co-design relationship: the benchmark taxonomy and sub-test structure were informed by the tool's detection capabilities, creating a potential circularity that could inflate its apparent performance.
+Its results appear in \cref{tab:results} under the ``Co-designed (interpret with caution)'' section, separated from independent tools by a rule.
+We include it in the main table to give a complete picture of the performance landscape---bibtex-updater achieves the highest raw detection rate of any evaluated tool---while the explicit caution label and this appendix preserve full transparency.
+The co-design relationship means the benchmark taxonomy and sub-test structure were informed by the tool's detection capabilities, creating a potential circularity that could inflate its apparent performance; readers should treat its numbers as an informative upper bound, not a fair head-to-head comparison with independent tools.
 
 \begin{table}[h]
 \caption{Results for \texttt{bibtex-updater} (co-designed by the authors). Reported separately from independent tools in \cref{tab:results} due to co-design bias concerns.}
