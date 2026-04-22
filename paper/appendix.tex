@@ -371,9 +371,93 @@ Respond with JSON only:
 }
 \end{lstlisting}
 
-\paragraph{Timeout handling.}
-Each baseline is subject to a per-entry timeout (default: 60 seconds).
-Entries that timeout are assigned a default prediction of \texttt{VALID} with confidence 0.5, following the conservative assumption that unverifiable entries should not be flagged.
+\subsection{Reproducibility: LLM experimental setup}
+\label{app:llm-setup}
+
+\paragraph{Model identifiers.}
+All LLM baselines are pinned to date-stamped versions.
+Zero-shot: \texttt{gpt-5.1} (OpenAI), \texttt{claude-sonnet-4-5-20250929} (Anthropic), and OpenRouter IDs \texttt{deepseek/deepseek-r1}, \texttt{deepseek/deepseek-v3.2}, \texttt{qwen/qwen3-235b-a22b-2507}, \texttt{mistralai/mistral-large-2512}, \texttt{google/gemini-2.5-flash}.
+Agentic GPT-5.1 and Claude variants share the same identifiers.
+OpenRouter is accessed via the OpenAI SDK with \texttt{base\_url=https://openrouter.ai/api/v1}.
+
+\paragraph{Decoding configuration.}
+Zero-shot calls use \texttt{temperature=0.0}, \texttt{max\_completion\_tokens=256} (Anthropic: \texttt{max\_tokens=256}), and pass \texttt{seed=42} on OpenAI-SDK-compatible endpoints (no equivalent is exposed by the Anthropic Messages API).
+The zero-shot prompt (\cref{app:prompt-template}) is sent as a single user-role message with no system prompt.
+We do not use JSON mode; responses are parsed with a tolerant extractor that handles bare JSON and fenced code blocks, with an \texttt{UNCERTAIN@0.5} fallback on parse failure.
+Agentic calls use 1024 for the completion-token budget to accommodate tool-call turns.
+Client-side retry is \texttt{max\_retries=5} for zero-shot and \texttt{3} for agentic baselines, with a 120\,s per-request timeout.
+
+\paragraph{Agentic baselines: tools and iteration.}
+We evaluate four agentic variants: OpenAI (\texttt{gpt-5.1}) and Anthropic (\texttt{claude-sonnet-4-5-20250929}) backends, each with either a multi-source tool suite or \texttt{bibtex-updater}-as-tool.
+Tools are exposed via the provider's native function-calling interface with \texttt{tool\_choice="auto"} --- the model may answer without any tool call, and we track the parametric-vs-tool split per prediction.
+Up to \texttt{MAX\_TOOL\_CALLS=5} invocations per entry, plus one final verdict turn.
+If the cap is exceeded without a verdict, the entry is assigned \texttt{UNCERTAIN@0.5}.
+
+Multi-source suite --- 4 tools, each returning \texttt{\{authors, title, venue, year, doi\}} with fields truncated to 500 characters:
+\begin{itemize}
+    \item \texttt{resolve\_doi(doi)} --- CrossRef DOI resolution (\texttt{api.crossref.org/works/\{doi\}}).
+    \item \texttt{search\_crossref(query, limit=5)} --- CrossRef bibliographic search (max 20 results).
+    \item \texttt{search\_openalex(query, limit=5)} --- OpenAlex polite pool (max 25).
+    \item \texttt{search\_arxiv(query, limit=5)} --- arXiv Atom API (max 20).
+\end{itemize}
+All HTTP requests use a \texttt{HALLMARK/1.0} User-Agent and 10--15\,s timeouts; tool exceptions are retried with exponential backoff (up to 3 retries, base delay 1\,s).
+
+BTU-as-tool variant --- a single tool \texttt{verify\_with\_bibtex\_updater(bibtex)} that invokes the \texttt{bibtex-check} CLI with \texttt{--rate-limit 120 --academic-only}, returning \texttt{\{status, confidence, mismatched\_fields, api\_sources, errors\}}.
+Subprocess timeout: 180\,s.
+
+\paragraph{System prompts.}
+The multi-source agentic system prompt:
+
+\begin{lstlisting}[basicstyle=\small\ttfamily, breaklines=true, frame=single, captionpos=b, label={lst:system-multi}, caption={System prompt (multi-source)}]
+You are a citation verification expert with access to bibliographic lookup tools.
+Your task: determine whether a BibTeX entry is a VALID real publication or a HALLUCINATED (fabricated) citation.
+
+Strategy:
+1. Inspect the entry for obvious red flags (fake DOI prefix, future year, placeholder authors).
+2. Use tools to cross-reference: resolve the DOI, or search by title/author.
+3. After gathering evidence (or after finding sufficient signal), emit your verdict.
+
+When you are ready to give your final answer, output ONLY valid JSON -- no prose, no markdown fences:
+{
+    "label": "VALID" or "HALLUCINATED",
+    "confidence": 0.0 to 1.0,
+    "reason": "concise explanation citing the evidence you found"
+}
+
+Do NOT output the JSON until you have used enough tools or determined that parametric knowledge is sufficient.
+\end{lstlisting}
+
+The BTU-as-tool agentic system prompt:
+
+\begin{lstlisting}[basicstyle=\small\ttfamily, breaklines=true, frame=single, captionpos=b, label={lst:system-btu}, caption={System prompt (BTU-as-tool)}]
+You are a citation verification expert with access to a specialised tool, `verify_with_bibtex_updater`, which cross-references a BibTeX entry against CrossRef, DBLP, and Semantic Scholar and returns a structured verdict.
+
+Strategy:
+1. For almost every entry, call `verify_with_bibtex_updater` once with the exact BibTeX string you were given.
+2. Interpret the returned `status` field: statuses like `verified`, `url_verified`, or `published_version_exists` suggest VALID; statuses like `not_found`, `title_mismatch`, `author_mismatch`, `hallucinated`, `future_date`, `doi_not_found`, or `venue_mismatch` suggest HALLUCINATED.
+3. If the tool returns `api_error` or you suspect the tool is wrong (e.g. it reports `verified` but the entry still looks suspicious on inspection), apply your own judgment -- the tool is evidence, not an oracle.
+4. If the first call is unambiguous, do NOT call again. Extra calls waste budget.
+
+When you are ready to give your final answer, output ONLY valid JSON -- no prose, no markdown fences:
+{
+    "label": "VALID" or "HALLUCINATED",
+    "confidence": 0.0 to 1.0,
+    "reason": "concise explanation referencing the tool status and any disagreement"
+}
+\end{lstlisting}
+
+\paragraph{Tool-call caching.}
+Agentic tool results are cached in SQLite keyed on \texttt{sha256(tool\_name::canonical\_args\_json)}.
+TTL is disabled by default; cache hits bypass the network.
+This is a reproducibility artefact, transparent to the LLM.
+
+\paragraph{Failure handling.}
+After three consecutive API errors, the baseline aborts and marks remaining entries as \texttt{UNCERTAIN@0.5} with reason tag \texttt{[Error fallback]}.
+These entries retain Cov.\,=\,1.00 but contribute zero to detection rate.
+
+\paragraph{Anthropic baselines disclosure.}
+The released code registers \texttt{llm\_anthropic} (zero-shot Claude Sonnet~4.5), \texttt{llm\_agentic\_anthropic}, and \texttt{llm\_agentic\_btu\_anthropic}.
+We report GPT-5.1 agentic variants in the main paper; Anthropic agentic variants are omitted from \cref{tab:results} because they were completed after the submission deadline and will appear in the camera-ready extended tables.
 
 \paragraph{Rate limiting.}
 HaRC and verify-citations are subject to Semantic Scholar and Google Scholar rate limits.

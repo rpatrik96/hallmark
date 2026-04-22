@@ -27,7 +27,7 @@ GPT-5.1 achieves $3{\times}$ the detection rate at \$0.21/entry.
 \paragraph{Fair-budget agentic comparison.}
 \label{sec:agentic}
 The zero-shot LLM baselines are compute-asymmetric with \texttt{bibtex-updater}: they make a single API call per entry, while \texttt{bibtex-updater} performs several lookups.
-We therefore added agentic variants of GPT-5.1 that can issue up to five tool calls per entry---either to a multi-source suite (CrossRef, OpenAlex, arXiv) or to \texttt{bibtex-updater} exposed as a single tool.
+We therefore added agentic variants of GPT-5.1 that can issue up to five tool calls per entry---either to a multi-source suite (\texttt{resolve\_doi}, \texttt{search\_crossref}, \texttt{search\_openalex}, \texttt{search\_arxiv}; see \cref{app:llm-setup}) or to \texttt{bibtex-updater} exposed as a single tool.
 Tool access lifts DR from 0.797 to 0.956--0.965, nearly matching \texttt{bibtex-updater}'s 0.946, but FPR rises from 0.171 to ${\approx}0.46$ because absence of evidence in any one source is interpreted as evidence of fabrication; F1 ends up below the zero-shot baseline despite the DR gain.
 The BTU-as-tool variant slightly dominates the multi-source variant (DR 0.965 vs.\ 0.956, ECE 0.113 vs.\ 0.165), suggesting that a distilled upstream verdict is easier for the LLM to interpret than raw API responses, and that the marginal value of an agentic harness over simply piping \texttt{bibtex-updater} output into the prompt is small.
 

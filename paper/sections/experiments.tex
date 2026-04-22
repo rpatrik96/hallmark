@@ -4,8 +4,9 @@
 \subsection{Evaluated tools}
 \label{sec:baselines}
 
-We evaluate seven full-coverage tools on \texttt{dev\_public}: a DOI-only lower bound, GPT-5.1~\citep{openai2025gpt5}, and five open-weight LLMs via OpenRouter (DeepSeek-R1, DeepSeek-V3.2~\citep{deepseekv3}, Qwen3-235B~\citep{qwen3}, Mistral Large~\citep{mistral2025large}, Gemini~2.5~Flash~\citep{google2025gemini}).
+We evaluate seven full-coverage tools on \texttt{dev\_public}: a DOI-only lower bound, GPT-5.1~\citep{openai2025gpt5} (\texttt{gpt-5.1}), and five open-weight LLMs via OpenRouter (DeepSeek-R1, DeepSeek-V3.2~\citep{deepseekv3}, Qwen3-235B~\citep{qwen3}, Mistral Large~\citep{mistral2025large}, Gemini~2.5~Flash~\citep{google2025gemini}; model IDs: \texttt{deepseek/deepseek-r1}, \texttt{deepseek/deepseek-v3.2}, \texttt{qwen/qwen3-235b-a22b-2507}, \texttt{mistralai/mistral-large-2512}, \texttt{google/gemini-2.5-flash}).
 All LLM baselines use the same zero-shot prompt; DeepSeek-R1 uses chain-of-thought (${\sim}25$s/entry vs.\ ${\sim}5$s).
+The codebase also registers \texttt{llm\_anthropic} (Claude Sonnet~4.5, \texttt{claude-sonnet-4-5-20250929}) and Anthropic agentic variants; these are omitted from \cref{tab:results} as they were completed after the submission deadline and are reported in \cref{app:llm-setup}.
 We also attempted two dedicated tools (HaRC~\citep{harc2024}, verify-citations~\citep{verifycitations2025}), both rate-limited to $<$7\% coverage due to Semantic Scholar API constraints.
 The DOI-only baseline checks whether each entry's DOI resolves via CrossRef; results include the shared pre-screening layer (\cref{sec:prescreening}).
 
