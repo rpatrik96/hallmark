@@ -1,0 +1,867 @@
+"""Unit tests for the llm_agentic baseline.
+
+All API calls are mocked — no live keys consumed in CI.
+"""
+
+from __future__ import annotations
+
+import json
+import sqlite3
+from pathlib import Path
+from unittest.mock import MagicMock, patch
+
+import pytest
+
+from hallmark.baselines._agentic_cache import AgenticToolCache, cache_key
+from hallmark.baselines._agentic_tools import TOOL_DEFINITIONS, TOOL_REGISTRY, _normalise
+from hallmark.baselines.llm_agentic import (
+    ANTHROPIC_MODEL,
+    MAX_TOOL_CALLS,
+    _dispatch_tool,
+    _load_checkpoint,
+    _write_checkpoint,
+    verify_agentic_anthropic,
+    verify_agentic_openai,
+)
+from hallmark.dataset.schema import BlindEntry, Prediction
+
+# ---------------------------------------------------------------------------
+# Helpers
+# ---------------------------------------------------------------------------
+
+
+def _make_entry(key: str = "test2024") -> BlindEntry:
+    return BlindEntry(
+        bibtex_key=key,
+        bibtex_type="article",
+        fields={
+            "title": "Deep Learning for Citation Verification",
+            "author": "Smith, John and Doe, Jane",
+            "year": "2024",
+            "doi": "10.1234/fake",
+        },
+        raw_bibtex=(
+            f"@article{{{key}, title={{Deep Learning for Citation Verification}}, "
+            f"author={{Smith, John and Doe, Jane}}, year={{2024}}}}"
+        ),
+    )
+
+
+# ---------------------------------------------------------------------------
+# _agentic_cache tests
+# ---------------------------------------------------------------------------
+
+
+class TestAgenticToolCache:
+    def test_miss_returns_none(self, tmp_path: Path) -> None:
+        db = tmp_path / "test.sqlite"
+        with AgenticToolCache(db) as cache:
+            assert cache.get("nonexistent") is None
+
+    def test_set_then_get(self, tmp_path: Path) -> None:
+        db = tmp_path / "test.sqlite"
+        with AgenticToolCache(db) as cache:
+            key = "abc123"
+            value = {"title": "Test Paper", "authors": "Doe"}
+            cache.set(key, value)
+            assert cache.get(key) == value
+
+    def test_overwrites_existing(self, tmp_path: Path) -> None:
+        db = tmp_path / "test.sqlite"
+        with AgenticToolCache(db) as cache:
+            cache.set("k", {"v": 1})
+            cache.set("k", {"v": 2})
+            assert cache.get("k") == {"v": 2}
+
+    def test_persists_across_instances(self, tmp_path: Path) -> None:
+        db = tmp_path / "test.sqlite"
+        with AgenticToolCache(db) as cache:
+            cache.set("persistent_key", {"data": "hello"})
+        # Open a second instance pointing at the same DB
+        with AgenticToolCache(db) as cache2:
+            assert cache2.get("persistent_key") == {"data": "hello"}
+
+    def test_ttl_expiry(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+        import time
+
+        db = tmp_path / "ttl_test.sqlite"
+        monkeypatch.setenv("CACHE_TTL_DAYS", "0.000001")  # ~86ms TTL
+
+        with AgenticToolCache(db) as cache:
+            cache.set("expiry_key", {"x": 1})
+            # Patch time to simulate expiry — capture original before replacing
+            original_time = time.time
+            monkeypatch.setattr(time, "time", lambda: original_time() + 200)
+            # Re-open to pick up monkeypatched env
+            cache2 = AgenticToolCache(db)
+            assert cache2.get("expiry_key") is None
+            cache2.close()
+
+    def test_schema_creates_table(self, tmp_path: Path) -> None:
+        db = tmp_path / "schema_test.sqlite"
+        with AgenticToolCache(db):
+            pass
+        conn = sqlite3.connect(str(db))
+        tables = conn.execute("SELECT name FROM sqlite_master WHERE type='table'").fetchall()
+        conn.close()
+        assert ("tool_cache",) in tables
+
+
+class TestCacheKey:
+    def test_deterministic(self) -> None:
+        k1 = cache_key("resolve_doi", {"doi": "10.1234/abc"})
+        k2 = cache_key("resolve_doi", {"doi": "10.1234/abc"})
+        assert k1 == k2
+
+    def test_args_order_independent(self) -> None:
+        k1 = cache_key("search_crossref", {"query": "deep learning", "limit": 5})
+        k2 = cache_key("search_crossref", {"limit": 5, "query": "deep learning"})
+        assert k1 == k2
+
+    def test_different_tools_differ(self) -> None:
+        k1 = cache_key("resolve_doi", {"doi": "10.1234/abc"})
+        k2 = cache_key("search_crossref", {"doi": "10.1234/abc"})
+        assert k1 != k2
+
+    def test_different_args_differ(self) -> None:
+        k1 = cache_key("resolve_doi", {"doi": "10.1234/abc"})
+        k2 = cache_key("resolve_doi", {"doi": "10.1234/xyz"})
+        assert k1 != k2
+
+
+# ---------------------------------------------------------------------------
+# _agentic_tools tests
+# ---------------------------------------------------------------------------
+
+
+class TestNormalise:
+    def test_truncates_long_fields(self) -> None:
+        long_str = "x" * 600
+        result = _normalise({"title": long_str, "authors": "", "venue": "", "year": "", "doi": ""})
+        assert len(result["title"]) == 500
+
+    def test_none_becomes_empty_string(self) -> None:
+        result = _normalise(
+            {"title": None, "authors": None, "venue": None, "year": None, "doi": None}
+        )
+        for v in result.values():
+            assert v == ""
+
+    def test_missing_keys_become_empty(self) -> None:
+        result = _normalise({})
+        assert result == {"authors": "", "title": "", "venue": "", "year": "", "doi": ""}
+
+
+class TestToolDefinitions:
+    def test_all_tools_registered(self) -> None:
+        names = {t["name"] for t in TOOL_DEFINITIONS}
+        assert names == {"resolve_doi", "search_crossref", "search_openalex", "search_arxiv"}
+
+    def test_each_tool_has_required_keys(self) -> None:
+        for tool in TOOL_DEFINITIONS:
+            assert "name" in tool
+            assert "description" in tool
+            assert "parameters" in tool
+            assert tool["parameters"]["type"] == "object"
+
+    def test_registry_matches_definitions(self) -> None:
+        for tool in TOOL_DEFINITIONS:
+            assert tool["name"] in TOOL_REGISTRY
+
+
+class TestDispatchTool:
+    def test_cache_hit_skips_call(self, tmp_path: Path) -> None:
+        db = tmp_path / "test.sqlite"
+        cached_value = {"title": "cached", "authors": "", "venue": "", "year": "", "doi": ""}
+        key = cache_key("resolve_doi", {"doi": "10.9999/cached"})
+
+        with AgenticToolCache(db) as cache:
+            cache.set(key, cached_value)
+            result_str = _dispatch_tool("resolve_doi", {"doi": "10.9999/cached"}, cache)
+            result = json.loads(result_str)
+            assert result["title"] == "cached"
+
+    def test_unknown_tool_returns_error(self, tmp_path: Path) -> None:
+        db = tmp_path / "test.sqlite"
+        with AgenticToolCache(db) as cache:
+            result_str = _dispatch_tool("nonexistent_tool", {}, cache)
+            result = json.loads(result_str)
+            assert "error" in result
+
+    def test_tool_failure_returns_error_json(self, tmp_path: Path) -> None:
+        db = tmp_path / "test.sqlite"
+        with (
+            AgenticToolCache(db) as cache,
+            patch(
+                "hallmark.baselines.llm_agentic.retry_with_backoff",
+                side_effect=RuntimeError("network failure"),
+            ),
+        ):
+            result_str = _dispatch_tool("resolve_doi", {"doi": "10.9999/bad"}, cache)
+            result = json.loads(result_str)
+            assert "error" in result
+
+    def test_successful_call_stored_in_cache(self, tmp_path: Path) -> None:
+        db = tmp_path / "test.sqlite"
+        fake_result = {"title": "stored", "authors": "", "venue": "", "year": "", "doi": "10.1/x"}
+        with AgenticToolCache(db) as cache:
+            with patch(
+                "hallmark.baselines.llm_agentic.retry_with_backoff",
+                return_value=fake_result,
+            ):
+                _dispatch_tool("resolve_doi", {"doi": "10.1/x"}, cache)
+            # Re-read from cache without mocking — should return stored value
+            key = cache_key("resolve_doi", {"doi": "10.1/x"})
+            assert cache.get(key) == fake_result
+
+
+# ---------------------------------------------------------------------------
+# Checkpoint helpers
+# ---------------------------------------------------------------------------
+
+
+class TestCheckpoint:
+    def test_write_and_load_roundtrip(self, tmp_path: Path) -> None:
+        path = tmp_path / "ckpt.jsonl"
+        pred = Prediction(
+            bibtex_key="paper42",
+            label="HALLUCINATED",
+            confidence=0.9,
+            reason="test reason",
+            wall_clock_seconds=1.5,
+            api_calls=3,
+            api_sources_queried=["openai/gpt-5.1", "tool:resolve_doi"],
+        )
+        _write_checkpoint(path, pred)
+        loaded = _load_checkpoint(path)
+        assert "paper42" in loaded
+        assert loaded["paper42"].label == "HALLUCINATED"
+        assert loaded["paper42"].confidence == pytest.approx(0.9)
+        assert loaded["paper42"].api_calls == 3
+
+    def test_write_none_path_is_noop(self) -> None:
+        pred = Prediction(bibtex_key="x", label="VALID", confidence=0.8, reason="ok")
+        _write_checkpoint(None, pred)  # must not raise
+
+    def test_load_nonexistent_returns_empty(self, tmp_path: Path) -> None:
+        result = _load_checkpoint(tmp_path / "missing.jsonl")
+        assert result == {}
+
+    def test_load_skips_malformed_lines(self, tmp_path: Path) -> None:
+        path = tmp_path / "ckpt.jsonl"
+        path.write_text(
+            'not-json\n{"bibtex_key":"ok","label":"VALID","confidence":0.7,"reason":""}\n'
+        )
+        loaded = _load_checkpoint(path)
+        assert "ok" in loaded
+        assert len(loaded) == 1
+
+
+# ---------------------------------------------------------------------------
+# Registry
+# ---------------------------------------------------------------------------
+
+
+class TestAgenticRegistry:
+    def test_both_baselines_registered(self) -> None:
+        from hallmark.baselines.registry import get_registry
+
+        registry = get_registry()
+        assert "llm_agentic_openai" in registry
+        assert "llm_agentic_anthropic" in registry
+
+    def test_openai_baseline_metadata(self) -> None:
+        from hallmark.baselines.registry import get_registry
+
+        info = get_registry()["llm_agentic_openai"]
+        assert info.confidence_type == "probabilistic"
+        assert "openai" in info.pip_packages
+        assert info.env_var == "OPENAI_API_KEY"
+        assert info.requires_api_key is True
+        assert info.is_free is False
+
+    def test_anthropic_baseline_metadata(self) -> None:
+        from hallmark.baselines.registry import get_registry
+
+        info = get_registry()["llm_agentic_anthropic"]
+        assert info.confidence_type == "probabilistic"
+        assert "anthropic" in info.pip_packages
+        assert info.env_var == "ANTHROPIC_API_KEY"
+        assert info.requires_api_key is True
+        assert info.is_free is False
+
+
+# ---------------------------------------------------------------------------
+# OpenAI agentic loop (mocked)
+# ---------------------------------------------------------------------------
+
+
+def _make_openai_text_response(text: str) -> MagicMock:
+    """Build a mock OpenAI chat completion that returns text (no tool calls)."""
+    msg = MagicMock()
+    msg.tool_calls = None
+    msg.content = text
+    msg.model_dump.return_value = {"role": "assistant", "content": text}
+    choice = MagicMock()
+    choice.message = msg
+    usage = MagicMock()
+    usage.total_tokens = 100
+    resp = MagicMock()
+    resp.choices = [choice]
+    resp.usage = usage
+    return resp
+
+
+def _make_openai_tool_response(
+    tool_name: str, tool_args: dict, call_id: str = "call_1"
+) -> MagicMock:
+    """Build a mock OpenAI chat completion that requests a tool call."""
+    tc = MagicMock()
+    tc.id = call_id
+    tc.function.name = tool_name
+    tc.function.arguments = json.dumps(tool_args)
+
+    msg = MagicMock()
+    msg.tool_calls = [tc]
+    msg.content = None
+    msg.model_dump.return_value = {
+        "role": "assistant",
+        "tool_calls": [
+            {"id": call_id, "function": {"name": tool_name, "arguments": json.dumps(tool_args)}}
+        ],
+    }
+    choice = MagicMock()
+    choice.message = msg
+    usage = MagicMock()
+    usage.total_tokens = 150
+    resp = MagicMock()
+    resp.choices = [choice]
+    resp.usage = usage
+    return resp
+
+
+class TestVerifyAgenticOpenAI:
+    def test_direct_verdict_no_tools(self, tmp_path: Path) -> None:
+        """Model returns verdict on first turn (no tools)."""
+        verdict = json.dumps({"label": "VALID", "confidence": 0.85, "reason": "Looks real"})
+        mock_resp = _make_openai_text_response(verdict)
+
+        mock_client = MagicMock()
+        mock_client.chat.completions.create.return_value = mock_resp
+
+        mock_openai = MagicMock()
+        mock_openai.OpenAI.return_value = mock_client
+
+        entries = [_make_entry()]
+        with patch.dict("sys.modules", {"openai": mock_openai}):
+            preds = verify_agentic_openai(
+                entries,
+                model="gpt-5.1",
+                api_key="test-key",
+                cache_db_path=tmp_path / "cache.sqlite",
+            )
+
+        assert len(preds) == 1
+        assert preds[0].label == "VALID"
+        assert preds[0].confidence == pytest.approx(0.85)
+        assert "parametric" in preds[0].reason
+
+    def test_one_tool_call_then_verdict(self, tmp_path: Path) -> None:
+        """Model calls one tool, then emits verdict."""
+        tool_resp = _make_openai_tool_response(
+            "search_crossref", {"query": "deep learning citations"}, call_id="c1"
+        )
+        verdict_resp = _make_openai_text_response(
+            json.dumps({"label": "HALLUCINATED", "confidence": 0.92, "reason": "Not found"})
+        )
+
+        mock_client = MagicMock()
+        mock_client.chat.completions.create.side_effect = [tool_resp, verdict_resp]
+
+        mock_openai = MagicMock()
+        mock_openai.OpenAI.return_value = mock_client
+
+        fake_tool_result = [{"title": "", "authors": "", "venue": "", "year": "", "doi": ""}]
+
+        entries = [_make_entry()]
+        with (
+            patch.dict("sys.modules", {"openai": mock_openai}),
+            patch(
+                "hallmark.baselines.llm_agentic._dispatch_tool",
+                return_value=json.dumps(fake_tool_result),
+            ),
+        ):
+            preds = verify_agentic_openai(
+                entries,
+                model="gpt-5.1",
+                api_key="test-key",
+                cache_db_path=tmp_path / "cache.sqlite",
+            )
+
+        assert len(preds) == 1
+        assert preds[0].label == "HALLUCINATED"
+        assert "tool" in preds[0].reason
+        assert "search_crossref" in preds[0].reason
+
+    def test_max_tool_calls_cap(self, tmp_path: Path) -> None:
+        """Loop aborts with UNCERTAIN after MAX_TOOL_CALLS tool invocations."""
+        # Alternate tool calls indefinitely
+        tool_resps = [
+            _make_openai_tool_response("resolve_doi", {"doi": "10.x/y"}, call_id=f"c{i}")
+            for i in range(MAX_TOOL_CALLS + 2)
+        ]
+
+        mock_client = MagicMock()
+        mock_client.chat.completions.create.side_effect = tool_resps
+
+        mock_openai = MagicMock()
+        mock_openai.OpenAI.return_value = mock_client
+
+        entries = [_make_entry()]
+        with (
+            patch.dict("sys.modules", {"openai": mock_openai}),
+            patch(
+                "hallmark.baselines.llm_agentic._dispatch_tool",
+                return_value=json.dumps({"error": "not found"}),
+            ),
+        ):
+            preds = verify_agentic_openai(
+                entries,
+                model="gpt-5.1",
+                api_key="test-key",
+                cache_db_path=tmp_path / "cache.sqlite",
+            )
+
+        assert len(preds) == 1
+        assert preds[0].label == "UNCERTAIN"
+        assert "Max tool calls" in preds[0].reason
+
+    def test_consecutive_failures_abort(self, tmp_path: Path) -> None:
+        """Consecutive API failures trigger early abort with UNCERTAIN for all entries."""
+        mock_client = MagicMock()
+        mock_client.chat.completions.create.side_effect = RuntimeError("API down")
+
+        mock_openai = MagicMock()
+        mock_openai.OpenAI.return_value = mock_client
+
+        entries = [_make_entry(f"k{i}") for i in range(5)]
+        with patch.dict("sys.modules", {"openai": mock_openai}):
+            preds = verify_agentic_openai(
+                entries,
+                model="gpt-5.1",
+                api_key="test-key",
+                max_consecutive_failures=2,
+                cache_db_path=tmp_path / "cache.sqlite",
+            )
+
+        assert len(preds) == 5
+        assert all(p.label == "UNCERTAIN" for p in preds)
+
+    def test_checkpoint_resume(self, tmp_path: Path) -> None:
+        """Entries already in the checkpoint are not re-queried."""
+        ckpt_dir = tmp_path / "ckpt"
+        ckpt_dir.mkdir()
+        ckpt_path = ckpt_dir / "agentic_openai_gpt-5.1.jsonl"
+        # Pre-populate checkpoint with one entry
+        pred = Prediction(
+            bibtex_key="test2024",
+            label="VALID",
+            confidence=0.9,
+            reason="pre-cached",
+        )
+        _write_checkpoint(ckpt_path, pred)
+
+        mock_client = MagicMock()
+        mock_openai = MagicMock()
+        mock_openai.OpenAI.return_value = mock_client
+
+        entries = [_make_entry("test2024")]
+        with patch.dict("sys.modules", {"openai": mock_openai}):
+            preds = verify_agentic_openai(
+                entries,
+                model="gpt-5.1",
+                api_key="test-key",
+                checkpoint_dir=ckpt_dir,
+                cache_db_path=tmp_path / "cache.sqlite",
+            )
+
+        # API should NOT have been called (entry already in checkpoint)
+        mock_client.chat.completions.create.assert_not_called()
+        assert preds[0].label == "VALID"
+
+    def test_missing_openai_returns_fallback(self, tmp_path: Path) -> None:
+        """When openai import fails inside the runner, returns fallback predictions."""
+        import sys
+
+        entries = [_make_entry()]
+        original = sys.modules.pop("openai", None)
+        try:
+            preds = verify_agentic_openai(
+                entries,
+                model="gpt-5.1",
+                api_key="test-key",
+                cache_db_path=tmp_path / "cache.sqlite",
+            )
+        finally:
+            if original is not None:
+                sys.modules["openai"] = original
+
+        assert len(preds) == 1
+        assert preds[0].label in ("VALID", "UNCERTAIN")
+
+
+# ---------------------------------------------------------------------------
+# Anthropic agentic loop (mocked)
+# ---------------------------------------------------------------------------
+
+
+def _make_anthropic_text_response(text: str) -> MagicMock:
+    block = MagicMock()
+    block.type = "text"
+    block.text = text
+    usage = MagicMock()
+    usage.input_tokens = 80
+    usage.output_tokens = 40
+    resp = MagicMock()
+    resp.content = [block]
+    resp.usage = usage
+    return resp
+
+
+def _make_anthropic_tool_response(
+    tool_name: str, tool_args: dict, call_id: str = "tu_1"
+) -> MagicMock:
+    block = MagicMock()
+    block.type = "tool_use"
+    block.id = call_id
+    block.name = tool_name
+    block.input = tool_args
+    usage = MagicMock()
+    usage.input_tokens = 100
+    usage.output_tokens = 20
+    resp = MagicMock()
+    resp.content = [block]
+    resp.usage = usage
+    return resp
+
+
+class TestVerifyAgenticAnthropic:
+    def test_direct_verdict_no_tools(self, tmp_path: Path) -> None:
+        verdict = json.dumps({"label": "HALLUCINATED", "confidence": 0.88, "reason": "Fake DOI"})
+        mock_resp = _make_anthropic_text_response(verdict)
+
+        mock_client = MagicMock()
+        mock_client.messages.create.return_value = mock_resp
+
+        mock_anthropic = MagicMock()
+        mock_anthropic.Anthropic.return_value = mock_client
+
+        entries = [_make_entry()]
+        with patch.dict("sys.modules", {"anthropic": mock_anthropic}):
+            preds = verify_agentic_anthropic(
+                entries,
+                model=ANTHROPIC_MODEL,
+                api_key="test-key",
+                cache_db_path=tmp_path / "cache.sqlite",
+            )
+
+        assert len(preds) == 1
+        assert preds[0].label == "HALLUCINATED"
+        assert "parametric" in preds[0].reason
+
+    def test_one_tool_call_then_verdict(self, tmp_path: Path) -> None:
+        tool_resp = _make_anthropic_tool_response(
+            "search_openalex", {"query": "attention is all you need"}, call_id="tu_1"
+        )
+        verdict_resp = _make_anthropic_text_response(
+            json.dumps({"label": "VALID", "confidence": 0.95, "reason": "Found in OpenAlex"})
+        )
+
+        mock_client = MagicMock()
+        mock_client.messages.create.side_effect = [tool_resp, verdict_resp]
+
+        mock_anthropic = MagicMock()
+        mock_anthropic.Anthropic.return_value = mock_client
+
+        entries = [_make_entry()]
+        dispatch_result = json.dumps(
+            [{"title": "Attention", "authors": "", "venue": "", "year": "", "doi": ""}]
+        )
+        with (
+            patch.dict("sys.modules", {"anthropic": mock_anthropic}),
+            patch(
+                "hallmark.baselines.llm_agentic._dispatch_tool",
+                return_value=dispatch_result,
+            ),
+        ):
+            preds = verify_agentic_anthropic(
+                entries,
+                model=ANTHROPIC_MODEL,
+                api_key="test-key",
+                cache_db_path=tmp_path / "cache.sqlite",
+            )
+
+        assert len(preds) == 1
+        assert preds[0].label == "VALID"
+        assert "search_openalex" in preds[0].reason
+
+    def test_max_tool_calls_cap(self, tmp_path: Path) -> None:
+        tool_resps = [
+            _make_anthropic_tool_response("resolve_doi", {"doi": "10.x/y"}, call_id=f"tu_{i}")
+            for i in range(MAX_TOOL_CALLS + 2)
+        ]
+
+        mock_client = MagicMock()
+        mock_client.messages.create.side_effect = tool_resps
+
+        mock_anthropic = MagicMock()
+        mock_anthropic.Anthropic.return_value = mock_client
+
+        entries = [_make_entry()]
+        with (
+            patch.dict("sys.modules", {"anthropic": mock_anthropic}),
+            patch(
+                "hallmark.baselines.llm_agentic._dispatch_tool",
+                return_value=json.dumps({"error": "not found"}),
+            ),
+        ):
+            preds = verify_agentic_anthropic(
+                entries,
+                model=ANTHROPIC_MODEL,
+                api_key="test-key",
+                cache_db_path=tmp_path / "cache.sqlite",
+            )
+
+        assert preds[0].label == "UNCERTAIN"
+        assert "Max tool calls" in preds[0].reason
+
+    def test_consecutive_failures_abort(self, tmp_path: Path) -> None:
+        mock_client = MagicMock()
+        mock_client.messages.create.side_effect = RuntimeError("Anthropic down")
+
+        mock_anthropic = MagicMock()
+        mock_anthropic.Anthropic.return_value = mock_client
+
+        entries = [_make_entry(f"k{i}") for i in range(4)]
+        with patch.dict("sys.modules", {"anthropic": mock_anthropic}):
+            preds = verify_agentic_anthropic(
+                entries,
+                model=ANTHROPIC_MODEL,
+                api_key="test-key",
+                max_consecutive_failures=2,
+                cache_db_path=tmp_path / "cache.sqlite",
+            )
+
+        assert len(preds) == 4
+        assert all(p.label == "UNCERTAIN" for p in preds)
+
+
+# ---------------------------------------------------------------------------
+# JSON parsing edge cases (reused from llm_verifier, stress-tested here)
+# ---------------------------------------------------------------------------
+
+
+class TestJsonParsingEdgeCases:
+    """Verify _parse_llm_response handles outputs the agentic model may emit."""
+
+    def _parse(self, text: str, key: str = "k") -> Prediction:
+        from hallmark.baselines.llm_verifier import _parse_llm_response
+
+        return _parse_llm_response(text, key)
+
+    def test_valid_json(self) -> None:
+        pred = self._parse('{"label": "VALID", "confidence": 0.9, "reason": "ok"}')
+        assert pred.label == "VALID"
+        assert pred.confidence == pytest.approx(0.9)
+
+    def test_hallucinated_json(self) -> None:
+        pred = self._parse('{"label": "HALLUCINATED", "confidence": 0.7, "reason": "fake doi"}')
+        assert pred.label == "HALLUCINATED"
+
+    def test_invalid_label_becomes_uncertain(self) -> None:
+        pred = self._parse('{"label": "MAYBE", "confidence": 0.6, "reason": "unsure"}')
+        assert pred.label == "UNCERTAIN"
+
+    def test_confidence_clamped(self) -> None:
+        pred = self._parse('{"label": "VALID", "confidence": 1.5, "reason": "x"}')
+        assert pred.confidence <= 1.0
+        pred2 = self._parse('{"label": "VALID", "confidence": -0.1, "reason": "x"}')
+        assert pred2.confidence >= 0.0
+
+    def test_completely_invalid_json(self) -> None:
+        pred = self._parse("This is not JSON at all.")
+        assert pred.label == "UNCERTAIN"
+        assert pred.confidence == pytest.approx(0.5)
+
+
+# ---------------------------------------------------------------------------
+# BTU-as-tool agentic variants
+# ---------------------------------------------------------------------------
+
+
+class TestBtuTool:
+    """Tests for verify_with_bibtex_updater (BTU-as-tool wrapper)."""
+
+    def test_no_binary_raises_runtimeerror(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        """verify_with_bibtex_updater raises RuntimeError when bibtex-check missing."""
+        from hallmark.baselines._agentic_tools import verify_with_bibtex_updater
+
+        monkeypatch.setattr("shutil.which", lambda _: None)
+        with pytest.raises(RuntimeError, match="bibtex-check not found"):
+            verify_with_bibtex_updater("@article{k, title={t}}")
+
+    def test_successful_call_returns_flat_dict(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """Parses one-line JSONL output from bibtex-check into the flat canonical dict."""
+        from hallmark.baselines import _agentic_tools as at
+
+        record = {
+            "status": "title_mismatch",
+            "confidence": 0.85,
+            "mismatched_fields": ["title", "venue"],
+            "api_sources": ["crossref", "dblp"],
+            "errors": [],
+        }
+
+        def _fake_run(cmd, **_kw):  # type: ignore[no-untyped-def]
+            # bibtex-check writes JSONL to the path after --jsonl
+            idx = cmd.index("--jsonl")
+            jsonl = Path(cmd[idx + 1])
+            jsonl.write_text(json.dumps(record) + "\n")
+            return MagicMock(returncode=0, stdout="", stderr="")
+
+        monkeypatch.setattr(at, "_trunc", lambda v: str(v) if v is not None else "")
+        monkeypatch.setattr("shutil.which", lambda _: "/fake/bibtex-check")
+        monkeypatch.setattr("subprocess.run", _fake_run)
+
+        result = at.verify_with_bibtex_updater("@article{k, title={fake}}")
+        assert result["status"] == "title_mismatch"
+        assert result["mismatched_fields"] == "title, venue"
+        assert result["api_sources"] == "crossref, dblp"
+
+    def test_tool_listed_in_registry(self) -> None:
+        from hallmark.baselines._agentic_tools import (
+            BTU_TOOL_DEFINITION,
+            TOOL_REGISTRY,
+        )
+
+        assert "verify_with_bibtex_updater" in TOOL_REGISTRY
+        assert BTU_TOOL_DEFINITION["name"] == "verify_with_bibtex_updater"
+        assert "bibtex" in BTU_TOOL_DEFINITION["parameters"]["properties"]
+
+
+class TestVerifyAgenticBtuOpenai:
+    """Mocked tests for verify_agentic_btu_openai (tool_defs=[BTU_TOOL_DEFINITION])."""
+
+    def test_btu_variant_uses_only_btu_tool(self, tmp_path: Path) -> None:
+        """OpenAI call receives exactly one tool: verify_with_bibtex_updater."""
+        from hallmark.baselines.llm_agentic import verify_agentic_btu_openai
+
+        verdict = json.dumps(
+            {"label": "HALLUCINATED", "confidence": 0.9, "reason": "BTU status=not_found"}
+        )
+        resp = _make_openai_text_response(verdict)
+
+        mock_client = MagicMock()
+        mock_client.chat.completions.create.return_value = resp
+
+        mock_openai = MagicMock()
+        mock_openai.OpenAI.return_value = mock_client
+
+        entries = [_make_entry()]
+        with patch.dict("sys.modules", {"openai": mock_openai}):
+            preds = verify_agentic_btu_openai(
+                entries,
+                model="gpt-5.1",
+                api_key="test-key",
+                cache_db_path=tmp_path / "cache.sqlite",
+            )
+
+        assert len(preds) == 1
+        assert preds[0].label == "HALLUCINATED"
+
+        # Verify the tool set passed to the API contained only BTU
+        call_kwargs = mock_client.chat.completions.create.call_args.kwargs
+        tools = call_kwargs["tools"]
+        assert len(tools) == 1
+        assert tools[0]["function"]["name"] == "verify_with_bibtex_updater"
+
+    def test_btu_variant_uses_btu_system_prompt(self, tmp_path: Path) -> None:
+        from hallmark.baselines.llm_agentic import BTU_SYSTEM_PROMPT, verify_agentic_btu_openai
+
+        verdict = json.dumps({"label": "VALID", "confidence": 0.9, "reason": "ok"})
+        resp = _make_openai_text_response(verdict)
+
+        mock_client = MagicMock()
+        mock_client.chat.completions.create.return_value = resp
+
+        mock_openai = MagicMock()
+        mock_openai.OpenAI.return_value = mock_client
+
+        with patch.dict("sys.modules", {"openai": mock_openai}):
+            verify_agentic_btu_openai(
+                [_make_entry()],
+                model="gpt-5.1",
+                api_key="test-key",
+                cache_db_path=tmp_path / "cache.sqlite",
+            )
+
+        call_kwargs = mock_client.chat.completions.create.call_args.kwargs
+        system_msg = call_kwargs["messages"][0]
+        assert system_msg["role"] == "system"
+        assert system_msg["content"] == BTU_SYSTEM_PROMPT
+
+    def test_btu_variant_checkpoint_name_distinct(self, tmp_path: Path) -> None:
+        """BTU variant writes to a different checkpoint file than the multi-tool variant."""
+        from hallmark.baselines.llm_agentic import verify_agentic_btu_openai
+
+        verdict = json.dumps({"label": "VALID", "confidence": 0.8, "reason": "ok"})
+        resp = _make_openai_text_response(verdict)
+
+        mock_client = MagicMock()
+        mock_client.chat.completions.create.return_value = resp
+        mock_openai = MagicMock()
+        mock_openai.OpenAI.return_value = mock_client
+
+        ckpt_dir = tmp_path / "ckpt"
+        with patch.dict("sys.modules", {"openai": mock_openai}):
+            verify_agentic_btu_openai(
+                [_make_entry()],
+                model="gpt-5.1",
+                api_key="test-key",
+                checkpoint_dir=ckpt_dir,
+                cache_db_path=tmp_path / "cache.sqlite",
+            )
+
+        # Checkpoint file should be prefixed "agentic_btu_openai_"
+        files = list(ckpt_dir.iterdir())
+        assert len(files) == 1
+        assert files[0].name.startswith("agentic_btu_openai_")
+
+
+class TestVerifyAgenticBtuAnthropic:
+    def test_btu_anthropic_uses_only_btu_tool(self, tmp_path: Path) -> None:
+        from hallmark.baselines.llm_agentic import verify_agentic_btu_anthropic
+
+        verdict = json.dumps({"label": "VALID", "confidence": 0.9, "reason": "BTU verified"})
+        resp = _make_anthropic_text_response(verdict)
+
+        mock_client = MagicMock()
+        mock_client.messages.create.return_value = resp
+        mock_anthropic = MagicMock()
+        mock_anthropic.Anthropic.return_value = mock_client
+
+        with patch.dict("sys.modules", {"anthropic": mock_anthropic}):
+            preds = verify_agentic_btu_anthropic(
+                [_make_entry()],
+                model=ANTHROPIC_MODEL,
+                api_key="test-key",
+                cache_db_path=tmp_path / "cache.sqlite",
+            )
+
+        assert preds[0].label == "VALID"
+        call_kwargs = mock_client.messages.create.call_args.kwargs
+        tools = call_kwargs["tools"]
+        assert len(tools) == 1
+        assert tools[0]["name"] == "verify_with_bibtex_updater"

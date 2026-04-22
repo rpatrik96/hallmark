@@ -422,6 +422,93 @@ def _register_builtins() -> None:
         )
     )
 
+    # --- LLM: Agentic OpenAI ---
+    def _run_llm_agentic_openai(entries: list[BlindEntry], **kw: Any) -> list[Prediction]:
+        from hallmark.baselines.llm_agentic import verify_agentic_openai
+
+        return verify_agentic_openai(entries, **kw)
+
+    register(
+        BaselineInfo(
+            name="llm_agentic_openai",
+            description=(
+                "GPT-5.1 with tool-use: resolve_doi, search_crossref, "
+                "search_openalex, search_arxiv (up to 5 tool calls per entry)"
+            ),
+            runner=_run_llm_agentic_openai,
+            pip_packages=["openai"],
+            requires_api_key=True,
+            is_free=False,
+            env_var="OPENAI_API_KEY",
+            confidence_type="probabilistic",
+        )
+    )
+
+    # --- LLM: Agentic Anthropic ---
+    def _run_llm_agentic_anthropic(entries: list[BlindEntry], **kw: Any) -> list[Prediction]:
+        from hallmark.baselines.llm_agentic import verify_agentic_anthropic
+
+        return verify_agentic_anthropic(entries, **kw)
+
+    register(
+        BaselineInfo(
+            name="llm_agentic_anthropic",
+            description=(
+                "Claude Sonnet 4.5 with tool-use: resolve_doi, search_crossref, "
+                "search_openalex, search_arxiv (up to 5 tool calls per entry)"
+            ),
+            runner=_run_llm_agentic_anthropic,
+            pip_packages=["anthropic"],
+            requires_api_key=True,
+            is_free=False,
+            env_var="ANTHROPIC_API_KEY",
+            confidence_type="probabilistic",
+        )
+    )
+
+    # --- LLM: Agentic BTU-only (OpenAI) ---
+    def _run_llm_agentic_btu_openai(entries: list[BlindEntry], **kw: Any) -> list[Prediction]:
+        from hallmark.baselines.llm_agentic import verify_agentic_btu_openai
+
+        return verify_agentic_btu_openai(entries, **kw)
+
+    register(
+        BaselineInfo(
+            name="llm_agentic_btu_openai",
+            description=(
+                "GPT-5.1 agentic harness with bibtex-updater exposed as its only "
+                "tool — tests whether the LLM is a useful dispatcher for BTU"
+            ),
+            runner=_run_llm_agentic_btu_openai,
+            pip_packages=["openai"],
+            cli_commands=["bibtex-check"],
+            requires_api_key=True,
+            is_free=False,
+            env_var="OPENAI_API_KEY",
+            confidence_type="probabilistic",
+        )
+    )
+
+    # --- LLM: Agentic BTU-only (Anthropic) ---
+    def _run_llm_agentic_btu_anthropic(entries: list[BlindEntry], **kw: Any) -> list[Prediction]:
+        from hallmark.baselines.llm_agentic import verify_agentic_btu_anthropic
+
+        return verify_agentic_btu_anthropic(entries, **kw)
+
+    register(
+        BaselineInfo(
+            name="llm_agentic_btu_anthropic",
+            description=("Claude Sonnet 4.5 agentic harness with bibtex-updater as only tool"),
+            runner=_run_llm_agentic_btu_anthropic,
+            pip_packages=["anthropic"],
+            cli_commands=["bibtex-check"],
+            requires_api_key=True,
+            is_free=False,
+            env_var="ANTHROPIC_API_KEY",
+            confidence_type="probabilistic",
+        )
+    )
+
     # --- Title-match oracle (diagnostic baseline) ---
     # NOTE: This is NOT a legitimate detector.  It exploits label leakage by
     # looking up dev-split VALID titles.  Register it here so it appears in
