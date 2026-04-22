@@ -760,6 +760,43 @@ The comparison is computed from cached predictions via \texttt{hallmark.evaluati
 
 \input{figures/cutoff_aware_results}
 
+\subsection*{Post-freeze robustness check: GPT-5.4 on the temporal supplement}
+\label{app:gpt54-probe}
+
+\textbf{H1} predicts that the FPR explosion on post-cutoff entries is a \emph{direct} consequence of the training-data cutoff: moving the cutoff forward should shift which entries the model recognises and, in turn, drop the FPR on entries that cross the new cutoff line.
+We probe this with a single post-freeze model: \textbf{GPT-5.4} (\texttt{gpt-5.4-2026-03-05}), released on 5 March 2026 with an \textbf{August 31, 2025} training cutoff---roughly 11 months later than GPT-5.1's September 2024 cutoff.
+We run it zero-shot on the same 448-entry 2024--2025 temporal supplement used in \cref{tab:cutoff-aware-results} and compare entry-by-entry against the existing GPT-5.1 default-prompt predictions.
+GPT-5.4 is \emph{not} added to the main results in \cref{tab:results} (that table is frozen as of our 10 February 2026 model-freeze date); this is a single-model robustness probe, reported separately.
+
+\begin{table}[h]
+\centering
+\small
+\caption{Stratified GPT-5.1 vs.\ GPT-5.4 on the 2024--2025 temporal supplement ($N{=}448$). Stratum is the entry's publication year. \emph{2024 \& earlier} (236 entries: 161 valid, 75 hallucinated) is post-cutoff for GPT-5.1 but pre-cutoff for GPT-5.4. \emph{2025} (191 entries: 139 valid, 52 hallucinated) is post-cutoff for both, although some venues (ICLR/ICML/AAAI/CVPR/ACL 2025) predate August 2025. \emph{Future} (21 entries: all hallucinated \texttt{future\_date} types) is post-cutoff for both and contains no valid entries, so FPR is undefined.}
+\label{tab:gpt54-probe}
+\begin{tabular}{lrrrrrr}
+\toprule
+ & & \multicolumn{2}{c}{\textbf{FPR (\%)}} & & \multicolumn{2}{c}{\textbf{DR (\%)}} \\
+\cmidrule(lr){3-4}\cmidrule(lr){6-7}
+Stratum & $N$ & GPT-5.1 & GPT-5.4 & $\Delta$ & GPT-5.1 & GPT-5.4 \\
+\midrule
+2024 \& earlier  & 236 & 53.1 & 28.0 & $-25.2$ & 92.0 & 85.3 \\
+2025             & 191 & 99.3 & 56.8 & $-42.4$ & 100.0 & 92.3 \\
+Future (2026+)   &  21 & --   & --   & --      & 100.0 & 100.0 \\
+\midrule
+All              & 448 & 74.2 & 41.3 & $-32.9$ &  95.9 &  89.0 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Two features of the result replicate the paper's temporal narrative across a model generation:
+\begin{itemize}
+  \item \textbf{FPR drops monotonically with cutoff distance.} The 2024-and-earlier stratum shifts from post-cutoff (GPT-5.1) to pre-cutoff (GPT-5.4) and FPR drops by $25$\,pp. The 2025 stratum is post-cutoff for \emph{both} models but is \emph{closer} to the GPT-5.4 cutoff; FPR drops by $42$\,pp, consistent with a graded notion of ``unfamiliar'' rather than a binary cutoff.
+  \item \textbf{GPT-5.4 still over-flags.} On pre-cutoff 2024 entries, GPT-5.4's FPR is $28\%$---far from zero. Training cutoff alone does not explain the full FPR burden: long-tail recognition, paraphrased titles, and pre-print/published-version mismatches contribute residual false positives even for papers the model's training data should have covered. This tempers a naïve ``just use a newer model'' mitigation.
+  \item \textbf{UNCERTAIN rate does not rise.} Unlike the cutoff-aware prompt ablation (\cref{tab:cutoff-aware-results}), which inflated abstention without shifting discrimination, moving to a later-cutoff model reduces FPR \emph{and} drops UNCERTAIN from $2.0\%$ to $0.0\%$. The mechanism is familiarity, not caution.
+\end{itemize}
+
+We interpret this as evidence that H1 is a genuine temporal phenomenon rather than an artefact of GPT-5.1 specifically, and that the practical mitigation path is retrieval-augmented verification rather than prompt-engineered abstention---consistent with the agentic-baseline finding in \cref{tab:results}.
+
 \section{Infrastructure documentation}
 \label{app:infrastructure}
 

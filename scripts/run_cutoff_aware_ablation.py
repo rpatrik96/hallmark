@@ -59,6 +59,12 @@ SUBSET: dict[str, dict[str, str]] = {
         "api_key_env": "OPENAI_API_KEY",
         "display": "GPT-5.1",
     },
+    "llm_openai_gpt54": {
+        "provider": "openai",
+        "model_id": "gpt-5.4",
+        "api_key_env": "OPENAI_API_KEY",
+        "display": "GPT-5.4",
+    },
     "llm_openrouter_gemini_flash": {
         "provider": "openrouter",
         "model_id": "google/gemini-2.5-flash",
