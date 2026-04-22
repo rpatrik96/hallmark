@@ -1,14 +1,12 @@
 \begin{abstract}
-LLM use for literature review is prevalent, but authors, reviewers, and venues rarely verify AI-generated references---shown by the NeurIPS 2025 incident in which 53 accepted papers carried fabricated citations.
+LLM use for literature review is prevalent, but authors, reviewers, and venues rarely verify AI-generated references---as shown by the NeurIPS 2025 incident in which 53 accepted papers carried fabricated citations.
 Citation verification workflows, including LLM-assisted ones, are emerging, but there is no standardized measurement of how well they perform.
-We introduce \textsc{Hallmark} (\textbf{Hall}ucination bench\textbf{mark}), a collection of BibTeX entries grouped into three difficulty tiers by how much external lookup they require, with a held-out split whose labels are not released to prevent contamination.
-Each entry is fed to a verifier, which must return a binary hallucinated-or-valid label together with six structured per-entry checks---DOI resolution, author-list match, venue validity, title match, required-field completeness, and cross-database agreement---so a miss can be traced to the specific check that failed.
-We evaluate nine settings: a DOI-lookup baseline, six zero-shot LLMs (GPT-5.1 and five open-weight models), two agentic GPT-5.1 variants with up to five lookup calls per entry (against CrossRef/OpenAlex/arXiv, or against bibtex-updater, a rule-based verifier that cross-references CrossRef, DBLP, and Semantic Scholar), and bibtex-updater itself.
-Tool access trades recall for false positives.
-DOI-only catches 26\% of hallucinations; zero-shot LLMs reach 48--88\% recall with poor calibration (ECE 0.11--0.33, where 0 is perfect).
-Giving GPT-5.1 a matched lookup budget lifts detection from 80\% to 96\%---close to bibtex-updater's 95\%---but inflates false positives $2.7{\times}$ (17\%$\to$46\%), so F1 never beats the zero-shot baseline.
-At an estimated 2\% per-citation base rate (from the NeurIPS 2025 incident), the best precision (PPV) across all nine settings is only 10.4\%---roughly one real hallucination per ten flagged citations.
-On a separate set of 480 papers from 2024--2025 that postdate every LLM's training cutoff, false positives rise $3$--$5{\times}$ (GPT-5.1: 17\%$\to$73\%) and F1 on a balanced probe drops to ${\approx}0.53$ (chance level), showing that LLM verifiers fail on recent work for a simple reason---they have not seen it.
+We introduce \textsc{Hallmark} (\textbf{Hall}ucination bench\textbf{mark}), a benchmark of BibTeX entries grouped into three difficulty tiers by how much external lookup they require, with a held-out contamination-resistant split and six structured per-entry checks---DOI, authors, venue, title, field completeness, cross-database agreement---so that every miss is traced to the specific check that failed.
+We evaluate a DOI-lookup baseline, six zero-shot LLMs, two agentic GPT-5.1 variants with a five-call lookup budget (against either public APIs or our co-designed rule-based verifier \texttt{bibtex-updater}), and \texttt{bibtex-updater} alone.
+Three findings emerge.
+First, tool access is not a free lunch: giving the LLM a matched lookup budget closes the recall gap with \texttt{bibtex-updater} but inflates false positives nearly threefold, so F1 never beats the zero-shot baseline.
+Second, at the per-citation base rate implied by the NeurIPS 2025 incident, the best precision across all settings is roughly one real hallucination per ten flagged citations---calibration, not detection rate, is the binding deployment constraint.
+Third, on 480 papers published after every LLM's training cutoff, false positives multiply and F1 collapses to chance, showing that LLM verifiers fail on recent work for a simple reason: they have not seen it.
 \textsc{Hallmark} ships with versioned splits, a baseline registry, and a pinned evaluation protocol, as an open-source, pip-installable package.
 Code and data: \url{https://github.com/anonymous/hallmark}.
 \end{abstract}
