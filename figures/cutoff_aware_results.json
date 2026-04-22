@@ -1,0 +1,46 @@
+{
+  "rows": [
+    {
+      "model": "GPT-5.1",
+      "post_default_fpr": 0.7261538461538461,
+      "post_ca_fpr": 0.0,
+      "post_default_dr": 0.958904109589041,
+      "post_ca_dr": 1.0,
+      "post_default_unc_count": 9,
+      "post_ca_unc_count": 423,
+      "pre_default_unc_rate": 0.0,
+      "pre_ca_unc_rate": 0.5266666666666666,
+      "pre_ca_dr": 0.5555555555555556,
+      "pre_ca_fpr": 0.0,
+      "pre_ca_n": 150
+    },
+    {
+      "model": "Gemini 2.5 Flash",
+      "post_default_fpr": 0.5749235474006116,
+      "post_ca_fpr": 0.46956521739130436,
+      "post_default_dr": 0.8456375838926175,
+      "post_ca_dr": 0.7954545454545454,
+      "post_default_unc_count": 5,
+      "post_ca_unc_count": 86,
+      "pre_default_unc_rate": 0.01161751563896336,
+      "pre_ca_unc_rate": 0.006666666666666667,
+      "pre_ca_dr": 0.3918918918918919,
+      "pre_ca_fpr": 0.04,
+      "pre_ca_n": 150
+    },
+    {
+      "model": "Qwen3-235B",
+      "post_default_fpr": 0.7850467289719626,
+      "post_ca_fpr": 0.0,
+      "post_default_dr": 0.9862068965517241,
+      "post_ca_dr": 1.0,
+      "post_default_unc_count": 13,
+      "post_ca_unc_count": 447,
+      "pre_default_unc_rate": 0.0017873100983020554,
+      "pre_ca_unc_rate": 0.9533333333333334,
+      "pre_ca_dr": 0.6,
+      "pre_ca_fpr": 0.0,
+      "pre_ca_n": 150
+    }
+  ]
+}

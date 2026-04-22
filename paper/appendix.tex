@@ -699,9 +699,11 @@ Do not guess.
 \noindent No other element of the prompt, temperature ($T{=}0$), seed (42), or token budget (256) is changed, so any observed shift in predictions is attributable to the addendum alone.
 
 \paragraph{Subset of models.}
-We run the cutoff-aware variant on GPT-5.1, Claude Sonnet~4.5, Gemini~2.5~Flash, and Qwen3-235B---the four non-DeepSeek models already evaluated on the temporal supplement.
+We run the cutoff-aware variant on GPT-5.1, Gemini~2.5~Flash, and Qwen3-235B.
 DeepSeek-R1 and DeepSeek-V3.2 are omitted because they already saturate at \texttt{UNCERTAIN} (or near-\texttt{UNCERTAIN}) on 2024--2025 entries under the default prompt (\cref{tab:temporal_supplement}, footnote $\dagger$): there is zero headroom for the addendum to shift their behaviour, and any measured ``improvement'' would be dominated by noise in the few non-\texttt{UNCERTAIN} predictions.
-Mistral Large is additionally omitted because its FPR dynamics closely track Qwen3-235B; the four-model subset retains coverage over the ``conservative'' (Gemini Flash, GPT-5.1) and ``aggressive'' (Qwen3-235B, Claude Sonnet~4.5) poles of the FPR spectrum.
+Mistral Large is omitted because its FPR dynamics closely track Qwen3-235B.
+Claude Sonnet~4.5 is omitted for a non-scientific reason---we did not have access to an Anthropic API key during this ablation run---and we register this as a limitation of the reported comparison.
+The retained three-model subset spans the full conservative--aggressive FPR spectrum observed in \cref{tab:temporal_supplement}: Gemini Flash and GPT-5.1 populate the conservative end and Qwen3-235B the aggressive end.
 
 \paragraph{Pre-registered interpretation.}
 We bind our interpretation of the empirical outcome to \cref{tab:cutoff-aware-preregistration} \emph{before running the ablation}.
@@ -739,7 +741,7 @@ FPR drops on post-cutoff specifically,
 We report four per-segment metrics (detection rate, FPR, \texttt{UNCERTAIN} rate, coverage), stratified by each model's training-data cutoff (\cref{tab:cutoffs}) into pre-cutoff and post-cutoff entries.
 The comparison is computed from cached predictions via \texttt{hallmark.evaluation.temporal.compare\_prompt\_variants}, so the ablation is reproducible from the released prediction dumps without re-running the API calls.
 
-\todo[inline]{Results are computed from cached predictions using \texttt{compare\_prompt\_variants}; the per-model table and outcome classification will be inserted here once the four ablation runs complete.}
+\input{figures/cutoff_aware_results}
 
 \section{Infrastructure documentation}
 \label{app:infrastructure}

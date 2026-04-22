@@ -1,0 +1,74 @@
+{
+  "rows": [
+    {
+      "model": "GPT-5.1",
+      "model_key": "llm_openai",
+      "model_id": "gpt-5.1",
+      "default": {
+        "detection_rate": 0.958904109589041,
+        "false_positive_rate": 0.7261538461538461,
+        "f1": 0.5363984674329502,
+        "ece": 0.42399150743099795,
+        "uncertain_rate": 0.01875,
+        "num_uncertain": 9,
+        "num_entries": 480
+      },
+      "cutoff_aware": {
+        "detection_rate": 1.0,
+        "false_positive_rate": 0.0,
+        "f1": 1.0,
+        "ece": 0.06359999999999996,
+        "uncertain_rate": 0.9441964285714286,
+        "num_uncertain": 423,
+        "num_entries": 448
+      }
+    },
+    {
+      "model": "Gemini 2.5 Flash",
+      "model_key": "llm_openrouter_gemini_flash",
+      "model_id": "google/gemini-2.5-flash",
+      "default": {
+        "detection_rate": 0.8456375838926175,
+        "false_positive_rate": 0.5749235474006116,
+        "f1": 0.5442764578833694,
+        "ece": 0.3553571428571428,
+        "uncertain_rate": 0.010416666666666666,
+        "num_uncertain": 5,
+        "num_entries": 480
+      },
+      "cutoff_aware": {
+        "detection_rate": 0.7954545454545454,
+        "false_positive_rate": 0.46956521739130436,
+        "f1": 0.6086956521739131,
+        "ece": 0.27196132596685085,
+        "uncertain_rate": 0.19196428571428573,
+        "num_uncertain": 86,
+        "num_entries": 448
+      }
+    },
+    {
+      "model": "Qwen3-235B",
+      "model_key": "llm_openrouter_qwen",
+      "model_id": "qwen/qwen3-235b-a22b-2507",
+      "default": {
+        "detection_rate": 0.9862068965517241,
+        "false_positive_rate": 0.7850467289719626,
+        "f1": 0.5296296296296297,
+        "ece": 0.5094635193133047,
+        "uncertain_rate": 0.027083333333333334,
+        "num_uncertain": 13,
+        "num_entries": 480
+      },
+      "cutoff_aware": {
+        "detection_rate": 1.0,
+        "false_positive_rate": 0.0,
+        "f1": 1.0,
+        "ece": null,
+        "uncertain_rate": 0.9977678571428571,
+        "num_uncertain": 447,
+        "num_entries": 448
+      }
+    }
+  ],
+  "supplement": "results/temporal_supplement/temporal_supplement_2024_2025.jsonl"
+}
