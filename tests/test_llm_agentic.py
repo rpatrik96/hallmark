@@ -865,3 +865,325 @@ class TestVerifyAgenticBtuAnthropic:
         tools = call_kwargs["tools"]
         assert len(tools) == 1
         assert tools[0]["name"] == "verify_with_bibtex_updater"
+
+    def test_consecutive_failures_abort(self, tmp_path: Path) -> None:
+        """BTU Anthropic variant aborts after N consecutive API failures."""
+        from hallmark.baselines.llm_agentic import verify_agentic_btu_anthropic
+
+        mock_client = MagicMock()
+        mock_client.messages.create.side_effect = RuntimeError("BTU Anthropic down")
+
+        mock_anthropic = MagicMock()
+        mock_anthropic.Anthropic.return_value = mock_client
+
+        entries = [_make_entry(f"k{i}") for i in range(5)]
+        with patch.dict("sys.modules", {"anthropic": mock_anthropic}):
+            preds = verify_agentic_btu_anthropic(
+                entries,
+                model=ANTHROPIC_MODEL,
+                api_key="test-key",
+                max_consecutive_failures=2,
+                cache_db_path=tmp_path / "cache.sqlite",
+            )
+
+        assert len(preds) == 5
+        assert all(p.label == "UNCERTAIN" for p in preds)
+
+
+# ---------------------------------------------------------------------------
+# Priority 1 — missing anthropic package fallback
+# ---------------------------------------------------------------------------
+
+
+class TestVerifyAgenticAnthropicMissingPackage:
+    def test_missing_anthropic_returns_fallback(self, tmp_path: Path) -> None:
+        """When anthropic import fails, returns fallback UNCERTAIN predictions."""
+        import sys
+
+        entries = [_make_entry()]
+        original = sys.modules.pop("anthropic", None)
+        try:
+            preds = verify_agentic_anthropic(
+                entries,
+                model=ANTHROPIC_MODEL,
+                api_key="test-key",
+                cache_db_path=tmp_path / "cache.sqlite",
+            )
+        finally:
+            if original is not None:
+                sys.modules["anthropic"] = original
+
+        assert len(preds) == 1
+        assert preds[0].label in ("VALID", "UNCERTAIN")
+
+
+# ---------------------------------------------------------------------------
+# Priority 2 — network tool functions (mocked httpx)
+# ---------------------------------------------------------------------------
+
+
+class TestResolveDoi:
+    def test_success_returns_normalised(self) -> None:
+        """200 response with CrossRef work body → normalised dict."""
+        from hallmark.baselines._agentic_tools import resolve_doi
+
+        payload = {
+            "message": {
+                "author": [{"family": "Smith", "given": "John"}],
+                "title": ["Deep Learning"],
+                "container-title": ["Nature"],
+                "published": {"date-parts": [[2022]]},
+                "DOI": "10.1234/abc",
+            }
+        }
+        mock_resp = MagicMock()
+        mock_resp.status_code = 200
+        mock_resp.json.return_value = payload
+
+        with patch("httpx.get", return_value=mock_resp):
+            result = resolve_doi("10.1234/abc")
+
+        assert result["title"] == "Deep Learning"
+        assert "Smith" in result["authors"]
+        assert result["venue"] == "Nature"
+        assert result["year"] == "2022"
+        assert result["doi"] == "10.1234/abc"
+
+    def test_404_raises_value_error(self) -> None:
+        """404 response → ValueError (DOI not found)."""
+        from hallmark.baselines._agentic_tools import resolve_doi
+
+        mock_resp = MagicMock()
+        mock_resp.status_code = 404
+
+        with (
+            patch("httpx.get", return_value=mock_resp),
+            pytest.raises(ValueError, match="DOI not found"),
+        ):
+            resolve_doi("10.9999/notexist")
+
+    def test_500_raises_runtime_error(self) -> None:
+        """Non-200/non-404 response → RuntimeError."""
+        from hallmark.baselines._agentic_tools import resolve_doi
+
+        mock_resp = MagicMock()
+        mock_resp.status_code = 500
+
+        with patch("httpx.get", return_value=mock_resp), pytest.raises(RuntimeError, match="500"):
+            resolve_doi("10.1234/abc")
+
+    def test_network_error_raises_runtime_error(self) -> None:
+        """httpx.RequestError → RuntimeError."""
+        import httpx
+
+        from hallmark.baselines._agentic_tools import resolve_doi
+
+        with (
+            patch("httpx.get", side_effect=httpx.RequestError("connection refused")),
+            pytest.raises(RuntimeError, match="Network error"),
+        ):
+            resolve_doi("10.1234/abc")
+
+    def test_malformed_doi_raises_value_error(self) -> None:
+        """String with no valid DOI pattern → ValueError."""
+        from hallmark.baselines._agentic_tools import resolve_doi
+
+        with pytest.raises(ValueError, match="Malformed DOI"):
+            resolve_doi("not-a-doi-at-all")
+
+
+class TestSearchCrossref:
+    def test_success_returns_list(self) -> None:
+        """200 response with items → list of normalised dicts."""
+        from hallmark.baselines._agentic_tools import search_crossref
+
+        payload = {
+            "message": {
+                "items": [
+                    {
+                        "author": [{"family": "Doe", "given": "Jane"}],
+                        "title": ["Attention Mechanisms"],
+                        "container-title": ["ICML"],
+                        "published": {"date-parts": [[2023]]},
+                        "DOI": "10.5555/1234",
+                    }
+                ]
+            }
+        }
+        mock_resp = MagicMock()
+        mock_resp.status_code = 200
+        mock_resp.json.return_value = payload
+
+        with patch("httpx.get", return_value=mock_resp):
+            results = search_crossref("attention mechanisms")
+
+        assert len(results) == 1
+        assert results[0]["title"] == "Attention Mechanisms"
+        assert "Doe" in results[0]["authors"]
+        assert results[0]["venue"] == "ICML"
+        assert results[0]["year"] == "2023"
+        assert results[0]["doi"] == "10.5555/1234"
+
+    def test_non_200_raises_runtime_error(self) -> None:
+        """Non-200 response → RuntimeError."""
+        from hallmark.baselines._agentic_tools import search_crossref
+
+        mock_resp = MagicMock()
+        mock_resp.status_code = 503
+
+        with patch("httpx.get", return_value=mock_resp), pytest.raises(RuntimeError, match="503"):
+            search_crossref("some query")
+
+    def test_network_error_raises_runtime_error(self) -> None:
+        """httpx.RequestError → RuntimeError."""
+        import httpx
+
+        from hallmark.baselines._agentic_tools import search_crossref
+
+        with (
+            patch("httpx.get", side_effect=httpx.RequestError("timeout")),
+            pytest.raises(RuntimeError, match="network error"),
+        ):
+            search_crossref("some query")
+
+    def test_empty_items_returns_empty_list(self) -> None:
+        """Response with no items → empty list (no error)."""
+        from hallmark.baselines._agentic_tools import search_crossref
+
+        mock_resp = MagicMock()
+        mock_resp.status_code = 200
+        mock_resp.json.return_value = {"message": {"items": []}}
+
+        with patch("httpx.get", return_value=mock_resp):
+            results = search_crossref("nonexistent paper xyz")
+
+        assert results == []
+
+
+class TestSearchOpenalex:
+    def test_success_returns_list(self) -> None:
+        """200 response with results → list of normalised dicts."""
+        from hallmark.baselines._agentic_tools import search_openalex
+
+        payload = {
+            "results": [
+                {
+                    "title": "Graph Neural Networks",
+                    "authorships": [
+                        {"author": {"display_name": "Alice Chen"}},
+                        {"author": {"display_name": "Bob Lee"}},
+                    ],
+                    "primary_location": {"source": {"display_name": "NeurIPS"}},
+                    "publication_year": 2021,
+                    "doi": "https://doi.org/10.9999/gnn",
+                }
+            ]
+        }
+        mock_resp = MagicMock()
+        mock_resp.status_code = 200
+        mock_resp.json.return_value = payload
+
+        with patch("httpx.get", return_value=mock_resp):
+            results = search_openalex("graph neural networks")
+
+        assert len(results) == 1
+        assert results[0]["title"] == "Graph Neural Networks"
+        assert "Alice Chen" in results[0]["authors"]
+        assert results[0]["venue"] == "NeurIPS"
+        assert results[0]["year"] == "2021"
+        # doi prefix stripped
+        assert results[0]["doi"] == "10.9999/gnn"
+
+    def test_non_200_raises_runtime_error(self) -> None:
+        """Non-200 response → RuntimeError."""
+        from hallmark.baselines._agentic_tools import search_openalex
+
+        mock_resp = MagicMock()
+        mock_resp.status_code = 429
+
+        with patch("httpx.get", return_value=mock_resp), pytest.raises(RuntimeError, match="429"):
+            search_openalex("test")
+
+    def test_network_error_raises_runtime_error(self) -> None:
+        """httpx.RequestError → RuntimeError."""
+        import httpx
+
+        from hallmark.baselines._agentic_tools import search_openalex
+
+        with (
+            patch("httpx.get", side_effect=httpx.RequestError("connection reset")),
+            pytest.raises(RuntimeError, match="network error"),
+        ):
+            search_openalex("test")
+
+
+class TestSearchArxiv:
+    _ATOM_RESPONSE = """\
+<?xml version="1.0" encoding="UTF-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom"
+      xmlns:arxiv="http://arxiv.org/schemas/atom">
+  <entry>
+    <title>Transformers for Citation Verification</title>
+    <author><name>Alice Wang</name></author>
+    <author><name>Bob Kim</name></author>
+    <published>2023-06-15T00:00:00Z</published>
+    <link title="doi" href="https://doi.org/10.48550/arXiv.2306.12345"/>
+  </entry>
+</feed>"""
+
+    def test_success_returns_list(self) -> None:
+        """200 Atom response → list of normalised dicts."""
+        from hallmark.baselines._agentic_tools import search_arxiv
+
+        mock_resp = MagicMock()
+        mock_resp.status_code = 200
+        mock_resp.text = self._ATOM_RESPONSE
+
+        with patch("httpx.get", return_value=mock_resp):
+            results = search_arxiv("citation verification")
+
+        assert len(results) == 1
+        assert results[0]["title"] == "Transformers for Citation Verification"
+        assert "Alice Wang" in results[0]["authors"]
+        assert results[0]["venue"] == "arXiv"
+        assert results[0]["year"] == "2023"
+        assert "arXiv.2306.12345" in results[0]["doi"]
+
+    def test_non_200_raises_runtime_error(self) -> None:
+        """Non-200 response → RuntimeError."""
+        from hallmark.baselines._agentic_tools import search_arxiv
+
+        mock_resp = MagicMock()
+        mock_resp.status_code = 503
+
+        with patch("httpx.get", return_value=mock_resp), pytest.raises(RuntimeError, match="503"):
+            search_arxiv("test query")
+
+    def test_network_error_raises_runtime_error(self) -> None:
+        """httpx.RequestError → RuntimeError."""
+        import httpx
+
+        from hallmark.baselines._agentic_tools import search_arxiv
+
+        with (
+            patch("httpx.get", side_effect=httpx.RequestError("arXiv unreachable")),
+            pytest.raises(RuntimeError, match="network error"),
+        ):
+            search_arxiv("test query")
+
+    def test_empty_feed_returns_empty_list(self) -> None:
+        """Atom feed with no entries → empty list."""
+        from hallmark.baselines._agentic_tools import search_arxiv
+
+        empty_atom = """\
+<?xml version="1.0" encoding="UTF-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom"></feed>"""
+
+        mock_resp = MagicMock()
+        mock_resp.status_code = 200
+        mock_resp.text = empty_atom
+
+        with patch("httpx.get", return_value=mock_resp):
+            results = search_arxiv("completely obscure title xyz")
+
+        assert results == []
