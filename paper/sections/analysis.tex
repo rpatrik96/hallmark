@@ -24,6 +24,19 @@ DOI-only is cheapest (1 API call) but achieves only 25.6\% DR.
 HaRC and verify-citations are bottlenecked by rate limiting ($<$7\% coverage).
 GPT-5.1 achieves $3{\times}$ the detection rate at \$0.21/entry.
 
+\paragraph{Fair-budget agentic comparison.}
+\label{sec:agentic}
+The zero-shot LLM baselines are compute-asymmetric with \texttt{bibtex-updater}: they make a single API call per entry, while \texttt{bibtex-updater} performs several lookups.
+We therefore added agentic variants of GPT-5.1 that can issue up to five tool calls per entry---either to a multi-source suite (CrossRef, OpenAlex, arXiv) or to \texttt{bibtex-updater} exposed as a single tool.
+Tool access lifts DR from 0.797 to 0.956--0.965, nearly matching \texttt{bibtex-updater}'s 0.946, but FPR rises from 0.171 to ${\approx}0.46$ because absence of evidence in any one source is interpreted as evidence of fabrication; F1 ends up below the zero-shot baseline despite the DR gain.
+The BTU-as-tool variant slightly dominates the multi-source variant (DR 0.965 vs.\ 0.956, ECE 0.113 vs.\ 0.165), suggesting that a distilled upstream verdict is easier for the LLM to interpret than raw API responses, and that the marginal value of an agentic harness over simply piping \texttt{bibtex-updater} output into the prompt is small.
+
+\paragraph{Infeasibility of HaRC even with a paid Semantic Scholar key.}
+\label{sec:harc_feasibility}
+To test whether HaRC's ${<}$7\% coverage was merely a rate-limit artefact, we re-ran HaRC on \texttt{dev\_public} with an authenticated Semantic Scholar API key (1 RPS guaranteed) and a 5-hour wall-clock budget.
+Even so, \texttt{harcx}'s per-entry latency (${\sim}90$~s, dominated by internal DBLP and Google Scholar fallbacks that do not benefit from the S2 key) exceeds the 30-minute per-batch timeout: 0 of 1119 entries were checked by \texttt{harcx} itself, and the ``full-coverage'' run reflects pre-screening alone (DR 0.209, which we therefore treat as the pre-screening ceiling).
+We conclude that HaRC is not operationally feasible at benchmark scale on shared infrastructure, independent of S2 quota.
+
 \begin{figure}[t]
 \centering
 \includegraphics[width=0.65\linewidth]{figures/cost_accuracy.pdf}

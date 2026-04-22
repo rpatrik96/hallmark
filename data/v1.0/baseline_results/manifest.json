@@ -14,6 +14,28 @@
       "split": "dev_public",
       "num_entries": 521,
       "f1_hallucination": 0.26829268292682923
+    },
+    "v1.0/baseline_results/llm_agentic_btu_openai_dev_public.json": {
+      "sha256": "b6ec05d80f592f5ae42d20c77aed108a0d65febfd5c86736ba553af6bd702cda",
+      "baseline": "llm_agentic_btu_openai",
+      "split": "dev_public",
+      "environment": {
+        "python_version": "3.13.0",
+        "platform": "macOS-26.3.1-x86_64-i386-64bit-Mach-O",
+        "timestamp": "2026-04-22T10:19:44.618539+00:00",
+        "hallmark_version": "0.1.0.post1.dev126+g6f6fdf0ce.d20260222"
+      }
+    },
+    "v1.0/baseline_results/llm_agentic_openai_dev_public.json": {
+      "sha256": "7e877e5bf9ab6a5a9eb925e4ab0edeb40016af6d306f104a3200edd63e6f08ed",
+      "baseline": "llm_agentic_openai",
+      "split": "dev_public",
+      "environment": {
+        "python_version": "3.13.0",
+        "platform": "macOS-26.3.1-x86_64-i386-64bit-Mach-O",
+        "timestamp": "2026-04-22T10:19:49.660129+00:00",
+        "hallmark_version": "0.1.0.post1.dev126+g6f6fdf0ce.d20260222"
+      }
     }
   }
 }
