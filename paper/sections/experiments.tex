@@ -15,10 +15,12 @@ The DOI-only baseline checks whether each entry's DOI resolves via CrossRef; res
 \cref{tab:results} presents results on \texttt{dev\_public}.
 
 \begin{table}[t]
-\caption{Results on \texttt{dev\_public}. Best values among independent full-coverage tools in \textbf{bold}. $^*$Partial evaluation due to API rate limiting; metrics computed on completed entries only and have wide CIs. The co-designed section (separated by a rule) shows bibtex-updater and its ensemble; interpret these with caution due to possible construct-overfitting bias (see \cref{app:codesign}).}
+\caption{\textbf{Main results on \texttt{dev\_public}.} Best values among independent full-coverage tools in \textbf{bold}. $^*$Partial evaluation due to API rate limiting; metrics computed on completed entries only and have wide CIs. The co-designed section (separated by a rule) shows bibtex-updater and its ensemble; interpret these with caution due to possible construct-overfitting bias (see \cref{app:codesign}).}
 \label{tab:results}
 \centering
 \small
+\setlength{\tabcolsep}{4pt}
+\resizebox{\textwidth}{!}{%
 \begin{tabular}{lccccccc}
 \toprule
 \textbf{Tool} & \textbf{DR $\uparrow$} & \textbf{FPR $\downarrow$} & \textbf{F1 $\uparrow$} & \textbf{MCC $\uparrow$} & \textbf{TW-F1 $\uparrow$} & \textbf{ECE $\downarrow$} & \textbf{Cov.} \\
@@ -44,7 +46,8 @@ GPT-5.1 + bibtex-updater (as tool) & 0.965 & 0.461 & 0.832 & 0.574 & 0.901 & 0.1
 bibtex-updater         & 0.946          & 0.179          & 0.908          & 0.781          & 0.936          & 0.297          & 1.00 \\
 GPT-5.1 + bibtex-updater & 0.818        & 0.144          & 0.846          & 0.670          & 0.856          & 0.086          & 1.00 \\
 \bottomrule
-\end{tabular}
+\end{tabular}%
+}
 \end{table}
 
 Three key insights emerge from the independent tools.
