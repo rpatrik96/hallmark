@@ -377,23 +377,28 @@ Respond with JSON only:
 \paragraph{Model identifiers.}
 All LLM baselines are pinned to date-stamped versions.
 \paragraph{Model freeze date and scope.}
-All LLM evaluations use model versions available on or before
-\textbf{February 10, 2026}. Frontier models released after the freeze
-are explicitly out of scope for this submission: GPT-5.2 (Dec 2025) and
+The primary evaluation uses model versions available on or before
+\textbf{February 10, 2026}. A subsequent April 2026 refresh added
+three baselines targeted at reviewer-flagged gaps: \emph{Llama 4
+Maverick} (closes the Meta gap), \emph{Gemini 2.5 Pro} (pairs the
+Gemini Flash tier with its Pro sibling), and \emph{Qwen3-VL-235B-Instruct}
+(tests stability across Qwen releases vs.\ the original Qwen3-235B-2507).
+Frontier models that remain out of scope are: GPT-5.2 (Dec 2025) and
 GPT-5.4 (Mar 5, 2026); Claude Sonnet 4.6 (Feb 17, 2026), Opus 4.6
 (Feb 5, 2026), and Opus 4.7 (Apr 16, 2026); Gemini 3 Pro (late 2025)
-and Gemini 3.1 Pro (Feb 19, 2026 preview); Meta Llama 4 (Scout/Maverick);
-Alibaba Qwen3.5 (Feb 2026), Qwen3.6, and Qwen3-Max (1T parameters);
-and Moonshot Kimi K2.6 (Apr 20, 2026). We report results for the models
-listed below and interpret them as characterizing \emph{tool-capability
-categories}---conservative vs.\ aggressive verifiers, standalone vs.\
-agentic, closed- vs.\ open-weight---rather than as an absolute
-leaderboard of the April 2026 model landscape. The evaluation pipeline
-accepts any OpenRouter-, OpenAI-, or Anthropic-compatible model ID as a
-drop-in kwarg (\texttt{model=...}); refreshing to newer generations
-requires no code changes.
+and Gemini 3.1 Pro (Feb 19, 2026 preview); Alibaba Qwen3.5 (Feb 2026),
+Qwen3.6, and Qwen3-Max (1T parameters; restricted to Alibaba provider
+on OpenRouter); and Moonshot Kimi K2.6 (Apr 20, 2026). We report results
+for the models listed below and interpret them as characterizing
+\emph{tool-capability categories}---conservative vs.\ aggressive
+verifiers, standalone vs.\ agentic, closed- vs.\ open-weight---rather
+than an absolute leaderboard of the April 2026 model landscape. The
+evaluation pipeline accepts any OpenRouter-, OpenAI-, or
+Anthropic-compatible model ID as a drop-in kwarg (\texttt{model=...});
+refreshing to newer generations requires no code changes.
 
-Zero-shot: \texttt{gpt-5.1} (OpenAI), \texttt{claude-sonnet-4-5-20250929} (Anthropic), and OpenRouter IDs \texttt{deepseek/deepseek-r1}, \texttt{deepseek/deepseek-v3.2}, \texttt{qwen/qwen3-235b-a22b-2507}, \texttt{mistralai/mistral-large-2512}, \texttt{google/gemini-2.5-flash}.
+Zero-shot (original roster): \texttt{gpt-5.1} (OpenAI), \texttt{claude-sonnet-4-5-20250929} (Anthropic), and OpenRouter IDs \texttt{deepseek/deepseek-r1}, \texttt{deepseek/deepseek-v3.2}, \texttt{qwen/qwen3-235b-a22b-2507}, \texttt{mistralai/mistral-large-2512}, \texttt{google/gemini-2.5-flash}.
+Zero-shot (post-freeze refresh, OpenRouter): \texttt{meta-llama/llama-4-maverick}, \texttt{google/gemini-2.5-pro}, \texttt{qwen/qwen3-vl-235b-a22b-instruct}.
 Agentic GPT-5.1 and Claude variants share the same identifiers.
 OpenRouter is accessed via the OpenAI SDK with \texttt{base\_url=https://openrouter.ai/api/v1}.
 

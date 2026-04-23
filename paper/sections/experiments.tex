@@ -4,15 +4,7 @@
 \subsection{Evaluated tools}
 \label{sec:baselines}
 
-We evaluate seven full-coverage tools on \texttt{dev\_public}: a DOI-only lower bound, GPT-5.1~\citep{openai2025gpt5}\footnote{Model freeze date: February 10, 2026. Frontier models released
-after the freeze---GPT-5.4 (Mar 2026); Claude Sonnet 4.6 (Feb 17, 2026),
-Opus 4.6 (Feb 5, 2026), and Opus 4.7 (Apr 16, 2026); Gemini 3 Pro and
-3.1 Pro (Feb 19, 2026 preview); Meta Llama 4 (Scout/Maverick); Alibaba
-Qwen3.5/3.6 and Qwen3-Max; and Moonshot Kimi K2.6 (Apr 20, 2026)---are
-out of scope for this submission. Results characterize tool-capability
-categories, not an absolute leaderboard. The pipeline accepts any
-OpenRouter-, OpenAI-, or Anthropic-compatible model ID as a drop-in
-kwarg; see \cref{app:llm-setup} for the registered roster.} (\texttt{gpt-5.1}), and five open-weight LLMs via OpenRouter (DeepSeek-R1, DeepSeek-V3.2~\citep{deepseekv3}, Qwen3-235B~\citep{qwen3}, Mistral Large~\citep{mistral2025large}, Gemini~2.5~Flash~\citep{google2025gemini}; model IDs: \texttt{deepseek/deepseek-r1}, \texttt{deepseek/deepseek-v3.2}, \texttt{qwen/qwen3-235b-a22b-2507}, \texttt{mistralai/mistral-large-2512}, \texttt{google/gemini-2.5-flash}).
+We evaluate ten full-coverage tools on \texttt{dev\_public}: a DOI-only lower bound, GPT-5.1~\citep{openai2025gpt5}\footnote{Model freeze date: February 10, 2026. The three rows flagged \emph{(post-freeze refresh)} in \cref{tab:results}---Llama~4~Maverick, Gemini~2.5~Pro, and Qwen3-VL-235B-Instruct---were added in April 2026 to address reviewer concerns about model-set staleness (Meta gap; Gemini-tier mismatch; Qwen-version reproducibility). Other frontier models released after the freeze---GPT-5.2/5.4 (Dec 2025--Mar 2026); Claude Sonnet 4.6 (Feb 17, 2026), Opus 4.6 (Feb 5, 2026), and Opus 4.7 (Apr 16, 2026); Gemini 3 Pro and 3.1 Pro (Feb 19, 2026 preview); Qwen3-Max; and Moonshot Kimi K2.6 (Apr 20, 2026)---remain out of scope. Results characterize tool-capability categories, not an absolute leaderboard. The pipeline accepts any OpenRouter-, OpenAI-, or Anthropic-compatible model ID as a drop-in kwarg; see \cref{app:llm-setup} for the registered roster.} (\texttt{gpt-5.1}), five LLMs via OpenRouter that were part of the original evaluation (DeepSeek-R1, DeepSeek-V3.2~\citep{deepseekv3}, Qwen3-235B~\citep{qwen3}, Mistral Large~\citep{mistral2025large}, Gemini~2.5~Flash~\citep{google2025gemini}; model IDs: \texttt{deepseek/deepseek-r1}, \texttt{deepseek/deepseek-v3.2}, \texttt{qwen/qwen3-235b-a22b-2507}, \texttt{mistralai/mistral-large-2512}, \texttt{google/gemini-2.5-flash}), and three additional baselines evaluated post-freeze (Llama~4~Maverick, Gemini~2.5~Pro~\citep{google2025gemini}, Qwen3-VL-235B-Instruct~\citep{qwen3}; model IDs: \texttt{meta-llama/llama-4-maverick}, \texttt{google/gemini-2.5-pro}, \texttt{qwen/qwen3-vl-235b-a22b-instruct}).
 All LLM baselines use the same zero-shot prompt; DeepSeek-R1 uses chain-of-thought (${\sim}25$s/entry vs.\ ${\sim}5$s).
 The codebase also registers \texttt{llm\_anthropic} (Claude Sonnet~4.5, \texttt{claude-sonnet-4-5-20250929}) and Anthropic agentic variants; these are omitted from \cref{tab:results} as they were completed after the submission deadline and are reported in \cref{app:llm-setup}.
 We also attempted two dedicated tools (HaRC~\citep{harc2024}, verify-citations~\citep{verifycitations2025}), both rate-limited to $<$7\% coverage due to Semantic Scholar API constraints.
@@ -46,6 +38,11 @@ DeepSeek-V3.2          & \textbf{0.880} & 0.730          & 0.721          & 0.19
 Qwen3-235B             & 0.832          & 0.551          & 0.737          & 0.307          & 0.806          & 0.294          & 1.00 \\
 Mistral Large          & 0.691          & 0.258          & 0.731          & 0.430          & 0.743          & 0.247          & 1.00 \\
 Gemini~2.5~Flash       & 0.482          & 0.101          & 0.617          & 0.406          & 0.608          & 0.286          & 1.00 \\
+\addlinespace[2pt]
+\multicolumn{8}{l}{\emph{Post-freeze refresh (April 2026; \cref{app:llm-setup})}} \\
+Llama~4~Maverick       & 0.591          & 0.150          & 0.693          & 0.446          & 0.688          & 0.197          & 1.00 \\
+Gemini~2.5~Pro         & 0.456          & \textbf{0.053} & 0.609          & 0.446          & 0.587          & 0.321          & 1.00 \\
+Qwen3-VL-235B          & 0.834          & 0.567          & 0.735          & 0.294          & 0.804          & 0.298          & 1.00 \\
 \midrule
 \multicolumn{8}{l}{\emph{Agentic (tool-use; GPT-5.1 with up to 5 tool calls per entry)}} \\
 GPT-5.1 + CrossRef/OpenAlex/arXiv & 0.956 & 0.465 & 0.827 & 0.556 & 0.895 & 0.165 & 1.00 \\
@@ -61,7 +58,9 @@ GPT-5.1 + bibtex-updater & 0.818        & 0.144          & 0.846          & 0.67
 
 Three key insights emerge from the independent tools.
 First, \emph{LLMs dramatically outperform DOI-only}: five of six achieve ${\geq}69\%$ DR---a $3{\times}$+ improvement---demonstrating that language models have sufficient parametric knowledge to detect citation hallucinations, including types they routinely generate.
-Second, \emph{LLMs span a recall--precision spectrum}: from conservative (Gemini~2.5~Flash: 48\% DR, 10\% FPR) to aggressive (DeepSeek-V3.2: 88\% DR, 73\% FPR), with GPT-5.1 achieving the best balance (F1\,=\,0.822, ECE\,=\,0.107).
+Second, \emph{LLMs span a recall--precision spectrum}: from ultra-conservative (Gemini~2.5~Pro: 46\% DR, 5\% FPR---the lowest FPR we observe) through conservative (Gemini~2.5~Flash: 48\% DR, 10\% FPR) to aggressive (DeepSeek-V3.2: 88\% DR, 73\% FPR).
+GPT-5.1 achieves the best overall balance (F1\,=\,0.822, ECE\,=\,0.107); among non-OpenAI models, Llama~4~Maverick is the best-calibrated (ECE\,=\,0.197), closing the Meta gap flagged in prior audits.
+Qwen3-VL-235B-Instruct reproduces Qwen3-235B's profile within ${\pm}2$\,pp on every headline metric, confirming that these behaviors are stable across Qwen releases rather than artifacts of a specific checkpoint.
 Third, \emph{a capability gap remains}: even the highest-recall independent model misses 12\% of hallucinations, with systematic weaknesses on subtle types.
 Fourth, \emph{granting the LLM a matched lookup budget closes the recall gap but inflates false positives}: giving GPT-5.1 up to five tool calls per entry (CrossRef, OpenAlex, arXiv, or bibtex-updater) lifts DR from 0.797 to 0.956--0.965---matching bibtex-updater's 0.946---but FPR rises from 0.171 to 0.46, because absence of evidence in any one source is interpreted as evidence of fabrication.
 The BTU-only agentic variant (DR\,=\,0.965, ECE\,=\,0.113) slightly dominates the multi-source variant because BTU's pre-distilled verdict is easier to interpret than raw API responses.
@@ -77,7 +76,7 @@ We compute 95\% confidence intervals via stratified bootstrap (10{,}000 resample
 DOI-only detection concentrates in Tier~1; all LLMs achieve strong cross-tier performance with graceful degradation.
 GPT-5.1 achieves 87\%/76\%/79\% on Tiers~1/2/3.
 Aggressive models achieve near-perfect Tier~1 (97--99\%) partly reflecting high FPR rather than superior discrimination.
-On Tier~3, rates range from 46\% (Gemini) to 83\% (DeepSeek-R1), confirming the recall--precision tradeoff persists across difficulty levels.
+On Tier~3, rates range from 44\% (Gemini~2.5~Pro) to 83\% (DeepSeek-R1), confirming the recall--precision tradeoff persists across difficulty levels; the post-freeze additions extend the range without disturbing the ordering.
 
 \begin{figure}[t]
 \centering
