@@ -113,9 +113,14 @@ OPENROUTER_MODELS: dict[str, str] = {
     # 256-token max_completion_tokens budget, causing JSON parse failures;
     # 2.5-pro is the closest reliable "Pro-tier" alternative without that issue.
     "gemini-pro": "google/gemini-2.5-pro",
-    # qwen/qwen3.5-397b-a17b: confirmed live 2026-04-22
-    # (qwen/qwen3-max blocked — only available via Alibaba provider, not in allowed set)
-    "qwen-max": "qwen/qwen3.5-397b-a17b",
+    # qwen/qwen3-vl-235b-a22b-instruct: same 235B class as the existing "qwen"
+    # baseline (qwen3-235b-a22b-2507 / July 2025) but a newer release via
+    # DeepInfra, explicit -instruct suffix (non-thinking). Smoke-tested
+    # 2026-04-23 (provider=DeepInfra, reasoning_tokens=0). Previous attempts:
+    #   qwen3.5-397b-a17b: ~40% empty responses (thinking mode ate budget)
+    #   qwen3-max / qwen3.6-plus / qwen-plus: 404 Alibaba-only
+    #   qwen3.5-122b-a10b: works but emits 500+ reasoning tokens per reply
+    "qwen-max": "qwen/qwen3-vl-235b-a22b-instruct",
 }
 
 # Reference dict of OpenAI model IDs for documentation and kwarg overrides.
@@ -142,8 +147,14 @@ ANTHROPIC_MODELS: dict[str, str] = {
 }
 
 
-def _load_checkpoint(checkpoint_path: Path) -> dict[str, Prediction]:
-    """Load previously saved predictions from a JSONL checkpoint file."""
+def _load_checkpoint(checkpoint_path: Path, *, skip_failed: bool = False) -> dict[str, Prediction]:
+    """Load previously saved predictions from a JSONL checkpoint file.
+
+    When ``skip_failed=True``, entries whose reason starts with
+    ``[Error fallback]`` are omitted from the returned dict, so the main loop
+    treats them as incomplete and re-attempts the API call. Use this to patch
+    transient failures (e.g. network drops) without rerunning clean entries.
+    """
     if not checkpoint_path.exists():
         return {}
     existing: dict[str, Prediction] = {}
@@ -151,11 +162,17 @@ def _load_checkpoint(checkpoint_path: Path) -> dict[str, Prediction]:
         if not line.strip():
             continue
         data = json.loads(line)
+        reason = data.get("reason", "")
+        if skip_failed and reason.startswith("[Error fallback]"):
+            # Intentionally drop from the "completed" set so it gets retried.
+            # Keep earlier non-failed record if we already saw one for this key.
+            existing.pop(data["bibtex_key"], None)
+            continue
         existing[data["bibtex_key"]] = Prediction(
             bibtex_key=data["bibtex_key"],
             label=data["label"],
             confidence=data["confidence"],
-            reason=data.get("reason", ""),
+            reason=reason,
             wall_clock_seconds=data.get("wall_clock_seconds", 0.0),
             api_calls=data.get("api_calls", 0),
             api_sources_queried=data.get("api_sources_queried", []),
@@ -187,6 +204,7 @@ def _verify_entries(
     checkpoint_dir: Path | None = None,
     max_consecutive_failures: int = 3,
     prompt_fn: Callable[[BlindEntry], str] | None = None,
+    retry_failed: bool = False,
 ) -> list[Prediction]:
     """Shared verification loop for all LLM providers.
 
@@ -202,6 +220,9 @@ def _verify_entries(
         max_consecutive_failures: Abort after this many consecutive API errors.
         prompt_fn: Optional function that takes a BlindEntry and returns a prompt
             string. When provided, overrides the default VERIFICATION_PROMPT.
+        retry_failed: When loading a checkpoint, treat previous
+            ``[Error fallback]`` predictions as incomplete so they get
+            re-attempted. Useful after a transient network outage.
     """
     checkpoint_path: Path | None = None
     completed: dict[str, Prediction] = {}
@@ -210,7 +231,7 @@ def _verify_entries(
         checkpoint_dir.mkdir(parents=True, exist_ok=True)
         safe_model = model.replace("/", "_")
         checkpoint_path = checkpoint_dir / f"{source_prefix}_{safe_model}.jsonl"
-        completed = _load_checkpoint(checkpoint_path)
+        completed = _load_checkpoint(checkpoint_path, skip_failed=retry_failed)
         if completed:
             logger.info(
                 "Resuming %s/%s: %d entries already completed",
@@ -340,6 +361,8 @@ def _verify_with_openai_compatible(
         def entry_prompt_fn(entry: BlindEntry) -> str:
             return _build_verification_prompt(entry, cutoff_aware=True)
 
+    retry_failed = bool(kwargs.pop("retry_failed", False))
+
     return _verify_entries(
         entries,
         call_fn,
@@ -348,6 +371,7 @@ def _verify_with_openai_compatible(
         log_dir=log_dir,
         checkpoint_dir=checkpoint_dir,
         prompt_fn=entry_prompt_fn,
+        retry_failed=retry_failed,
     )
 
 
@@ -375,6 +399,7 @@ def verify_with_openai(
         log_dir=log_dir,
         checkpoint_dir=checkpoint_dir,
         cutoff_aware=cutoff_aware,
+        **kwargs,
     )
 
 
@@ -401,6 +426,7 @@ def verify_with_openrouter(
         log_dir=log_dir,
         checkpoint_dir=checkpoint_dir,
         cutoff_aware=cutoff_aware,
+        **kwargs,
     )
 
 
@@ -411,6 +437,8 @@ def verify_with_anthropic(
     log_dir: Path | None = None,
     checkpoint_dir: Path | None = None,
     cutoff_aware: bool = False,
+    retry_failed: bool = False,
+    **kwargs: Any,
 ) -> list[Prediction]:
     """Verify entries using Anthropic API.
 
@@ -454,6 +482,7 @@ def verify_with_anthropic(
         log_dir=log_dir,
         checkpoint_dir=checkpoint_dir,
         prompt_fn=prompt_fn,
+        retry_failed=retry_failed,
     )
 
 

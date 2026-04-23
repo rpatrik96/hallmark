@@ -174,6 +174,28 @@ def main(argv: list[str] | None = None) -> int:
         default=False,
         help="Show metrics broken down by API source combination",
     )
+    eval_parser.add_argument(
+        "--checkpoint-dir",
+        type=str,
+        default=None,
+        metavar="DIR",
+        help=(
+            "Directory to save per-entry JSONL checkpoints for LLM baselines. "
+            "Enables resume-after-crash: if a run is interrupted, re-running the "
+            "same command picks up from where it stopped. One file per "
+            "(source_prefix, model) pair."
+        ),
+    )
+    eval_parser.add_argument(
+        "--retry-failed",
+        action="store_true",
+        default=False,
+        help=(
+            "When used with --checkpoint-dir, re-run only entries whose previous "
+            "prediction was an '[Error fallback]' — useful for patching "
+            "transient network failures without re-running clean entries."
+        ),
+    )
 
     # --- contribute ---
     contrib_parser = subparsers.add_parser(
@@ -474,8 +496,13 @@ def _cmd_evaluate(args: argparse.Namespace) -> int:
         if args.tool_name is None:
             tool_name = Path(args.predictions).stem
     elif args.baseline:
+        extra_kwargs: dict[str, object] = {}
+        if args.checkpoint_dir:
+            extra_kwargs["checkpoint_dir"] = Path(args.checkpoint_dir)
+        if args.retry_failed:
+            extra_kwargs["retry_failed"] = True
         try:
-            predictions = _run_baseline(args.baseline, entries, split=args.split)
+            predictions = _run_baseline(args.baseline, entries, split=args.split, **extra_kwargs)
         except (ImportError, ValueError) as e:
             logging.error(
                 f"Baseline '{args.baseline}' is not available: {e}\n"
@@ -1341,12 +1368,15 @@ def _cmd_diagnose(args: argparse.Namespace) -> int:
 
 
 def _run_baseline(
-    name: str, entries: list[BenchmarkEntry], split: str | None = None
+    name: str,
+    entries: list[BenchmarkEntry],
+    split: str | None = None,
+    **kwargs: object,
 ) -> list[Prediction]:
-    """Run a baseline via the registry."""
+    """Run a baseline via the registry. Extra kwargs forward to the runner."""
     from hallmark.baselines.registry import run_baseline
 
-    return run_baseline(name, entries, split=split)
+    return run_baseline(name, entries, split=split, **kwargs)
 
 
 if __name__ == "__main__":

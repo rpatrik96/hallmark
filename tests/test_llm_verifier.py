@@ -521,3 +521,116 @@ class TestSalvageParser:
         pred = _parse_llm_response(garbage, "k")
         assert pred.label == "UNCERTAIN"
         assert "Error fallback" in pred.reason
+
+
+# ---------------------------------------------------------------------------
+# Checkpoint resume + retry-failed behavior
+# ---------------------------------------------------------------------------
+
+
+class TestCheckpointRetryFailed:
+    """_load_checkpoint must skip [Error fallback] entries when skip_failed=True."""
+
+    def test_skip_failed_drops_error_fallback_entries(self, tmp_path: object) -> None:
+        from hallmark.baselines.llm_verifier import _load_checkpoint
+
+        path = tmp_path / "ckpt.jsonl"  # type: ignore[attr-defined]
+        records = [
+            {
+                "bibtex_key": "ok-1",
+                "label": "VALID",
+                "confidence": 0.9,
+                "reason": "looks real",
+            },
+            {
+                "bibtex_key": "failed-1",
+                "label": "UNCERTAIN",
+                "confidence": 0.5,
+                "reason": "[Error fallback] API error: ConnectionError",
+            },
+            {
+                "bibtex_key": "ok-2",
+                "label": "HALLUCINATED",
+                "confidence": 0.8,
+                "reason": "DOI does not resolve",
+            },
+        ]
+        path.write_text("\n".join(json.dumps(r) for r in records))
+
+        # Default: all three kept
+        loaded_all = _load_checkpoint(path)
+        assert set(loaded_all.keys()) == {"ok-1", "failed-1", "ok-2"}
+
+        # skip_failed=True: only the two good ones
+        loaded_retry = _load_checkpoint(path, skip_failed=True)
+        assert set(loaded_retry.keys()) == {"ok-1", "ok-2"}
+        assert "failed-1" not in loaded_retry
+
+    def test_skip_failed_keeps_later_success_for_same_key(self, tmp_path: object) -> None:
+        """If a key was retried successfully after a fallback, keep the success."""
+        from hallmark.baselines.llm_verifier import _load_checkpoint
+
+        path = tmp_path / "ckpt.jsonl"  # type: ignore[attr-defined]
+        # Same key appears twice: once as a fallback, once as a successful retry
+        records = [
+            {
+                "bibtex_key": "key-a",
+                "label": "UNCERTAIN",
+                "confidence": 0.5,
+                "reason": "[Error fallback] transient",
+            },
+            {
+                "bibtex_key": "key-a",
+                "label": "VALID",
+                "confidence": 0.95,
+                "reason": "resolved after retry",
+            },
+        ]
+        path.write_text("\n".join(json.dumps(r) for r in records))
+
+        loaded = _load_checkpoint(path, skip_failed=True)
+        assert loaded["key-a"].label == "VALID"
+        assert loaded["key-a"].confidence == pytest.approx(0.95)
+
+    def test_retry_failed_kwarg_flows_through_openrouter(self, tmp_path: object) -> None:
+        """verify_with_openrouter(retry_failed=True) must honor the flag."""
+        from hallmark.baselines.llm_verifier import (
+            _append_checkpoint,
+            verify_with_openrouter,
+        )
+
+        ckpt_dir = tmp_path / "ckpt"  # type: ignore[attr-defined]
+        ckpt_dir.mkdir()
+        ckpt_path = ckpt_dir / "openrouter_meta-llama_llama-4-maverick.jsonl"
+
+        # Pre-seed: one failed record for an entry we'll re-attempt
+        _append_checkpoint(
+            ckpt_path,
+            _parse_llm_response(
+                '{"label":"UNCERTAIN","confidence":0.5,"reason":"[Error fallback] x"}',
+                "retry-me",
+            ),
+        )
+
+        entry = _make_entry(key="retry-me")
+        resp = _make_openai_response(
+            json.dumps({"label": "VALID", "confidence": 0.9, "reason": "ok"})
+        )
+        mock_client = MagicMock()
+        mock_client.chat.completions.create.return_value = resp
+        mock_openai = MagicMock()
+        mock_openai.OpenAI.return_value = mock_client
+
+        with patch.dict("sys.modules", {"openai": mock_openai}):
+            preds = verify_with_openrouter(
+                [entry],
+                model="meta-llama/llama-4-maverick",
+                api_key="test-key",
+                checkpoint_dir=ckpt_dir,
+                retry_failed=True,
+            )
+
+        # The API should have been re-invoked (since we cleared the fallback)
+        assert mock_client.chat.completions.create.call_count == 1
+        assert len(preds) == 1
+        assert preds[0].label == "VALID"
