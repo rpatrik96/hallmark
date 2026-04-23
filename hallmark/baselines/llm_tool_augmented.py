@@ -218,4 +218,5 @@ def verify_tool_augmented(
         log_dir=log_dir,
         checkpoint_dir=checkpoint_dir,
         prompt_fn=_make_prompt,
+        **kwargs,
     )

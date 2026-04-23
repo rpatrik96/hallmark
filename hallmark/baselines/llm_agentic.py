@@ -378,7 +378,7 @@ def _run_agentic_anthropic(
 # ---------------------------------------------------------------------------
 
 
-def _load_checkpoint(path: Path) -> dict[str, Prediction]:
+def _load_checkpoint(path: Path, *, skip_failed: bool = False) -> dict[str, Prediction]:
     if not path.exists():
         return {}
     completed: dict[str, Prediction] = {}
@@ -387,11 +387,20 @@ def _load_checkpoint(path: Path) -> dict[str, Prediction]:
             continue
         try:
             d = json.loads(line)
+            reason = d.get("reason", "")
+            if skip_failed and reason.startswith("[Agentic error]"):
+                # Drop failed entries so they get retried; preserve a prior
+                # non-failed record for the same key if one was already seen.
+                prior = completed.get(d["bibtex_key"])
+                prior_reason = prior.reason if prior is not None else ""
+                if prior is None or prior_reason.startswith("[Agentic error]"):
+                    completed.pop(d["bibtex_key"], None)
+                continue
             completed[d["bibtex_key"]] = Prediction(
                 bibtex_key=d["bibtex_key"],
                 label=d["label"],
                 confidence=d["confidence"],
-                reason=d.get("reason", ""),
+                reason=reason,
                 wall_clock_seconds=d.get("wall_clock_seconds", 0.0),
                 api_calls=d.get("api_calls", 0),
                 api_sources_queried=d.get("api_sources_queried", []),
@@ -432,6 +441,7 @@ def verify_agentic_openai(
     tool_defs: list[dict] | None = None,
     system_prompt: str = SYSTEM_PROMPT,
     checkpoint_name: str = "agentic_openai",
+    retry_failed: bool = False,
     **_kwargs: Any,
 ) -> list[Prediction]:
     """Run agentic citation verification via OpenAI tool-use API.
@@ -461,7 +471,9 @@ def verify_agentic_openai(
         safe_model = model.replace("/", "_")
         checkpoint_path = checkpoint_dir / f"{checkpoint_name}_{safe_model}.jsonl"
 
-    completed = _load_checkpoint(checkpoint_path) if checkpoint_path else {}
+    completed = (
+        _load_checkpoint(checkpoint_path, skip_failed=retry_failed) if checkpoint_path else {}
+    )
     if completed:
         logger.info("Resuming %s: %d entries already done", checkpoint_name, len(completed))
 
@@ -529,6 +541,7 @@ def verify_agentic_anthropic(
     tool_defs: list[dict] | None = None,
     system_prompt: str = SYSTEM_PROMPT,
     checkpoint_name: str = "agentic_anthropic",
+    retry_failed: bool = False,
     **_kwargs: Any,
 ) -> list[Prediction]:
     """Run agentic citation verification via Anthropic tool-use API.
@@ -558,7 +571,9 @@ def verify_agentic_anthropic(
         safe_model = model.replace("/", "_")
         checkpoint_path = checkpoint_dir / f"{checkpoint_name}_{safe_model}.jsonl"
 
-    completed = _load_checkpoint(checkpoint_path) if checkpoint_path else {}
+    completed = (
+        _load_checkpoint(checkpoint_path, skip_failed=retry_failed) if checkpoint_path else {}
+    )
     if completed:
         logger.info("Resuming %s: %d entries already done", checkpoint_name, len(completed))
 

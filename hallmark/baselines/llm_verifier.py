@@ -166,7 +166,10 @@ def _load_checkpoint(checkpoint_path: Path, *, skip_failed: bool = False) -> dic
         if skip_failed and reason.startswith("[Error fallback]"):
             # Intentionally drop from the "completed" set so it gets retried.
             # Keep earlier non-failed record if we already saw one for this key.
-            existing.pop(data["bibtex_key"], None)
+            prior = existing.get(data["bibtex_key"])
+            prior_reason = prior.reason if prior is not None else ""
+            if prior is None or prior_reason.startswith("[Error fallback]"):
+                existing.pop(data["bibtex_key"], None)
             continue
         existing[data["bibtex_key"]] = Prediction(
             bibtex_key=data["bibtex_key"],

@@ -1254,3 +1254,139 @@ class TestAgenticBtuAnthropicSystemPrompt:
         call_kwargs = mock_client.messages.create.call_args.kwargs
         assert call_kwargs["system"] == SYSTEM_PROMPT
         assert call_kwargs["system"] != BTU_SYSTEM_PROMPT
+
+
+# ---------------------------------------------------------------------------
+# Bug-fix: agentic _load_checkpoint skip_failed + retry_failed threading
+# ---------------------------------------------------------------------------
+
+
+class TestAgenticCheckpointSkipFailed:
+    """_load_checkpoint(skip_failed=True) must drop [Agentic error] entries
+    while preserving successful ones, including the priority-preserve case."""
+
+    def _write_checkpoint(self, path: Path, records: list[dict]) -> None:
+        path.write_text("\n".join(json.dumps(r) for r in records))
+
+    def _make_pred_record(self, key: str, label: str, confidence: float, reason: str) -> dict:
+        return {
+            "bibtex_key": key,
+            "label": label,
+            "confidence": confidence,
+            "reason": reason,
+            "wall_clock_seconds": 1.0,
+            "api_calls": 1,
+            "api_sources_queried": [],
+        }
+
+    def test_skip_failed_drops_agentic_error_entries(self, tmp_path: Path) -> None:
+        """Entries with [Agentic error] reason are excluded when skip_failed=True."""
+        path = tmp_path / "ckpt.jsonl"
+        records = [
+            self._make_pred_record("ok-1", "VALID", 0.9, "resolved"),
+            self._make_pred_record("err-1", "UNCERTAIN", 0.5, "[Agentic error] timeout"),
+        ]
+        self._write_checkpoint(path, records)
+
+        loaded = _load_checkpoint(path, skip_failed=True)
+        assert "ok-1" in loaded
+        assert "err-1" not in loaded
+
+    def test_skip_failed_keeps_later_success_for_same_key(self, tmp_path: Path) -> None:
+        """[Agentic error] followed by success for same key: success is kept."""
+        path = tmp_path / "ckpt.jsonl"
+        records = [
+            self._make_pred_record("key-a", "UNCERTAIN", 0.5, "[Agentic error] transient"),
+            self._make_pred_record("key-a", "HALLUCINATED", 0.88, "confirmed bad DOI"),
+        ]
+        self._write_checkpoint(path, records)
+
+        loaded = _load_checkpoint(path, skip_failed=True)
+        assert loaded["key-a"].label == "HALLUCINATED"
+        assert loaded["key-a"].confidence == pytest.approx(0.88)
+
+    def test_skip_failed_preserves_prior_success_when_error_follows(self, tmp_path: Path) -> None:
+        """Success seen first, then [Agentic error] for same key: success is kept.
+
+        This mirrors the Bug 3 scenario but for agentic checkpoints.
+        """
+        path = tmp_path / "ckpt.jsonl"
+        records = [
+            self._make_pred_record("key-b", "VALID", 0.95, "all fields match"),
+            self._make_pred_record("key-b", "UNCERTAIN", 0.5, "[Agentic error] network drop"),
+        ]
+        self._write_checkpoint(path, records)
+
+        loaded = _load_checkpoint(path, skip_failed=True)
+        assert "key-b" in loaded
+        assert loaded["key-b"].label == "VALID"
+        assert loaded["key-b"].confidence == pytest.approx(0.95)
+
+    def test_retry_failed_flows_through_verify_agentic_openai(self, tmp_path: Path) -> None:
+        """verify_agentic_openai(retry_failed=True) must re-run [Agentic error] entries."""
+        ckpt_dir = tmp_path / "ckpt"
+        ckpt_dir.mkdir()
+        ckpt_path = ckpt_dir / "agentic_openai_gpt-5.1.jsonl"
+
+        # Write a checkpoint with one error entry
+        record = {
+            "bibtex_key": "test2024",
+            "label": "UNCERTAIN",
+            "confidence": 0.5,
+            "reason": "[Agentic error] simulated",
+            "wall_clock_seconds": 0.1,
+            "api_calls": 1,
+            "api_sources_queried": [],
+        }
+        ckpt_path.write_text(json.dumps(record) + "\n")
+
+        verdict = json.dumps({"label": "VALID", "confidence": 0.9, "reason": "ok"})
+
+        def _make_openai_final_msg(content: str) -> MagicMock:
+            msg = MagicMock()
+            msg.content = content
+            msg.tool_calls = None
+            msg.refusal = None
+            return msg
+
+        mock_client = MagicMock()
+        mock_client.chat.completions.create.return_value.choices = [
+            MagicMock(
+                message=_make_openai_final_msg(verdict),
+                finish_reason="stop",
+            )
+        ]
+        mock_openai = MagicMock()
+        mock_openai.OpenAI.return_value = mock_client
+
+        with patch.dict("sys.modules", {"openai": mock_openai}):
+            preds = verify_agentic_openai(
+                [_make_entry()],
+                model="gpt-5.1",
+                api_key="test-key",
+                checkpoint_dir=ckpt_dir,
+                retry_failed=True,
+                cache_db_path=tmp_path / "cache.sqlite",
+            )
+
+        # The errored entry was retried — API must have been called
+        assert mock_client.chat.completions.create.call_count >= 1
+        assert len(preds) == 1
+
+    def test_retry_failed_false_preserves_agentic_error_entries(self, tmp_path: Path) -> None:
+        """retry_failed=False (default) must NOT skip [Agentic error] entries."""
+        path = tmp_path / "ckpt.jsonl"
+        record = {
+            "bibtex_key": "test2024",
+            "label": "UNCERTAIN",
+            "confidence": 0.5,
+            "reason": "[Agentic error] simulated",
+            "wall_clock_seconds": 0.1,
+            "api_calls": 1,
+            "api_sources_queried": [],
+        }
+        path.write_text(json.dumps(record) + "\n")
+
+        loaded = _load_checkpoint(path, skip_failed=False)
+        assert "test2024" in loaded
+        assert loaded["test2024"].reason.startswith("[Agentic error]")

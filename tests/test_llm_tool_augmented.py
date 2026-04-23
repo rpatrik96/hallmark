@@ -369,3 +369,38 @@ class TestToolAugmentedMockFlowExtended:
             or call_args.kwargs.get("output_path") == nonexistent_path
         )
         assert len(preds) == 1
+
+
+# ---------------------------------------------------------------------------
+# Bug-fix: verify_tool_augmented must forward **kwargs to _verify_with_openai_compatible
+# ---------------------------------------------------------------------------
+
+
+class TestToolAugmentedKwargsForwarding:
+    """verify_tool_augmented(**kwargs) must pass extra kwargs to the inner call."""
+
+    def test_extra_kwargs_forwarded(self, tmp_path: Path) -> None:
+        """retry_failed (and any future kwarg) must reach _verify_with_openai_compatible."""
+        from hallmark.dataset.schema import Prediction
+
+        dummy_pred = Prediction(
+            bibtex_key="test2024",
+            label="VALID",
+            confidence=0.9,
+            reason="mocked",
+        )
+
+        with patch(
+            "hallmark.baselines.llm_verifier._verify_with_openai_compatible",
+            return_value=[dummy_pred],
+        ) as mock_verify:
+            verify_tool_augmented(
+                [_make_entry()],
+                model="gpt-5.1",
+                api_key="test-key",
+                retry_failed=True,
+            )
+
+        mock_verify.assert_called_once()
+        _, call_kwargs = mock_verify.call_args
+        assert call_kwargs.get("retry_failed") is True

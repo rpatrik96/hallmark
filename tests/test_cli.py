@@ -500,3 +500,28 @@ class TestLeaderboardCovF1Column:
         assert rc == 0
         out = capsys.readouterr().out
         assert "CovF1" in out
+
+
+# ── Bug-fix: --retry-failed requires --checkpoint-dir ─────────────────────────
+
+
+def test_retry_failed_without_checkpoint_dir_exits_nonzero(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """--retry-failed without --checkpoint-dir must exit with a non-zero code and
+    emit an error message that mentions both flags."""
+    rc = main(
+        [
+            "evaluate",
+            "--split",
+            "dev_public",
+            "--baseline",
+            "doi_only",
+            "--retry-failed",
+            # intentionally omitting --checkpoint-dir
+        ]
+    )
+    assert rc != 0
+    err = capsys.readouterr().err
+    assert "--retry-failed" in err
+    assert "--checkpoint-dir" in err

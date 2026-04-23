@@ -485,6 +485,14 @@ def _cmd_evaluate(args: argparse.Namespace) -> int:
         entries = _stratified_sample(entries, args.max_entries)
         logging.info(f"Sampled {len(entries)} entries (--max-entries {args.max_entries})")
 
+    # Validate flag combinations
+    if args.retry_failed and not args.checkpoint_dir:
+        print(
+            "error: --retry-failed requires --checkpoint-dir",
+            file=sys.stderr,
+        )
+        return 2
+
     # Get predictions
     predictions: list[Prediction]
     tool_name: str = args.tool_name or "unknown"

@@ -634,3 +634,38 @@ class TestCheckpointRetryFailed:
         assert mock_client.chat.completions.create.call_count == 1
         assert len(preds) == 1
         assert preds[0].label == "VALID"
+
+    def test_skip_failed_preserves_prior_success_when_fallback_follows(
+        self, tmp_path: object
+    ) -> None:
+        """Success seen first, then [Error fallback] for the same key: success must be kept.
+
+        Before the bug fix, the unconditional ``existing.pop(...)`` would discard
+        the earlier successful prediction, leaving the key absent and causing it
+        to be re-run unnecessarily (or silently dropped).
+        """
+        from hallmark.baselines.llm_verifier import _load_checkpoint
+
+        path = tmp_path / "ckpt.jsonl"  # type: ignore[attr-defined]
+        # success written first, then a later error fallback for the same key
+        records = [
+            {
+                "bibtex_key": "key-b",
+                "label": "HALLUCINATED",
+                "confidence": 0.92,
+                "reason": "DOI mismatch confirmed",
+            },
+            {
+                "bibtex_key": "key-b",
+                "label": "UNCERTAIN",
+                "confidence": 0.5,
+                "reason": "[Error fallback] transient network error",
+            },
+        ]
+        path.write_text("\n".join(json.dumps(r) for r in records))
+
+        loaded = _load_checkpoint(path, skip_failed=True)
+        # The successful prior record must be preserved, not discarded
+        assert "key-b" in loaded
+        assert loaded["key-b"].label == "HALLUCINATED"
+        assert loaded["key-b"].confidence == pytest.approx(0.92)
