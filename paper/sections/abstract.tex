@@ -1,12 +1,12 @@
 \begin{abstract}
-LLM use for literature review is prevalent, but authors, reviewers, and venues rarely verify AI-generated references---as shown by the NeurIPS 2025 incident in which 53 accepted papers carried fabricated citations.
-Citation verification workflows, including LLM-assisted ones, are emerging, but there is no standardized measurement of how well they perform.
-We introduce \textsc{Hallmark} (\textbf{Hall}ucination bench\textbf{mark}), a benchmark of BibTeX entries grouped into three difficulty tiers by how much external lookup they require, with a held-out contamination-resistant split and six structured per-entry checks---DOI, authors, venue, title, field completeness, cross-database agreement---so that every miss is traced to the specific check that failed.
-We evaluate a DOI-lookup baseline, nine zero-shot LLMs (GPT-5.1, DeepSeek-R1/V3.2, Qwen3-235B, Qwen3-VL-235B, Mistral Large, Gemini~2.5 Flash/Pro, Llama~4 Maverick), two agentic GPT-5.1 variants with a five-call lookup budget (against either public APIs or a co-designed rule-based verifier, \texttt{bibtex-updater}), and \texttt{bibtex-updater} alone.
-Three findings emerge.
-First, tool access is not a free lunch: giving the LLM a matched lookup budget closes the recall gap with \texttt{bibtex-updater} but inflates false positives nearly threefold, so F1 never beats the zero-shot baseline.
-Second, at the per-citation base rate implied by the NeurIPS 2025 incident, the best precision across all settings is roughly one real hallucination per ten flagged citations---calibration, not detection rate, is the binding deployment constraint.
-Third, on 480 papers published after every LLM's training cutoff, false positives multiply and F1 collapses to chance, showing that LLM verifiers fail on recent work for a simple reason: they have not seen it.
-\textsc{Hallmark} ships with versioned splits, a baseline registry, and a pinned evaluation protocol, as an open-source, pip-installable package.
-Code and data: \url{https://anonymous.4open.science/r/hallmark/}.
+LLMs are now routine collaborators on literature reviews, but their bibliographies often contain fabricated references---a failure mode that reached the main track of NeurIPS 2025, where 53 accepted papers carried hallucinated citations.
+To assess how current tools, including LLM-based ones, fare on citation verification, we introduce \textsc{Hallmark} (\textbf{Hall}ucination bench\textbf{mark}), a dataset of 2{,}525 BibTeX entries covering 14 hallucination types arranged in three tiers of increasing lookup difficulty (from fabricated DOIs to plausible fabrications), with six diagnostic sub-tests per entry so every missed detection is traced to the specific check that failed.
+A held-out, contamination-resistant split keeps the comparison fair to verifiers that may have memorized public bibliographic data.
+We benchmark a DOI-lookup baseline, nine zero-shot LLMs spanning frontier closed- and open-weight models (GPT-5.1, Gemini 2.5 Pro, DeepSeek-R1, among others), two tool-using GPT-5.1 \emph{agents} with a five-call external-lookup budget per citation, and our own rule-based verifier (\texttt{bibtex-updater}) on the same budget.
+Three findings reframe how these tools should be deployed.
+First, tool use is not a free lunch: giving the LLM the same lookup budget as \texttt{bibtex-updater} closes its recall gap but nearly triples its false-positive rate, so F1 never beats the \emph{zero-shot} LLM.
+Second, at the per-citation hallucination rate implied by the NeurIPS 2025 incident, the best precision across every setting is roughly one true hallucination per ten flagged citations---precision, not detection rate, is the deployment bottleneck.
+Third, on 480 papers published after every LLM's training cutoff, false positives multiply and F1 collapses to chance---a pattern that holds even for a model released after the original benchmark freeze.
+Together, these results show that today's LLM citation verifiers---tooled or not---are not yet deployment-ready, and pinpoint where the next round of work has to push.
 \end{abstract}
+% we show how this benchmark is solvable with a tool; focus as a testbed for hallucinations -> analyze failures (add new models to check whether there is any improvements)
