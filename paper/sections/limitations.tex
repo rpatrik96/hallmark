@@ -13,7 +13,7 @@ Expanding real-world coverage from retraction databases is a priority.
 
 \paragraph{Temporal fragility.}
 LLM verifiers carry implicit training-cutoff bias.
-A 480-entry temporal supplement (\cref{app:temporal_supplement}) confirms GPT-5.1's FPR rises 17.1\%$\to$72.6\% on 2024--2025 papers; the five non-anomalous models collapse to F1\,${\approx}0.53$ (DeepSeek-R1 to F1\,=\,0 via \texttt{UNCERTAIN} routing). This is structural and makes temporal robustness a moving target.
+A 448-entry temporal supplement (\cref{app:temporal_supplement}) confirms GPT-5.1's FPR rises 17.1\%$\to$72.6\% on 2024--2025 papers; the five non-anomalous models collapse to F1\,${\approx}0.53$ (DeepSeek-R1 to F1\,=\,0 via \texttt{UNCERTAIN} routing). Two post-freeze Anthropic models (Sonnet~4.6, Opus~4.7) avoid the collapse, suggesting the failure is fixable at the training-pipeline level---but for any verifier that has not been pretrained or post-trained for this kind of metacognitive abstention, temporal robustness remains a moving target.
 
 \paragraph{Benchmark--tool co-design and external validity.}
 The taxonomy predates bibtex-updater and reflects fundamental verification steps, not tool-specific internals; we report bibtex-updater separately (\cref{app:codesign}) and use identical pre-screening for all tools.

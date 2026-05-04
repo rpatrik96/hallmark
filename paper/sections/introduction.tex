@@ -24,4 +24,4 @@ We address this gap with four contributions:
 \end{enumerate}
 
 We validate the benchmark on ten full-coverage tools (\cref{sec:experiments}), revealing that DOI-only detects 26\% of hallucinations while zero-shot LLM verifiers achieve 46--88\%, with a pronounced recall--precision spectrum across models.
-A 480-entry temporal supplement exposes a critical deployment concern: LLM false positive rates increase 3--5$\times$ on papers from 2024--2025, collapsing F1 to near-chance (\cref{sec:temporal_robustness}).
+A 448-entry temporal supplement exposes a critical deployment concern: most LLM verifiers' false-positive rates increase 3--5$\times$ on papers from 2024--2025, collapsing F1 to near-chance, while two post-freeze Anthropic models break the pattern (\cref{sec:temporal_robustness}).

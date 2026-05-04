@@ -8,5 +8,5 @@ We benchmark a DOI-lookup baseline, nine frontier LLMs zero-shot (GPT-5.1, Gemin
 Our rule-based verifier reaches DR=0.95; no LLM configuration matches it, and three failure modes explain the gap.
 First, tool use is not a free lunch: giving the LLM the same lookup budget as \texttt{bibtex-updater} closes its recall gap but nearly triples its false-positive rate, so F1 never beats the \emph{zero-shot} LLM.
 Second, at the per-citation hallucination rate implied by the NeurIPS 2025 incident, the best precision across every setting is roughly one true hallucination per ten flagged citations---precision, not detection rate, is the deployment bottleneck.
-Third, on 480 papers published after every LLM's training cutoff, false positives multiply and F1 drops to ${\approx}0.53$---a pattern that holds even for GPT-5.4 (training cutoff August 2025, 11 months past GPT-5.1's), probed after the original benchmark freeze.
+Third, on 448 papers published after every LLM's training cutoff, every tested OpenAI/Google/DeepSeek/Qwen/Mistral verifier collapses to F1\,${\approx}0.53$ as false positives explode (FPR up to 0.84)---yet Claude Sonnet~4.6 and Opus~4.7, probed post-freeze via OpenRouter, stay sharp (FPR\,${\le}0.12$, F1\,${\ge}0.77$), so the failure is a vendor-specific behavioural pattern, not a structural limit of LLM verification.
 \end{abstract}
