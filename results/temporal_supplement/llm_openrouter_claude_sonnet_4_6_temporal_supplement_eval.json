@@ -1,0 +1,149 @@
+{
+  "tool_name": "llm_openrouter_claude_sonnet_4_6_temporal_supplement",
+  "split_name": "temporal_supplement",
+  "num_entries": 448,
+  "num_hallucinated": 148,
+  "num_valid": 300,
+  "detection_rate": 0.8175675675675675,
+  "false_positive_rate": 0.12,
+  "f1_hallucination": 0.7934426229508197,
+  "tier_weighted_f1": 0.8023032629558541,
+  "mcc": 0.6876721636315973,
+  "macro_f1": 0.843421819089623,
+  "union_recall_at_k": {},
+  "temporal_robustness": null,
+  "cost_efficiency": 0.17665701152335514,
+  "mean_api_calls": 1.0,
+  "ece": 0.07011160714285716,
+  "auroc": 0.9101914414414415,
+  "auprc": 0.8955441512945412,
+  "num_uncertain": 0,
+  "tier3_f1": 0.5050505050505051,
+  "detection_rate_ci": null,
+  "f1_hallucination_ci": null,
+  "tier_weighted_f1_ci": null,
+  "fpr_ci": null,
+  "ece_ci": null,
+  "mcc_ci": null,
+  "tier3_f1_ci": null,
+  "per_tier_metrics": {
+    "1": {
+      "detection_rate": 1.0,
+      "false_positive_rate": 0.12,
+      "f1": 0.763157894736842,
+      "precision": 0.6170212765957447,
+      "num_hallucinated": 58,
+      "num_valid": 300
+    },
+    "2": {
+      "detection_rate": 0.7307692307692307,
+      "false_positive_rate": 0.12,
+      "f1": 0.6031746031746031,
+      "precision": 0.5135135135135135,
+      "num_hallucinated": 52,
+      "num_valid": 300
+    },
+    "3": {
+      "detection_rate": 0.6578947368421053,
+      "false_positive_rate": 0.12,
+      "f1": 0.5050505050505051,
+      "precision": 0.4098360655737705,
+      "num_hallucinated": 38,
+      "num_valid": 300
+    }
+  },
+  "per_type_metrics": {
+    "arxiv_version_mismatch": {
+      "detection_rate": 0.6470588235294118,
+      "false_positive_rate": 0.0,
+      "f1": 0.7857142857142858,
+      "count": 17
+    },
+    "chimeric_title": {
+      "detection_rate": 0.8888888888888888,
+      "false_positive_rate": 0.0,
+      "f1": 0.9411764705882353,
+      "count": 9
+    },
+    "fabricated_doi": {
+      "detection_rate": 1.0,
+      "false_positive_rate": 0.0,
+      "f1": 1.0,
+      "count": 10
+    },
+    "future_date": {
+      "detection_rate": 1.0,
+      "false_positive_rate": 0.0,
+      "f1": 1.0,
+      "count": 18
+    },
+    "hybrid_fabrication": {
+      "detection_rate": 1.0,
+      "false_positive_rate": 0.0,
+      "f1": 1.0,
+      "count": 14
+    },
+    "merged_citation": {
+      "detection_rate": 1.0,
+      "false_positive_rate": 0.0,
+      "f1": 1.0,
+      "count": 1
+    },
+    "near_miss_title": {
+      "detection_rate": 0.3,
+      "false_positive_rate": 0.0,
+      "f1": 0.4615384615384615,
+      "count": 10
+    },
+    "nonexistent_venue": {
+      "detection_rate": 1.0,
+      "false_positive_rate": 0.0,
+      "f1": 1.0,
+      "count": 12
+    },
+    "partial_author_list": {
+      "detection_rate": 0.1111111111111111,
+      "false_positive_rate": 0.0,
+      "f1": 0.19999999999999998,
+      "count": 9
+    },
+    "placeholder_authors": {
+      "detection_rate": 1.0,
+      "false_positive_rate": 0.0,
+      "f1": 1.0,
+      "count": 18
+    },
+    "plausible_fabrication": {
+      "detection_rate": 1.0,
+      "false_positive_rate": 0.0,
+      "f1": 1.0,
+      "count": 11
+    },
+    "preprint_as_published": {
+      "detection_rate": 0.7142857142857143,
+      "false_positive_rate": 0.0,
+      "f1": 0.8333333333333333,
+      "count": 7
+    },
+    "swapped_authors": {
+      "detection_rate": 0.6666666666666666,
+      "false_positive_rate": 0.0,
+      "f1": 0.8,
+      "count": 3
+    },
+    "valid": {
+      "detection_rate": 0.0,
+      "false_positive_rate": 0.12,
+      "f1": 0.0,
+      "count": 300
+    },
+    "wrong_venue": {
+      "detection_rate": 0.7777777777777778,
+      "false_positive_rate": 0.0,
+      "f1": 0.8750000000000001,
+      "count": 9
+    }
+  },
+  "coverage": 1.0,
+  "coverage_adjusted_f1": 0.7934426229508197
+}

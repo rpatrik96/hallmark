@@ -1,0 +1,38 @@
+{
+  "supplement_file": "results/temporal_supplement/temporal_supplement_2024_2025.jsonl",
+  "supplement_stats": {
+    "n_total": 448,
+    "n_valid": 300,
+    "n_hallucinated": 148
+  },
+  "v1_stats": {
+    "n_total": 1119,
+    "n_valid": 486,
+    "n_hallucinated": 633
+  },
+  "models": {
+    "llm_openrouter_claude_sonnet_4_6": "Claude Sonnet 4.6 (OR)",
+    "llm_openrouter_claude_opus_4_7": "Claude Opus 4.7 (OR)"
+  },
+  "v1_metrics": {
+    "llm_openrouter_claude_sonnet_4_6": {},
+    "llm_openrouter_claude_opus_4_7": {}
+  },
+  "supplement_metrics": {
+    "llm_openrouter_claude_sonnet_4_6": {
+      "detection_rate": 0.8175675675675675,
+      "fpr": 0.12,
+      "f1": 0.7934426229508197,
+      "tw_f1": 0.8023032629558541,
+      "ece": 0.07011160714285716
+    },
+    "llm_openrouter_claude_opus_4_7": {
+      "detection_rate": 0.7162162162162162,
+      "fpr": 0.07333333333333333,
+      "f1": 0.7681159420289855,
+      "tw_f1": 0.7836734693877551,
+      "ece": 0.09799107142857148
+    }
+  },
+  "bootstrap_fpr": {}
+}
