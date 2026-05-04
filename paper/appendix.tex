@@ -806,7 +806,7 @@ We interpret this as evidence that H1 is a genuine temporal phenomenon rather th
 \section{Infrastructure documentation}
 \label{app:infrastructure}
 
-\textsc{Hallmark} is distributed as a pip-installable Python package with the following components:
+\textsc{Hallmark} is packaged as an installable Python project (PEP 517/518) and distributed via two channels: a source repository (anonymized for review at \url{https://anonymous.4open.science/r/hallmark/}) and a HuggingFace dataset mirror at \url{https://huggingface.co/datasets/hallmark-neurips2026/HALLMARK}. PyPI release is planned upon acceptance. The package includes the following components:
 
 \begin{itemize}
     \item \textbf{CLI}: \texttt{hallmark evaluate}, \texttt{hallmark stats}, \texttt{hallmark leaderboard}, \texttt{hallmark contribute}.
@@ -823,11 +823,17 @@ Tool developers submit predictions via pull request; maintainers evaluate agains
 
 \paragraph{Installation.}
 \begin{verbatim}
-pip install hallmark                    # Core
-pip install hallmark[baselines]         # With baseline dependencies
-pip install hallmark[ranking]           # With Plackett-Luce support
-pip install hallmark[all]               # Everything
+git clone https://anonymous.4open.science/r/hallmark/
+cd hallmark
+pip install -e .                  # Core (editable install)
+pip install -e ".[baselines]"     # With baseline deps (openai, anthropic)
+pip install -e ".[ranking]"       # With Plackett-Luce support (choix)
+pip install -e ".[scraping]"      # With dataset scraping tools
+pip install -e ".[analysis]"      # With analysis tools (scikit-learn)
+pip install -e ".[all]"           # Everything
 \end{verbatim}
+
+\noindent The benchmark data (\texttt{data/v1.0/}) is shipped in the repository. Once installed, the \texttt{hallmark} CLI provides access to all splits; the dataset is also available as a stable mirror at \url{https://huggingface.co/datasets/hallmark-neurips2026/HALLMARK}.
 
 \section{Datasheet for \textsc{Hallmark}}
 \label{app:datasheet}
@@ -838,28 +844,43 @@ Following \citet{gebru2021datasheets} and \citet{holland2020dataset}, we provide
 \textsc{Hallmark} was created to provide a standardized benchmark for evaluating citation hallucination detection tools, motivated by the NeurIPS 2025 incident and subsequent audits.
 
 \paragraph{Composition.}
-The dataset contains 2,525 BibTeX entries: 973 valid entries scraped from DBLP and arXiv and 1,551 hallucinated entries generated through perturbation, LLM generation, adversarial crafting, and real-world collection across 14 hallucination types.
+The public release contains 2,072 BibTeX entries: 774 valid entries scraped from DBLP and arXiv and 1,298 hallucinated entries generated through perturbation, LLM generation, adversarial crafting, and real-world collection across 14 hallucination types.
+A held-out \texttt{test\_hidden} split contains 453 additional entries (label distribution withheld) bringing the grand total to 2,525.
+Split counts: \texttt{dev\_public} 1,119 (486 valid / 633 hallucinated), \texttt{test\_public} 831 (287 / 544), \texttt{stress\_test} 122 (1 / 121).
 Each entry includes 6 binary sub-test labels.
 
 \paragraph{Collection process.}
 Valid entries were scraped from the DBLP API and verified against CrossRef and Semantic Scholar.
 Hallucinated entries were generated using the methods described in \cref{sec:dataset} and \cref{app:dataset}.
 
-\paragraph{Preprocessing.}
+\paragraph{Preprocessing/Cleaning/Labeling.}
 BibTeX records were normalized to a consistent field ordering.
 Unicode characters were preserved.
 Entries were split into dev/test/hidden sets with stratified sampling across hallucination types and tiers.
+Labels were assigned deterministically by the generation pipeline; valid entries carry ground-truth sub-test labels derived from database cross-checks.
 
-\paragraph{Uses.}
-\textsc{Hallmark} is intended for evaluating and comparing citation verification tools.
-It should not be used to train hallucination generators or to generate convincing fake citations.
+\paragraph{Recommended uses.}
+\textsc{Hallmark} is intended for evaluating and comparing citation verification tools, ablating individual verification sub-tests, and cross-tool ranking via the Plackett-Luce framework (\cref{app:ranking}).
+
+\paragraph{Non-recommended uses.}
+\textsc{Hallmark} should not be used to train hallucination generators, to produce convincing fake citations, or for any purpose that violates the MIT license.
 
 \paragraph{Distribution.}
-The dataset is distributed under the MIT license via GitHub and PyPI.
-The hidden test set is not publicly distributed.
+The dataset is distributed under the MIT license (\url{https://opensource.org/licenses/MIT}) via GitHub (anonymous for review) and as a stable HuggingFace mirror at \texttt{hallmark-neurips2026/HALLMARK}.
+A Croissant~1.0 metadata record is included in the repository root.
+The \texttt{test\_hidden} split is not publicly distributed.
 
 \paragraph{Maintenance.}
-The benchmark is maintained by the authors and accepts community contributions through a structured submission process (pull requests to the GitHub repository, validated by automated checks for BibTeX well-formedness, sub-test consistency, and duplicate detection).
+The benchmark is maintained by the authors (contact will be de-anonymized at camera-ready) and accepts community contributions through pull requests validated by automated checks for BibTeX well-formedness, sub-test consistency, and duplicate detection.
+Dataset versioning is tracked via the \texttt{schema\_version} field in \texttt{metadata.json}; corrections are issued as point releases (1.0.x).
+
+\paragraph{Errata.}
+Schema versioning is managed via the \texttt{schema\_version} field in \texttt{metadata.json}.
+Corrections to entries are issued as point releases (e.g., 1.0.1), preserving backward compatibility with prior evaluation results.
+
+\paragraph{Ethical and legal considerations.}
+\textsc{Hallmark} contains only bibliographic metadata; it includes no personally identifiable information beyond author names already present in published bibliographic records.
+No human subjects are involved and no IRB approval is required.
 
 \section{Co-designed tool evaluation}
 \label{app:codesign}

@@ -30,6 +30,7 @@ KS tests across the seven types with both real and synthetic instances show 4/7 
 \label{sec:temporal_robustness}
 A 480-entry supplement (330 valid 2024--2025 DBLP, 150 hallucinated; \cref{app:temporal_supplement}) shows LLM verifiers degrade sharply beyond training cutoff: GPT-5.1's FPR rises 17.1\%$\to$72.6\% ($4.2{\times}$); the five non-anomalous models collapse to F1\,${\approx}0.53$ with DR inflating to 0.846--0.986 (``flag everything unfamiliar''); DeepSeek-R1 instead routes nearly every entry to \texttt{UNCERTAIN}, yielding DR\,=\,F1\,=\,0 with FPR\,=\,0.844 (\cref{tab:temporal_supplement}).
 Low-baseline-FPR models suffer the largest relative degradation ($r = -0.82$, $p = 0.02$, $n = 7$); API augmentation does not help (databases also lack recent papers).
+A post-freeze probe with GPT-5.4 (training cutoff: August 2025, 11 months later than GPT-5.1's) replicates the pattern on the same 448-entry supplement: FPR drops from 74.2\% to 41.3\% as entries cross the new cutoff line, but remains far from zero even for papers GPT-5.4 should recognise---confirming that training-cutoff blindness is not an artefact of any single model generation (\cref{app:gpt54-probe}).
 
 \paragraph{Failure modes.}
 \label{sec:failure}
