@@ -209,9 +209,8 @@ def compute_bootstrap_ci(
 
 def main():
     # Load results
-    results_path = Path(
-        "/Users/patrik.reizinger/Documents/GitHub/hallmark/results/llm_openai_dev_public.json"
-    )
+    repo_root = Path(__file__).resolve().parent.parent
+    results_path = repo_root / "results" / "llm_openai_dev_public.json"
     with open(results_path) as f:
         results = json.load(f)
 
@@ -241,9 +240,7 @@ def main():
     output["ece_ci"] = None  # Skip ECE as requested
 
     # Save output
-    output_path = Path(
-        "/Users/patrik.reizinger/Documents/GitHub/hallmark/results/llm_openai_dev_public_ci.json"
-    )
+    output_path = repo_root / "results" / "llm_openai_dev_public_ci.json"
     with open(output_path, "w") as f:
         json.dump(output, f, indent=2)
 

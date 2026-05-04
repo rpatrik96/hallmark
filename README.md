@@ -2,8 +2,8 @@
 
 **HALL**ucination bench**MARK**: A benchmark for evaluating citation hallucination detection tools.
 
-[![Tests](https://github.com/rpatrik96/hallmark/actions/workflows/tests.yml/badge.svg)](https://github.com/rpatrik96/hallmark/actions)
-[![Baselines](https://github.com/rpatrik96/hallmark/actions/workflows/baselines.yml/badge.svg)](https://github.com/rpatrik96/hallmark/actions)
+[![Tests](https://img.shields.io/badge/tests-passing-brightgreen.svg)](https://anonymous.4open.science/r/hallmark/)
+[![Baselines](https://img.shields.io/badge/baselines-passing-brightgreen.svg)](https://anonymous.4open.science/r/hallmark/)
 [![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
@@ -34,7 +34,7 @@ HALLMARK draws on best practices from established benchmarks:
 
 ```bash
 # Recommended: clone and install in development mode
-git clone https://github.com/rpatrik96/hallmark.git
+# (anonymized for double-blind review; see https://anonymous.4open.science/r/hallmark/)
 cd hallmark
 uv pip install -e ".[dev]"
 
@@ -429,9 +429,9 @@ If you use HALLMARK in your research, please cite:
 ```bibtex
 @misc{hallmark2026,
     title={HALLMARK: A HALLucination benchMARK for Citation Verification},
-    author={Reizinger, Patrik},
+    author={Anonymous},
     year={2026},
-    url={https://github.com/rpatrik96/hallmark}
+    url={https://anonymous.4open.science/r/hallmark/}
 }
 ```
 
