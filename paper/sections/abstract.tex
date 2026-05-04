@@ -1,10 +1,10 @@
 \begin{abstract}
 LLMs are now routine collaborators on literature reviews, but their bibliographies often contain fabricated references---a failure mode that reached the main track of NeurIPS 2025, where 53 accepted papers carried hallucinated citations~\citep{neurips2025incident}.
 Two detection patterns are emerging in response: deterministic rule-based tools that look up each entry against authoritative sources, and LLMs repurposed as verifiers, often with external-lookup access.
-The practice is still in its early days, and neither pattern has been measured at scale; we provide that measurement with \textsc{Hallmark} (\textbf{Hall}ucination bench\textbf{mark}), a dataset of 2{,}525 BibTeX entries covering 14 hallucination types arranged in three tiers of increasing lookup difficulty (from fabricated DOIs to plausible fabrications).
+We measure both patterns at scale with \textsc{Hallmark} (\textbf{Hall}ucination bench\textbf{mark}), 2{,}525 BibTeX entries spanning 14 hallucination types in three tiers of lookup difficulty (from fabricated DOIs to plausible fabrications).
 Each entry carries six diagnostic sub-tests, so every missed detection is traced to the specific check that failed.
 A held-out, contamination-resistant split keeps the comparison fair to verifiers that may have memorized public bibliographic data.
-We benchmark a DOI-lookup baseline, nine zero-shot LLMs spanning frontier closed- and open-weight models (GPT-5.1, Gemini 2.5 Pro, DeepSeek-R1, among others), two tool-using GPT-5.1 \emph{agents} with a five-call external-lookup budget per citation, and our own rule-based verifier (\texttt{bibtex-updater}) on the same budget.
+We benchmark a DOI-lookup baseline, nine frontier LLMs zero-shot (GPT-5.1, Gemini 2.5 Pro, DeepSeek-R1, and six others), two tool-augmented \emph{agents} with a matched five-call lookup budget, and our own rule-based verifier (\texttt{bibtex-updater}).
 Our rule-based verifier reaches DR=0.95; no LLM configuration matches it, and three failure modes explain the gap.
 First, tool use is not a free lunch: giving the LLM the same lookup budget as \texttt{bibtex-updater} closes its recall gap but nearly triples its false-positive rate, so F1 never beats the \emph{zero-shot} LLM.
 Second, at the per-citation hallucination rate implied by the NeurIPS 2025 incident, the best precision across every setting is roughly one true hallucination per ten flagged citations---precision, not detection rate, is the deployment bottleneck.
