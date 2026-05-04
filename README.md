@@ -187,6 +187,19 @@ See [`examples/03_custom_baseline.py`](examples/03_custom_baseline.py) for a com
 | `plausible_fabrication` | Entirely fabricated but realistic | Realistic author + plausible title |
 | `arxiv_version_mismatch` | Mixed preprint/published metadata | arXiv ID with conference venue claim |
 
+## Hosting & Croissant
+
+The dataset is mirrored on HuggingFace (parquet + jsonl + baseline results + RAI Croissant metadata):
+<https://huggingface.co/datasets/hallmark-neurips2026/HALLMARK>
+
+A [Croissant 1.0](https://mlcommons.org/croissant/) metadata file is included at the repo root (`croissant.json`). It covers all public splits and includes RAI fields required by NeurIPS 2026 D&B. Validate locally with:
+
+```bash
+mlcroissant validate --jsonld croissant.json
+```
+
+The data is also shipped in `data/v1.0/` for direct repo-relative access without any external download.
+
 ## Dataset
 
 ### Splits
