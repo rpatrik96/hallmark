@@ -4,9 +4,9 @@ Two detection patterns are emerging in response: deterministic rule-based tools 
 We measure both patterns at scale with \textsc{Hallmark} (\textbf{Hall}ucination bench\textbf{mark}), 2{,}525 BibTeX entries spanning 14 hallucination types in three tiers of lookup difficulty (from fabricated DOIs to plausible fabrications).
 Each entry carries six diagnostic sub-tests, so every missed detection is traced to the specific check that failed.
 A held-out, contamination-resistant split keeps the comparison fair to verifiers that may have memorized public bibliographic data.
-We benchmark a DOI-lookup baseline, nine frontier LLMs zero-shot (GPT-5.1, Gemini 2.5 Pro, DeepSeek-R1, and six others), two tool-augmented \emph{agents} with a matched five-call lookup budget, and our own rule-based verifier (\texttt{bibtex-updater}).
+We benchmark a DOI-lookup baseline, nine frontier LLMs zero-shot (GPT-5.1, Gemini 2.5 Pro, Llama 4 Maverick, DeepSeek-V3.2, and five others, evaluated through April 2026), two tool-augmented \emph{agents} with a matched five-call lookup budget, and our own rule-based verifier (\texttt{bibtex-updater}).
 Our rule-based verifier reaches DR=0.95; no LLM configuration matches it, and three failure modes explain the gap.
 First, tool use is not a free lunch: giving the LLM the same lookup budget as \texttt{bibtex-updater} closes its recall gap but nearly triples its false-positive rate, so F1 never beats the \emph{zero-shot} LLM.
 Second, at the per-citation hallucination rate implied by the NeurIPS 2025 incident, the best precision across every setting is roughly one true hallucination per ten flagged citations---precision, not detection rate, is the deployment bottleneck.
-Third, on 480 papers published after every LLM's training cutoff, false positives multiply and F1 drops to ${\approx}0.53$---a pattern that holds even for a model released after the original benchmark freeze.
+Third, on 480 papers published after every LLM's training cutoff, false positives multiply and F1 drops to ${\approx}0.53$---a pattern that holds even for GPT-5.4 (training cutoff August 2025, 11 months past GPT-5.1's), probed after the original benchmark freeze.
 \end{abstract}
