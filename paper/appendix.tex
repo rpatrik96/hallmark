@@ -399,7 +399,8 @@ Anthropic-compatible model ID as a drop-in kwarg (\texttt{model=...});
 refreshing to newer generations requires no code changes.
 
 Zero-shot (original roster): \texttt{gpt-5.1} (OpenAI), \texttt{claude-sonnet-4-5-20250929} (Anthropic), and OpenRouter IDs \texttt{deepseek/deepseek-r1}, \texttt{deepseek/deepseek-v3.2}, \texttt{qwen/qwen3-235b-a22b-2507}, \texttt{mistralai/mistral-large-2512}, \texttt{google/gemini-2.5-flash}.
-Zero-shot (post-freeze refresh, OpenRouter): \texttt{meta-llama/llama-4-maverick}, \texttt{google/gemini-2.5-pro}, \texttt{qwen/qwen3-vl-235b-a22b-instruct}.
+Zero-shot (post-freeze refresh, OpenRouter): \texttt{meta-llama/llama-4-maverick}, \texttt{google/gemini-2.5-pro}, \texttt{qwen/qwen3-vl-235b-a22b-instruct}, \texttt{anthropic/claude-sonnet-4.6}, \texttt{anthropic/claude-opus-4.7}.
+The two Anthropic models were re-evaluated through OpenRouter rather than the native Anthropic API to keep the dispatch path uniform across post-freeze additions; predictions land in \texttt{data/v1.0/baseline\_results/} and \texttt{results/temporal\_supplement/} alongside the original cohort.
 Agentic GPT-5.1 and Claude variants share the same identifiers.
 OpenRouter is accessed via the OpenAI SDK with \texttt{base\_url=https://openrouter.ai/api/v1}.
 
@@ -492,10 +493,10 @@ CI validates these reference results by checksum rather than re-running the tool
 
 \paragraph{Training-data cutoffs of evaluated LLMs.}
 \label{app:cutoffs}
-The temporal evaluation assumes papers from calendar years 2024--2025 post-date most evaluated models' training data. \cref{tab:cutoffs} compiles vendor-disclosed training cutoffs (or the most recent reliable upper bound when no disclosure is available) for every LLM used as a baseline. Three observations frame the temporal results: (i) every evaluated model has a disclosed or inferred cutoff no later than mid-2025, so the 480-entry temporal supplement (drawn from 2024--2025 DBLP proceedings) is partially or fully out-of-distribution for all of them; (ii) the two closed-weight models with earliest cutoffs (GPT-5.1, Sep 2024) and the conservative open-weight Gemini 2.5 Flash (Jan 2025) are the models hardest-hit by the FPR explosion, consistent with their reliance on parametric confirmation; (iii) DeepSeek models do not publish an official cutoff in their technical reports, so we report the OpenRouter-surfaced metadata and flag this as a provenance gap that future versions of \textsc{Hallmark} should track via release-date probes.
+The temporal evaluation assumes papers from calendar years 2024--2025 post-date most evaluated models' training data. \cref{tab:cutoffs} compiles vendor-disclosed training cutoffs (or the most recent reliable upper bound when no disclosure is available) for every LLM used as a baseline. Three observations frame the temporal results: (i) every evaluated model has a disclosed or inferred cutoff no later than late~2025, so the 448-entry temporal supplement (drawn from 2024--2025 DBLP proceedings) is partially or fully out-of-distribution for all of them; (ii) the two closed-weight models with earliest cutoffs (GPT-5.1, Sep 2024) and the conservative open-weight Gemini 2.5 Flash (Jan 2025) are the models hardest-hit by the FPR explosion, consistent with their reliance on parametric confirmation; (iii) DeepSeek models do not publish an official cutoff in their technical reports, so we report the OpenRouter-surfaced metadata and flag this as a provenance gap that future versions of \textsc{Hallmark} should track via release-date probes.
 
 \begin{table}[t]
-\caption{\textbf{Training-data cutoffs of LLM baselines evaluated in \textsc{Hallmark}.} ``Disclosed'' indicates a vendor-published cutoff in an official model card, API documentation, system card, or technical report; ``Inferred'' indicates an upper bound derived from release date and predecessor disclosures. Anthropic distinguishes ``training data cutoff'' from ``reliable knowledge cutoff'' and we report the latter for Claude Sonnet~4.5.}
+\caption{\textbf{Training-data cutoffs of LLM baselines evaluated in \textsc{Hallmark}.} ``Disclosed'' indicates a vendor-published cutoff in an official model card, API documentation, system card, or technical report; ``Inferred'' indicates an upper bound derived from release date and predecessor disclosures. Anthropic distinguishes ``training data cutoff'' from ``reliable knowledge cutoff'' and we report the latter for Claude variants. Rows below the midrule are post-freeze additions (\cref{app:llm-setup}).}
 \label{tab:cutoffs}
 \centering
 \small
@@ -512,12 +513,15 @@ DeepSeek-R1          & Jul~2024                  & OpenRouter model metadata    
 DeepSeek-V3.2        & ${\leq}$\,Oct~2024        & Release date; V3 tech report       & Inferred \\
 Qwen3-235B-A22B-2507 & Jun~2025                  & OpenRouter model metadata          & Disclosed (via host) \\
 Mistral Large~2512   & ${\leq}$\,mid-2025        & Release date; predecessor cutoff   & Inferred \\
+\midrule
+Claude Sonnet~4.6    & ${\leq}$\,Aug~2025        & Release Feb~2026; Anthropic family lag & Inferred \\
+Claude Opus~4.7      & ${\leq}$\,Oct~2025        & Release Apr~2026; Anthropic family lag & Inferred \\
 \bottomrule
 \end{tabular}%
 }
 \end{table}
 
-The implication for the temporal evaluation is that 2024--2025 DBLP papers are genuinely post-cutoff for the entire cohort, so the observed FPR explosion cannot be attributed to a subset of under-trained models; conversely, the longer-cutoff models (Qwen3-235B: Jun~2025; Claude Sonnet~4.5: Jan~2025) still exhibit the same collapse pattern, suggesting that training-data recency alone does not rescue LLM-based verifiers---the gap between ``seen during training'' and ``reliably recalled'' matters as much as the cutoff itself.
+The implication for the temporal evaluation is that 2024--2025 DBLP papers are genuinely post-cutoff for the entire frozen cohort, so the observed FPR explosion within that cohort cannot be attributed to a subset of under-trained models; longer-cutoff models in the cohort (Qwen3-235B: Jun~2025; Claude Sonnet~4.5: Jan~2025) still exhibit the same collapse, indicating that training-data recency alone does not rescue parametric verification---the gap between ``seen during training'' and ``reliably recalled'' matters as much as the cutoff. The post-freeze Anthropic additions (Sonnet~4.6, Opus~4.7) complicate this picture: their inferred cutoffs (Aug~2025, Oct~2025) are not radically later than Qwen3-235B's, yet their FPR shifts on the supplement are an order of magnitude smaller. Cutoff recency is therefore a necessary but insufficient predictor; pipeline-level differences (RLHF for abstention, ``I don't know'' calibration) appear to dominate the temporal-robustness story.
 
 \paragraph{Baseline temporal consistency.}
 We assign entries to three temporal segments: pre-2023 (papers published before January 2023), 2023--2024, and 2025+.
@@ -662,15 +666,15 @@ Third, \textbf{baseline aggressiveness predicts degradation}: models with higher
 \subsection{Temporal supplement (2024--2025)}
 \label{app:temporal_supplement}
 
-To validate the 60-entry temporal probe at scale, we construct a 480-entry temporal supplement: 330 valid entries scraped from DBLP across six ML venues (NeurIPS, ICML, ICLR, AAAI, CVPR, ECCV) for publication years 2024--2025, plus 150 hallucinated entries generated via the standard perturbation pipeline.
-This provides $11{\times}$ more valid entries than the probe (330 vs.\ 30), yielding substantially tighter confidence intervals on FPR estimates.
+To validate the 60-entry temporal probe at scale, we construct a 448-entry temporal supplement: 300 valid entries scraped from DBLP across six ML venues (NeurIPS, ICML, ICLR, AAAI, CVPR, ECCV) for publication years 2024--2025, plus 148 hallucinated entries generated via the standard perturbation pipeline.
+This provides $10{\times}$ more valid entries than the probe (300 vs.\ 30), yielding substantially tighter confidence intervals on FPR estimates.
 
 \cref{tab:temporal_supplement} compares each LLM baseline's performance on the original benchmark (2021--2023 valid entries) against the temporal supplement (2024--2025 valid entries).
 The pattern is unambiguous: every model's FPR increases dramatically on recent papers, while detection rate inflates because models flag nearly everything as hallucinated.
 
 \begin{table}[t]
 \centering
-\caption{Temporal supplement: LLM baseline performance on 2021--2023 benchmark entries vs.\ 2024--2025 supplement entries ($n{=}480$). $\Delta$DR and $\Delta$FPR report the absolute shift. Models sorted by baseline FPR (ascending). $^\dagger$DeepSeek-R1 classified nearly all entries as \texttt{UNCERTAIN}; see footnote below table.}
+\caption{Temporal supplement: LLM baseline performance on 2021--2023 benchmark entries (\texttt{dev\_public}, $n{=}1{,}119$) vs.\ 2024--2025 supplement entries ($n{=}448$). $\Delta$DR and $\Delta$FPR report the absolute shift. Top block (Gemini Flash through DeepSeek-R1) is the original frozen cohort, sorted by baseline FPR. The two Anthropic rows below the midrule are post-freeze additions (\cref{app:llm-setup}); they break the FPR-explosion pattern and are reported here for completeness. $^\dagger$DeepSeek-R1 classified nearly all entries as \texttt{UNCERTAIN}; see footnote below table.}
 \label{tab:temporal_supplement}
 \small
 \setlength{\tabcolsep}{3pt}
@@ -684,6 +688,10 @@ Mistral Large      & 0.691 & 0.953 & +0.262 & 0.258 & 0.770 & \textbf{+0.512} & 
 Qwen3-235B         & 0.832 & 0.986 & +0.154 & 0.551 & 0.785 & +0.234 & 0.530 & 0.259 \\
 DeepSeek-V3.2      & 0.880 & 0.980 & +0.100 & 0.730 & 0.757 & +0.026 & 0.538 & 0.273 \\
 DeepSeek-R1$^\dagger$ & 0.871 & 0.000 & $-$0.871 & 0.640 & 0.844 & +0.204 & 0.000 & 0.000 \\
+\midrule
+\multicolumn{9}{l}{\emph{Post-freeze additions (Anthropic via OpenRouter; \cref{app:llm-setup}):}} \\
+Claude Sonnet 4.6     & 0.777 & 0.818 & +0.041 & 0.095 & 0.120 & +0.025 & 0.793 & 0.688 \\
+Claude Opus 4.7       & 0.733 & 0.716 & $-$0.017 & 0.060 & 0.073 & +0.013 & 0.768 & 0.669 \\
 \bottomrule
 \end{tabular}
 \end{table}
