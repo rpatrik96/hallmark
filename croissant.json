@@ -38,16 +38,20 @@
     "separator": "cr:separator",
     "source": "cr:source",
     "subField": "cr:subField",
-    "transform": "cr:transform"
+    "transform": "cr:transform",
+    "examples": {
+      "@id": "cr:examples",
+      "@type": "@json"
+    }
   },
   "@type": "sc:Dataset",
   "conformsTo": "http://mlcommons.org/croissant/1.0",
   "name": "HALLMARK",
   "description": "HALLMARK (HALLucination benchMARK) is a benchmark for evaluating citation metadata verification systems. It contains 2,525 BibTeX entries spanning 14 hallucination types organized into 3 difficulty tiers, with 6 sub-tests per entry covering DOI resolution, title existence, author matching, venue correctness, field completeness, and cross-database agreement. The benchmark targets ML venue citations (NeurIPS, ICML, ICLR, AAAI, CVPR) from 2021-2023 and includes entries generated via systematic perturbation, LLM generation, adversarial crafting, and real-world hallucination collection.",
-  "url": "https://github.com/rpatrik96/hallmark",
+  "url": "https://anonymous.4open.science/r/hallmark/",
   "license": "https://spdx.org/licenses/MIT.html",
   "version": "1.0",
-  "datePublished": "2026-02-20",
+  "datePublished": "2026-05-04",
   "inLanguage": "en",
   "isLiveDataset": false,
   "keywords": [
@@ -75,7 +79,7 @@
       "description": "Development split with ground-truth labels for model development and hyperparameter tuning.",
       "contentUrl": "data/v1.0/dev_public.jsonl",
       "encodingFormat": "application/jsonlines",
-      "sha256": ""
+      "sha256": "f35f5643f12129ccf1cbc5df754329bab8ecf93e3ac703afa63ae975040f97af"
     },
     {
       "@type": "cr:FileObject",
@@ -84,7 +88,7 @@
       "description": "Public test split with ground-truth labels for evaluation and ablation studies.",
       "contentUrl": "data/v1.0/test_public.jsonl",
       "encodingFormat": "application/jsonlines",
-      "sha256": ""
+      "sha256": "1d9d65873f3c5a016f838ae0665afb52c4f2b29bb719245c2b13189c4783c173"
     },
     {
       "@type": "cr:FileObject",
@@ -93,7 +97,7 @@
       "description": "Stress-test split focusing on theoretically-motivated hallucination types (merged_citation, partial_author_list, arxiv_version_mismatch) evaluated separately from the main benchmark.",
       "contentUrl": "data/v1.0/stress_test.jsonl",
       "encodingFormat": "application/jsonlines",
-      "sha256": ""
+      "sha256": "af3a11606948fea8edccbbd5c512e6efd69c1f9056032d446f01c66950da07d3"
     },
     {
       "@type": "cr:FileObject",
@@ -102,7 +106,7 @@
       "description": "Blinded version of the development split (no ground-truth labels) for baseline runners.",
       "contentUrl": "data/v1.0/dev_public_blind.jsonl",
       "encodingFormat": "application/jsonlines",
-      "sha256": ""
+      "sha256": "46b9a23a1e1a7564c52ac490a492090fdc8d87f15bfea4c62bc49f8fd9ce42b7"
     },
     {
       "@type": "cr:FileObject",
@@ -111,7 +115,7 @@
       "description": "Blinded version of the public test split (no ground-truth labels) for baseline runners.",
       "contentUrl": "data/v1.0/test_public_blind.jsonl",
       "encodingFormat": "application/jsonlines",
-      "sha256": ""
+      "sha256": "0461cef293e6f2a1e1448b6fa56de72c0efd18a240cdf426377616afc00649bd"
     },
     {
       "@type": "cr:FileObject",
@@ -120,7 +124,7 @@
       "description": "Blinded version of the stress-test split (no ground-truth labels) for baseline runners.",
       "contentUrl": "data/v1.0/stress_test_blind.jsonl",
       "encodingFormat": "application/jsonlines",
-      "sha256": ""
+      "sha256": "cf6f829b2ad99c6badd9eb513214e2d811e6b0fe3218a64263aeecb690ea49e3"
     },
     {
       "@type": "cr:FileObject",
@@ -129,7 +133,7 @@
       "description": "Dataset metadata including split statistics, type distributions, and generation method breakdowns.",
       "contentUrl": "data/v1.0/metadata.json",
       "encodingFormat": "application/json",
-      "sha256": ""
+      "sha256": "ba1f34270db35047678cc13a5a74056f53eea07c0d16fe52061d7849b65717e7"
     }
   ],
   "recordSet": [
@@ -442,5 +446,6 @@
   "rai:personalSensitiveInformation": "The dataset contains only publicly available bibliographic metadata (author names, paper titles, DOIs, venue names, publication years) from published academic papers. No private or sensitive personal information is included. Author names appear only as part of standard bibliographic citations that are already public record.",
   "rai:dataPreprocessing": "Valid entries were deduplicated by DOI and title. BibTeX keys were replaced with hex hashes to prevent leakage of entry provenance. Fake DOI prefixes are enforced for fabricated entries. A canary/watermark string is embedded to detect data leakage into training corpora. Blind versions of each split strip ground-truth labels and the url field.",
   "rai:dataSocialImpact": "This benchmark supports the detection of citation hallucinations in academic papers, a growing concern as LLM-assisted writing becomes prevalent. By providing a standardized evaluation framework, HALLMARK enables systematic comparison of verification tools, ultimately contributing to academic integrity and trust in scholarly communication. The benchmark does not enable generation of convincing fake citations at scale -- the hallucination taxonomy and generation methods are designed for evaluation, not production of deceptive content.",
-  "rai:dataLimitations": "The benchmark focuses on ML venue citations (NeurIPS, ICML, ICLR, AAAI, CVPR) from 2021-2023 and may not generalize to other academic domains, time periods, or publication types (e.g., books, theses). The hallucination taxonomy, while comprehensive for current patterns, may not cover future hallucination strategies. Verification tools that rely on external APIs (Crossref, Semantic Scholar) may produce different results over time as these databases are updated."
+  "rai:dataLimitations": "The benchmark focuses on ML venue citations (NeurIPS, ICML, ICLR, AAAI, CVPR) from 2021-2023 and may not generalize to other academic domains, time periods, or publication types (e.g., books, theses). The hallucination taxonomy, while comprehensive for current patterns, may not cover future hallucination strategies. Verification tools that rely on external APIs (Crossref, Semantic Scholar) may produce different results over time as these databases are updated.",
+  "citeAs": "@inproceedings{hallmark2026, author = {Anonymous}, title = {HALLMARK: A Benchmark for Citation Hallucination Detection}, booktitle = {Advances in Neural Information Processing Systems (NeurIPS) Track on Evaluations and Datasets}, year = {2026}}"
 }

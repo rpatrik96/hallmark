@@ -342,6 +342,7 @@ Each wrapper:
 (3)~maps the tool's output to a \textsc{Hallmark} \texttt{Prediction} with label, confidence, and reason.
 
 \paragraph{LLM prompt template.}
+\label{app:prompt-template}
 The LLM-based baselines (GPT-5.1, Claude, and OpenRouter models) use a zero-shot prompt with no few-shot examples.
 The exact template is:
 
@@ -863,13 +864,13 @@ The benchmark is maintained by the authors and accepts community contributions t
 \section{Co-designed tool evaluation}
 \label{app:codesign}
 
-\texttt{bibtex-updater}~\citep{bibtexupdater} is a multi-database cross-referencing tool developed by the authors of this benchmark.
+\texttt{bibtex-updater}~\citep{bibtexupdater} is a multi-database cross-referencing tool co-developed alongside this benchmark.
 Its results appear in \cref{tab:results} under the ``Co-designed (interpret with caution)'' section, separated from independent tools by a rule.
 We include it in the main table to give a complete picture of the performance landscape---bibtex-updater achieves the highest raw detection rate of any evaluated tool---while the explicit caution label and this appendix preserve full transparency.
 The co-design relationship means the benchmark taxonomy and sub-test structure were informed by the tool's detection capabilities, creating a potential circularity that could inflate its apparent performance; readers should treat its numbers as an informative upper bound, not a fair head-to-head comparison with independent tools.
 
 \begin{table}[t]
-\caption{Results for \texttt{bibtex-updater} (co-designed by the authors). Reported separately from independent tools in \cref{tab:results} due to co-design bias concerns.}
+\caption{Results for \texttt{bibtex-updater} (co-designed alongside this benchmark). Reported separately from independent tools in \cref{tab:results} due to co-design bias concerns.}
 \label{tab:codesign}
 \centering
 \small
@@ -1008,8 +1009,40 @@ This confirms that tools must inspect citation content (DOIs, titles, authors, v
 The most informative feature is \texttt{has\_doi} (coefficient 0.12), consistent with the DOI-only baseline's non-zero detection rate.
 All other features have coefficients $< 0.05$, confirming that the perturbation pipeline does not introduce systematic metadata artifacts.
 
+\section{Comparison with related citation efforts}
+\label{app:related}
+
+\cref{tab:comparison-extended} contrasts \textsc{Hallmark} with concurrent citation-audit efforts. Prior work focuses on auditing published papers; \textsc{Hallmark} is the first \emph{evaluation benchmark} for citation verification tools.
+
+\begin{table}[t]
+\caption{Comparison of \textsc{Hallmark} with related citation analysis efforts.}
+\label{tab:comparison-extended}
+\centering
+\small
+\begin{tabular}{lccccc}
+\toprule
+& \textbf{Entries} & \textbf{Types} & \textbf{Sub-tests} & \textbf{Tool eval.} & \textbf{Open} \\
+\midrule
+\multicolumn{6}{l}{\emph{Citation audits}} \\
+GhostCite~\citep{ghostcite2026} & 56K papers & --- & \ding{55} & \ding{55} & \ding{55} \\
+HalluCitation~\citep{hallucitation2026} & 100{+} papers & 3 & \ding{55} & \ding{55} & \ding{51} \\
+Mysterious Citations~\citep{mysterious2026} & HPC venues & --- & \ding{55} & \ding{55} & \ding{55} \\
+\midrule
+\multicolumn{6}{l}{\emph{Citation verification benchmarks}} \\
+\textsc{Hallmark} (ours) & 2,525 & 14 & 6 & \ding{51} & \ding{51} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
 \section{Additional figures}
 \label{app:figures}
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=0.65\linewidth]{figures/cost_accuracy.pdf}
+\caption{Cost--accuracy tradeoff. Rate-limited tools (HaRC, verify-citations) are impractical for venue-scale deployment.}
+\label{fig:cost}
+\end{figure}
 
 \begin{figure}[t]
 \centering

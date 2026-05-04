@@ -2,15 +2,12 @@
 \label{sec:related}
 
 \paragraph{Citation hallucination in the LLM era.}
-LLM hallucination~\citep{ji2023survey,huang2023survey} manifests distinctly in citation generation~\citep{alkaissi2023,agrawal2024}.
-Systematic audits confirmed the scale: \citet{ghostcite2026} flagged 604 papers with hallucinated references across 56K papers; \citet{hallucitation2026} found over 100 affected papers in ACL/NAACL/EMNLP; \citet{mysterious2026} documented a sharp rise across HPC venues.
-Several tools address detection---HaRC~\citep{harc2024}, verify-citations~\citep{verifycitations2025}, RefChecker~\citep{refchecker2024}---but each targets different hallucination types and uses different evaluation protocols, making comparison impossible without a shared benchmark.
-RefChecker operates on manuscript-level context rather than individual BibTeX entries, requiring full-text input that falls outside \textsc{Hallmark}'s metadata-focused scope; a head-to-head comparison on overlapping capabilities is future work.
+LLM hallucination~\citep{ji2023survey,huang2023survey} manifests distinctly in citations~\citep{alkaissi2023,agrawal2024}; audits confirm scale (\citet{ghostcite2026,hallucitation2026,mysterious2026}).
+Detection tools---HaRC~\citep{harc2024}, verify-citations~\citep{verifycitations2025}, RefChecker~\citep{refchecker2024}---use different protocols, blocking comparison. RefChecker requires full-text manuscript context, outside \textsc{Hallmark}'s metadata scope.
+Concurrent work~\citep{rao2026bibtex,raowong2026urls,checkifexist2026,hallucitechecker2026} evaluates LLM-as-citation-generator accuracy or releases narrow URL/existence checkers; \textsc{Hallmark} is complementary, benchmarking standalone \emph{detection} tools on a controlled, tiered taxonomy with sub-test decomposition.
 
 \paragraph{Hallucination detection benchmarks.}
-General-purpose hallucination benchmarks~\citep{hallueval2023,halogen2024} focus on factual claims rather than bibliographic metadata.
-Adjacent benchmarks address related problems: FactScore~\citep{min2023factscore} evaluates atomic factual precision, RARR~\citep{gao2023rarr} targets citation revision, and SciFact~\citep{wadden2020scifact} verifies claims against abstracts.
-None evaluate BibTeX metadata integrity---the structured verification of whether a cited paper's DOI, title, authors, and venue are internally consistent and match external databases.
+General-purpose benchmarks~\citep{hallueval2023,halogen2024} target factual claims, not metadata; adjacent work---FactScore~\citep{min2023factscore}, RARR~\citep{gao2023rarr}, SciFact~\citep{wadden2020scifact}---does not evaluate BibTeX integrity (DOI/title/author/venue cross-consistency against external databases).
 
 \paragraph{Benchmark design principles.}
 \textsc{Hallmark} synthesizes design principles from established benchmarks: multi-criteria sub-tests from HumanEval~\citep{humaneval}, temporal segmentation from SWE-bench~\citep{swebench} and LiveCodeBench~\citep{livecodebench2024}, adversarial evolution from Dynabench~\citep{kiela2021dynabench}, and atomic evaluation with Plackett-Luce ranking from ONEBench~\citep{onebench2024}.

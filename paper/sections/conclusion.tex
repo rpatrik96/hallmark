@@ -1,9 +1,4 @@
 \section{Conclusion}
 \label{sec:conclusion}
 
-We contribute \textsc{Hallmark}, the first benchmark for BibTeX metadata integrity verification: 14 hallucination types across 3 difficulty tiers, 2,525 annotated entries with 6 sub-tests each, and tier-weighted metrics rewarding detection of hard hallucinations.
-Evaluation of seven tools reveals that DOI-only detects 26\% while LLMs achieve 48--88\%, spanning a recall--precision spectrum---but a 480-entry temporal supplement shows this parametric verification breaks down on recent papers (FPR rises $4{\times}$, F1 collapses to near-chance), establishing temporal robustness as a first-order deployment concern.
-No single tool covers all 14 types, and venue-level hallucinations remain a blind spot, providing concrete targets for tool developers.
-The benchmark, data, and evaluation infrastructure are open-source and designed for community adoption.
-Code and data: \url{https://github.com/anonymous/hallmark}.
-The dataset is also available on Hugging Face with Croissant metadata for machine-readable documentation.
+\textsc{Hallmark} is the first benchmark for BibTeX metadata integrity: 14 hallucination types across 3 tiers, 2,525 entries with 6 sub-tests each, tier-weighted metrics. DOI-only detects 26\%; zero-shot LLMs span 46--88\%, but parametric verification breaks on recent papers (temporal supplement: FPR ${\sim}4{\times}$, F1 near-chance). Code: \url{https://anonymous.4open.science/r/hallmark/}.
