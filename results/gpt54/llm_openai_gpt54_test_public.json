@@ -1,0 +1,15 @@
+{
+  "tool_name": "llm_openai_gpt-5.4",
+  "split_name": "test_public",
+  "num_entries": 831,
+  "num_hallucinated": 544,
+  "num_valid": 287,
+  "detection_rate": 0.7555147058823529,
+  "false_positive_rate": 0.2229965156794425,
+  "f1_hallucination": 0.8066732090284593,
+  "tp": 411,
+  "fp": 64,
+  "tn": 223,
+  "fn": 133,
+  "note": "Computed from checkpoint after evaluate() crashed in shim."
+}
