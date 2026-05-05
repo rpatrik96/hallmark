@@ -63,3 +63,9 @@ results/*.csv
 *.bak
 results/new_models/checkpoints/
 results/probes/
+
+# LaTeX build artifacts (paper lives in hallmark-paper repo)
+paper/
+
+# claude-mem session notes auto-generated in checkpoint dirs
+results/checkpoints/**/CLAUDE.md

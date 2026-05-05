@@ -1,0 +1,32 @@
+[
+  {
+    "bibtex_key": "a1a52be81664",
+    "label": "HALLUCINATED",
+    "confidence": 0.82,
+    "reason": "[Agentic|tool|tools=verify_with_bibtex_updater|tokens=2855] The tool returned status 'hallucinated' with mismatches across title, author, and year. No matching record was found on CrossRef (or DBLP/Se"
+  },
+  {
+    "bibtex_key": "caef38397355",
+    "label": "HALLUCINATED",
+    "confidence": 0.95,
+    "reason": "[Agentic|tool|tools=verify_with_bibtex_updater|tokens=3322] The tool returned a partial_match with only 0.364 confidence and flagged mismatches in title, author, year, and venue. The DOI (arXiv.2310.0"
+  },
+  {
+    "bibtex_key": "d5eef6dc978e",
+    "label": "HALLUCINATED",
+    "confidence": 0.82,
+    "reason": "[Agentic|tool|tools=verify_with_bibtex_updater|tokens=3187] The tool returned a 'title_mismatch' status via CrossRef, meaning the title 'BiasAdv: Bias-Adversarial Augmentation towards Model Debiasing'"
+  },
+  {
+    "bibtex_key": "bb81ad4f08e0",
+    "label": "HALLUCINATED",
+    "confidence": 0.91,
+    "reason": "[Agentic|tool|tools=verify_with_bibtex_updater|tokens=2963] The tool returned status 'hallucinated' with all major fields (title, author, year, venue) flagged as mismatched against CrossRef. No matchi"
+  },
+  {
+    "bibtex_key": "ce034d80f2ee",
+    "label": "HALLUCINATED",
+    "confidence": 0.87,
+    "reason": "[Agentic|tool|tools=verify_with_bibtex_updater|tokens=3160] The tool returned a low-confidence partial_match (0.364) with mismatches in title, author, and venue. The combination of three mismatched fi"
+  }
+]
