@@ -113,7 +113,7 @@ Results are reported both with and without pre-screening for transparency.
 ## Development Setup
 
 ```bash
-# anonymized for double-blind review; see https://anonymous.4open.science/r/hallmark/
+git clone https://github.com/rpatrik96/hallmark.git
 cd hallmark
 
 # Recommended: use uv

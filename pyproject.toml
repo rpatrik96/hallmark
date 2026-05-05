@@ -10,7 +10,7 @@ readme = "README.md"
 license = "MIT"
 requires-python = ">=3.10"
 authors = [
-    { name = "Anonymous" },
+    { name = "Patrik Reizinger", email = "patrik.reizinger@gmail.com" },
 ]
 keywords = ["benchmark", "citations", "hallucination", "bibtex", "verification"]
 classifiers = [
@@ -65,10 +65,10 @@ all = ["hallmark[baselines,ranking,scraping,analysis,dev]"]
 hallmark = "hallmark.cli:main"
 
 [project.urls]
-Homepage = "https://anonymous.4open.science/r/hallmark/"
-Documentation = "https://anonymous.4open.science/r/hallmark/README.md"
-Repository = "https://anonymous.4open.science/r/hallmark/"
-Issues = "https://anonymous.4open.science/r/hallmark/"
+Homepage = "https://github.com/rpatrik96/hallmark"
+Documentation = "https://github.com/rpatrik96/hallmark#readme"
+Repository = "https://github.com/rpatrik96/hallmark.git"
+Issues = "https://github.com/rpatrik96/hallmark/issues"
 
 [tool.hatch.version]
 source = "vcs"

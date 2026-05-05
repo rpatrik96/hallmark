@@ -63,7 +63,7 @@ class ScraperConfig:
     timeout: float = 20.0
     verify_against_crossref: bool = True
     verify_against_s2: bool = True
-    user_agent: str = "HALLMARK/0.1.0 (https://anonymous.4open.science/r/hallmark/)"
+    user_agent: str = "HALLMARK/0.1.0 (https://github.com/rpatrik96/hallmark)"
     include_arxiv: bool = True  # Scrape arXiv preprints
     arxiv_categories: list[str] | None = None  # Default: ARXIV_ML_CATEGORIES
     adaptive_years: bool = True  # Auto-compute year range from current date
