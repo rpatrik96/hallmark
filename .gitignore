@@ -69,3 +69,6 @@ paper/
 
 # claude-mem session notes auto-generated in checkpoint dirs
 results/checkpoints/**/CLAUDE.md
+
+# Prediction checkpoints (regeneratable from committed eval JSONs)
+results/checkpoints/
