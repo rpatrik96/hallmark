@@ -319,7 +319,7 @@ def parse_gptzero_csv(csv_path: Path) -> list[BenchmarkEntry]:
 def main():
     """Main entry point."""
     # Paths
-    data_dir = Path("/Users/patrik.reizinger/Documents/GitHub/hallmark/data")
+    data_dir = Path(__file__).resolve().parent.parent / "data"
     csv_path = data_dir / "Neurips Hallucinations For Public - Main results.csv"
     output_path = data_dir / "v1.0/gptzero_neurips2025.jsonl"
     existing_path = data_dir / "v1.0/real_world_incidents.jsonl"

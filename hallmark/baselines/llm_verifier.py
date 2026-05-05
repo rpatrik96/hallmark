@@ -121,6 +121,25 @@ OPENROUTER_MODELS: dict[str, str] = {
     #   qwen3-max / qwen3.6-plus / qwen-plus: 404 Alibaba-only
     #   qwen3.5-122b-a10b: works but emits 500+ reasoning tokens per reply
     "qwen-max": "qwen/qwen3-vl-235b-a22b-instruct",
+    # --- Q2 2026 frontier additions (confirmed via OpenRouter /api/v1/models 2026-05-04) ---
+    # openai/gpt-5.5: non-reasoning chat model, released 2026-04-24. $5/$30 per M tok.
+    "gpt-5.5": "openai/gpt-5.5",
+    # openai/gpt-5.5-pro: high-capability non-reasoning variant, released 2026-04-24.
+    # $30/$180 per M tok — expensive; include for completeness but budget accordingly.
+    "gpt-5.5-pro": "openai/gpt-5.5-pro",
+    # anthropic/claude-sonnet-4.6 via OpenRouter mirror (native path: llm_anthropic).
+    # Released 2026-02-17. $3/$15 per M tok.
+    "claude-sonnet-4-6": "anthropic/claude-sonnet-4.6",
+    # anthropic/claude-opus-4.7 via OpenRouter mirror (native path: llm_anthropic_opus_4_7).
+    # Released 2026-04-16. $5/$25 per M tok.
+    "claude-opus-4-7": "anthropic/claude-opus-4.7",
+    # Skipped models (Q2 2026):
+    #   deepseek/deepseek-v4-pro  — thinking model (reasoning_effort high/xhigh supported);
+    #                               risk of reasoning tokens consuming the 1024-tok budget.
+    #   deepseek/deepseek-v4-flash — same thinking-mode issue as V4-pro.
+    #   google/gemini-3.1-flash-lite-preview — supports full thinking levels (minimal→high);
+    #                               same unbounded-thinking risk as gemini-3.1-pro-preview.
+    #   google/gemini-3.1-pro-preview — already rejected (see comment above gemini-pro).
 }
 
 # Reference dict of OpenAI model IDs for documentation and kwarg overrides.
@@ -347,14 +366,27 @@ def _verify_with_openai_compatible(
     # response being truncated mid-structure. Non-thinking models still emit
     # ~50-80 tokens of actual content, so the increase has negligible cost.
     max_completion_tokens = int(kwargs.pop("max_completion_tokens", 1024))
+    # GPT-5.5 family rejects temperature != 1 (API returns 400). Default to 1.0
+    # for those models, 0.0 elsewhere; callers may still override via kwargs.
+    _default_temp = 1.0 if "gpt-5.5" in model else 0.0
+    temperature = float(kwargs.pop("temperature", _default_temp))
+    # GPT-5.5 is a reasoning model; the default effort burns through the
+    # 1024-token budget on hidden thinking and leaves the JSON output empty
+    # (finish_reason='length'). Verification doesn't need chain-of-thought, so
+    # default to 'none' for the gpt-5.5 family. Other models don't accept
+    # reasoning_effort, so don't pass it.
+    extra_call_kwargs: dict[str, Any] = {}
+    if "gpt-5.5" in model:
+        extra_call_kwargs["reasoning_effort"] = kwargs.pop("reasoning_effort", "none")
 
     def call_fn(prompt: str) -> str:
         resp = client.chat.completions.create(
             model=model,
             messages=[{"role": "user", "content": prompt}],
-            temperature=0.0,
+            temperature=temperature,
             max_completion_tokens=max_completion_tokens,
             seed=42,
+            **extra_call_kwargs,
         )
         return str(resp.choices[0].message.content).strip()
 

@@ -1,0 +1,15 @@
+{
+  "tool_name": "llm_agentic_btu_sonnet_4_6",
+  "split_name": "dev_public",
+  "num_entries": 1119,
+  "num_hallucinated": 261,
+  "num_valid": 198,
+  "detection_rate": 0.9616858237547893,
+  "false_positive_rate": 0.45454545454545453,
+  "f1_hallucination": 0.8338870431893688,
+  "tp": 251,
+  "fp": 90,
+  "tn": 108,
+  "fn": 10,
+  "note": "Sonnet 4.6 + BTU agentic via OpenRouter; eval salvaged from checkpoint after evaluate() arg-order bug in shim."
+}

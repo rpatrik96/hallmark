@@ -26,7 +26,7 @@ from hallmark.dataset.generator import (
 from hallmark.dataset.schema import BenchmarkEntry
 
 # Paths
-DATA_DIR = Path("/Users/patrik.reizinger/Documents/GitHub/hallmark/data/v1.0")
+DATA_DIR = Path(__file__).resolve().parent.parent.parent / "data" / "v1.0"
 DEV_FILE = DATA_DIR / "dev_public.jsonl"
 TEST_FILE = DATA_DIR / "test_public.jsonl"
 SOURCE_MAPPING_FILE = DATA_DIR / "source_mapping.json"

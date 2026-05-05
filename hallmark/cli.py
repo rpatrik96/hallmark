@@ -462,7 +462,7 @@ def _cmd_evaluate(args: argparse.Namespace) -> int:
         if args.split == "test_hidden":
             print(
                 "The test_hidden split is held out for official evaluation. "
-                "Submit predictions at https://github.com/rpatrik96/hallmark .",
+                "Submit predictions at https://anonymous.4open.science/r/hallmark/ .",
                 file=sys.stderr,
             )
         else:

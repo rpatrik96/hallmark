@@ -91,6 +91,17 @@ def parse_args() -> argparse.Namespace:
         help="Run each baseline N times and report mean/std of metrics (default: 1)",
     )
     parser.add_argument(
+        "--checkpoint-dir",
+        type=Path,
+        default=None,
+        help=(
+            "Root directory for incremental per-baseline JSONL checkpoints. "
+            "Each LLM-based baseline writes one prediction per line as it "
+            "completes, so partial runs are recoverable and inspectable "
+            "mid-flight. Defaults to {output_dir}/checkpoints/."
+        ),
+    )
+    parser.add_argument(
         "-v",
         "--verbose",
         action="store_true",
@@ -142,6 +153,7 @@ def run_single_baseline(
     entries: list[Any],
     split: str,
     output_dir: Path,
+    checkpoint_root: Path | None = None,
 ) -> dict[str, Any] | None:
     """Run a single baseline and save results.
 
@@ -150,6 +162,9 @@ def run_single_baseline(
         entries: Benchmark entries to evaluate on
         split: Dataset split name
         output_dir: Directory to save results
+        checkpoint_root: Optional root for incremental JSONL checkpoints. If
+            provided, LLM-based baselines write a per-call prediction line so
+            partial runs survive interruption and can be inspected mid-run.
 
     Returns:
         Dictionary with baseline results or None if failed
@@ -157,8 +172,18 @@ def run_single_baseline(
     try:
         logger.info(f"Running {name}...")
 
+        # LLM verifiers accept a checkpoint_dir kwarg that streams predictions
+        # to JSONL as each entry completes. Other baseline types (DOI lookup,
+        # bibtex-updater, etc.) ignore unknown kwargs unsafely, so only pass
+        # the checkpoint_dir when the baseline is LLM-based.
+        run_kwargs: dict[str, Any] = {}
+        if checkpoint_root is not None and name.startswith("llm_"):
+            ckpt = checkpoint_root / name
+            ckpt.mkdir(parents=True, exist_ok=True)
+            run_kwargs["checkpoint_dir"] = ckpt
+
         # Run baseline
-        predictions = run_baseline(name, entries)
+        predictions = run_baseline(name, entries, **run_kwargs)
 
         # Evaluate
         result = evaluate(entries, predictions, tool_name=name, split_name=split)
@@ -301,6 +326,10 @@ def main() -> None:
     args.output_dir.mkdir(parents=True, exist_ok=True)
     logger.info(f"Output directory: {args.output_dir}")
 
+    checkpoint_root: Path = args.checkpoint_dir or (args.output_dir / "checkpoints")
+    checkpoint_root.mkdir(parents=True, exist_ok=True)
+    logger.info(f"Checkpoint root:  {checkpoint_root} (per-baseline JSONL streams)")
+
     # Load entries once
     logger.info(f"Loading {args.split} split (version={args.version})...")
     try:
@@ -330,6 +359,7 @@ def main() -> None:
                     entries,
                     args.split,
                     args.output_dir,
+                    checkpoint_root,
                 ): name
                 for name in baselines
             }
@@ -341,7 +371,9 @@ def main() -> None:
     else:
         logger.info("Running baselines sequentially...")
         for name in baselines:
-            result = run_single_baseline(name, entries, args.split, args.output_dir)
+            result = run_single_baseline(
+                name, entries, args.split, args.output_dir, checkpoint_root
+            )
             if result is not None:
                 results.append(result)
 

@@ -1,0 +1,47 @@
+{
+  "supplement_file": "results/temporal_supplement/temporal_supplement_2024_2025.jsonl",
+  "supplement_stats": {
+    "n_total": 448,
+    "n_valid": 300,
+    "n_hallucinated": 148
+  },
+  "v1_stats": {
+    "n_total": 1119,
+    "n_valid": 486,
+    "n_hallucinated": 633
+  },
+  "models": {
+    "llm_openrouter_gemini_pro": "Gemini 2.5 Pro (OR)",
+    "llm_openrouter_llama_4_maverick": "Llama 4 Maverick (OR)",
+    "llm_openrouter_qwen_max": "Qwen3-VL-235B (OR)"
+  },
+  "v1_metrics": {
+    "llm_openrouter_gemini_pro": {},
+    "llm_openrouter_llama_4_maverick": {},
+    "llm_openrouter_qwen_max": {}
+  },
+  "supplement_metrics": {
+    "llm_openrouter_gemini_pro": {
+      "detection_rate": 0.6258503401360545,
+      "fpr": 0.25,
+      "f1": 0.5878594249201278,
+      "tw_f1": 0.615079365079365,
+      "ece": 0.28284424379232503
+    },
+    "llm_openrouter_llama_4_maverick": {
+      "detection_rate": 0.9391891891891891,
+      "fpr": 0.7633333333333333,
+      "f1": 0.5387596899224807,
+      "tw_f1": 0.6710526315789473,
+      "ece": 0.43325892857142856
+    },
+    "llm_openrouter_qwen_max": {
+      "detection_rate": 1.0,
+      "fpr": 0.8866666666666667,
+      "f1": 0.5266903914590747,
+      "tw_f1": 0.6748166259168704,
+      "ece": 0.5594419642857144
+    }
+  },
+  "bootstrap_fpr": {}
+}

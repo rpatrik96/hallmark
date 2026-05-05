@@ -36,6 +36,19 @@
         "timestamp": "2026-04-22T10:19:49.660129+00:00",
         "hallmark_version": "0.1.0.post1.dev126+g6f6fdf0ce.d20260222"
       }
+    },
+    "bibtexupdater_test_public.json": {
+      "sha256": "fac21f68c0f226e874e7074f5d14de3d449fbedde4fda7ebf8e79881d398749d",
+      "baseline": "bibtexupdater",
+      "split": "test_public",
+      "num_entries": 831,
+      "f1_hallucination": 0.8584149599287623
     }
+  },
+  "environment": {
+    "python_version": "3.13.0",
+    "platform": "macOS-26.3.1-x86_64-i386-64bit-Mach-O",
+    "timestamp": "2026-05-05T09:49:37.974747+00:00",
+    "hallmark_version": "0.1.0.post1.dev205+gb1b6f972c"
   }
 }

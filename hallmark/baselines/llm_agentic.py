@@ -437,7 +437,7 @@ def verify_agentic_openai(
     api_key: str | None = None,
     checkpoint_dir: Path | None = None,
     cache_db_path: Path | None = None,
-    max_consecutive_failures: int = 3,
+    max_consecutive_failures: int = 10,  # fix: raised from 3 → 10 to survive OpenRouter 429 bursts
     tool_defs: list[dict] | None = None,
     system_prompt: str = SYSTEM_PROMPT,
     checkpoint_name: str = "agentic_openai",
@@ -452,7 +452,9 @@ def verify_agentic_openai(
         api_key: API key (falls back to OPENAI_API_KEY env var).
         checkpoint_dir: Directory for JSONL resume checkpoints.
         cache_db_path: Override SQLite cache path.
-        max_consecutive_failures: Abort after N consecutive errors.
+        max_consecutive_failures: Abort after N consecutive errors (default 10).
+            Raised from 3 to tolerate transient OpenRouter 429 bursts without
+            aborting the entire run mid-dataset.
     """
     try:
         import openai
@@ -460,7 +462,8 @@ def verify_agentic_openai(
         logger.error("openai package not installed. Install with: pip install openai")
         return fallback_predictions(entries, reason="llm_agentic_openai unavailable")
 
-    client_kwargs: dict[str, Any] = {"max_retries": 3, "timeout": 120.0}
+    # fix: max_retries raised from 3 → 8 for longer OpenRouter 429 retry windows
+    client_kwargs: dict[str, Any] = {"max_retries": 8, "timeout": 120.0}
     if api_key:
         client_kwargs["api_key"] = api_key
     client = openai.OpenAI(**client_kwargs)
@@ -537,7 +540,7 @@ def verify_agentic_anthropic(
     api_key: str | None = None,
     checkpoint_dir: Path | None = None,
     cache_db_path: Path | None = None,
-    max_consecutive_failures: int = 3,
+    max_consecutive_failures: int = 10,  # fix: raised from 3 → 10 to match openai variant
     tool_defs: list[dict] | None = None,
     system_prompt: str = SYSTEM_PROMPT,
     checkpoint_name: str = "agentic_anthropic",
@@ -552,7 +555,7 @@ def verify_agentic_anthropic(
         api_key: API key (falls back to ANTHROPIC_API_KEY env var).
         checkpoint_dir: Directory for JSONL resume checkpoints.
         cache_db_path: Override SQLite cache path.
-        max_consecutive_failures: Abort after N consecutive errors.
+        max_consecutive_failures: Abort after N consecutive errors (default 10).
     """
     try:
         import anthropic
@@ -560,7 +563,8 @@ def verify_agentic_anthropic(
         logger.error("anthropic package not installed. Install with: pip install anthropic")
         return fallback_predictions(entries, reason="llm_agentic_anthropic unavailable")
 
-    client_kwargs: dict[str, Any] = {"max_retries": 3, "timeout": 120.0}
+    # fix: max_retries raised from 3 → 8 to match openai variant
+    client_kwargs: dict[str, Any] = {"max_retries": 8, "timeout": 120.0}
     if api_key:
         client_kwargs["api_key"] = api_key
     client = anthropic.Anthropic(**client_kwargs)
@@ -642,7 +646,7 @@ def verify_agentic_btu_openai(
     api_key: str | None = None,
     checkpoint_dir: Path | None = None,
     cache_db_path: Path | None = None,
-    max_consecutive_failures: int = 3,
+    max_consecutive_failures: int = 10,  # fix: raised from 3 → 10
     **kwargs: Any,
 ) -> list[Prediction]:
     """Agentic baseline where the LLM can call ``bibtex-updater`` as its only tool.
@@ -674,7 +678,7 @@ def verify_agentic_btu_anthropic(
     api_key: str | None = None,
     checkpoint_dir: Path | None = None,
     cache_db_path: Path | None = None,
-    max_consecutive_failures: int = 3,
+    max_consecutive_failures: int = 10,  # fix: raised from 3 → 10
     **kwargs: Any,
 ) -> list[Prediction]:
     """Anthropic variant of the BTU-as-tool agentic baseline."""

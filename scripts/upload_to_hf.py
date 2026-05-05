@@ -5,6 +5,22 @@ Usage:
 
 Requires:
     pip install huggingface_hub
+
+NOTE FOR MAINTAINERS — dataset card (README.md on HF Hub)
+----------------------------------------------------------
+This script does NOT push a dataset card. After uploading, manually create or update
+the README.md on the HF Hub and include a "Pre-screening transparency" section such as:
+
+    ## Pre-screening transparency
+
+    Baseline wrappers shipped with HALLMARK include a lightweight pre-screening layer
+    that runs *before* the external citation-verification tool (DOI resolution, year
+    bounds, author-count heuristics). Some detections in the ``baseline_results/``
+    files therefore originate from this pre-screening step rather than from the
+    underlying tool itself.  Any result whose ``reason`` field starts with
+    ``[Pre-screening override]`` was flagged by the pre-screening layer.  Consumers
+    who want tool-only performance should filter these entries out before computing
+    metrics.
 """
 
 from __future__ import annotations

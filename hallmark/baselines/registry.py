@@ -366,6 +366,25 @@ def _register_builtins() -> None:
         )
     )
 
+    # GPT-5.5 native baseline (released 2026-04-24; non-reasoning chat model).
+    def _run_llm_openai_gpt55(entries: list[BlindEntry], **kw: Any) -> list[Prediction]:
+        from hallmark.baselines.llm_verifier import verify_with_openai
+
+        return verify_with_openai(entries, model="gpt-5.5", **kw)
+
+    register(
+        BaselineInfo(
+            name="llm_openai_gpt55",
+            description="GPT-5.5 citation verification via OpenAI API (released 2026-04-24)",
+            runner=_run_llm_openai_gpt55,
+            pip_packages=["openai"],
+            requires_api_key=True,
+            is_free=False,
+            env_var="OPENAI_API_KEY",
+            confidence_type="probabilistic",
+        )
+    )
+
     # --- LLM: Anthropic ---
     def _run_llm_anthropic(entries: list[BlindEntry], **kw: Any) -> list[Prediction]:
         from hallmark.baselines.llm_verifier import verify_with_anthropic
@@ -380,6 +399,27 @@ def _register_builtins() -> None:
                 " (default; override via model= kwarg)"
             ),
             runner=_run_llm_anthropic,
+            pip_packages=["anthropic"],
+            requires_api_key=True,
+            is_free=False,
+            env_var="ANTHROPIC_API_KEY",
+            confidence_type="probabilistic",
+        )
+    )
+
+    # Claude Opus 4.7 native baseline (released 2026-04-16; $5/$25 per M tok).
+    def _run_llm_anthropic_opus_4_7(entries: list[BlindEntry], **kw: Any) -> list[Prediction]:
+        from hallmark.baselines.llm_verifier import verify_with_anthropic
+
+        return verify_with_anthropic(entries, model="claude-opus-4-7", **kw)
+
+    register(
+        BaselineInfo(
+            name="llm_anthropic_opus_4_7",
+            description=(
+                "Claude Opus 4.7 citation verification via Anthropic API (released 2026-04-16)"
+            ),
+            runner=_run_llm_anthropic_opus_4_7,
             pip_packages=["anthropic"],
             requires_api_key=True,
             is_free=False,

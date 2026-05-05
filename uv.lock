@@ -406,8 +406,8 @@ scraping = [
 
 [package.metadata]
 requires-dist = [
-    { name = "anthropic", marker = "extra == 'all'", specifier = ">=0.20" },
-    { name = "anthropic", marker = "extra == 'baselines'", specifier = ">=0.20" },
+    { name = "anthropic", marker = "extra == 'all'", specifier = ">=0.79.0" },
+    { name = "anthropic", marker = "extra == 'baselines'", specifier = ">=0.79.0" },
     { name = "beautifulsoup4", marker = "extra == 'all'", specifier = ">=4.12" },
     { name = "beautifulsoup4", marker = "extra == 'scraping'", specifier = ">=4.12" },
     { name = "bibtexparser", specifier = ">=2.0.0b0" },

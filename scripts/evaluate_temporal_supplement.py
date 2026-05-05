@@ -16,14 +16,39 @@ Analyses:
 
 Usage::
 
+    # Zero-shot LLMs (existing):
     python scripts/evaluate_temporal_supplement.py \\
-        --supplement-file /tmp/temporal_supplement_2024_2025.jsonl
+        --supplement-file results/temporal_supplement/temporal_supplement_2024_2025.jsonl
     python scripts/evaluate_temporal_supplement.py \\
-        --supplement-file /tmp/temporal_supplement_2024_2025.jsonl \\
+        --supplement-file results/temporal_supplement/temporal_supplement_2024_2025.jsonl \\
         --models qwen,mistral
     python scripts/evaluate_temporal_supplement.py \\
-        --supplement-file /tmp/temporal_supplement_2024_2025.jsonl \\
+        --supplement-file results/temporal_supplement/temporal_supplement_2024_2025.jsonl \\
         --skip-run
+
+    # Agentic baselines (new) — costs ~$260-320 for GPT-5.1 multi-source (448 entries),
+    # ~$72-96 for GPT-5.1 BTU-only. Use --max-entries 2 for a free dispatch smoke-test:
+    python scripts/evaluate_temporal_supplement.py \\
+        --supplement-file results/temporal_supplement/temporal_supplement_2024_2025.jsonl \\
+        --models llm_agentic_openai \\
+        --checkpoint-dir results/temporal_supplement/checkpoints/llm_agentic_openai
+    python scripts/evaluate_temporal_supplement.py \\
+        --supplement-file results/temporal_supplement/temporal_supplement_2024_2025.jsonl \\
+        --models llm_agentic_btu_openai \\
+        --checkpoint-dir results/temporal_supplement/checkpoints/llm_agentic_btu_openai
+    python scripts/evaluate_temporal_supplement.py \\
+        --supplement-file results/temporal_supplement/temporal_supplement_2024_2025.jsonl \\
+        --models llm_agentic_anthropic \\
+        --checkpoint-dir results/temporal_supplement/checkpoints/llm_agentic_anthropic
+    python scripts/evaluate_temporal_supplement.py \\
+        --supplement-file results/temporal_supplement/temporal_supplement_2024_2025.jsonl \\
+        --models llm_agentic_btu_anthropic \\
+        --checkpoint-dir results/temporal_supplement/checkpoints/llm_agentic_btu_anthropic
+
+    # Dispatch smoke-test (no real API calls if key absent — skips gracefully):
+    python scripts/evaluate_temporal_supplement.py \\
+        --supplement-file results/temporal_supplement/temporal_supplement_2024_2025.jsonl \\
+        --models llm_agentic_openai --max-entries 2
 """
 
 from __future__ import annotations
@@ -107,6 +132,83 @@ MODEL_REGISTRY: dict[str, dict[str, str]] = {
         "display": "Gemini 2.5 Flash",
         "pred_pattern": "llm_openrouter_gemini_flash_{split}_predictions.jsonl",
         "eval_pattern": "llm_openrouter_gemini_flash_{split}.json",
+    },
+    "llm_openrouter_claude_sonnet_4_6": {
+        "provider": "openrouter",
+        "model_id": "anthropic/claude-sonnet-4.6",
+        "api_key_env": "OPENROUTER_API_KEY",
+        "display": "Claude Sonnet 4.6 (OR)",
+        "pred_pattern": "llm_openrouter_claude_sonnet_4_6_{split}_predictions.jsonl",
+        "eval_pattern": "llm_openrouter_claude_sonnet_4_6_{split}.json",
+    },
+    "llm_openrouter_claude_opus_4_7": {
+        "provider": "openrouter",
+        "model_id": "anthropic/claude-opus-4.7",
+        "api_key_env": "OPENROUTER_API_KEY",
+        "display": "Claude Opus 4.7 (OR)",
+        "pred_pattern": "llm_openrouter_claude_opus_4_7_{split}_predictions.jsonl",
+        "eval_pattern": "llm_openrouter_claude_opus_4_7_{split}.json",
+    },
+    # ── Post-freeze additions (gap-closing; no temporal supplement data yet) ──
+    "llm_openrouter_gemini_pro": {
+        "provider": "openrouter",
+        "model_id": "google/gemini-2.5-pro",
+        "api_key_env": "OPENROUTER_API_KEY",
+        "display": "Gemini 2.5 Pro (OR)",
+        "pred_pattern": "llm_openrouter_gemini_pro_{split}_predictions.jsonl",
+        "eval_pattern": "llm_openrouter_gemini_pro_{split}.json",
+    },
+    "llm_openrouter_llama_4_maverick": {
+        "provider": "openrouter",
+        "model_id": "meta-llama/llama-4-maverick",
+        "api_key_env": "OPENROUTER_API_KEY",
+        "display": "Llama 4 Maverick (OR)",
+        "pred_pattern": "llm_openrouter_llama_4_maverick_{split}_predictions.jsonl",
+        "eval_pattern": "llm_openrouter_llama_4_maverick_{split}.json",
+    },
+    "llm_openrouter_qwen_max": {
+        "provider": "openrouter",
+        "model_id": "qwen/qwen3-vl-235b-a22b-instruct",
+        "api_key_env": "OPENROUTER_API_KEY",
+        "display": "Qwen3-VL-235B (OR)",
+        "pred_pattern": "llm_openrouter_qwen_max_{split}_predictions.jsonl",
+        "eval_pattern": "llm_openrouter_qwen_max_{split}.json",
+    },
+    # ── Agentic baselines ─────────────────────────────────────────────────────
+    # Checkpoint dirs are model-key-specific under results/temporal_supplement/
+    # checkpoints/ to avoid colliding with dev_public agentic checkpoint files
+    # (which have 1119 entries vs the 448 here).
+    "llm_agentic_openai": {
+        "provider": "agentic_openai",
+        "model_id": "gpt-5.1",
+        "api_key_env": "OPENAI_API_KEY",
+        "display": "Agentic GPT-5.1 (multi-source)",
+        "pred_pattern": "llm_agentic_openai_{split}_predictions.jsonl",
+        "eval_pattern": "llm_agentic_openai_{split}.json",
+    },
+    "llm_agentic_btu_openai": {
+        "provider": "agentic_btu_openai",
+        "model_id": "gpt-5.1",
+        "api_key_env": "OPENAI_API_KEY",
+        "display": "Agentic GPT-5.1 (BTU)",
+        "pred_pattern": "llm_agentic_btu_openai_{split}_predictions.jsonl",
+        "eval_pattern": "llm_agentic_btu_openai_{split}.json",
+    },
+    "llm_agentic_anthropic": {
+        "provider": "agentic_anthropic",
+        "model_id": "claude-sonnet-4-5-20250929",
+        "api_key_env": "ANTHROPIC_API_KEY",
+        "display": "Agentic Claude Sonnet 4.5 (multi-source)",
+        "pred_pattern": "llm_agentic_anthropic_{split}_predictions.jsonl",
+        "eval_pattern": "llm_agentic_anthropic_{split}.json",
+    },
+    "llm_agentic_btu_anthropic": {
+        "provider": "agentic_btu_anthropic",
+        "model_id": "claude-sonnet-4-5-20250929",
+        "api_key_env": "ANTHROPIC_API_KEY",
+        "display": "Agentic Claude Sonnet 4.5 (BTU)",
+        "pred_pattern": "llm_agentic_btu_anthropic_{split}_predictions.jsonl",
+        "eval_pattern": "llm_agentic_btu_anthropic_{split}.json",
     },
 }
 
@@ -202,6 +304,10 @@ def run_model_on_supplement(
         len(blind_entries),
     )
 
+    # Agentic baselines use a per-model-key checkpoint subdir so they don't
+    # collide with dev_public agentic checkpoints (different entry counts).
+    agentic_checkpoint_dir = checkpoint_dir / model_key
+
     if provider == "openai":
         predictions = verify_with_openai(
             blind_entries,
@@ -215,6 +321,42 @@ def run_model_on_supplement(
             model=model_id,
             api_key=api_key,
             checkpoint_dir=checkpoint_dir,
+        )
+    elif provider == "agentic_openai":
+        from hallmark.baselines.llm_agentic import verify_agentic_openai
+
+        predictions = verify_agentic_openai(
+            blind_entries,
+            model=model_id,
+            api_key=api_key,
+            checkpoint_dir=agentic_checkpoint_dir,
+        )
+    elif provider == "agentic_btu_openai":
+        from hallmark.baselines.llm_agentic import verify_agentic_btu_openai
+
+        predictions = verify_agentic_btu_openai(
+            blind_entries,
+            model=model_id,
+            api_key=api_key,
+            checkpoint_dir=agentic_checkpoint_dir,
+        )
+    elif provider == "agentic_anthropic":
+        from hallmark.baselines.llm_agentic import verify_agentic_anthropic
+
+        predictions = verify_agentic_anthropic(
+            blind_entries,
+            model=model_id,
+            api_key=api_key,
+            checkpoint_dir=agentic_checkpoint_dir,
+        )
+    elif provider == "agentic_btu_anthropic":
+        from hallmark.baselines.llm_agentic import verify_agentic_btu_anthropic
+
+        predictions = verify_agentic_btu_anthropic(
+            blind_entries,
+            model=model_id,
+            api_key=api_key,
+            checkpoint_dir=agentic_checkpoint_dir,
         )
     else:
         raise ValueError(f"Unknown provider: {provider}")
@@ -636,6 +778,16 @@ def main() -> None:
         help="Max concurrent API workers (default: 3; unused in sequential mode)",
     )
     parser.add_argument(
+        "--max-entries",
+        type=int,
+        default=None,
+        help=(
+            "Limit evaluation to the first N supplement entries. "
+            "Use --max-entries 2 for a free dispatch smoke-test "
+            "(skips gracefully when API key is absent)."
+        ),
+    )
+    parser.add_argument(
         "--latex",
         action="store_true",
         help="Print LaTeX table to stdout in addition to saving",
@@ -682,6 +834,14 @@ def main() -> None:
     if not supp_entries:
         print("Error: temporal supplement file is empty", file=sys.stderr)
         sys.exit(1)
+
+    if args.max_entries is not None:
+        supp_entries = supp_entries[: args.max_entries]
+        logger.info(
+            "--max-entries %d: truncated supplement to %d entries",
+            args.max_entries,
+            len(supp_entries),
+        )
 
     supp_n_valid = sum(1 for e in supp_entries if e.label == "VALID")
     supp_n_hall = sum(1 for e in supp_entries if e.label == "HALLUCINATED")
