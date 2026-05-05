@@ -149,6 +149,31 @@ MODEL_REGISTRY: dict[str, dict[str, str]] = {
         "pred_pattern": "llm_openrouter_claude_opus_4_7_{split}_predictions.jsonl",
         "eval_pattern": "llm_openrouter_claude_opus_4_7_{split}.json",
     },
+    # ── Post-freeze additions (gap-closing; no temporal supplement data yet) ──
+    "llm_openrouter_gemini_pro": {
+        "provider": "openrouter",
+        "model_id": "google/gemini-2.5-pro",
+        "api_key_env": "OPENROUTER_API_KEY",
+        "display": "Gemini 2.5 Pro (OR)",
+        "pred_pattern": "llm_openrouter_gemini_pro_{split}_predictions.jsonl",
+        "eval_pattern": "llm_openrouter_gemini_pro_{split}.json",
+    },
+    "llm_openrouter_llama_4_maverick": {
+        "provider": "openrouter",
+        "model_id": "meta-llama/llama-4-maverick",
+        "api_key_env": "OPENROUTER_API_KEY",
+        "display": "Llama 4 Maverick (OR)",
+        "pred_pattern": "llm_openrouter_llama_4_maverick_{split}_predictions.jsonl",
+        "eval_pattern": "llm_openrouter_llama_4_maverick_{split}.json",
+    },
+    "llm_openrouter_qwen_max": {
+        "provider": "openrouter",
+        "model_id": "qwen/qwen3-vl-235b-a22b-instruct",
+        "api_key_env": "OPENROUTER_API_KEY",
+        "display": "Qwen3-VL-235B (OR)",
+        "pred_pattern": "llm_openrouter_qwen_max_{split}_predictions.jsonl",
+        "eval_pattern": "llm_openrouter_qwen_max_{split}.json",
+    },
     # ── Agentic baselines ─────────────────────────────────────────────────────
     # Checkpoint dirs are model-key-specific under results/temporal_supplement/
     # checkpoints/ to avoid colliding with dev_public agentic checkpoint files

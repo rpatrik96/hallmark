@@ -11,27 +11,36 @@
     "n_hallucinated": 633
   },
   "models": {
-    "llm_openrouter_claude_sonnet_4_6": "Claude Sonnet 4.6 (OR)",
-    "llm_openrouter_claude_opus_4_7": "Claude Opus 4.7 (OR)"
+    "llm_openrouter_gemini_pro": "Gemini 2.5 Pro (OR)",
+    "llm_openrouter_llama_4_maverick": "Llama 4 Maverick (OR)",
+    "llm_openrouter_qwen_max": "Qwen3-VL-235B (OR)"
   },
   "v1_metrics": {
-    "llm_openrouter_claude_sonnet_4_6": {},
-    "llm_openrouter_claude_opus_4_7": {}
+    "llm_openrouter_gemini_pro": {},
+    "llm_openrouter_llama_4_maverick": {},
+    "llm_openrouter_qwen_max": {}
   },
   "supplement_metrics": {
-    "llm_openrouter_claude_sonnet_4_6": {
-      "detection_rate": 0.8175675675675675,
-      "fpr": 0.12,
-      "f1": 0.7934426229508197,
-      "tw_f1": 0.8023032629558541,
-      "ece": 0.07011160714285716
+    "llm_openrouter_gemini_pro": {
+      "detection_rate": 0.6258503401360545,
+      "fpr": 0.25,
+      "f1": 0.5878594249201278,
+      "tw_f1": 0.615079365079365,
+      "ece": 0.28284424379232503
     },
-    "llm_openrouter_claude_opus_4_7": {
-      "detection_rate": 0.7162162162162162,
-      "fpr": 0.07333333333333333,
-      "f1": 0.7681159420289855,
-      "tw_f1": 0.7836734693877551,
-      "ece": 0.09799107142857148
+    "llm_openrouter_llama_4_maverick": {
+      "detection_rate": 0.9391891891891891,
+      "fpr": 0.7633333333333333,
+      "f1": 0.5387596899224807,
+      "tw_f1": 0.6710526315789473,
+      "ece": 0.43325892857142856
+    },
+    "llm_openrouter_qwen_max": {
+      "detection_rate": 1.0,
+      "fpr": 0.8866666666666667,
+      "f1": 0.5266903914590747,
+      "tw_f1": 0.6748166259168704,
+      "ece": 0.5594419642857144
     }
   },
   "bootstrap_fpr": {}
