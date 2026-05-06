@@ -1,0 +1,693 @@
+generator,constant_name,value,occurrence_count_dev_public,hallucination_types_affected,is_potential_tell
+_pools,REAL_VENUES,NeurIPS,171,plausible_fabrication|arxiv_version_mismatch,False
+_pools,REAL_VENUES,ICML,172,plausible_fabrication|arxiv_version_mismatch,False
+_pools,REAL_VENUES,ICLR,179,plausible_fabrication|arxiv_version_mismatch,False
+_pools,REAL_VENUES,AAAI,184,plausible_fabrication|arxiv_version_mismatch,False
+_pools,REAL_VENUES,ACL,31,plausible_fabrication|arxiv_version_mismatch,False
+_pools,REAL_VENUES,CVPR,192,plausible_fabrication|arxiv_version_mismatch,False
+_pools,REAL_VENUES,ECCV,8,plausible_fabrication|arxiv_version_mismatch,False
+_pools,REAL_VENUES,EMNLP,8,plausible_fabrication|arxiv_version_mismatch,False
+_pools,REAL_VENUES,AISTATS,12,plausible_fabrication|arxiv_version_mismatch,False
+_pools,REAL_VENUES,UAI,22,plausible_fabrication|arxiv_version_mismatch,False
+_pools,REAL_VENUES,IJCAI,7,plausible_fabrication|arxiv_version_mismatch,False
+_pools,REAL_VENUES,COLT,4,plausible_fabrication|arxiv_version_mismatch,False
+_pools,REAL_VENUES,KDD,7,plausible_fabrication|arxiv_version_mismatch,False
+_pools,REAL_VENUES,WWW,9,plausible_fabrication|arxiv_version_mismatch,False
+_pools,REAL_VENUES,SIGIR,2,plausible_fabrication|arxiv_version_mismatch,False
+_pools,VALID_VENUES,NeurIPS,171,wrong_venue|preprint_as_published,False
+_pools,VALID_VENUES,ICML,172,wrong_venue|preprint_as_published,False
+_pools,VALID_VENUES,ICLR,179,wrong_venue|preprint_as_published,False
+_pools,VALID_VENUES,AAAI,184,wrong_venue|preprint_as_published,False
+_pools,VALID_VENUES,CVPR,192,wrong_venue|preprint_as_published,False
+_pools,VALID_VENUES,ACL,31,wrong_venue|preprint_as_published,False
+_pools,VALID_VENUES,EMNLP,8,wrong_venue|preprint_as_published,False
+_pools,VALID_VENUES,AISTATS,12,wrong_venue|preprint_as_published,False
+_pools,VALID_VENUES,NAACL,4,wrong_venue|preprint_as_published,False
+_pools,VALID_VENUES,J. Mach. Learn. Res.,11,wrong_venue|preprint_as_published,False
+_pools,VALID_VENUES,Mach. Learn.,36,wrong_venue|preprint_as_published,False
+_pools,VALID_VENUES,Trans. Mach. Learn. Res.,7,wrong_venue|preprint_as_published,False
+_pools,VALID_JOURNALS,J. Mach. Learn. Res.,11,wrong_venue|preprint_as_published,False
+_pools,VALID_JOURNALS,Mach. Learn.,36,wrong_venue|preprint_as_published,False
+_pools,VALID_JOURNALS,Trans. Mach. Learn. Res.,7,wrong_venue|preprint_as_published,False
+_pools,ML_BUZZWORD_WORDS,Attention,27,chimeric_title,False
+_pools,ML_BUZZWORD_WORDS,Transformer,50,chimeric_title,False
+_pools,ML_BUZZWORD_WORDS,Diffusion,22,chimeric_title,False
+_pools,ML_BUZZWORD_WORDS,Contrastive,25,chimeric_title,False
+_pools,ML_BUZZWORD_WORDS,Self-Supervised,19,chimeric_title,False
+_pools,ML_BUZZWORD_WORDS,Prompt,15,chimeric_title,False
+_pools,ML_BUZZWORD_WORDS,Retrieval-Augmented,5,chimeric_title,False
+_pools,ML_BUZZWORD_WORDS,Foundation Model,1,chimeric_title,False
+_pools,ML_BUZZWORD_WORDS,Chain-of-Thought,5,chimeric_title,False
+_pools,ML_BUZZWORD_WORDS,Mixture of Experts,0,chimeric_title,False
+_pools,CHIMERIC_TITLE_TEMPLATES,Self-Attention Mechanisms for Low-Resource Temporal Reasoning,1,chimeric_title,False
+_pools,CHIMERIC_TITLE_TEMPLATES,Cross-Modal Representation Learning in Heterogeneous Domains,0,chimeric_title,False
+_pools,CHIMERIC_TITLE_TEMPLATES,Contrastive Self-Supervised Methods for Dense Prediction,1,chimeric_title,False
+_pools,CHIMERIC_TITLE_TEMPLATES,Few-Shot Meta-Learning with Task-Adaptive Initialization,0,chimeric_title,False
+_pools,CHIMERIC_TITLE_TEMPLATES,Diffusion-Based Generative Models for Molecular Design,0,chimeric_title,False
+_pools,CHIMERIC_TITLE_TEMPLATES,Neural Architecture Search with Hardware Constraints,1,chimeric_title,False
+_pools,CHIMERIC_TITLE_TEMPLATES,Multi-Task Transfer Learning Across Modalities,1,chimeric_title,False
+_pools,CHIMERIC_TITLE_TEMPLATES,Graph Neural Network Architectures for Combinatorial Optimization,1,chimeric_title,False
+_pools,CHIMERIC_TITLE_TEMPLATES,Prompt-Tuning Strategies for Instruction-Following Models,0,chimeric_title,False
+_pools,CHIMERIC_TITLE_TEMPLATES,Retrieval-Augmented Generation for Long-Form Question Answering,0,chimeric_title,False
+_pools,CHIMERIC_TITLE_TEMPLATES,Vision-Language Alignment via Contrastive Pre-Training,0,chimeric_title,False
+_pools,CHIMERIC_TITLE_TEMPLATES,Causal Inference Methods for Treatment Effect Estimation,1,chimeric_title,False
+_pools,CHIMERIC_TITLE_TEMPLATES,Federated Learning with Heterogeneous Client Distributions,2,chimeric_title,False
+_pools,CHIMERIC_TITLE_TEMPLATES,Sparse Mixture-of-Experts for Efficient Inference,1,chimeric_title,False
+_pools,CHIMERIC_TITLE_TEMPLATES,Test-Time Adaptation Under Distribution Shift,0,chimeric_title,False
+_pools,CHIMERIC_TITLE_TEMPLATES,Token-Free Language Modeling with Character-Level Transformers,2,chimeric_title,False
+_pools,CHIMERIC_TITLE_TEMPLATES,Reward Modeling for Alignment of Large Language Models,0,chimeric_title,False
+_pools,CHIMERIC_TITLE_TEMPLATES,Low-Rank Adaptation for Parameter-Efficient Fine-Tuning,1,chimeric_title,False
+_pools,CHIMERIC_TITLE_TEMPLATES,Continual Learning Without Catastrophic Forgetting,1,chimeric_title,False
+_pools,CHIMERIC_TITLE_TEMPLATES,Efficient Attention via Linear Complexity Approximations,1,chimeric_title,False
+_pools,CHIMERIC_TITLE_TEMPLATES,Denoising Diffusion Probabilistic Models for Image Restoration,1,chimeric_title,False
+_pools,CHIMERIC_TITLE_TEMPLATES,Self-Supervised Speech Representation Learning,0,chimeric_title,False
+_pools,CHIMERIC_TITLE_TEMPLATES,Equivariant Neural Networks for Physical Simulations,0,chimeric_title,False
+_pools,CHIMERIC_TITLE_TEMPLATES,Bayesian Optimization for Hyperparameter Tuning,0,chimeric_title,False
+_pools,CHIMERIC_TITLE_TEMPLATES,Multi-Agent Reinforcement Learning in Cooperative Settings,0,chimeric_title,False
+_pools,CHIMERIC_TITLE_TEMPLATES,Knowledge Distillation for Model Compression,1,chimeric_title,False
+_pools,CHIMERIC_TITLE_TEMPLATES,Adversarial Robustness Through Certified Defenses,0,chimeric_title,False
+_pools,CHIMERIC_TITLE_TEMPLATES,Neural Radiance Fields for Novel View Synthesis,1,chimeric_title,False
+_pools,CHIMERIC_TITLE_TEMPLATES,Temporal Graph Networks for Dynamic Interaction Modeling,0,chimeric_title,False
+_pools,CHIMERIC_TITLE_TEMPLATES,Data Augmentation Strategies for Low-Resource NLP,0,chimeric_title,False
+_pools,CHIMERIC_TITLE_TEMPLATES,Hierarchical Reinforcement Learning with Temporal Abstraction,0,chimeric_title,False
+_pools,CHIMERIC_TITLE_TEMPLATES,Attention Mechanisms for Sequential Decision Making,2,chimeric_title,False
+_pools,CHIMERIC_TITLE_TEMPLATES,Uncertainty Quantification in Deep Neural Networks,1,chimeric_title,False
+_pools,CHIMERIC_TITLE_TEMPLATES,Efficient Transformer Architectures for Long Sequences,0,chimeric_title,False
+_pools,CHIMERIC_TITLE_TEMPLATES,Multi-Modal Fusion for Visual Question Answering,2,chimeric_title,False
+_pools,CHIMERIC_TITLE_TEMPLATES,Domain Adaptation via Adversarial Training,0,chimeric_title,False
+_pools,CHIMERIC_TITLE_TEMPLATES,Neural Program Synthesis from Input-Output Examples,0,chimeric_title,False
+_pools,CHIMERIC_TITLE_TEMPLATES,Explainable AI Through Attention Visualization,0,chimeric_title,False
+_pools,CHIMERIC_TITLE_TEMPLATES,Graph Transformers for Molecular Property Prediction,1,chimeric_title,False
+_pools,CHIMERIC_TITLE_TEMPLATES,Few-Shot Learning via Prototypical Networks,1,chimeric_title,False
+_pools,CHIMERIC_TITLE_TEMPLATES,Meta-Reinforcement Learning for Task Distribution,0,chimeric_title,False
+_pools,CHIMERIC_TITLE_TEMPLATES,Causal Discovery from Observational Data,1,chimeric_title,False
+_pools,CHIMERIC_TITLE_TEMPLATES,Self-Supervised Learning for Medical Imaging,1,chimeric_title,False
+_pools,CHIMERIC_TITLE_TEMPLATES,Neural Architecture Search with Evolutionary Algorithms,0,chimeric_title,False
+_pools,CHIMERIC_TITLE_TEMPLATES,Multimodal Pre-Training for Vision and Language,0,chimeric_title,False
+_pools,CHIMERIC_TITLE_TEMPLATES,Efficient Neural Network Pruning Techniques,1,chimeric_title,False
+_pools,CHIMERIC_TITLE_TEMPLATES,Gradient-Based Meta-Learning for Quick Adaptation,0,chimeric_title,False
+_pools,CHIMERIC_TITLE_TEMPLATES,Contrastive Learning for Self-Supervised Representation,1,chimeric_title,False
+_pools,CHIMERIC_TITLE_TEMPLATES,Neural Ordinary Differential Equations for Time Series,1,chimeric_title,False
+_pools,CHIMERIC_TITLE_TEMPLATES,Adversarial Training for Distribution Robustness,1,chimeric_title,False
+_pools,CHIMERIC_TITLE_TEMPLATES,Knowledge Graph Completion via Relation Prediction,0,chimeric_title,False
+_pools,CHIMERIC_TITLE_TEMPLATES,Transformer-Based Models for Code Generation,0,chimeric_title,False
+_pools,CHIMERIC_TITLE_TEMPLATES,Curriculum Learning for Complex Task Training,0,chimeric_title,False
+_pools,CHIMERIC_TITLE_TEMPLATES,Neural Scene Representation and Rendering,0,chimeric_title,False
+_pools,CHIMERIC_TITLE_TEMPLATES,Multi-Agent Communication with Emergent Protocols,1,chimeric_title,False
+_pools,CHIMERIC_TITLE_TEMPLATES,Active Learning Strategies for Label Efficiency,0,chimeric_title,False
+_pools,CHIMERIC_TITLE_TEMPLATES,Deep Learning for Combinatorial Optimization Problems,0,chimeric_title,False
+_pools,CHIMERIC_TITLE_TEMPLATES,Variational Autoencoders for Anomaly Detection,1,chimeric_title,False
+_pools,CHIMERIC_TITLE_TEMPLATES,Neural Machine Translation with Attention,0,chimeric_title,False
+_pools,CHIMERIC_TITLE_TEMPLATES,Graph Neural Networks for Traffic Forecasting,0,chimeric_title,False
+_pools,CHIMERIC_TITLE_TEMPLATES,Reinforcement Learning from Human Feedback,0,chimeric_title,False
+_pools,CHIMERIC_TITLE_TEMPLATES,Diffusion Models for High-Resolution Image Synthesis,1,chimeric_title,False
+_pools,CHIMERIC_TITLE_TEMPLATES,Vision Transformers for Dense Prediction Tasks,0,chimeric_title,False
+_pools,CHIMERIC_TITLE_TEMPLATES,Neural Architecture Search Under Resource Constraints,1,chimeric_title,False
+_pools,CHIMERIC_TITLE_TEMPLATES,Self-Supervised Speech Representation via Contrastive Learning,1,chimeric_title,False
+_pools,CHIMERIC_TITLE_TEMPLATES,Probabilistic Forecasting with Deep Learning,0,chimeric_title,False
+_pools,CHIMERIC_TITLE_TEMPLATES,Neural Tangent Kernel Theory and Applications,2,chimeric_title,False
+_pools,CHIMERIC_TITLE_TEMPLATES,Multi-Objective Optimization in Neural Architecture Search,0,chimeric_title,False
+_pools,CHIMERIC_TITLE_TEMPLATES,Geometric Deep Learning on Manifolds and Graphs,0,chimeric_title,False
+_pools,CHIMERIC_TITLE_TEMPLATES,Neural Sequence-to-Sequence Models with Copy Mechanism,0,chimeric_title,False
+_pools,FAKE_DOI_PREFIXES,10.99990,1,fabricated_doi,True
+_pools,FAKE_DOI_PREFIXES,10.99991,0,fabricated_doi,True
+_pools,FAKE_DOI_PREFIXES,10.99992,1,fabricated_doi,True
+_pools,FAKE_DOI_PREFIXES,10.99993,1,fabricated_doi,True
+_pools,FAKE_DOI_PREFIXES,10.99994,1,fabricated_doi,True
+_pools,FAKE_DOI_PREFIXES,10.99995,2,fabricated_doi,True
+_pools,FAKE_DOI_PREFIXES,10.99996,3,fabricated_doi,True
+_pools,FAKE_DOI_PREFIXES,10.99997,1,fabricated_doi,True
+_pools,FAKE_DOI_PREFIXES,10.99998,0,fabricated_doi,True
+_pools,FAKE_DOI_PREFIXES,10.99999,1,fabricated_doi,True
+_pools,FAKE_DOI_PREFIXES,10.88880,1,fabricated_doi,True
+_pools,FAKE_DOI_PREFIXES,10.88881,1,fabricated_doi,True
+_pools,FAKE_DOI_PREFIXES,10.88882,1,fabricated_doi,True
+_pools,FAKE_DOI_PREFIXES,10.88883,1,fabricated_doi,True
+_pools,FAKE_DOI_PREFIXES,10.77770,1,fabricated_doi,True
+_pools,FAKE_DOI_PREFIXES,10.77771,2,fabricated_doi,True
+_pools,FAKE_DOI_PREFIXES,10.77772,0,fabricated_doi,True
+_pools,FAKE_DOI_PREFIXES,10.77773,1,fabricated_doi,True
+_pools,FAKE_DOI_PREFIXES,10.66660,3,fabricated_doi,True
+_pools,FAKE_DOI_PREFIXES,10.66661,0,fabricated_doi,True
+_pools,FAKE_VENUES,International Conference on Advanced AI Systems,0,nonexistent_venue|preprint_as_published,True
+_pools,FAKE_VENUES,Journal of Computational Intelligence and Applications,0,nonexistent_venue|preprint_as_published,False
+_pools,FAKE_VENUES,Workshop on Emerging Methods in Deep Learning,0,nonexistent_venue|preprint_as_published,False
+_pools,FAKE_VENUES,Transactions on Neural Computing Paradigms,0,nonexistent_venue|preprint_as_published,False
+_pools,FAKE_VENUES,Symposium on Frontier Artificial Intelligence Research,0,nonexistent_venue|preprint_as_published,False
+_pools,FAKE_VENUES,Annual Conference on Machine Learning Innovations,0,nonexistent_venue|preprint_as_published,False
+_pools,FAKE_VENUES,IEEE International Conference on Cognitive Computing,0,nonexistent_venue|preprint_as_published,False
+_pools,FAKE_VENUES,Pacific Rim Symposium on Neural Information Systems,1,nonexistent_venue|preprint_as_published,False
+_pools,FAKE_VENUES,European Workshop on Probabilistic Machine Learning,0,nonexistent_venue|preprint_as_published,False
+_pools,FAKE_VENUES,ACM Conference on Automated Reasoning and Learning,0,nonexistent_venue|preprint_as_published,False
+_pools,FAKE_VENUES,International Journal of Adaptive Computation,0,nonexistent_venue|preprint_as_published,False
+_pools,FAKE_VENUES,Workshop on Scalable Representation Learning,1,nonexistent_venue|preprint_as_published,False
+_pools,FAKE_VENUES,Conference on Foundations of Intelligent Systems,0,nonexistent_venue|preprint_as_published,False
+_pools,FAKE_VENUES,Journal of Theoretical and Applied AI Research,0,nonexistent_venue|preprint_as_published,False
+_pools,FAKE_VENUES,International Symposium on Data-Driven Discovery,0,nonexistent_venue|preprint_as_published,True
+_pools,FAKE_VENUES,Transactions on Autonomous Learning Systems,1,nonexistent_venue|preprint_as_published,False
+_pools,FAKE_VENUES,Workshop on Trustworthy AI and Robustness,0,nonexistent_venue|preprint_as_published,False
+_pools,FAKE_VENUES,Conference on Multimodal Learning and Perception,1,nonexistent_venue|preprint_as_published,False
+_pools,FAKE_VENUES,Annual Symposium on Efficient Deep Learning,1,nonexistent_venue|preprint_as_published,False
+_pools,FAKE_VENUES,Journal of Neural Architecture and Optimization,1,nonexistent_venue|preprint_as_published,False
+_pools,FAKE_VENUES,International Conference on Generative Modeling,0,nonexistent_venue|preprint_as_published,True
+_pools,FAKE_VENUES,Workshop on Causal Inference in Machine Learning,0,nonexistent_venue|preprint_as_published,False
+_pools,FAKE_VENUES,Conference on Language Models and Understanding,1,nonexistent_venue|preprint_as_published,False
+_pools,FAKE_VENUES,Symposium on Geometric Deep Learning Methods,0,nonexistent_venue|preprint_as_published,False
+_pools,FAKE_VENUES,Pacific Conference on Knowledge Representation,0,nonexistent_venue|preprint_as_published,False
+_pools,FAKE_VENUES,Journal of Reinforcement Learning and Control,1,nonexistent_venue|preprint_as_published,False
+_pools,FAKE_VENUES,International Workshop on Federated AI Systems,0,nonexistent_venue|preprint_as_published,True
+_pools,FAKE_VENUES,Conference on Bio-Inspired Computing and AI,2,nonexistent_venue|preprint_as_published,False
+_pools,FAKE_VENUES,Transactions on Computer Vision Applications,0,nonexistent_venue|preprint_as_published,False
+_pools,FAKE_VENUES,Annual Workshop on AI Safety and Alignment,2,nonexistent_venue|preprint_as_published,False
+_pools,FAKE_VENUES,Symposium on Graph Neural Network Research,0,nonexistent_venue|preprint_as_published,False
+_pools,FAKE_VENUES,International Conference on Continual Learning,0,nonexistent_venue|preprint_as_published,True
+_pools,FAKE_VENUES,Journal of Explainable Artificial Intelligence,0,nonexistent_venue|preprint_as_published,False
+_pools,FAKE_VENUES,Workshop on Low-Resource Language Processing,0,nonexistent_venue|preprint_as_published,False
+_pools,FAKE_VENUES,Conference on Bayesian Deep Learning Methods,0,nonexistent_venue|preprint_as_published,False
+_pools,FAKE_VENUES,International Symposium on AI for Science,1,nonexistent_venue|preprint_as_published,True
+_pools,FAKE_VENUES,Transactions on Self-Supervised Representation Learning,0,nonexistent_venue|preprint_as_published,False
+_pools,FAKE_VENUES,Workshop on Embodied Intelligence and Robotics,0,nonexistent_venue|preprint_as_published,False
+_pools,FAKE_VENUES,Conference on Privacy-Preserving Machine Learning,0,nonexistent_venue|preprint_as_published,False
+_pools,FAKE_VENUES,Journal of Time Series Analysis and Forecasting,0,nonexistent_venue|preprint_as_published,False
+_pools,FAKE_VENUES,Symposium on Neuro-Symbolic AI Integration,0,nonexistent_venue|preprint_as_published,False
+_pools,FAKE_VENUES,International Conference on Quantum Machine Learning,4,nonexistent_venue|preprint_as_published,True
+_pools,FAKE_VENUES,Workshop on Foundation Models and Adaptation,0,nonexistent_venue|preprint_as_published,False
+_pools,FAKE_VENUES,Conference on Algorithmic Fairness in AI,0,nonexistent_venue|preprint_as_published,False
+_pools,FAKE_VENUES,Annual Conference on Spatial Intelligence,1,nonexistent_venue|preprint_as_published,False
+_pools,FAKE_VENUES,Journal of Statistical Machine Learning Theory,1,nonexistent_venue|preprint_as_published,False
+_pools,FAKE_VENUES,Workshop on Scientific Machine Learning,1,nonexistent_venue|preprint_as_published,False
+_pools,FAKE_VENUES,Symposium on Decision-Making Under Uncertainty,0,nonexistent_venue|preprint_as_published,False
+_pools,FAKE_VENUES,International Conference on Intelligent Automation,0,nonexistent_venue|preprint_as_published,True
+_pools,FAKE_VENUES,Conference on Emergent Communication in AI,0,nonexistent_venue|preprint_as_published,False
+_pools,FAKE_VENUES,IEEE Symposium on Adaptive Neural Systems,0,nonexistent_venue|preprint_as_published,False
+_pools,FAKE_VENUES,Workshop on Memory-Augmented Neural Networks,1,nonexistent_venue|preprint_as_published,False
+_pools,FAKE_VENUES,International Journal of Deep Learning Research,0,nonexistent_venue|preprint_as_published,False
+_pools,FAKE_VENUES,Conference on Structured Prediction Methods,0,nonexistent_venue|preprint_as_published,False
+_pools,FAKE_VENUES,Symposium on Transfer Learning Paradigms,1,nonexistent_venue|preprint_as_published,False
+_pools,FAKE_VENUES,ACM Workshop on Neural Architecture Design,1,nonexistent_venue|preprint_as_published,False
+_pools,FAKE_VENUES,Transactions on Meta-Learning and Adaptation,1,nonexistent_venue|preprint_as_published,False
+_pools,FAKE_VENUES,Conference on Distributed Machine Learning,0,nonexistent_venue|preprint_as_published,False
+_pools,FAKE_VENUES,Journal of Adversarial Machine Learning,1,nonexistent_venue|preprint_as_published,False
+_pools,FAKE_VENUES,International Workshop on Interpretable Models,0,nonexistent_venue|preprint_as_published,True
+_pools,FAKE_VENUES,Symposium on Online Learning Theory,0,nonexistent_venue|preprint_as_published,False
+_pools,FAKE_VENUES,Conference on Attention Mechanisms and Transformers,1,nonexistent_venue|preprint_as_published,False
+_pools,FAKE_VENUES,Workshop on Multi-Agent Learning Systems,0,nonexistent_venue|preprint_as_published,False
+_pools,FAKE_VENUES,Journal of Optimization in Neural Networks,0,nonexistent_venue|preprint_as_published,False
+_pools,FAKE_VENUES,International Conference on Semantic Understanding,0,nonexistent_venue|preprint_as_published,True
+_pools,FAKE_VENUES,Symposium on Probabilistic Reasoning,1,nonexistent_venue|preprint_as_published,False
+_pools,FAKE_VENUES,Conference on Zero-Shot and Few-Shot Learning,0,nonexistent_venue|preprint_as_published,False
+_pools,FAKE_VENUES,Workshop on Neural Information Retrieval,0,nonexistent_venue|preprint_as_published,False
+_pools,FAKE_VENUES,Transactions on Language Model Architectures,0,nonexistent_venue|preprint_as_published,False
+_pools,FAKE_VENUES,International Journal of Representation Learning,1,nonexistent_venue|preprint_as_published,False
+_pools,FAKE_VENUES,Conference on Active Learning Methods,0,nonexistent_venue|preprint_as_published,False
+_pools,FAKE_VENUES,Symposium on Regularization Techniques,2,nonexistent_venue|preprint_as_published,False
+_pools,FAKE_VENUES,Workshop on Curriculum Learning Strategies,0,nonexistent_venue|preprint_as_published,False
+_pools,FAKE_VENUES,Journal of Uncertainty Estimation,0,nonexistent_venue|preprint_as_published,False
+_pools,FAKE_VENUES,International Conference on Model Compression,0,nonexistent_venue|preprint_as_published,True
+_pools,FAKE_VENUES,Conference on Synthetic Data Generation,0,nonexistent_venue|preprint_as_published,False
+_pools,FAKE_VENUES,Symposium on Contrastive Learning Methods,0,nonexistent_venue|preprint_as_published,False
+_pools,FAKE_VENUES,Workshop on Attention and Memory Networks,0,nonexistent_venue|preprint_as_published,False
+_pools,FAKE_VENUES,Transactions on Graph Representation Learning,0,nonexistent_venue|preprint_as_published,False
+_pools,FAKE_VENUES,International Journal of Neural Inference,0,nonexistent_venue|preprint_as_published,False
+_pools,FAKE_VENUES,Conference on Prompt Engineering and Design,0,nonexistent_venue|preprint_as_published,False
+_pools,FAKE_VENUES,Symposium on Test-Time Adaptation Methods,1,nonexistent_venue|preprint_as_published,False
+_pools,FAKE_VENUES,Workshop on Domain Generalization,1,nonexistent_venue|preprint_as_published,False
+_pools,FAKE_VENUES,Journal of Efficient Neural Architectures,0,nonexistent_venue|preprint_as_published,False
+_pools,FAKE_VENUES,International Conference on Multimodal Integration,1,nonexistent_venue|preprint_as_published,True
+_pools,FAKE_VENUES,Conference on Neural Theorem Proving,0,nonexistent_venue|preprint_as_published,False
+_pools,FAKE_VENUES,Symposium on World Models and Planning,1,nonexistent_venue|preprint_as_published,False
+_pools,FAKE_VENUES,Workshop on Latent Variable Models,0,nonexistent_venue|preprint_as_published,False
+_pools,FAKE_VENUES,Transactions on Neural Rendering,0,nonexistent_venue|preprint_as_published,False
+_pools,FAKE_VENUES,International Journal of Metric Learning,0,nonexistent_venue|preprint_as_published,False
+_pools,FAKE_VENUES,Conference on Hierarchical Learning Systems,0,nonexistent_venue|preprint_as_published,False
+_pools,FAKE_VENUES,Symposium on Energy-Based Models,0,nonexistent_venue|preprint_as_published,False
+_pools,FAKE_VENUES,Workshop on Neural Differential Equations,0,nonexistent_venue|preprint_as_published,False
+_pools,FAKE_VENUES,Journal of Sequence Modeling,0,nonexistent_venue|preprint_as_published,False
+_pools,FAKE_VENUES,International Conference on Equivariant Networks,0,nonexistent_venue|preprint_as_published,True
+_pools,FAKE_VENUES,Conference on Disentangled Representations,1,nonexistent_venue|preprint_as_published,False
+_pools,FAKE_VENUES,Symposium on Neural Scaling Laws,1,nonexistent_venue|preprint_as_published,False
+_pools,FAKE_VENUES,Workshop on Sparse Neural Networks,0,nonexistent_venue|preprint_as_published,False
+_pools,FAKE_VENUES,Transactions on Instruction Following Models,1,nonexistent_venue|preprint_as_published,False
+_pools,FAKE_VENUES,International Journal of Context Learning,0,nonexistent_venue|preprint_as_published,False
+_pools,FAKE_VENUES,Conference on Reward Learning and Alignment,2,nonexistent_venue|preprint_as_published,False
+_pools,FAKE_VENUES,Symposium on Compositional Generalization,0,nonexistent_venue|preprint_as_published,False
+_pools,FAKE_AUTHORS,Wei Zhang and Priya Patel and James Brown,1,placeholder_authors,False
+_pools,FAKE_AUTHORS,Maria Santos and Hiroshi Tanaka,0,placeholder_authors,False
+_pools,FAKE_AUTHORS,Ahmed Hassan and Sarah O'Brien and Raj Gupta,0,placeholder_authors,False
+_pools,FAKE_AUTHORS,K. Mueller and L. Johansson,2,placeholder_authors,False
+_pools,FAKE_AUTHORS,Yusuf Ali and Elena Popova and David Lee,0,placeholder_authors,False
+_pools,FAKE_AUTHORS,R. Kumar and S. Nakamura and T. Fischer,2,placeholder_authors,False
+_pools,FAKE_AUTHORS,Jing Liu and Carlos Ramirez,0,placeholder_authors,False
+_pools,FAKE_AUTHORS,Olga Ivanova and Pierre Dubois and Min-Soo Kim,0,placeholder_authors,False
+_pools,FAKE_AUTHORS,M. Chen and A. Kowalski and B. Okafor,0,placeholder_authors,False
+_pools,FAKE_AUTHORS,Fatima Al-Rashid and Kenji Yamamoto,0,placeholder_authors,False
+_pools,FAKE_AUTHORS,Dmitri Volkov and Aisha Mbeki and Luca Rossi,0,placeholder_authors,False
+_pools,FAKE_AUTHORS,J. Andersen and C. Morales,0,placeholder_authors,False
+_pools,FAKE_AUTHORS,Ravi Sharma and Mei-Ling Wu and Thomas Schmidt,0,placeholder_authors,False
+_pools,FAKE_AUTHORS,P. Novak and H. Sato and F. Osei,1,placeholder_authors,False
+_pools,FAKE_AUTHORS,Soo-Jin Park and Rafael Costa,0,placeholder_authors,False
+_pools,FAKE_AUTHORS,N. Petersen and Y. Taniguchi and A. Mensah,0,placeholder_authors,False
+_pools,FAKE_AUTHORS,Ling Chen and Amara Diallo and Viktor Horvat,1,placeholder_authors,False
+_pools,FAKE_AUTHORS,Q. Wang and D. Fernandez and E. Kimura,0,placeholder_authors,False
+_pools,FAKE_AUTHORS,Hassan Ibrahim and Sofia Kowalczyk and Jun-Ho Lee,0,placeholder_authors,False
+_pools,FAKE_AUTHORS,Isabella Romano and Kwame Mensah and Yuki Sato,0,placeholder_authors,False
+_pools,FAKE_AUTHORS,Lars Bergström and Aisha Ndiaye and Chen Wei,0,placeholder_authors,False
+_pools,FAKE_AUTHORS,Mateo Garcia and Nadia Petrova and Hiroshi Yamada,0,placeholder_authors,False
+_pools,FAKE_AUTHORS,Elena Vasquez and Tariq Al-Mansour and Min-Ji Park,0,placeholder_authors,False
+_pools,FAKE_AUTHORS,Viktor Sokolov and Amina Diop and Takeshi Nakamura,0,placeholder_authors,False
+_pools,FAKE_AUTHORS,Gabriela Silva and Omar Farah and Yuna Choi,0,placeholder_authors,False
+_pools,FAKE_AUTHORS,Andreas Schneider and Zainab Ahmed and Kenji Tanaka,1,placeholder_authors,False
+_pools,FAKE_AUTHORS,Lucia Moretti and Jamal Williams and Hye-Jin Kim,0,placeholder_authors,False
+_pools,FAKE_AUTHORS,Nikolai Ivanov and Fatou Sow and Akira Suzuki,0,placeholder_authors,False
+_pools,FAKE_AUTHORS,Carmen Rodriguez and Kwasi Osei and Mei-Ling Huang,1,placeholder_authors,False
+_pools,FAKE_AUTHORS,Stefan Müller and Amara Koné and Taro Watanabe,2,placeholder_authors,False
+_pools,FAKE_AUTHORS,Valentina Costa and Ibrahim Kone and Soo-Yeon Lee,0,placeholder_authors,False
+_pools,FAKE_AUTHORS,Dimitri Popov and Nadine Dubois and Yuki Matsumoto,0,placeholder_authors,False
+_pools,FAKE_AUTHORS,Rosa Martinez and Adebayo Adeyemi and Ji-Woo Park,0,placeholder_authors,False
+_pools,FAKE_AUTHORS,Henrik Larsen and Yasmin Hassan and Haruto Nakano,1,placeholder_authors,False
+_pools,FAKE_AUTHORS,Francesca Bianchi and Mustafa Ali and Hana Taniguchi,0,placeholder_authors,False
+_pools,FAKE_AUTHORS,Pavel Novotny and Fatima Ndoye and Ryota Kobayashi,0,placeholder_authors,False
+_pools,FAKE_AUTHORS,Ana Santos and Kwame Asante and Min-Seo Kim,0,placeholder_authors,False
+_pools,FAKE_AUTHORS,Mikhail Petrov and Amina Traoré and Kaito Yamamoto,1,placeholder_authors,False
+_pools,FAKE_AUTHORS,Giulia Romano and Youssef Benali and Sora Takahashi,2,placeholder_authors,False
+_pools,FAKE_AUTHORS,Jan Kowalski and Zara Ibrahim and Ren Watanabe,0,placeholder_authors,False
+_pools,FAKE_AUTHORS,Marta Fernandez and Abdi Mohamed and Aiko Suzuki,0,placeholder_authors,False
+_pools,FAKE_AUTHORS,Boris Volkov and Fatoumata Diallo and Riku Nakamura,0,placeholder_authors,False
+_pools,FAKE_AUTHORS,Cristina Lopez and Tariq Hussein and Yui Tanaka,0,placeholder_authors,False
+_pools,FAKE_AUTHORS,Andrei Ivanov and Mariama Sow and Haruki Sato,0,placeholder_authors,False
+_pools,FAKE_AUTHORS,Bianca Silva and Omar Sharif and Ayumi Yamada,0,placeholder_authors,False
+_pools,FAKE_AUTHORS,Dmitry Kozlov and Aissatou Diop and Sota Kobayashi,0,placeholder_authors,False
+_pools,FAKE_AUTHORS,Elena Garcia and Adama Toure and Kaede Matsumoto,1,placeholder_authors,False
+_pools,FAKE_AUTHORS,Igor Sokolov and Ndeye Ndiaye and Yuta Nakano,1,placeholder_authors,False
+_pools,FAKE_AUTHORS,Laura Martinez and Hassan Ahmed and Rina Taniguchi,0,placeholder_authors,False
+_pools,FAKE_AUTHORS,Maxim Petrov and Fatou Kone and Sho Watanabe,0,placeholder_authors,False
+_pools,FAKE_AUTHORS,Nina Rodriguez and Ibrahim Diallo and Kenta Yamamoto,3,placeholder_authors,False
+_pools,FAKE_AUTHORS,Oleg Volkov and Aminata Seck and Daiki Suzuki,0,placeholder_authors,False
+_pools,FAKE_AUTHORS,Paula Santos and Yusuf Ibrahim and Hiro Takahashi,2,placeholder_authors,False
+_pools,FAKE_AUTHORS,Roman Ivanov and Zeynab Hassan and Ryo Nakamura,0,placeholder_authors,False
+_pools,FAKE_AUTHORS,Sara Lopez and Abdou Diop and Yuki Sato,2,placeholder_authors,False
+_pools,FAKE_AUTHORS,Tomas Novotny and Fatouma Traore and Takumi Tanaka,0,placeholder_authors,False
+_pools,FAKE_AUTHORS,Ulyana Petrova and Oumar Ndiaye and Shun Yamada,0,placeholder_authors,False
+_pools,FAKE_AUTHORS,Vera Sokolova and Mamadou Kone and Kaito Matsumoto,0,placeholder_authors,False
+_pools,FAKE_AUTHORS,Xavier Costa and Awa Sow and Ren Kobayashi,1,placeholder_authors,False
+_pools,FAKE_AUTHORS,Yana Ivanova and Cheikh Diallo and Sora Nakano,0,placeholder_authors,False
+_pools,FAKE_AUTHORS,Zara Fernandez and Boubacar Toure and Aoi Watanabe,0,placeholder_authors,False
+_pools,FAKE_AUTHORS,Ali Rahman and Ingrid Johansson and Yuto Suzuki,1,placeholder_authors,False
+_pools,FAKE_AUTHORS,Beatriz Silva and Jamal Ibrahim and Hana Yamamoto,0,placeholder_authors,False
+_pools,FAKE_AUTHORS,Carlos Garcia and Khadija Hassan and Riku Tanaka,1,placeholder_authors,False
+_pools,FAKE_AUTHORS,Diana Martinez and Lamine Ndiaye and Saki Sato,1,placeholder_authors,False
+_pools,FAKE_AUTHORS,Emilio Rodriguez and Maimouna Diop and Yui Nakamura,0,placeholder_authors,False
+_pools,FAKE_AUTHORS,Fatima Lopez and Ndongo Kone and Haruki Yamada,1,placeholder_authors,False
+_pools,FAKE_AUTHORS,Gabriel Santos and Oumou Sow and Kaede Kobayashi,0,placeholder_authors,False
+_pools,FAKE_AUTHORS,Hector Fernandez and Penda Diallo and Yuta Matsumoto,0,placeholder_authors,False
+_pools,FAKE_AUTHORS,Ibrahim Costa and Ramata Traore and Sota Nakano,0,placeholder_authors,False
+_pools,FAKE_AUTHORS,Jasmin Novotny and Saliou Ndiaye and Rina Taniguchi,0,placeholder_authors,False
+_pools,FAKE_AUTHORS,Karim Petrov and Thiam Toure and Kenta Watanabe,1,placeholder_authors,False
+_pools,FAKE_AUTHORS,Leila Ivanov and Ury Seck and Sho Yamamoto,0,placeholder_authors,False
+_pools,FAKE_AUTHORS,Malik Sokolov and Viviane Kone and Daiki Suzuki,1,placeholder_authors,False
+_pools,FAKE_AUTHORS,Noor Rodriguez and Waly Diop and Hiro Takahashi,0,placeholder_authors,False
+_pools,FAKE_AUTHORS,Oscar Lopez and Xadi Sow and Ryo Nakamura,0,placeholder_authors,False
+_pools,FAKE_AUTHORS,Petra Silva and Yacouba Ndiaye and Yuki Sato,1,placeholder_authors,False
+_pools,FAKE_AUTHORS,Quinn Martinez and Zeinab Kone and Takumi Tanaka,0,placeholder_authors,False
+_pools,FAKE_AUTHORS,Rashid Fernandez and Aida Traore and Shun Yamada,2,placeholder_authors,False
+_pools,FAKE_AUTHORS,Salma Santos and Binta Diallo and Kaito Matsumoto,0,placeholder_authors,False
+_pools,FAKE_AUTHORS,Tariq Garcia and Coumba Toure and Ren Kobayashi,1,placeholder_authors,False
+_pools,FAKE_AUTHORS,Umi Rodriguez and Dieynaba Seck and Sora Nakano,0,placeholder_authors,False
+_pools,FAKE_AUTHORS,Vera Costa and Elhadj Ndiaye and Aoi Watanabe,1,placeholder_authors,False
+_pools,FAKE_AUTHORS,Walid Novotny and Fanta Kone and Yuto Suzuki,0,placeholder_authors,False
+_pools,FAKE_AUTHORS,Yasmin Petrov and Gnima Sow and Hana Yamamoto,0,placeholder_authors,False
+_pools,FAKE_AUTHORS,Zahra Ivanov and Habib Diop and Riku Tanaka,1,placeholder_authors,False
+_pools,FAKE_AUTHORS,Amir Sokolov and Ina Diallo and Saki Sato,0,placeholder_authors,False
+_pools,FAKE_AUTHORS,Basma Lopez and Juma Traore and Yui Nakamura,0,placeholder_authors,False
+_pools,FAKE_AUTHORS,Cyril Silva and Kadiatou Ndiaye and Haruki Yamada,0,placeholder_authors,False
+_pools,FAKE_AUTHORS,Dalia Martinez and Lassana Toure and Kaede Kobayashi,0,placeholder_authors,False
+_pools,FAKE_AUTHORS,Elias Fernandez and Mame Seck and Yuta Matsumoto,1,placeholder_authors,False
+_pools,FAKE_AUTHORS,Farah Santos and Ndiaga Kone and Sota Nakano,0,placeholder_authors,False
+_pools,FAKE_AUTHORS,Ghazi Garcia and Oury Sow and Rina Taniguchi,1,placeholder_authors,False
+_pools,FAKE_AUTHORS,Huda Rodriguez and Papa Ndiaye and Kenta Watanabe,0,placeholder_authors,False
+_pools,FAKE_AUTHORS,Imran Costa and Qader Diop and Sho Yamamoto,0,placeholder_authors,False
+_pools,FAKE_AUTHORS,Jana Novotny and Rokhaya Kone and Daiki Suzuki,1,placeholder_authors,False
+_pools,FAKE_AUTHORS,Kareem Petrov and Safiatou Traore and Hiro Takahashi,1,placeholder_authors,False
+_pools,FAKE_AUTHORS,Laila Ivanov and Tidiane Diallo and Ryo Nakamura,0,placeholder_authors,False
+_pools,HYBRID_FAKE_AUTHORS,Michael Zhang and Jennifer Liu and Robert Chen,1,hybrid_fabrication,False
+_pools,HYBRID_FAKE_AUTHORS,Anna Petrov and Carlos Martinez and Yuki Nakamura,1,hybrid_fabrication,False
+_pools,HYBRID_FAKE_AUTHORS,Thomas Anderson and Sophia Kumar and Daniel Park,3,hybrid_fabrication,False
+_pools,HYBRID_FAKE_AUTHORS,Isabella Rossi and Ahmed Ali and Emma Williams,1,hybrid_fabrication,False
+_pools,HYBRID_FAKE_AUTHORS,Lucas Brown and Maria Garcia and Kevin Nguyen,3,hybrid_fabrication,False
+_pools,HYBRID_FAKE_AUTHORS,Olga Sokolova and James Wright and Mei Lin,4,hybrid_fabrication,False
+_pools,HYBRID_FAKE_AUTHORS,Henrik Larsson and Fatima Benali and Takeshi Ito,3,hybrid_fabrication,False
+_pools,HYBRID_FAKE_AUTHORS,Priya Chatterjee and Marco Bianchi and Soo-Yeon Choi,4,hybrid_fabrication,False
+_pools,HYBRID_FAKE_AUTHORS,David Okonkwo and Laura Fischer and Wei-Ting Hsu,4,hybrid_fabrication,False
+_pools,HYBRID_FAKE_AUTHORS,Amir Rezaei and Rachel Thompson and Kenji Morita,1,hybrid_fabrication,False
+_pools,HYBRID_FAKE_AUTHORS,Elena Vasquez and Patrick Murphy and Zhi-Yong Xu,2,hybrid_fabrication,False
+_pools,HYBRID_FAKE_AUTHORS,Nadia Kowalczyk and Samuel Adjei and Yuki Watanabe,2,hybrid_fabrication,False
+_pools,HYBRID_FAKE_AUTHORS,Oscar Herrera and Anya Krishnan and Felix Bauer,1,hybrid_fabrication,False
+_pools,HYBRID_FAKE_AUTHORS,Christine Dufour and Jamal Henderson and Hana Suzuki,0,hybrid_fabrication,False
+_pools,HYBRID_FAKE_AUTHORS,Dmitri Orlov and Amelia Santos and Jun-Ho Kwon,0,hybrid_fabrication,False
+_pools,PLAUSIBLE_FIRST_NAMES,Wei,156,plausible_fabrication,False
+_pools,PLAUSIBLE_FIRST_NAMES,Yuki,11,plausible_fabrication,False
+_pools,PLAUSIBLE_FIRST_NAMES,Sofia,6,plausible_fabrication,False
+_pools,PLAUSIBLE_FIRST_NAMES,Alex,41,plausible_fabrication,False
+_pools,PLAUSIBLE_FIRST_NAMES,Nina,9,plausible_fabrication,False
+_pools,PLAUSIBLE_FIRST_NAMES,Gabriel,7,plausible_fabrication,False
+_pools,PLAUSIBLE_FIRST_NAMES,Tomoko,5,plausible_fabrication,False
+_pools,PLAUSIBLE_FIRST_NAMES,Leonardo,4,plausible_fabrication,False
+_pools,PLAUSIBLE_FIRST_NAMES,Kexin,1,plausible_fabrication,False
+_pools,PLAUSIBLE_FIRST_NAMES,Jieyu,2,plausible_fabrication,False
+_pools,PLAUSIBLE_FIRST_NAMES,Pavel,3,plausible_fabrication,False
+_pools,PLAUSIBLE_FIRST_NAMES,Daphne,6,plausible_fabrication,False
+_pools,PLAUSIBLE_FIRST_NAMES,Elena,8,plausible_fabrication,False
+_pools,PLAUSIBLE_FIRST_NAMES,Aditya,5,plausible_fabrication,False
+_pools,PLAUSIBLE_FIRST_NAMES,Ziqian,6,plausible_fabrication,False
+_pools,PLAUSIBLE_FIRST_NAMES,Ryuichi,2,plausible_fabrication,False
+_pools,PLAUSIBLE_FIRST_NAMES,Tamara,4,plausible_fabrication,False
+_pools,PLAUSIBLE_FIRST_NAMES,Jessica,5,plausible_fabrication,False
+_pools,PLAUSIBLE_FIRST_NAMES,Ruiqi,5,plausible_fabrication,False
+_pools,PLAUSIBLE_FIRST_NAMES,Anton,15,plausible_fabrication,False
+_pools,PLAUSIBLE_FIRST_NAMES,Wenda,2,plausible_fabrication,False
+_pools,PLAUSIBLE_FIRST_NAMES,Robin,15,plausible_fabrication,False
+_pools,PLAUSIBLE_FIRST_NAMES,Yuntao,6,plausible_fabrication,False
+_pools,PLAUSIBLE_FIRST_NAMES,Hanlin,9,plausible_fabrication,False
+_pools,PLAUSIBLE_FIRST_NAMES,Tiancheng,7,plausible_fabrication,False
+_pools,PLAUSIBLE_FIRST_NAMES,Georg,16,plausible_fabrication,False
+_pools,PLAUSIBLE_FIRST_NAMES,Minjoon,2,plausible_fabrication,False
+_pools,PLAUSIBLE_FIRST_NAMES,Ilia,8,plausible_fabrication,False
+_pools,PLAUSIBLE_FIRST_NAMES,Fei,42,plausible_fabrication,False
+_pools,PLAUSIBLE_FIRST_NAMES,Lin,262,plausible_fabrication,False
+_pools,PLAUSIBLE_FIRST_NAMES,Ekin,5,plausible_fabrication,False
+_pools,PLAUSIBLE_FIRST_NAMES,Shuang,13,plausible_fabrication,False
+_pools,PLAUSIBLE_FIRST_NAMES,Yuxin,9,plausible_fabrication,False
+_pools,PLAUSIBLE_FIRST_NAMES,Zhouhan,2,plausible_fabrication,False
+_pools,PLAUSIBLE_FIRST_NAMES,Yao,42,plausible_fabrication,False
+_pools,PLAUSIBLE_FIRST_NAMES,Priya,5,plausible_fabrication,False
+_pools,PLAUSIBLE_FIRST_NAMES,Rahul,0,plausible_fabrication,False
+_pools,PLAUSIBLE_FIRST_NAMES,Aaditya,0,plausible_fabrication,False
+_pools,PLAUSIBLE_FIRST_NAMES,Divya,0,plausible_fabrication,False
+_pools,PLAUSIBLE_FIRST_NAMES,Shreya,0,plausible_fabrication,False
+_pools,PLAUSIBLE_FIRST_NAMES,Rohan,2,plausible_fabrication,False
+_pools,PLAUSIBLE_FIRST_NAMES,Ananya,1,plausible_fabrication,False
+_pools,PLAUSIBLE_FIRST_NAMES,Vikram,3,plausible_fabrication,False
+_pools,PLAUSIBLE_FIRST_NAMES,Nadia,2,plausible_fabrication,False
+_pools,PLAUSIBLE_FIRST_NAMES,Omar,1,plausible_fabrication,False
+_pools,PLAUSIBLE_FIRST_NAMES,Layla,0,plausible_fabrication,False
+_pools,PLAUSIBLE_FIRST_NAMES,Tariq,1,plausible_fabrication,False
+_pools,PLAUSIBLE_FIRST_NAMES,Amira,4,plausible_fabrication,False
+_pools,PLAUSIBLE_FIRST_NAMES,Khalid,0,plausible_fabrication,False
+_pools,PLAUSIBLE_FIRST_NAMES,Sara,8,plausible_fabrication,False
+_pools,PLAUSIBLE_FIRST_NAMES,Hyun,9,plausible_fabrication,False
+_pools,PLAUSIBLE_FIRST_NAMES,Jinyoung,0,plausible_fabrication,False
+_pools,PLAUSIBLE_FIRST_NAMES,Sungwon,1,plausible_fabrication,False
+_pools,PLAUSIBLE_FIRST_NAMES,Minji,2,plausible_fabrication,False
+_pools,PLAUSIBLE_FIRST_NAMES,Jaeho,2,plausible_fabrication,False
+_pools,PLAUSIBLE_FIRST_NAMES,Seunghyun,0,plausible_fabrication,False
+_pools,PLAUSIBLE_FIRST_NAMES,Yejin,1,plausible_fabrication,False
+_pools,PLAUSIBLE_FIRST_NAMES,Dongwoo,0,plausible_fabrication,False
+_pools,PLAUSIBLE_FIRST_NAMES,Minsu,0,plausible_fabrication,False
+_pools,PLAUSIBLE_FIRST_NAMES,Bohyung,1,plausible_fabrication,False
+_pools,PLAUSIBLE_FIRST_NAMES,Lukas,2,plausible_fabrication,False
+_pools,PLAUSIBLE_FIRST_NAMES,Fabian,0,plausible_fabrication,False
+_pools,PLAUSIBLE_FIRST_NAMES,Moritz,6,plausible_fabrication,False
+_pools,PLAUSIBLE_FIRST_NAMES,Tobias,8,plausible_fabrication,False
+_pools,PLAUSIBLE_FIRST_NAMES,Maximilian,0,plausible_fabrication,False
+_pools,PLAUSIBLE_FIRST_NAMES,Hannah,0,plausible_fabrication,False
+_pools,PLAUSIBLE_FIRST_NAMES,Lena,8,plausible_fabrication,False
+_pools,PLAUSIBLE_FIRST_NAMES,Felix,8,plausible_fabrication,False
+_pools,PLAUSIBLE_FIRST_NAMES,Jonas,1,plausible_fabrication,False
+_pools,PLAUSIBLE_FIRST_NAMES,Clara,0,plausible_fabrication,False
+_pools,PLAUSIBLE_FIRST_NAMES,Rodrigo,0,plausible_fabrication,False
+_pools,PLAUSIBLE_FIRST_NAMES,Valentina,0,plausible_fabrication,False
+_pools,PLAUSIBLE_FIRST_NAMES,Sebastian,10,plausible_fabrication,False
+_pools,PLAUSIBLE_FIRST_NAMES,Camila,0,plausible_fabrication,False
+_pools,PLAUSIBLE_FIRST_NAMES,Matías,0,plausible_fabrication,False
+_pools,PLAUSIBLE_FIRST_NAMES,Isabela,0,plausible_fabrication,False
+_pools,PLAUSIBLE_FIRST_NAMES,Thiago,0,plausible_fabrication,False
+_pools,PLAUSIBLE_FIRST_NAMES,Beatriz,0,plausible_fabrication,False
+_pools,PLAUSIBLE_FIRST_NAMES,Rafael,4,plausible_fabrication,False
+_pools,PLAUSIBLE_FIRST_NAMES,Lucas,9,plausible_fabrication,False
+_pools,PLAUSIBLE_FIRST_NAMES,Léa,0,plausible_fabrication,False
+_pools,PLAUSIBLE_FIRST_NAMES,Antoine,4,plausible_fabrication,False
+_pools,PLAUSIBLE_FIRST_NAMES,Mathieu,4,plausible_fabrication,False
+_pools,PLAUSIBLE_FIRST_NAMES,Clément,5,plausible_fabrication,False
+_pools,PLAUSIBLE_FIRST_NAMES,Marine,0,plausible_fabrication,False
+_pools,PLAUSIBLE_FIRST_NAMES,Théo,0,plausible_fabrication,False
+_pools,PLAUSIBLE_FIRST_NAMES,Camille,0,plausible_fabrication,False
+_pools,PLAUSIBLE_FIRST_NAMES,Pierre,4,plausible_fabrication,False
+_pools,PLAUSIBLE_FIRST_NAMES,Julie,0,plausible_fabrication,False
+_pools,PLAUSIBLE_FIRST_NAMES,Simone,0,plausible_fabrication,False
+_pools,PLAUSIBLE_FIRST_NAMES,Alessandro,0,plausible_fabrication,False
+_pools,PLAUSIBLE_FIRST_NAMES,Federica,0,plausible_fabrication,False
+_pools,PLAUSIBLE_FIRST_NAMES,Marco,7,plausible_fabrication,False
+_pools,PLAUSIBLE_FIRST_NAMES,Chiara,1,plausible_fabrication,False
+_pools,PLAUSIBLE_FIRST_NAMES,Luca,18,plausible_fabrication,False
+_pools,PLAUSIBLE_FIRST_NAMES,Giulia,7,plausible_fabrication,False
+_pools,PLAUSIBLE_FIRST_NAMES,Daniele,0,plausible_fabrication,False
+_pools,PLAUSIBLE_FIRST_NAMES,Martina,0,plausible_fabrication,False
+_pools,PLAUSIBLE_FIRST_NAMES,Ryo,0,plausible_fabrication,False
+_pools,PLAUSIBLE_FIRST_NAMES,Haruki,1,plausible_fabrication,False
+_pools,PLAUSIBLE_FIRST_NAMES,Yuki,11,plausible_fabrication,False
+_pools,PLAUSIBLE_FIRST_NAMES,Sota,0,plausible_fabrication,False
+_pools,PLAUSIBLE_FIRST_NAMES,Hana,4,plausible_fabrication,False
+_pools,PLAUSIBLE_FIRST_NAMES,Kaito,1,plausible_fabrication,False
+_pools,PLAUSIBLE_FIRST_NAMES,Rina,9,plausible_fabrication,False
+_pools,PLAUSIBLE_FIRST_NAMES,Daiki,2,plausible_fabrication,False
+_pools,PLAUSIBLE_LAST_NAMES,Zhang,173,plausible_fabrication,False
+_pools,PLAUSIBLE_LAST_NAMES,Tanaka,8,plausible_fabrication,False
+_pools,PLAUSIBLE_LAST_NAMES,Andersson,2,plausible_fabrication,False
+_pools,PLAUSIBLE_LAST_NAMES,Wu,69,plausible_fabrication,False
+_pools,PLAUSIBLE_LAST_NAMES,Kowalski,1,plausible_fabrication,False
+_pools,PLAUSIBLE_LAST_NAMES,Moreira,5,plausible_fabrication,False
+_pools,PLAUSIBLE_LAST_NAMES,Watanabe,8,plausible_fabrication,False
+_pools,PLAUSIBLE_LAST_NAMES,Ricci,9,plausible_fabrication,False
+_pools,PLAUSIBLE_LAST_NAMES,Pei,13,plausible_fabrication,False
+_pools,PLAUSIBLE_LAST_NAMES,Chen,223,plausible_fabrication,False
+_pools,PLAUSIBLE_LAST_NAMES,Tokmakov,3,plausible_fabrication,False
+_pools,PLAUSIBLE_LAST_NAMES,Cornelisse,1,plausible_fabrication,False
+_pools,PLAUSIBLE_LAST_NAMES,Vorontsova,5,plausible_fabrication,False
+_pools,PLAUSIBLE_LAST_NAMES,Grover,1,plausible_fabrication,False
+_pools,PLAUSIBLE_LAST_NAMES,Zhong,24,plausible_fabrication,False
+_pools,PLAUSIBLE_LAST_NAMES,Yamamoto,10,plausible_fabrication,False
+_pools,PLAUSIBLE_LAST_NAMES,Broderick,3,plausible_fabrication,False
+_pools,PLAUSIBLE_LAST_NAMES,Hamrick,4,plausible_fabrication,False
+_pools,PLAUSIBLE_LAST_NAMES,Gao,29,plausible_fabrication,False
+_pools,PLAUSIBLE_LAST_NAMES,Obukhov,4,plausible_fabrication,False
+_pools,PLAUSIBLE_LAST_NAMES,Chu,79,plausible_fabrication,False
+_pools,PLAUSIBLE_LAST_NAMES,Rombach,5,plausible_fabrication,False
+_pools,PLAUSIBLE_LAST_NAMES,Bai,21,plausible_fabrication,False
+_pools,PLAUSIBLE_LAST_NAMES,Goh,6,plausible_fabrication,False
+_pools,PLAUSIBLE_LAST_NAMES,Zhao,65,plausible_fabrication,False
+_pools,PLAUSIBLE_LAST_NAMES,Martius,1,plausible_fabrication,False
+_pools,PLAUSIBLE_LAST_NAMES,Seo,9,plausible_fabrication,False
+_pools,PLAUSIBLE_LAST_NAMES,Sucholutsky,4,plausible_fabrication,False
+_pools,PLAUSIBLE_LAST_NAMES,Sha,127,plausible_fabrication,False
+_pools,PLAUSIBLE_LAST_NAMES,Gui,31,plausible_fabrication,False
+_pools,PLAUSIBLE_LAST_NAMES,Cubuk,4,plausible_fabrication,False
+_pools,PLAUSIBLE_LAST_NAMES,Li,722,plausible_fabrication,False
+_pools,PLAUSIBLE_LAST_NAMES,Sindhwani,3,plausible_fabrication,False
+_pools,PLAUSIBLE_LAST_NAMES,Fu,98,plausible_fabrication,False
+_pools,PLAUSIBLE_LAST_NAMES,Gu,228,plausible_fabrication,False
+_pools,PLAUSIBLE_LAST_NAMES,Krishnamurthy,3,plausible_fabrication,False
+_pools,PLAUSIBLE_LAST_NAMES,Iyer,0,plausible_fabrication,False
+_pools,PLAUSIBLE_LAST_NAMES,Venkataraman,0,plausible_fabrication,False
+_pools,PLAUSIBLE_LAST_NAMES,Subramanian,2,plausible_fabrication,False
+_pools,PLAUSIBLE_LAST_NAMES,Raghavan,0,plausible_fabrication,False
+_pools,PLAUSIBLE_LAST_NAMES,Nair,0,plausible_fabrication,False
+_pools,PLAUSIBLE_LAST_NAMES,Menon,0,plausible_fabrication,False
+_pools,PLAUSIBLE_LAST_NAMES,Pillai,1,plausible_fabrication,False
+_pools,PLAUSIBLE_LAST_NAMES,Chatterjee,4,plausible_fabrication,False
+_pools,PLAUSIBLE_LAST_NAMES,Bose,0,plausible_fabrication,False
+_pools,PLAUSIBLE_LAST_NAMES,Park,8,plausible_fabrication,False
+_pools,PLAUSIBLE_LAST_NAMES,Kim,29,plausible_fabrication,False
+_pools,PLAUSIBLE_LAST_NAMES,Lee,31,plausible_fabrication,False
+_pools,PLAUSIBLE_LAST_NAMES,Choi,5,plausible_fabrication,False
+_pools,PLAUSIBLE_LAST_NAMES,Kwon,0,plausible_fabrication,False
+_pools,PLAUSIBLE_LAST_NAMES,Jeong,2,plausible_fabrication,False
+_pools,PLAUSIBLE_LAST_NAMES,Yoon,3,plausible_fabrication,False
+_pools,PLAUSIBLE_LAST_NAMES,Oh,97,plausible_fabrication,False
+_pools,PLAUSIBLE_LAST_NAMES,Han,360,plausible_fabrication,False
+_pools,PLAUSIBLE_LAST_NAMES,Kang,13,plausible_fabrication,False
+_pools,PLAUSIBLE_LAST_NAMES,Müller,4,plausible_fabrication,False
+_pools,PLAUSIBLE_LAST_NAMES,Schölkopf,0,plausible_fabrication,False
+_pools,PLAUSIBLE_LAST_NAMES,Klicpera,0,plausible_fabrication,False
+_pools,PLAUSIBLE_LAST_NAMES,Nowak,0,plausible_fabrication,False
+_pools,PLAUSIBLE_LAST_NAMES,Bauer,1,plausible_fabrication,False
+_pools,PLAUSIBLE_LAST_NAMES,Brox,1,plausible_fabrication,False
+_pools,PLAUSIBLE_LAST_NAMES,Riedmiller,0,plausible_fabrication,False
+_pools,PLAUSIBLE_LAST_NAMES,Maier,0,plausible_fabrication,False
+_pools,PLAUSIBLE_LAST_NAMES,Fischer,6,plausible_fabrication,False
+_pools,PLAUSIBLE_LAST_NAMES,Wagner,0,plausible_fabrication,False
+_pools,PLAUSIBLE_LAST_NAMES,Santos,4,plausible_fabrication,False
+_pools,PLAUSIBLE_LAST_NAMES,Oliveira,1,plausible_fabrication,False
+_pools,PLAUSIBLE_LAST_NAMES,Ferreira,0,plausible_fabrication,False
+_pools,PLAUSIBLE_LAST_NAMES,Almeida,1,plausible_fabrication,False
+_pools,PLAUSIBLE_LAST_NAMES,Carvalho,0,plausible_fabrication,False
+_pools,PLAUSIBLE_LAST_NAMES,Souza,0,plausible_fabrication,False
+_pools,PLAUSIBLE_LAST_NAMES,Lima,2,plausible_fabrication,False
+_pools,PLAUSIBLE_LAST_NAMES,Pereira,0,plausible_fabrication,False
+_pools,PLAUSIBLE_LAST_NAMES,Costa,3,plausible_fabrication,False
+_pools,PLAUSIBLE_LAST_NAMES,Rocha,0,plausible_fabrication,False
+_pools,PLAUSIBLE_LAST_NAMES,Dupont,0,plausible_fabrication,False
+_pools,PLAUSIBLE_LAST_NAMES,Laurent,3,plausible_fabrication,False
+_pools,PLAUSIBLE_LAST_NAMES,Bernard,5,plausible_fabrication,False
+_pools,PLAUSIBLE_LAST_NAMES,Girard,0,plausible_fabrication,False
+_pools,PLAUSIBLE_LAST_NAMES,Leroy,0,plausible_fabrication,False
+_pools,PLAUSIBLE_LAST_NAMES,Moreau,0,plausible_fabrication,False
+_pools,PLAUSIBLE_LAST_NAMES,Simon,14,plausible_fabrication,False
+_pools,PLAUSIBLE_LAST_NAMES,Thomas,15,plausible_fabrication,False
+_pools,PLAUSIBLE_LAST_NAMES,Petit,1,plausible_fabrication,False
+_pools,PLAUSIBLE_LAST_NAMES,Renard,0,plausible_fabrication,False
+_pools,PLAUSIBLE_LAST_NAMES,Ferrari,0,plausible_fabrication,False
+_pools,PLAUSIBLE_LAST_NAMES,Bianchi,4,plausible_fabrication,False
+_pools,PLAUSIBLE_LAST_NAMES,Esposito,0,plausible_fabrication,False
+_pools,PLAUSIBLE_LAST_NAMES,Colombo,0,plausible_fabrication,False
+_pools,PLAUSIBLE_LAST_NAMES,Conti,15,plausible_fabrication,False
+_pools,PLAUSIBLE_LAST_NAMES,Mancini,0,plausible_fabrication,False
+_pools,PLAUSIBLE_LAST_NAMES,Fontana,0,plausible_fabrication,False
+_pools,PLAUSIBLE_LAST_NAMES,Pellegrini,0,plausible_fabrication,False
+_pools,PLAUSIBLE_LAST_NAMES,Nakano,2,plausible_fabrication,False
+_pools,PLAUSIBLE_LAST_NAMES,Kobayashi,2,plausible_fabrication,False
+_pools,PLAUSIBLE_LAST_NAMES,Suzuki,5,plausible_fabrication,False
+_pools,PLAUSIBLE_LAST_NAMES,Matsumoto,2,plausible_fabrication,False
+_pools,PLAUSIBLE_LAST_NAMES,Ito,9,plausible_fabrication,False
+_pools,PLAUSIBLE_LAST_NAMES,Inoue,0,plausible_fabrication,False
+_pools,PLAUSIBLE_LAST_NAMES,Kimura,0,plausible_fabrication,False
+_pools,PLAUSIBLE_LAST_NAMES,Hayashi,0,plausible_fabrication,False
+_pools,PLAUSIBLE_LAST_NAMES,Shimizu,0,plausible_fabrication,False
+_pools,PLAUSIBLE_LAST_NAMES,Ogawa,0,plausible_fabrication,False
+_pools,PLAUSIBLE_METHODS,Contrastive Learning,12,plausible_fabrication,False
+_pools,PLAUSIBLE_METHODS,Self-Supervised Pre-Training,1,plausible_fabrication,False
+_pools,PLAUSIBLE_METHODS,Variational Inference,5,plausible_fabrication,False
+_pools,PLAUSIBLE_METHODS,Reinforcement Learning,32,plausible_fabrication,False
+_pools,PLAUSIBLE_METHODS,Meta-Learning,17,plausible_fabrication,False
+_pools,PLAUSIBLE_METHODS,Knowledge Distillation,5,plausible_fabrication,False
+_pools,PLAUSIBLE_METHODS,Prompt Tuning,3,plausible_fabrication,False
+_pools,PLAUSIBLE_METHODS,Bayesian Optimization,1,plausible_fabrication,False
+_pools,PLAUSIBLE_METHODS,Curriculum Learning,1,plausible_fabrication,False
+_pools,PLAUSIBLE_METHODS,Federated Averaging,1,plausible_fabrication,False
+_pools,PLAUSIBLE_METHODS,Neural Architecture Search,6,plausible_fabrication,False
+_pools,PLAUSIBLE_METHODS,Gradient Descent,9,plausible_fabrication,False
+_pools,PLAUSIBLE_METHODS,Spectral Normalization,0,plausible_fabrication,False
+_pools,PLAUSIBLE_METHODS,Data Augmentation,1,plausible_fabrication,False
+_pools,PLAUSIBLE_METHODS,Domain Adaptation,1,plausible_fabrication,False
+_pools,PLAUSIBLE_METHODS,Transfer Learning,3,plausible_fabrication,False
+_pools,PLAUSIBLE_METHODS,Active Learning,3,plausible_fabrication,False
+_pools,PLAUSIBLE_METHODS,Few-Shot Learning,7,plausible_fabrication,False
+_pools,PLAUSIBLE_METHODS,Zero-Shot Learning,2,plausible_fabrication,False
+_pools,PLAUSIBLE_METHODS,Multi-Task Learning,1,plausible_fabrication,False
+_pools,PLAUSIBLE_METHODS,Adversarial Training,5,plausible_fabrication,False
+_pools,PLAUSIBLE_METHODS,Continual Learning,6,plausible_fabrication,False
+_pools,PLAUSIBLE_METHODS,Online Learning,3,plausible_fabrication,False
+_pools,PLAUSIBLE_METHODS,Causal Inference,4,plausible_fabrication,False
+_pools,PLAUSIBLE_METHODS,Information Bottleneck,2,plausible_fabrication,False
+_pools,PLAUSIBLE_DOMAINS,Vision Transformers,11,plausible_fabrication,False
+_pools,PLAUSIBLE_DOMAINS,Large Language Models,14,plausible_fabrication,False
+_pools,PLAUSIBLE_DOMAINS,Graph Neural Networks,20,plausible_fabrication,False
+_pools,PLAUSIBLE_DOMAINS,Point Cloud Processing,0,plausible_fabrication,False
+_pools,PLAUSIBLE_DOMAINS,Medical Image Analysis,2,plausible_fabrication,False
+_pools,PLAUSIBLE_DOMAINS,Autonomous Driving,1,plausible_fabrication,False
+_pools,PLAUSIBLE_DOMAINS,Molecular Property Prediction,1,plausible_fabrication,False
+_pools,PLAUSIBLE_DOMAINS,Speech Recognition,2,plausible_fabrication,False
+_pools,PLAUSIBLE_DOMAINS,Recommender Systems,5,plausible_fabrication,False
+_pools,PLAUSIBLE_DOMAINS,Time Series Forecasting,0,plausible_fabrication,False
+_pools,PLAUSIBLE_DOMAINS,Object Detection,11,plausible_fabrication,False
+_pools,PLAUSIBLE_DOMAINS,Semantic Segmentation,16,plausible_fabrication,False
+_pools,PLAUSIBLE_DOMAINS,Text Classification,1,plausible_fabrication,False
+_pools,PLAUSIBLE_DOMAINS,Image Generation,6,plausible_fabrication,False
+_pools,PLAUSIBLE_DOMAINS,Robot Navigation,2,plausible_fabrication,False
+_pools,PLAUSIBLE_DOMAINS,Question Answering,5,plausible_fabrication,False
+_pools,PLAUSIBLE_DOMAINS,Neural Rendering,1,plausible_fabrication,False
+_pools,PLAUSIBLE_DOMAINS,Protein Structure Prediction,2,plausible_fabrication,False
+_pools,PLAUSIBLE_DOMAINS,Code Generation,2,plausible_fabrication,False
+_pools,PLAUSIBLE_DOMAINS,Dialogue Systems,2,plausible_fabrication,False
+_pools,PLAUSIBLE_DOMAINS,Video Understanding,0,plausible_fabrication,False
+_pools,PLAUSIBLE_DOMAINS,Multi-Modal Retrieval,3,plausible_fabrication,False
+_pools,PLAUSIBLE_DOMAINS,Drug Discovery,1,plausible_fabrication,False
+_pools,PLAUSIBLE_DOMAINS,Traffic Prediction,2,plausible_fabrication,False
+_pools,PLAUSIBLE_DOMAINS,Anomaly Detection,5,plausible_fabrication,False
+_pools,PLAUSIBLE_PROPERTIES,Robust,49,plausible_fabrication,False
+_pools,PLAUSIBLE_PROPERTIES,Efficient,55,plausible_fabrication,False
+_pools,PLAUSIBLE_PROPERTIES,Scalable,4,plausible_fabrication,False
+_pools,PLAUSIBLE_PROPERTIES,Calibrated,1,plausible_fabrication,False
+_pools,PLAUSIBLE_PROPERTIES,Interpretable,5,plausible_fabrication,False
+_pools,PLAUSIBLE_PROPERTIES,Fair,15,plausible_fabrication,False
+_pools,PLAUSIBLE_PROPERTIES,Privacy-Preserving,3,plausible_fabrication,False
+_pools,PLAUSIBLE_PROPERTIES,Communication-Efficient,5,plausible_fabrication,False
+_pools,PLAUSIBLE_PROPERTIES,Sample-Efficient,1,plausible_fabrication,False
+_pools,PLAUSIBLE_PROPERTIES,Parameter-Efficient,4,plausible_fabrication,False
+_pools,PLAUSIBLE_PROPERTIES,Provably Correct,1,plausible_fabrication,False
+_pools,PLAUSIBLE_PROPERTIES,Certifiably Robust,1,plausible_fabrication,False
+_pools,PLAUSIBLE_PROPERTIES,Memory-Efficient,3,plausible_fabrication,False
+_pools,PLAUSIBLE_PROPERTIES,Data-Efficient,1,plausible_fabrication,False
+_pools,PLAUSIBLE_PROPERTIES,Compute-Efficient,1,plausible_fabrication,False
+_pools,PLAUSIBLE_PROPERTIES,Adaptive,17,plausible_fabrication,False
+_pools,PLAUSIBLE_PROPERTIES,Generalizable,6,plausible_fabrication,False
+_pools,PLAUSIBLE_PROPERTIES,Trustworthy,3,plausible_fabrication,False
+_pools,PLAUSIBLE_PROPERTIES,Explainable,3,plausible_fabrication,False
+_pools,PLAUSIBLE_PROPERTIES,Energy-Efficient,1,plausible_fabrication,False
+_pools,PLAUSIBLE_NOUNS,Representations,28,plausible_fabrication,False
+_pools,PLAUSIBLE_NOUNS,Embeddings,5,plausible_fabrication,False
+_pools,PLAUSIBLE_NOUNS,Features,11,plausible_fabrication,False
+_pools,PLAUSIBLE_NOUNS,Predictions,9,plausible_fabrication,False
+_pools,PLAUSIBLE_NOUNS,Distributions,5,plausible_fabrication,False
+_pools,PLAUSIBLE_NOUNS,Policies,4,plausible_fabrication,False
+_pools,PLAUSIBLE_NOUNS,Architectures,4,plausible_fabrication,False
+_pools,PLAUSIBLE_NOUNS,Objectives,1,plausible_fabrication,False
+_pools,PLAUSIBLE_NOUNS,Gradients,3,plausible_fabrication,False
+_pools,PLAUSIBLE_NOUNS,Attention Mechanisms,4,plausible_fabrication,False
+_pools,PLAUSIBLE_NOUNS,Loss Functions,1,plausible_fabrication,False
+_pools,PLAUSIBLE_NOUNS,Activation Functions,0,plausible_fabrication,False
+_pools,PLAUSIBLE_NOUNS,Optimization Strategies,1,plausible_fabrication,False
+_pools,PLAUSIBLE_NOUNS,Regularization Techniques,2,plausible_fabrication,False
+_pools,PLAUSIBLE_NOUNS,Sampling Methods,0,plausible_fabrication,False
+_pools,PLAUSIBLE_NOUNS,Inference Procedures,0,plausible_fabrication,False
+_pools,PLAUSIBLE_NOUNS,Training Dynamics,0,plausible_fabrication,False
+_pools,PLAUSIBLE_NOUNS,Model Weights,2,plausible_fabrication,False
+_pools,PLAUSIBLE_NOUNS,Hidden States,0,plausible_fabrication,False
+_pools,PLAUSIBLE_NOUNS,Latent Codes,0,plausible_fabrication,False
+_pools,PLAUSIBLE_SETTINGS,Low-Resource Settings,0,plausible_fabrication,False
+_pools,PLAUSIBLE_SETTINGS,Non-Stationary Environments,0,plausible_fabrication,False
+_pools,PLAUSIBLE_SETTINGS,High-Dimensional Spaces,1,plausible_fabrication,False
+_pools,PLAUSIBLE_SETTINGS,Heterogeneous Data,2,plausible_fabrication,False
+_pools,PLAUSIBLE_SETTINGS,Label-Scarce Regimes,0,plausible_fabrication,False
+_pools,PLAUSIBLE_SETTINGS,Streaming Data,1,plausible_fabrication,False
+_pools,PLAUSIBLE_SETTINGS,Multi-Task Settings,1,plausible_fabrication,False
+_pools,PLAUSIBLE_SETTINGS,Cross-Domain Scenarios,2,plausible_fabrication,False
+_pools,PLAUSIBLE_SETTINGS,Partial Observability,0,plausible_fabrication,False
+_pools,PLAUSIBLE_SETTINGS,Noisy Labels,2,plausible_fabrication,False
+_pools,PLAUSIBLE_SETTINGS,Imbalanced Datasets,0,plausible_fabrication,False
+_pools,PLAUSIBLE_SETTINGS,Distribution Shift,1,plausible_fabrication,False
+_pools,PLAUSIBLE_SETTINGS,Out-of-Distribution Detection,0,plausible_fabrication,False
+_pools,PLAUSIBLE_SETTINGS,Long-Tailed Recognition,0,plausible_fabrication,False
+_pools,PLAUSIBLE_SETTINGS,Adversarial Perturbations,0,plausible_fabrication,False
+_pools,PLAUSIBLE_SETTINGS,Missing Data,0,plausible_fabrication,False
+_pools,PLAUSIBLE_SETTINGS,Limited Supervision,0,plausible_fabrication,False
+_pools,PLAUSIBLE_SETTINGS,Real-Time Constraints,0,plausible_fabrication,False
+_pools,PLAUSIBLE_SETTINGS,Cold-Start Problems,1,plausible_fabrication,False
+_pools,PLAUSIBLE_SETTINGS,Extreme Classification,0,plausible_fabrication,False
+_pools,NEAR_MISS_SAFE_PLURAL_ROOTS,model,155,unknown,False
+_pools,NEAR_MISS_SAFE_PLURAL_ROOTS,network,105,unknown,False
+_pools,NEAR_MISS_SAFE_PLURAL_ROOTS,method,23,unknown,False
+_pools,NEAR_MISS_SAFE_PLURAL_ROOTS,bound,19,unknown,False
+_pools,NEAR_MISS_SAFE_PLURAL_ROOTS,guarantee,5,unknown,False
+_pools,NEAR_MISS_SAFE_PLURAL_ROOTS,constraint,11,unknown,False
+_pools,NEAR_MISS_SAFE_PLURAL_ROOTS,representation,65,unknown,False
+_pools,NEAR_MISS_SAFE_PLURAL_ROOTS,feature,15,unknown,False
+_pools,NEAR_MISS_SAFE_PLURAL_ROOTS,tree,5,unknown,False
+_pools,NEAR_MISS_SAFE_PLURAL_ROOTS,approach,14,unknown,False
+_pools,NEAR_MISS_SAFE_PLURAL_ROOTS,system,16,unknown,False
+_pools,NEAR_MISS_SAFE_PLURAL_ROOTS,attack,6,unknown,False
+_pools,NEAR_MISS_SAFE_PLURAL_ROOTS,image,60,unknown,False
+_pools,NEAR_MISS_SAFE_PLURAL_ROOTS,embedding,10,unknown,False
+_pools,NEAR_MISS_SAFE_PLURAL_ROOTS,distribution,26,unknown,False
+_pools,NEAR_MISS_SAFE_PLURAL_ROOTS,score,1,unknown,False
+_pools,NEAR_MISS_SAFE_PLURAL_ROOTS,prediction,40,unknown,False
+_pools,NEAR_MISS_SAFE_PLURAL_ROOTS,algorithm,22,unknown,False
+_pools,NEAR_MISS_SAFE_PLURAL_ROOTS,graph,75,unknown,False
+_pools,NEAR_MISS_SAFE_PLURAL_ROOTS,function,9,unknown,False
+_pools,NEAR_MISS_SAFE_PLURAL_ROOTS,layer,13,unknown,False
+_pools,NEAR_MISS_SAFE_PLURAL_ROOTS,node,3,unknown,False
+_pools,NEAR_MISS_SAFE_PLURAL_ROOTS,weight,11,unknown,False
+_pools,NEAR_MISS_SAFE_PLURAL_ROOTS,task,16,unknown,False
+_pools,NEAR_MISS_SAFE_PLURAL_ROOTS,objective,5,unknown,False
+_pools,NEAR_MISS_SAFE_PLURAL_ROOTS,problem,28,unknown,False
+_pools,NEAR_MISS_SAFE_PLURAL_ROOTS,gradient,22,unknown,False
+_pools,NEAR_MISS_SAFE_PLURAL_ROOTS,sample,12,unknown,False

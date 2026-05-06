@@ -1,0 +1,26 @@
+\begin{table}[t]
+\caption{\textbf{Thinking-budget regime boundary smoke test.} Stratified $n{=}100$ subsample of \texttt{dev\_public}. PF = parse-failure rate; $p_{95}/\text{cap}$ = saturation ratio (1.00 = the 95th-percentile output hits the budget cap). DR / FPR / F1 / MCC computed treating UNCERTAIN and parse-failure entries as label=\texttt{VALID}. \$ is the OpenRouter list-price cost for the cell at May 2026 rates.}
+\label{tab:smoke-results}
+\centering
+\small
+\setlength{\tabcolsep}{4pt}
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{llrrrrrrrrrr}
+\toprule
+\textbf{Model} & \textbf{Budget} & \textbf{$n$} & \textbf{PF} & \textbf{$p_{95}/\text{cap}$} & \textbf{DR $\uparrow$} & \textbf{FPR $\downarrow$} & \textbf{F1 $\uparrow$} & \textbf{MCC $\uparrow$} & \textbf{mean tok} & \textbf{$p_{95}$ tok} & \textbf{\$} \\
+\midrule
+GPT-5.5 & \texttt{256} & 100 & 0.66 & 1.000 & 0.100 & 0.000 & 0.182 & 0.180 & 249 & 256 & \$0.87 \\
+ & \texttt{1024} & 100 & 0.12 & 1.000 & 0.557 & 0.000 & 0.716 & 0.523 & 510 & 1024 & \$1.65 \\
+ & \texttt{4096} & 100 & 0.01 & 0.339 & 0.643 & 0.000 & 0.783 & 0.592 & 602 & 1389 & \$1.93 \\
+\midrule
+Gemini 3.1 Pro & \texttt{2048 + 1024 reas.} & 100 & 0.00 & 0.998 & 0.657 & 0.033 & 0.786 & 0.573 & 834 & 2044 & \$1.34 \\
+ & \texttt{8192 + 4096 reas.} & 100 & 0.01 & 0.969 & 0.629 & 0.033 & 0.765 & 0.548 & 1183 & 7937 & \$1.87 \\
+ & \texttt{16384 + 8192 reas.} & 100 & 0.01 & 0.964 & 0.643 & 0.033 & 0.776 & 0.560 & 1688 & 15793 & \$2.62 \\
+\midrule
+DeepSeek-V4-Pro & \texttt{4096, effort=low} & 100 & 0.06 & 1.000 & 0.600 & 0.000 & 0.750 & 0.557 & 1282 & 4096 & \$0.16 \\
+ & \texttt{8192, effort=high} & 100 & 0.00 & 0.366 & 0.700 & 0.033 & 0.817 & 0.611 & 1240 & 3002 & \$0.16 \\
+ & \texttt{16384, effort=high} & 100 & 0.00 & 0.211 & 0.643 & 0.000 & 0.783 & 0.592 & 1355 & 3463 & \$0.17 \\
+\bottomrule
+\end{tabular}%
+}
+\end{table}

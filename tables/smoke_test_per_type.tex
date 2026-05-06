@@ -1,0 +1,33 @@
+\begin{table}[t]
+\caption{\textbf{Per-type detection rate for smoke-test cells (stratified $n{=}100$ subsample of \texttt{dev\_public}, $\geq 5$ per type).} Each cell shows the fraction of hallucinated entries of that type that the model labelled \texttt{HALLUCINATED}; UNCERTAIN and parse failures count as non-detections. Per-type $n$ is small ($\geq 5$); 95\% binomial CI width is roughly $\pm 35$\,pp at $n{=}5$, so within-row differences across budgets are noise unless they exceed that band. The table is interpretable for relative shape (which types each model finds easiest/hardest at each budget) but not for fine absolute comparisons.}
+\label{tab:smoke-per-type}
+\centering
+\scriptsize
+\setlength{\tabcolsep}{2pt}
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{llr|rrr|rrr|rrr}
+\toprule
+ & & & \multicolumn{3}{c|}{\textbf{GPT-5.5}} & \multicolumn{3}{c|}{\textbf{Gemini 3.1 Pro}} & \multicolumn{3}{c}{\textbf{DeepSeek-V4-Pro}} \\
+\textbf{Type} & \textbf{Tier} & \textbf{$n$} & \textbf{A} & \textbf{B} & \textbf{C} & \textbf{A} & \textbf{B} & \textbf{C} & \textbf{A} & \textbf{B} & \textbf{C} \\
+\midrule
+\texttt{fabricated_doi} & 1 & 5 & 0.20 & 0.80 & 0.80 & 0.80 & 0.60 & 0.60 & 1.00 & 1.00 & 0.80 \\
+\texttt{nonexistent_venue} & 1 & 5 & 0.00 & 1.00 & 1.00 & 0.60 & 0.80 & 0.60 & 1.00 & 1.00 & 1.00 \\
+\texttt{placeholder_authors} & 1 & 5 & 0.00 & 1.00 & 1.00 & 1.00 & 1.00 & 1.00 & 0.80 & 1.00 & 1.00 \\
+\texttt{future_date} & 1 & 5 & 0.60 & 1.00 & 0.80 & 1.00 & 1.00 & 1.00 & 1.00 & 1.00 & 0.80 \\
+\midrule
+\texttt{chimeric_title} & 2 & 5 & 0.20 & 0.40 & 0.40 & 1.00 & 1.00 & 1.00 & 0.40 & 0.60 & 0.40 \\
+\texttt{wrong_venue} & 2 & 5 & 0.00 & 0.60 & 1.00 & 0.40 & 0.40 & 0.60 & 0.80 & 0.80 & 0.60 \\
+\texttt{swapped_authors} & 2 & 5 & 0.00 & 0.20 & 0.60 & 0.40 & 0.40 & 0.40 & 0.40 & 0.60 & 0.40 \\
+\texttt{preprint_as_published} & 2 & 5 & 0.00 & 0.40 & 0.40 & 0.40 & 0.40 & 0.40 & 0.60 & 0.60 & 0.80 \\
+\texttt{hybrid_fabrication} & 2 & 5 & 0.20 & 0.60 & 0.80 & 0.80 & 0.80 & 0.80 & 0.60 & 0.80 & 0.80 \\
+\midrule
+\texttt{near_miss_title} & 3 & 5 & 0.00 & 0.20 & 0.40 & 0.40 & 0.20 & 0.40 & 0.40 & 0.40 & 0.40 \\
+\texttt{plausible_fabrication} & 3 & 5 & 0.00 & 0.00 & 0.20 & 0.60 & 0.40 & 0.40 & 0.00 & 0.40 & 0.20 \\
+\midrule
+\texttt{merged_citation} & S & 5 & 0.20 & 0.80 & 0.80 & 0.80 & 0.80 & 0.80 & 0.40 & 0.60 & 0.60 \\
+\texttt{partial_author_list} & S & 5 & 0.00 & 0.00 & 0.00 & 0.20 & 0.40 & 0.20 & 0.20 & 0.00 & 0.20 \\
+\texttt{arxiv_version_mismatch} & S & 5 & 0.00 & 0.80 & 0.80 & 0.80 & 0.60 & 0.80 & 0.80 & 1.00 & 1.00 \\
+\bottomrule
+\end{tabular}%
+}
+\end{table}

@@ -1,0 +1,15 @@
+type,tier,n,gpt-5-5_a,gpt-5-5_b,gpt-5-5_c,gemini-3-1-pro_a,gemini-3-1-pro_b,gemini-3-1-pro_c,deepseek-v4-pro_a,deepseek-v4-pro_b,deepseek-v4-pro_c
+fabricated_doi,1,5,0.2,0.8,0.8,0.8,0.6,0.6,1.0,1.0,0.8
+nonexistent_venue,1,5,0.0,1.0,1.0,0.6,0.8,0.6,1.0,1.0,1.0
+placeholder_authors,1,5,0.0,1.0,1.0,1.0,1.0,1.0,0.8,1.0,1.0
+future_date,1,5,0.6,1.0,0.8,1.0,1.0,1.0,1.0,1.0,0.8
+chimeric_title,2,5,0.2,0.4,0.4,1.0,1.0,1.0,0.4,0.6,0.4
+wrong_venue,2,5,0.0,0.6,1.0,0.4,0.4,0.6,0.8,0.8,0.6
+swapped_authors,2,5,0.0,0.2,0.6,0.4,0.4,0.4,0.4,0.6,0.4
+preprint_as_published,2,5,0.0,0.4,0.4,0.4,0.4,0.4,0.6,0.6,0.8
+hybrid_fabrication,2,5,0.2,0.6,0.8,0.8,0.8,0.8,0.6,0.8,0.8
+near_miss_title,3,5,0.0,0.2,0.4,0.4,0.2,0.4,0.4,0.4,0.4
+plausible_fabrication,3,5,0.0,0.0,0.2,0.6,0.4,0.4,0.0,0.4,0.2
+merged_citation,S,5,0.2,0.8,0.8,0.8,0.8,0.8,0.4,0.6,0.6
+partial_author_list,S,5,0.0,0.0,0.0,0.2,0.4,0.2,0.2,0.0,0.2
+arxiv_version_mismatch,S,5,0.0,0.8,0.8,0.8,0.6,0.8,0.8,1.0,1.0
