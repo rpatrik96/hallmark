@@ -64,6 +64,13 @@
       "split": "test_public",
       "num_entries": 831,
       "f1_hallucination": 0.723963599595551
+    },
+    "llm_openrouter_llama_4_maverick_test_public.json": {
+      "sha256": "bad3c7b03580cfcba68eb94793717b7cad6843db33e126334b096b432855c503",
+      "baseline": "llm_openrouter_llama_4_maverick",
+      "split": "test_public",
+      "num_entries": 831,
+      "f1_hallucination": 0.7114967462039045
     }
   },
   "environment": {

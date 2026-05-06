@@ -1,0 +1,149 @@
+{
+  "tool_name": "llm_openrouter_llama_4_maverick",
+  "split_name": "test_public",
+  "num_entries": 831,
+  "num_hallucinated": 544,
+  "num_valid": 287,
+  "detection_rate": 0.6040515653775322,
+  "false_positive_rate": 0.17770034843205576,
+  "f1_hallucination": 0.7114967462039045,
+  "tier_weighted_f1": 0.6998892580287928,
+  "mcc": 0.4070994298827772,
+  "macro_f1": 0.6755315709339306,
+  "union_recall_at_k": {},
+  "temporal_robustness": null,
+  "cost_efficiency": 0.06117179498029582,
+  "mean_api_calls": 1.0,
+  "ece": 0.20712048192771085,
+  "auroc": 0.7265482126013052,
+  "auprc": 0.8239421591592544,
+  "num_uncertain": 1,
+  "tier3_f1": 0.5987261146496815,
+  "detection_rate_ci": null,
+  "f1_hallucination_ci": null,
+  "tier_weighted_f1_ci": null,
+  "fpr_ci": null,
+  "ece_ci": null,
+  "mcc_ci": null,
+  "tier3_f1_ci": null,
+  "per_tier_metrics": {
+    "1": {
+      "detection_rate": 0.8939393939393939,
+      "false_positive_rate": 0.17770034843205576,
+      "f1": 0.7840531561461793,
+      "precision": 0.6982248520710059,
+      "num_hallucinated": 132,
+      "num_valid": 287
+    },
+    "2": {
+      "detection_rate": 0.4793388429752066,
+      "false_positive_rate": 0.17770034843205576,
+      "f1": 0.567237163814181,
+      "precision": 0.6946107784431138,
+      "num_hallucinated": 243,
+      "num_valid": 287
+    },
+    "3": {
+      "detection_rate": 0.5562130177514792,
+      "false_positive_rate": 0.17770034843205576,
+      "f1": 0.5987261146496815,
+      "precision": 0.6482758620689655,
+      "num_hallucinated": 169,
+      "num_valid": 287
+    }
+  },
+  "per_type_metrics": {
+    "arxiv_version_mismatch": {
+      "detection_rate": 0.4642857142857143,
+      "false_positive_rate": 0.0,
+      "f1": 0.6341463414634146,
+      "count": 28
+    },
+    "chimeric_title": {
+      "detection_rate": 0.6666666666666666,
+      "false_positive_rate": 0.0,
+      "f1": 0.8,
+      "count": 24
+    },
+    "fabricated_doi": {
+      "detection_rate": 1.0,
+      "false_positive_rate": 0.0,
+      "f1": 1.0,
+      "count": 29
+    },
+    "future_date": {
+      "detection_rate": 1.0,
+      "false_positive_rate": 0.0,
+      "f1": 1.0,
+      "count": 29
+    },
+    "hybrid_fabrication": {
+      "detection_rate": 0.675,
+      "false_positive_rate": 0.0,
+      "f1": 0.8059701492537313,
+      "count": 40
+    },
+    "merged_citation": {
+      "detection_rate": 0.6206896551724138,
+      "false_positive_rate": 0.0,
+      "f1": 0.7659574468085107,
+      "count": 29
+    },
+    "near_miss_title": {
+      "detection_rate": 0.42105263157894735,
+      "false_positive_rate": 0.0,
+      "f1": 0.5925925925925926,
+      "count": 38
+    },
+    "nonexistent_venue": {
+      "detection_rate": 0.9473684210526315,
+      "false_positive_rate": 0.0,
+      "f1": 0.972972972972973,
+      "count": 38
+    },
+    "partial_author_list": {
+      "detection_rate": 0.20689655172413793,
+      "false_positive_rate": 0.0,
+      "f1": 0.34285714285714286,
+      "count": 29
+    },
+    "placeholder_authors": {
+      "detection_rate": 0.6666666666666666,
+      "false_positive_rate": 0.0,
+      "f1": 0.8,
+      "count": 36
+    },
+    "plausible_fabrication": {
+      "detection_rate": 0.6310679611650486,
+      "false_positive_rate": 0.0,
+      "f1": 0.7738095238095238,
+      "count": 103
+    },
+    "preprint_as_published": {
+      "detection_rate": 0.5517241379310345,
+      "false_positive_rate": 0.0,
+      "f1": 0.7111111111111111,
+      "count": 29
+    },
+    "swapped_authors": {
+      "detection_rate": 0.2857142857142857,
+      "false_positive_rate": 0.0,
+      "f1": 0.4444444444444445,
+      "count": 56
+    },
+    "valid": {
+      "detection_rate": 0.0,
+      "false_positive_rate": 0.17770034843205576,
+      "f1": 0.0,
+      "count": 287
+    },
+    "wrong_venue": {
+      "detection_rate": 0.4857142857142857,
+      "false_positive_rate": 0.0,
+      "f1": 0.6538461538461539,
+      "count": 36
+    }
+  },
+  "coverage": 1.0,
+  "coverage_adjusted_f1": 0.7114967462039045
+}
