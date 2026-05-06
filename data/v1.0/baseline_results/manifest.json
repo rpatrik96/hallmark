@@ -43,6 +43,27 @@
       "split": "test_public",
       "num_entries": 831,
       "f1_hallucination": 0.8584149599287623
+    },
+    "llm_openrouter_gemini_flash_test_public.json": {
+      "sha256": "3a76472ec2963a80ec34de44b57cfbc8f2b5491a1bd1ef054afc45eda8084916",
+      "baseline": "llm_openrouter_gemini_flash",
+      "split": "test_public",
+      "num_entries": 831,
+      "f1_hallucination": 0.6269368295589988
+    },
+    "llm_openrouter_qwen_max_test_public.json": {
+      "sha256": "2dc13b3cbaeff9dbe9792aad631248aa587bd06c1ee47cd9d97a1b1fdbc99c29",
+      "baseline": "llm_openrouter_qwen_max",
+      "split": "test_public",
+      "num_entries": 831,
+      "f1_hallucination": 0.8026208026208026
+    },
+    "llm_openrouter_mistral_test_public.json": {
+      "sha256": "852bc87051ebadb734f23581d8633b7c3f8f71ef35a79e7d688a769cdec6a774",
+      "baseline": "llm_openrouter_mistral",
+      "split": "test_public",
+      "num_entries": 831,
+      "f1_hallucination": 0.723963599595551
     }
   },
   "environment": {
