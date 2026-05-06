@@ -116,13 +116,22 @@ def load_results(results_dir: Path) -> list[dict]:
     """Load dev_public evaluation result JSONs (skips CI, test, no-prescreening variants).
 
     Scans the top-level results dir plus a few known subdirectories that hold
-    later-arriving model evaluations (``gpt54/``, ``new_models/``). Files are
-    deduplicated by ``tool_name`` (first occurrence wins).
+    later-arriving model evaluations (``gpt54/``, ``new_models/``), and the
+    canonical artifact directory ``data/v1.0/baseline_results/``.
+
+    Deduplication by ``tool_name``: ``data/v1.0/baseline_results/`` is listed
+    *first* so it takes priority as the canonical source; remaining paths
+    (results/ subdirs) are skipped for tools already seen.
     """
     results: list[dict] = []
     seen_tools: set[str] = set()
 
     candidate_paths: list[Path] = []
+    # Canonical artifacts — highest priority
+    baseline_dir = results_dir.parent / "data" / "v1.0" / "baseline_results"
+    if baseline_dir.is_dir():
+        candidate_paths.extend(sorted(baseline_dir.glob("*_dev_public.json")))
+    # Legacy results directories
     candidate_paths.extend(sorted(results_dir.glob("*_dev_public.json")))
     for subdir in ("gpt54", "new_models"):
         sub = results_dir / subdir
