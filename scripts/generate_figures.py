@@ -64,12 +64,18 @@ DISPLAY_NAMES = {
     "harc": "HaRC",
     "verify_citations": "verify-citations",
     "llm_openai": "GPT-5.1",
+    "llm_openai_gpt-5.4": "GPT-5.4",
     "llm_anthropic": "Claude Sonnet 4.5",
+    "llm_openrouter_claude_sonnet_4_6": "Sonnet 4.6",
+    "llm_openrouter_claude_opus_4_7": "Opus 4.7",
     "llm_openrouter_deepseek_r1": "DeepSeek-R1",
     "llm_openrouter_deepseek_v3": "DeepSeek-V3.2",
     "llm_openrouter_qwen": "Qwen3-235B",
+    "llm_openrouter_qwen_max": "Qwen3-VL-235B",
     "llm_openrouter_mistral": "Mistral Large",
-    "llm_openrouter_gemini_flash": "Gemini Flash",
+    "llm_openrouter_gemini_flash": "Gemini 2.5 Flash",
+    "llm_openrouter_gemini_pro": "Gemini 2.5 Pro",
+    "llm_openrouter_llama_4_maverick": "Llama 4 Maverick",
     "bibtexupdater": "bibtex-updater",
     "ensemble": "Ensemble",
     "doi_presence_heuristic": "DOI-heuristic",
@@ -78,17 +84,27 @@ DISPLAY_NAMES = {
 # Tools excluded from tier detection rate chart (partial coverage, metrics not meaningful)
 _PARTIAL_COVERAGE_TOOLS = {"harc", "verify_citations"}
 
-# Tools shown in main results table (Table 5) — used to filter figures
+# Tools shown in main results table (Table 3) — used to filter figures.
+# Mirrors the full independent full-coverage cohort plus the rule-based bibtex-updater.
+# HaRC and verify_citations stay here for table consistency but are filtered out of
+# figures via _PARTIAL_COVERAGE_TOOLS.
 _MAIN_TABLE_TOOLS = {
     "doi_only",
     "harc",
     "verify_citations",
     "llm_openai",
+    "llm_openai_gpt-5.4",
+    "llm_openrouter_claude_sonnet_4_6",
+    "llm_openrouter_claude_opus_4_7",
     "llm_openrouter_deepseek_r1",
     "llm_openrouter_deepseek_v3",
     "llm_openrouter_qwen",
+    "llm_openrouter_qwen_max",
     "llm_openrouter_mistral",
     "llm_openrouter_gemini_flash",
+    "llm_openrouter_gemini_pro",
+    "llm_openrouter_llama_4_maverick",
+    "bibtexupdater",
 }
 
 
@@ -97,22 +113,46 @@ def _display_name(tool_name: str) -> str:
 
 
 def load_results(results_dir: Path) -> list[dict]:
-    """Load dev_public evaluation result JSONs (skips CI, test, no-prescreening variants)."""
-    results = []
-    for path in sorted(results_dir.glob("*_dev_public.json")):
-        # Skip CI bootstrap and no-prescreening variants
-        if "_ci." in path.name or "_no_prescreening" in path.name:
+    """Load dev_public evaluation result JSONs (skips CI, test, no-prescreening variants).
+
+    Scans the top-level results dir plus a few known subdirectories that hold
+    later-arriving model evaluations (``gpt54/``, ``new_models/``). Files are
+    deduplicated by ``tool_name`` (first occurrence wins).
+    """
+    results: list[dict] = []
+    seen_tools: set[str] = set()
+
+    candidate_paths: list[Path] = []
+    candidate_paths.extend(sorted(results_dir.glob("*_dev_public.json")))
+    for subdir in ("gpt54", "new_models"):
+        sub = results_dir / subdir
+        if sub.is_dir():
+            candidate_paths.extend(sorted(sub.glob("*.json")))
+
+    for path in candidate_paths:
+        # Skip CI bootstrap, no-prescreening variants, and partial-evaluation smoke runs
+        if "_ci." in path.name or "_no_prescreening" in path.name or "smoke" in path.name:
             continue
-        with open(path) as f:
-            data = json.load(f)
-        # Only include standard evaluation results (must have tool_name at top level)
-        if "tool_name" in data:
-            results.append(data)
+        try:
+            with open(path) as f:
+                data = json.load(f)
+        except (OSError, json.JSONDecodeError):
+            continue
+        if not isinstance(data, dict):
+            continue
+        # Only include standard evaluation results with proper split + tool_name
+        tool_name = data.get("tool_name")
+        if not tool_name or data.get("split_name") != "dev_public":
+            continue
+        if tool_name in seen_tools:
+            continue
+        seen_tools.add(tool_name)
+        results.append(data)
     return results
 
 
 def fig_tier_detection_rates(results: list[dict], output_dir: Path) -> None:
-    """Bar chart: detection rate per tier, grouped by tool.
+    """Horizontal grouped bar chart: detection rate per tier, one row per tool.
 
     Excludes partial-coverage tools (HaRC, verify-citations) whose per-tier
     metrics on a small subset are not meaningful.
@@ -124,55 +164,58 @@ def fig_tier_detection_rates(results: list[dict], output_dir: Path) -> None:
         logger.warning("No full-coverage results for tier chart")
         return
 
-    fig, ax = plt.subplots(figsize=(7, 3.8))
+    tiers = [1, 2, 3]
+    tier_labels = ["Tier 1 (Easy)", "Tier 2 (Medium)", "Tier 3 (Hard)"]
+    # Distinct colors for the three tiers (colorblind-safe)
+    tier_colors = ["#648FFF", "#FE6100", "#DC267F"]
+
+    # Sort tools by Tier-3 detection rate descending for visual readability
+    def _t3(r: dict) -> float:
+        return r.get("per_tier_metrics", {}).get("3", {}).get("detection_rate", 0.0)
+
+    filtered = sorted(filtered, key=_t3, reverse=True)
 
     tools = [_display_name(r["tool_name"]) for r in filtered]
-    tiers = [1, 2, 3]
-    tier_labels = ["Tier 1\n(Easy)", "Tier 2\n(Medium)", "Tier 3\n(Hard)"]
-
     n_tools = len(tools)
-    x = np.arange(len(tiers))
-    # Wider group span (0.85) and wider bars for readability
-    group_width = 0.85
-    width = group_width / max(n_tools, 1)
 
-    for i, result in enumerate(filtered):
-        tier_metrics = result.get("per_tier_metrics", {})
+    fig, ax = plt.subplots(figsize=(7.5, max(3.5, 0.42 * n_tools + 1.2)))
+
+    y = np.arange(n_tools)
+    height = 0.78 / len(tiers)
+
+    for i, (t, label, color) in enumerate(zip(tiers, tier_labels, tier_colors, strict=True)):
         rates = []
-        for t in tiers:
-            m = tier_metrics.get(str(t), {})
+        for r in filtered:
+            m = r.get("per_tier_metrics", {}).get(str(t), {})
             rates.append(m.get("detection_rate", 0.0))
-
-        offset = (i - n_tools / 2 + 0.5) * width
-        bars = ax.bar(
-            x + offset,
+        offset = (i - len(tiers) / 2 + 0.5) * height
+        bars = ax.barh(
+            y + offset,
             rates,
-            width * 0.88,
-            label=_display_name(result["tool_name"]),
-            color=COLORS[i % len(COLORS)],
+            height * 0.9,
+            label=label,
+            color=color,
             edgecolor="white",
             linewidth=0.5,
         )
-        # Add value labels only when few enough tools to avoid clutter
-        if n_tools <= 5:
-            for bar, rate in zip(bars, rates, strict=True):
-                if rate > 0:
-                    ax.text(
-                        bar.get_x() + bar.get_width() / 2,
-                        bar.get_height() + 0.02,
-                        f"{rate:.0%}",
-                        ha="center",
-                        va="bottom",
-                        fontsize=7,
-                    )
+        for bar, rate in zip(bars, rates, strict=True):
+            if rate > 0:
+                ax.text(
+                    rate + 0.01,
+                    bar.get_y() + bar.get_height() / 2,
+                    f"{rate:.0%}",
+                    ha="left",
+                    va="center",
+                    fontsize=6.5,
+                )
 
-    ax.set_xlabel("Difficulty Tier")
-    ax.set_ylabel("Detection Rate")
+    ax.set_xlabel("Detection Rate")
     ax.set_title("Detection Rate by Hallucination Difficulty")
-    ax.set_xticks(x)
-    ax.set_xticklabels(tier_labels)
-    ax.set_ylim(0, 1.12)
-    ax.legend(loc="upper right", fontsize=8, ncol=2)
+    ax.set_yticks(y)
+    ax.set_yticklabels(tools)
+    ax.set_xlim(0, 1.12)
+    ax.invert_yaxis()  # best Tier-3 model on top
+    ax.legend(loc="lower right", fontsize=8, ncol=3)
     ax.spines["top"].set_visible(False)
     ax.spines["right"].set_visible(False)
 
