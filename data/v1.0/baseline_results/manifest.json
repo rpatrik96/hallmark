@@ -71,6 +71,13 @@
       "split": "test_public",
       "num_entries": 831,
       "f1_hallucination": 0.7114967462039045
+    },
+    "llm_openrouter_qwen_test_public.json": {
+      "sha256": "ddc24f45ebb4edec1f4e9a58f4c5cd4a93585af879e6ee83b339bed795eb670a",
+      "baseline": "llm_openrouter_qwen",
+      "split": "test_public",
+      "num_entries": 831,
+      "f1_hallucination": 0.7993366500829188
     }
   },
   "environment": {
