@@ -1,0 +1,37 @@
+\begin{table}[t]
+\centering
+\caption{Per-tier detection rate (DR) and false positive rate (FPR) on \texttt{dev\_public} and \texttt{test\_public} for six LLM verifiers. $\Delta$DR and $\Delta$FPR measure cross-split robustness (test\,$-$\,dev). DeepSeek-R1 omitted (run still in progress).}
+\label{tab:cross-split-per-tier}
+\small
+\begin{tabular}{llrrrrrr}
+\toprule
+Model & Tier & \multicolumn{2}{c}{DR} & \multicolumn{2}{c}{FPR} & $\Delta$DR & $\Delta$FPR \\
+\cmidrule(lr){3-4}\cmidrule(lr){5-6}
+& & dev & test & dev & test & & \\
+\midrule
+\multirow{3}{*}{Gemini 2.5 Flash} & Tier 1 (Easy) & 0.693 & 0.720 & 0.101 & 0.111 & +0.026 & +0.010 \\
+ & Tier 2 (Medium) & 0.385 & 0.395 & 0.101 & 0.111 & +0.010 & +0.010 \\
+ & Tier 3 (Hard) & 0.459 & 0.426 & 0.101 & 0.111 & -0.033 & +0.010 \\
+\midrule
+\multirow{3}{*}{Mistral Large 2512} & Tier 1 (Easy) & 0.954 & 0.894 & 0.258 & 0.303 & -0.060 & +0.045 \\
+ & Tier 2 (Medium) & 0.596 & 0.572 & 0.258 & 0.303 & -0.024 & +0.045 \\
+ & Tier 3 (Hard) & 0.621 & 0.598 & 0.258 & 0.303 & -0.023 & +0.045 \\
+\midrule
+\multirow{3}{*}{Qwen3-VL-235B} & Tier 1 (Easy) & 0.981 & 0.992 & 0.567 & 0.652 & +0.012 & +0.085 \\
+ & Tier 2 (Medium) & 0.764 & 0.881 & 0.567 & 0.652 & +0.117 & +0.085 \\
+ & Tier 3 (Hard) & 0.824 & 0.858 & 0.567 & 0.652 & +0.034 & +0.085 \\
+\midrule
+\multirow{3}{*}{Llama 4 Maverick} & Tier 1 (Easy) & 0.870 & 0.894 & 0.150 & 0.178 & +0.024 & +0.027 \\
+ & Tier 2 (Medium) & 0.459 & 0.479 & 0.150 & 0.178 & +0.020 & +0.027 \\
+ & Tier 3 (Hard) & 0.567 & 0.556 & 0.150 & 0.178 & -0.011 & +0.027 \\
+\midrule
+\multirow{3}{*}{Qwen3-235B} & Tier 1 (Easy) & 0.974 & 0.977 & 0.551 & 0.631 & +0.003 & +0.079 \\
+ & Tier 2 (Medium) & 0.756 & 0.855 & 0.551 & 0.631 & +0.099 & +0.079 \\
+ & Tier 3 (Hard) & 0.833 & 0.864 & 0.551 & 0.631 & +0.031 & +0.079 \\
+\midrule
+\multirow{3}{*}{Claude Opus 4.7} & Tier 1 (Easy) & 0.675 & 0.621 & 0.060 & 0.059 & -0.054 & -0.000 \\
+ & Tier 2 (Medium) & 0.764 & 0.782 & 0.060 & 0.059 & +0.018 & -0.000 \\
+ & Tier 3 (Hard) & 0.733 & 0.756 & 0.060 & 0.059 & +0.023 & -0.000 \\
+\bottomrule
+\end{tabular}
+\end{table}

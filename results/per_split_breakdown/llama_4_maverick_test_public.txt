@@ -1,0 +1,50 @@
+
+============================================================
+  HALLMARK Evaluation: openrouter_meta-llama_llama-4-maverick
+  Split: test_public
+============================================================
+  Entries:          831
+  Hallucinated:     544 (65.5%)
+  Valid:            287
+  Uncertain:        1
+  NOTE: Prevalence varies across splits. Use MCC for cross-split comparison.
+────────────────────────────────────────────────────────────
+  Confusion Matrix:
+    TP: 328    FP: 51
+    FN: 215    TN: 236
+────────────────────────────────────────────────────────────
+  Detection Rate:   0.604
+  False Pos. Rate:  0.178
+  F1 (Halluc.):     0.711
+  Coverage:         100.0%
+  Tier-weighted F1: 0.700
+  MCC:              0.407
+  Macro-F1:         0.676
+  ECE:              0.207
+  AUROC:            0.727
+  AUPRC:            0.824
+  Entries/sec:      0.1
+  Mean API calls:   1.0
+────────────────────────────────────────────────────────────
+  Per-tier breakdown:
+    Tier 1: DR=0.894 F1=0.784 (n=132)
+    Tier 2: DR=0.479 F1=0.567 (n=243)
+    Tier 3: DR=0.556 F1=0.599 (n=169)
+────────────────────────────────────────────────────────────
+  Per-type detection rates:
+    arxiv_version_mismatch          28 entries  DR=0.464
+    chimeric_title                  24 entries  DR=0.667
+    fabricated_doi                  29 entries  DR=1.000
+    future_date                     29 entries  DR=1.000
+    hybrid_fabrication              40 entries  DR=0.675
+    merged_citation                 29 entries  DR=0.621
+    near_miss_title                 38 entries  DR=0.421
+    nonexistent_venue               38 entries  DR=0.947
+    partial_author_list             29 entries  DR=0.207
+    placeholder_authors             36 entries  DR=0.667
+    plausible_fabrication          103 entries  DR=0.631
+    preprint_as_published           29 entries  DR=0.552
+    swapped_authors                 56 entries  DR=0.286
+    valid                          287 entries  DR=0.000
+    wrong_venue                     36 entries  DR=0.486
+============================================================

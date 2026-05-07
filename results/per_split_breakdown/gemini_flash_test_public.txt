@@ -1,0 +1,49 @@
+
+============================================================
+  HALLMARK Evaluation: openrouter_google_gemini-2.5-flash
+  Split: test_public
+============================================================
+  Entries:          831
+  Hallucinated:     544 (65.5%)
+  Valid:            287
+  NOTE: Prevalence varies across splits. Use MCC for cross-split comparison.
+────────────────────────────────────────────────────────────
+  Confusion Matrix:
+    TP: 263    FP: 32
+    FN: 281    TN: 255
+────────────────────────────────────────────────────────────
+  Detection Rate:   0.483
+  False Pos. Rate:  0.111
+  F1 (Halluc.):     0.627
+  Coverage:         100.0%
+  Tier-weighted F1: 0.606
+  MCC:              0.370
+  Macro-F1:         0.623
+  ECE:              0.335
+  AUROC:            0.718
+  AUPRC:            0.802
+  Entries/sec:      0.1
+  Mean API calls:   1.0
+────────────────────────────────────────────────────────────
+  Per-tier breakdown:
+    Tier 1: DR=0.720 F1=0.734 (n=132)
+    Tier 2: DR=0.395 F1=0.518 (n=243)
+    Tier 3: DR=0.426 F1=0.527 (n=169)
+────────────────────────────────────────────────────────────
+  Per-type detection rates:
+    arxiv_version_mismatch          28 entries  DR=0.321
+    chimeric_title                  24 entries  DR=0.708
+    fabricated_doi                  29 entries  DR=0.828
+    future_date                     29 entries  DR=1.000
+    hybrid_fabrication              40 entries  DR=0.700
+    merged_citation                 29 entries  DR=0.448
+    near_miss_title                 38 entries  DR=0.289
+    nonexistent_venue               38 entries  DR=0.658
+    partial_author_list             29 entries  DR=0.069
+    placeholder_authors             36 entries  DR=0.472
+    plausible_fabrication          103 entries  DR=0.505
+    preprint_as_published           29 entries  DR=0.345
+    swapped_authors                 56 entries  DR=0.250
+    valid                          287 entries  DR=0.000
+    wrong_venue                     36 entries  DR=0.333
+============================================================
