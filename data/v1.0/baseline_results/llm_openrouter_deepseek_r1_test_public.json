@@ -1,0 +1,149 @@
+{
+  "tool_name": "llm_openrouter_deepseek_r1",
+  "split_name": "test_public",
+  "num_entries": 831,
+  "num_hallucinated": 544,
+  "num_valid": 287,
+  "detection_rate": 0.7806004618937644,
+  "false_positive_rate": 0.3302752293577982,
+  "f1_hallucination": 0.8018979833926453,
+  "tier_weighted_f1": 0.8197530864197531,
+  "mcc": 0.4401472849772165,
+  "macro_f1": 0.7190317803673466,
+  "union_recall_at_k": {},
+  "temporal_robustness": null,
+  "cost_efficiency": 0.010902728652432974,
+  "mean_api_calls": 1.0024067388688327,
+  "ece": 0.20161290322580644,
+  "auroc": 0.7599476661652225,
+  "auprc": 0.8331854557920068,
+  "num_uncertain": 180,
+  "tier3_f1": 0.636986301369863,
+  "detection_rate_ci": null,
+  "f1_hallucination_ci": null,
+  "tier_weighted_f1_ci": null,
+  "fpr_ci": null,
+  "ece_ci": null,
+  "mcc_ci": null,
+  "tier3_f1_ci": null,
+  "per_tier_metrics": {
+    "1": {
+      "detection_rate": 0.963302752293578,
+      "false_positive_rate": 0.3302752293577982,
+      "f1": 0.7342657342657342,
+      "precision": 0.5932203389830508,
+      "num_hallucinated": 132,
+      "num_valid": 287
+    },
+    "2": {
+      "detection_rate": 0.7106598984771574,
+      "false_positive_rate": 0.3302752293577982,
+      "f1": 0.6845965770171148,
+      "precision": 0.660377358490566,
+      "num_hallucinated": 243,
+      "num_valid": 287
+    },
+    "3": {
+      "detection_rate": 0.7322834645669292,
+      "false_positive_rate": 0.3302752293577982,
+      "f1": 0.636986301369863,
+      "precision": 0.5636363636363636,
+      "num_hallucinated": 169,
+      "num_valid": 287
+    }
+  },
+  "per_type_metrics": {
+    "arxiv_version_mismatch": {
+      "detection_rate": 0.7894736842105263,
+      "false_positive_rate": 0.0,
+      "f1": 0.8823529411764706,
+      "count": 28
+    },
+    "chimeric_title": {
+      "detection_rate": 0.7058823529411765,
+      "false_positive_rate": 0.0,
+      "f1": 0.8275862068965517,
+      "count": 24
+    },
+    "fabricated_doi": {
+      "detection_rate": 0.9523809523809523,
+      "false_positive_rate": 0.0,
+      "f1": 0.975609756097561,
+      "count": 29
+    },
+    "future_date": {
+      "detection_rate": 1.0,
+      "false_positive_rate": 0.0,
+      "f1": 1.0,
+      "count": 29
+    },
+    "hybrid_fabrication": {
+      "detection_rate": 0.8235294117647058,
+      "false_positive_rate": 0.0,
+      "f1": 0.9032258064516129,
+      "count": 40
+    },
+    "merged_citation": {
+      "detection_rate": 0.84,
+      "false_positive_rate": 0.0,
+      "f1": 0.9130434782608696,
+      "count": 29
+    },
+    "near_miss_title": {
+      "detection_rate": 0.6666666666666666,
+      "false_positive_rate": 0.0,
+      "f1": 0.8,
+      "count": 38
+    },
+    "nonexistent_venue": {
+      "detection_rate": 0.96875,
+      "false_positive_rate": 0.0,
+      "f1": 0.9841269841269841,
+      "count": 38
+    },
+    "partial_author_list": {
+      "detection_rate": 0.48,
+      "false_positive_rate": 0.0,
+      "f1": 0.6486486486486487,
+      "count": 29
+    },
+    "placeholder_authors": {
+      "detection_rate": 0.9333333333333333,
+      "false_positive_rate": 0.0,
+      "f1": 0.9655172413793104,
+      "count": 36
+    },
+    "plausible_fabrication": {
+      "detection_rate": 0.7435897435897436,
+      "false_positive_rate": 0.0,
+      "f1": 0.8529411764705882,
+      "count": 103
+    },
+    "preprint_as_published": {
+      "detection_rate": 0.8461538461538461,
+      "false_positive_rate": 0.0,
+      "f1": 0.9166666666666666,
+      "count": 29
+    },
+    "swapped_authors": {
+      "detection_rate": 0.6190476190476191,
+      "false_positive_rate": 0.0,
+      "f1": 0.7647058823529412,
+      "count": 56
+    },
+    "valid": {
+      "detection_rate": 0.0,
+      "false_positive_rate": 0.3302752293577982,
+      "f1": 0.0,
+      "count": 287
+    },
+    "wrong_venue": {
+      "detection_rate": 0.6785714285714286,
+      "false_positive_rate": 0.0,
+      "f1": 0.8085106382978724,
+      "count": 36
+    }
+  },
+  "coverage": 1.0,
+  "coverage_adjusted_f1": 0.8018979833926453
+}

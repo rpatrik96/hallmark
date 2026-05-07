@@ -85,6 +85,13 @@
       "split": "test_public",
       "num_entries": 831,
       "f1_hallucination": 0.832116788321168
+    },
+    "llm_openrouter_deepseek_r1_test_public.json": {
+      "sha256": "d6a4dae5189fafb05cbe1ca4e875e60b30a5e5fbcc20fa45e283d42a085a7db2",
+      "baseline": "llm_openrouter_deepseek_r1",
+      "split": "test_public",
+      "num_entries": 831,
+      "f1_hallucination": 0.8018979833926453
     }
   },
   "environment": {
