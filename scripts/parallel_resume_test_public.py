@@ -162,6 +162,7 @@ def call_one(
     entry: dict,
     timeout: float = 120.0,
     max_retries: int = 3,
+    max_completion_tokens: int = 1024,
 ) -> dict:
     """Make one verification call with per-request timeout and exponential backoff.
 
@@ -171,9 +172,12 @@ def call_one(
     mid-stream on the sequential DS-R1 run.
 
     Retries (with 2s/4s/8s backoff) on:
-      - openai.RateLimitError  (HTTP 429 from OpenRouter or upstream)
-      - openai.APITimeoutError (per-request timeout hit)
-    Other errors fall through to the error-fallback record after max_retries.
+      - openai.RateLimitError    (HTTP 429 from OpenRouter or upstream)
+      - openai.APITimeoutError   (per-request timeout hit)
+      - openai.APIConnectionError (network blip / connection reset)
+      - openai.APIStatusError    only when status_code >= 500 (server-side
+                                  errors are usually transient)
+    4xx (auth, quota, malformed request) bails immediately.
     """
     bibtex = entry_to_bibtex(entry)
     prompt = VERIFICATION_PROMPT.format(bibtex=bibtex)
@@ -185,7 +189,7 @@ def call_one(
             resp = client.chat.completions.create(
                 model=model,
                 messages=[{"role": "user", "content": prompt}],
-                max_completion_tokens=1024,
+                max_completion_tokens=max_completion_tokens,
                 timeout=timeout,  # per-request timeout — critical to prevent hangs
             )
             content = resp.choices[0].message.content or ""
@@ -200,11 +204,15 @@ def call_one(
                 "api_calls": 1,
                 "api_sources_queried": [],
             }
-        except (openai.RateLimitError, openai.APITimeoutError) as e:
+        except (
+            openai.RateLimitError,
+            openai.APITimeoutError,
+            openai.APIConnectionError,
+        ) as e:
             last_err = e
             backoff = 2 ** (attempt + 1)  # 2, 4, 8 seconds
             logger.warning(
-                "Rate-limit/timeout on %s (attempt %d/%d): %s; backoff %ds",
+                "Transient error on %s (attempt %d/%d): %s; backoff %ds",
                 entry["bibtex_key"],
                 attempt + 1,
                 max_retries,
@@ -212,16 +220,38 @@ def call_one(
                 backoff,
             )
             time.sleep(backoff)
+        except openai.APIStatusError as e:
+            last_err = e
+            # Retry 5xx (server-side, usually transient); bail on 4xx.
+            status = getattr(e, "status_code", 0) or 0
+            if status >= 500:
+                backoff = 2 ** (attempt + 1)
+                logger.warning(
+                    "Server error %d on %s (attempt %d/%d); backoff %ds",
+                    status,
+                    entry["bibtex_key"],
+                    attempt + 1,
+                    max_retries,
+                    backoff,
+                )
+                time.sleep(backoff)
+            else:
+                logger.warning(
+                    "Client error %d on %s — bailing without retry: %s",
+                    status,
+                    entry["bibtex_key"],
+                    e,
+                )
+                break
         except Exception as e:
             last_err = e
             logger.warning(
-                "API error on %s (attempt %d/%d): %s",
+                "Non-API error on %s (attempt %d/%d): %s — bailing",
                 entry["bibtex_key"],
                 attempt + 1,
                 max_retries,
                 e,
             )
-            # Only retry on rate-limit/timeout; bail on other errors immediately
             break
 
     elapsed = time.time() - start
@@ -268,6 +298,16 @@ def main() -> None:
         type=float,
         default=120.0,
         help="Per-request timeout in seconds (passed to both client and each call).",
+    )
+    parser.add_argument(
+        "--max-completion-tokens",
+        type=int,
+        default=1024,
+        help=(
+            "Max completion tokens per request. Reasoning models "
+            "(DeepSeek-R1, GPT-5.5, Gemini 3.x Pro) may need 4096+ to fit "
+            "the JSON verdict after the reasoning trace."
+        ),
     )
     parser.add_argument(
         "--dry-run",
@@ -354,7 +394,18 @@ def main() -> None:
     run_start = time.time()
 
     with jsonl_path.open("a") as f, ThreadPoolExecutor(max_workers=args.workers) as ex:
-        futures = {ex.submit(call_one, client, args.model, e, args.timeout): e for e in remaining}
+        futures = {
+            ex.submit(
+                call_one,
+                client,
+                args.model,
+                e,
+                args.timeout,
+                3,
+                args.max_completion_tokens,
+            ): e
+            for e in remaining
+        }
         for fut in as_completed(futures):
             try:
                 rec = fut.result()

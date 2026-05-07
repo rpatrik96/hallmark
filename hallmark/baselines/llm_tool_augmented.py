@@ -164,6 +164,7 @@ def verify_tool_augmented(
     entries: list[BlindEntry],
     model: str = "gpt-5.1",
     api_key: str | None = None,
+    base_url: str | None = None,
     tool_evidence_path: Path | str | None = None,
     log_dir: Path | None = None,
     checkpoint_dir: Path | None = None,
@@ -175,6 +176,8 @@ def verify_tool_augmented(
         entries: Benchmark entries to verify.
         model: LLM model identifier (default: gpt-5.1).
         api_key: OpenAI API key (falls back to OPENAI_API_KEY env var).
+        base_url: Override the OpenAI base URL (e.g. ``https://openrouter.ai/api/v1``
+            to route through OpenRouter without mutating ``os.environ``).
         tool_evidence_path: Path to pre-computed bibtex-check raw JSONL.
             If None, runs bibtex-check live to generate evidence.
         log_dir: Optional directory for per-entry API call logs.
@@ -213,7 +216,7 @@ def verify_tool_augmented(
         entries,
         model=model,
         api_key=api_key,
-        base_url=None,
+        base_url=base_url,
         source_prefix="openai_tool_augmented",
         log_dir=log_dir,
         checkpoint_dir=checkpoint_dir,

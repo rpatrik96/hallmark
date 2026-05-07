@@ -44,14 +44,10 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
-# Route the openai SDK through OpenRouter BEFORE importing the agentic module.
-os.environ.setdefault("OPENAI_BASE_URL", "https://openrouter.ai/api/v1")
-or_key = os.environ.get("OPENROUTER_API_KEY")
-if or_key and not os.environ.get("OPENAI_API_KEY", "").startswith("sk-or-"):
-    # Override OPENAI_API_KEY with the OpenRouter key so the openai SDK auths
-    # against OpenRouter. Existing OPENAI_API_KEY is preserved if it already
-    # looks like an OpenRouter key.
-    os.environ["OPENAI_API_KEY"] = or_key
+# Routing through OpenRouter is now done via the explicit ``base_url`` and
+# ``api_key`` kwargs on verify_agentic_*_openai (added in commit 8fbd06e),
+# not by mutating ``os.environ``. The CLI ``hallmark evaluate --workers N``
+# is the recommended entry point; this script remains as a thin shim.
 
 from hallmark.baselines.llm_agentic import (  # noqa: E402
     verify_agentic_btu_openai,
@@ -59,6 +55,8 @@ from hallmark.baselines.llm_agentic import (  # noqa: E402
 )
 from hallmark.baselines.llm_tool_augmented import verify_tool_augmented  # noqa: E402
 from hallmark.dataset.loader import load_split  # noqa: E402
+
+OPENROUTER_BASE_URL = "https://openrouter.ai/api/v1"
 
 VERIFIERS = {
     "agentic_btu_openai": (verify_agentic_btu_openai, "agentic_btu_openai"),
@@ -154,15 +152,24 @@ def main() -> None:
     completed = 0
     start = time.time()
 
+    or_api_key = os.environ.get("OPENROUTER_API_KEY")
+    if not or_api_key:
+        raise SystemExit("OPENROUTER_API_KEY not set")
+
     def call_one(entry: object) -> dict:
         # Each thread issues an independent verify call with a single-entry
-        # list. The verifier writes its own checkpoint line; we ALSO append
-        # here for redundancy.
+        # list. The verifier writes its own checkpoint line (under the
+        # _CHECKPOINT_LOCK in llm_agentic.py).
         kw: dict[str, object] = {
             "model": args.model,
             "checkpoint_dir": args.checkpoint_dir,
+            # Route through OpenRouter via explicit kwargs (no os.environ
+            # mutation; works for verify_agentic_*_openai which gained the
+            # ``base_url`` parameter in commit 8fbd06e).
+            "base_url": OPENROUTER_BASE_URL,
+            "api_key": or_api_key,
         }
-        # tool_augmented has no cache_db_path arg
+        # tool_augmented has no cache_db_path arg.
         if args.verifier != "tool_augmented":
             kw["cache_db_path"] = args.cache_db_path
         preds = verifier_fn([entry], **kw)  # type: ignore[arg-type, list-item]
