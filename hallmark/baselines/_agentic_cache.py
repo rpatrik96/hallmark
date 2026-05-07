@@ -2,6 +2,10 @@
 
 Key: sha256(f"{tool_name}::{sorted_args_json}")
 TTL: disabled by default; set CACHE_TTL_DAYS env var to enable expiry.
+
+Concurrency: each instance owns one SQLite connection. Multiple instances
+against the same DB file are safe under WAL + busy_timeout (set
+automatically in `_open_db`).
 """
 
 from __future__ import annotations
@@ -32,6 +36,8 @@ def _get_db_path() -> Path:
 
 def _open_db(db_path: Path) -> sqlite3.Connection:
     conn = sqlite3.connect(str(db_path), check_same_thread=False)
+    conn.execute("PRAGMA journal_mode=WAL")
+    conn.execute("PRAGMA busy_timeout=30000")
     conn.execute(
         """CREATE TABLE IF NOT EXISTS tool_cache (
             cache_key TEXT PRIMARY KEY,
@@ -51,15 +57,22 @@ def cache_key(tool_name: str, args: dict[str, Any]) -> str:
 
 
 class AgenticToolCache:
-    """Thread-unsafe single-connection SQLite cache for agentic tool results.
+    """SQLite cache for agentic tool results.
 
-    Not designed for concurrent use — each process should own one instance.
+    Each instance owns one SQLite connection. Multiple instances against the
+    same DB file are safe under WAL + busy_timeout (set automatically in
+    `_open_db`).
     TTL is checked on read: expired entries are treated as misses and evicted.
     """
 
     def __init__(self, db_path: Path | None = None) -> None:
         self._db_path = db_path or _get_db_path()
         self._conn = _open_db(self._db_path)
+
+    @property
+    def conn(self) -> sqlite3.Connection:
+        """Expose the underlying SQLite connection (read-only access)."""
+        return self._conn
         ttl_env = os.environ.get("CACHE_TTL_DAYS")
         self._ttl_seconds: float | None = float(ttl_env) * 86400 if ttl_env else None
 
