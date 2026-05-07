@@ -92,6 +92,13 @@
       "split": "test_public",
       "num_entries": 831,
       "f1_hallucination": 0.8018979833926453
+    },
+    "llm_agentic_btu_sonnet_4_6_test_public.json": {
+      "sha256": "1c87a5d9e09caf2c79a10e84318b4873f60f0cdafa5285f638aff8a0d2581f44",
+      "baseline": "llm_agentic_btu_sonnet_4_6",
+      "split": "test_public",
+      "num_entries": 831,
+      "f1_hallucination": 0.9012875536480687
     }
   },
   "environment": {
