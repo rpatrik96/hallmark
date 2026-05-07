@@ -68,13 +68,13 @@ class AgenticToolCache:
     def __init__(self, db_path: Path | None = None) -> None:
         self._db_path = db_path or _get_db_path()
         self._conn = _open_db(self._db_path)
+        ttl_env = os.environ.get("CACHE_TTL_DAYS")
+        self._ttl_seconds: float | None = float(ttl_env) * 86400 if ttl_env else None
 
     @property
     def conn(self) -> sqlite3.Connection:
         """Expose the underlying SQLite connection (read-only access)."""
         return self._conn
-        ttl_env = os.environ.get("CACHE_TTL_DAYS")
-        self._ttl_seconds: float | None = float(ttl_env) * 86400 if ttl_env else None
 
     def get(self, key: str) -> Any | None:
         """Return cached value or None on miss/expiry."""
