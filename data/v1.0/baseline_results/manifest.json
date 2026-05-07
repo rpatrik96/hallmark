@@ -113,6 +113,13 @@
       "split": "test_public",
       "num_entries": 831,
       "f1_hallucination": 0.8846487424111014
+    },
+    "doi_only_test_public.json": {
+      "sha256": "ca7da1f544e24bf38e6f96c606adda2da1d9c5600290a4e3e7ceba2d08861e7d",
+      "baseline": "doi_only",
+      "split": "test_public",
+      "num_entries": 831,
+      "f1_hallucination": 0.4831730769230769
     }
   },
   "environment": {
