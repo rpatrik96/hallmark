@@ -120,6 +120,13 @@
       "split": "test_public",
       "num_entries": 831,
       "f1_hallucination": 0.4831730769230769
+    },
+    "llm_agentic_openai_test_public.json": {
+      "sha256": "2f3a62ba468bc2dfa026e344e4996e4c2bfd9fac8fc9088f26d42d9a9701a1c9",
+      "baseline": "llm_agentic_openai",
+      "split": "test_public",
+      "num_entries": 831,
+      "f1_hallucination": 0.8500414250207126
     }
   },
   "environment": {
