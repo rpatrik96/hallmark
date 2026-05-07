@@ -23,6 +23,7 @@ from __future__ import annotations
 
 import json
 import logging
+import threading
 import time
 from pathlib import Path
 from typing import Any
@@ -42,9 +43,26 @@ logger = logging.getLogger(__name__)
 
 MAX_TOOL_CALLS = 5
 
-# Model identifiers — pinned to date-stamped versions for reproducibility.
+# Model identifiers.
+#
+# OPENAI_MODEL is pinned to a date-stamped/versioned id (gpt-5.1).  ANTHROPIC_MODEL
+# uses the alias "claude-sonnet-4-6" because Anthropic has not published a
+# date-stamped form for the 4.6 release at the time of this benchmark run; the
+# actual run timestamp is recorded in
+# ``data/v1.0/baseline_results/manifest.json``'s ``environment.timestamp`` field
+# for reproducibility purposes.
 OPENAI_MODEL = "gpt-5.1"
 ANTHROPIC_MODEL = "claude-sonnet-4-6"
+
+# Module-level lock that serialises every JSONL checkpoint append in this
+# module.  Required because macOS's ``O_APPEND`` is *not* atomic for writes
+# >512 bytes, and our prediction records routinely exceed that once the
+# agentic ``reason`` field is populated.  We deliberately keep this as a
+# *separate* lock from concurrency._CHECKPOINT_LOCK so importing this module
+# does not require importing concurrency, but every public fan-out path
+# (e.g. concurrency.parallel_run_baseline) honours both because each thread's
+# call to _write_checkpoint passes through this same lock.
+_CHECKPOINT_LOCK = threading.Lock()
 
 SYSTEM_PROMPT = """\
 You are a citation verification expert with access to bibliographic lookup tools.
@@ -411,6 +429,13 @@ def _load_checkpoint(path: Path, *, skip_failed: bool = False) -> dict[str, Pred
 
 
 def _write_checkpoint(path: Path | None, pred: Prediction) -> None:
+    """Append ``pred`` as a JSON line to ``path`` under ``_CHECKPOINT_LOCK``.
+
+    The lock guards against interleaving when this function is called
+    concurrently from worker threads (e.g. via
+    ``concurrency.parallel_run_baseline``).  Sequential callers pay only
+    the cost of an uncontended ``threading.Lock`` acquisition.
+    """
     if path is None:
         return
     data = {
@@ -422,7 +447,7 @@ def _write_checkpoint(path: Path | None, pred: Prediction) -> None:
         "api_calls": pred.api_calls,
         "api_sources_queried": pred.api_sources_queried,
     }
-    with open(path, "a") as f:
+    with _CHECKPOINT_LOCK, open(path, "a") as f:
         f.write(json.dumps(data) + "\n")
 
 
