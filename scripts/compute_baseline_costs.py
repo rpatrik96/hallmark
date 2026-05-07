@@ -247,15 +247,18 @@ def compute_stats(
             )
         mean_wc = float(np.mean(wcs)) if wcs else (estimated_mean_wc or 0.0)
         p95_wc = float(np.percentile(wcs, 95)) if wcs else (estimated_p95_wc or 0.0)
-        total_min = float(sum(wcs) / 60) if wcs else (mean_wc * 1119 / 60)
+        # Use actual checkpoint length for total_min when wcs is available;
+        # fall back to n=1119 (dev_public size) only for fully-estimated tools.
+        total_min = float(sum(wcs) / 60) if wcs else (mean_wc * len(entries) / 60)
 
         api_vals = [e["api_calls"] for e in entries if "api_calls" in e]
         mean_api = float(np.mean(api_vals)) if api_vals else (estimated_mean_api or 1.0)
     else:
-        # Fully estimated
+        # Fully estimated (no checkpoint); use dev_public size (1119) as reference n.
+        # If the run was on a different split, callers should pass the correct entries.
         mean_wc = estimated_mean_wc or 0.0
         p95_wc = estimated_p95_wc or 0.0
-        total_min = mean_wc * 1119 / 60  # estimate for n=1119
+        total_min = mean_wc * 1119 / 60  # reference n=1119 (dev_public); noted in note field
         mean_api = estimated_mean_api or (3.5 if is_agentic else 1.0)
 
     # Token estimation: not logged in most checkpoints; use assumed values

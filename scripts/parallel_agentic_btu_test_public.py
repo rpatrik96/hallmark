@@ -53,8 +53,18 @@ if or_key and not os.environ.get("OPENAI_API_KEY", "").startswith("sk-or-"):
     # looks like an OpenRouter key.
     os.environ["OPENAI_API_KEY"] = or_key
 
-from hallmark.baselines.llm_agentic import verify_agentic_btu_openai  # noqa: E402
+from hallmark.baselines.llm_agentic import (  # noqa: E402
+    verify_agentic_btu_openai,
+    verify_agentic_openai,
+)
+from hallmark.baselines.llm_tool_augmented import verify_tool_augmented  # noqa: E402
 from hallmark.dataset.loader import load_split  # noqa: E402
+
+VERIFIERS = {
+    "agentic_btu_openai": (verify_agentic_btu_openai, "agentic_btu_openai"),
+    "agentic_openai": (verify_agentic_openai, "agentic_openai"),
+    "tool_augmented": (verify_tool_augmented, "tool_augmented"),
+}
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(
@@ -87,6 +97,12 @@ def _read_done_keys(jsonl_path: Path) -> set[str]:
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--checkpoint-dir", type=Path, required=True)
+    parser.add_argument(
+        "--verifier",
+        choices=sorted(VERIFIERS),
+        default="agentic_btu_openai",
+        help="Which verifier function to call",
+    )
     parser.add_argument("--model", default="anthropic/claude-sonnet-4.6")
     parser.add_argument("--split", default="test_public")
     parser.add_argument("--version", default="v1.0")
@@ -107,7 +123,8 @@ def main() -> None:
             " 100 RPS / 5000 RPM throttling that may collapse coverage."
         )
 
-    jsonl_path = _checkpoint_path(args.checkpoint_dir, args.model)
+    verifier_fn, verifier_prefix = VERIFIERS[args.verifier]
+    jsonl_path = args.checkpoint_dir / f"{verifier_prefix}_{_safe_model(args.model)}.jsonl"
     done_keys = _read_done_keys(jsonl_path)
 
     entries = load_split(split=args.split, version=args.version)
@@ -141,12 +158,14 @@ def main() -> None:
         # Each thread issues an independent verify call with a single-entry
         # list. The verifier writes its own checkpoint line; we ALSO append
         # here for redundancy.
-        preds = verify_agentic_btu_openai(
-            [entry],  # type: ignore[list-item]
-            model=args.model,
-            checkpoint_dir=args.checkpoint_dir,
-            cache_db_path=args.cache_db_path,
-        )
+        kw: dict[str, object] = {
+            "model": args.model,
+            "checkpoint_dir": args.checkpoint_dir,
+        }
+        # tool_augmented has no cache_db_path arg
+        if args.verifier != "tool_augmented":
+            kw["cache_db_path"] = args.cache_db_path
+        preds = verifier_fn([entry], **kw)  # type: ignore[arg-type, list-item]
         if not preds:
             return {
                 "bibtex_key": getattr(entry, "bibtex_key", "?"),

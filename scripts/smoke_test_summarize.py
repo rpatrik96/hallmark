@@ -21,6 +21,7 @@ import csv
 import json
 import math
 from pathlib import Path
+from typing import Any
 
 ROOT = Path(__file__).resolve().parents[1]
 CHECKPOINT_DIR = ROOT / "results" / "checkpoints" / "smoke_test_thinking_budget"
@@ -99,7 +100,8 @@ def main() -> None:
     truth = load_truth()
     print(f"Loaded ground truth for {len(truth)} entries")
 
-    rows: list[dict[str, str | float | int]] = []
+    # Use Any so the CSV writer doesn't complain about mixed str/float/int values.
+    rows: list[dict[str, Any]] = []
 
     print(
         f"\n{'Model':<18} {'Bud.':<22} "
@@ -108,6 +110,37 @@ def main() -> None:
         f"{'mean_t':>7} {'p95_t':>6} {'$':>5}"
     )
     print("-" * 110)
+
+    # Build cap lookup from COHORT in smoke_test_thinking_budget for a single
+    # source of truth. Fallback: hardcoded dict typed dict[str, int] that
+    # covers every entry in CELLS — an assertion guards against drift.
+    _CAP_FALLBACK: dict[str, int] = {
+        "gpt-5-5_a": 256,
+        "gpt-5-5_b": 1024,
+        "gpt-5-5_c": 4096,
+        "gemini-3-1-pro_a": 2048,
+        "gemini-3-1-pro_b": 8192,
+        "gemini-3-1-pro_c": 16384,
+        "deepseek-v4-pro_a": 4096,
+        "deepseek-v4-pro_b": 8192,
+        "deepseek-v4-pro_c": 16384,
+    }
+    expected_cells = {f"{mk}_{r}" for mk, r, _, _ in CELLS}
+    assert expected_cells <= _CAP_FALLBACK.keys(), (
+        f"_CAP_FALLBACK is missing cells: {expected_cells - _CAP_FALLBACK.keys()}"
+    )
+
+    try:
+        from scripts.smoke_test_thinking_budget import COHORT  # type: ignore[import]
+
+        _cap_map: dict[str, int] = {
+            f"{mk}_{r}": cfg[f"regime_{r}"]["max_tokens"]
+            for mk, cfg in COHORT.items()
+            for r in ("a", "b", "c")
+            if f"regime_{r}" in cfg
+        }
+    except Exception:
+        _cap_map = _CAP_FALLBACK
 
     for model_key, regime, display, budget in CELLS:
         cell = f"{model_key}_{regime}"
@@ -118,19 +151,9 @@ def main() -> None:
             continue
         m = evaluate_cell(jsonl, truth)
         s = json.loads(summary_path.read_text())
-        cap = {
-            "gpt-5-5_a": 256,
-            "gpt-5-5_b": 1024,
-            "gpt-5-5_c": 4096,
-            "gemini-3-1-pro_a": 2048,
-            "gemini-3-1-pro_b": 8192,
-            "gemini-3-1-pro_c": 16384,
-            "deepseek-v4-pro_a": 4096,
-            "deepseek-v4-pro_b": 8192,
-            "deepseek-v4-pro_c": 16384,
-        }[cell]
+        cap: int = _cap_map.get(cell, _CAP_FALLBACK[cell])
         sat = s["p95_output_tokens"] / cap
-        row = {
+        row: dict[str, Any] = {
             "cell": cell,
             "display": display,
             "budget": budget,
@@ -161,6 +184,9 @@ def main() -> None:
     # ------------------------------------------------------------------
     # CSV
     # ------------------------------------------------------------------
+    if not rows:
+        print("No cells found — checkpoints missing. Skipping CSV/LaTeX output.")
+        return
     TABLES_DIR.mkdir(exist_ok=True)
     csv_path = TABLES_DIR / "smoke_test_thinking_budget.csv"
     with csv_path.open("w", newline="") as f:

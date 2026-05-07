@@ -118,7 +118,8 @@ def main() -> None:
     print(header)
     print("-" * len(header))
 
-    rows_csv: list[dict[str, str | float | int]] = []
+    # Use object so mypy doesn't complain about tier being int or "S" (str).
+    rows_csv: list[dict[str, object]] = []
     rows_tex: list[list[str]] = []
 
     for htype, tier in TYPES_ORDERED:
@@ -128,7 +129,7 @@ def main() -> None:
         if n_total == 0:
             continue
         row_vals_pretty = []
-        row_vals_csv: dict[str, str | float | int] = {
+        row_vals_csv: dict[str, object] = {
             "type": htype,
             "tier": tier,
             "n": n_total,
@@ -152,6 +153,10 @@ def main() -> None:
         writer = csv.DictWriter(f, fieldnames=fieldnames)
         writer.writeheader()
         writer.writerows(rows_csv)
+    print(
+        "\nNote: per-type n is small (≥5); 95% binomial CI width is roughly ±35 pp at n=5."
+        " Values 0.000/1.000 reflect 0/5 or 5/5 detections, not true zero/perfect DR."
+    )
     print(f"\nCSV: {csv_path}")
 
     # LaTeX

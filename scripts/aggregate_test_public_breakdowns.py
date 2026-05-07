@@ -141,18 +141,21 @@ def run_hallmark_evaluate(
     return result.stdout
 
 
-def load_tier_metrics(eval_json: Path) -> dict[str, dict]:
+def load_tier_metrics(eval_json: Path) -> dict[str, dict]:  # type: ignore[type-arg]
     """Return per_tier_metrics dict from an already-computed eval JSON."""
+    from typing import Any, cast
+
     with open(eval_json) as f:
-        d = json.load(f)
-    return d["per_tier_metrics"]
+        d: dict[str, Any] = cast(dict[str, Any], json.load(f))
+    return cast("dict[str, dict]", d["per_tier_metrics"])  # type: ignore[type-arg]
 
 
-def evaluate_predictions_to_tier_metrics(predictions: Path, split: str) -> dict[str, dict]:
+def evaluate_predictions_to_tier_metrics(predictions: Path, split: str) -> dict[str, dict]:  # type: ignore[type-arg]
     """Run hallmark evaluate and extract per_tier_metrics from JSON output."""
     # Use --format text and parse per_tier from the output? No — pipe to a temp
     # JSON output file to get structured data.
     import tempfile
+    from typing import Any, cast
 
     with tempfile.NamedTemporaryFile(suffix=".json", delete=False) as tmp:
         tmp_path = tmp.name
@@ -172,9 +175,9 @@ def evaluate_predictions_to_tier_metrics(predictions: Path, split: str) -> dict[
         print(f"  STDERR: {result.stderr[-800:]}", file=sys.stderr)
         raise RuntimeError(f"hallmark evaluate failed (rc={result.returncode}) for {predictions}")
     with open(tmp_path) as f:
-        d = json.load(f)
+        d: dict[str, Any] = cast(dict[str, Any], json.load(f))
     os.unlink(tmp_path)
-    return d["per_tier_metrics"]
+    return cast("dict[str, dict]", d["per_tier_metrics"])  # type: ignore[type-arg]
 
 
 # ---------------------------------------------------------------------------
@@ -247,6 +250,10 @@ def main() -> None:
                 f"test DR={test_dr:.3f} FPR={test_fpr:.3f} | "
                 f"ΔDR={test_dr - dev_dr:+.3f} ΔFPR={test_fpr - dev_fpr:+.3f}"
             )
+
+    if not rows:
+        print("No model rows collected — all predictions missing. Skipping CSV/LaTeX output.")
+        return
 
     # --- Deliverable B: CSV ---
     csv_path = OUT_TABLES / "cross_split_per_tier.csv"

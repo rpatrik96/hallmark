@@ -247,6 +247,11 @@ def main() -> None:
     # tell-bearing types weighted by their share of the hallucinated set.
     # We conservatively assume *all* detections on tell-bearing types could
     # come from the tell (worst case). The share of those types is:
+    #
+    # NOTE: constants whose name is absent from _CONST_TYPE_MAP get type
+    # "unknown" and are excluded from types_with_tells. This means
+    # tell_type_entries undercounts the true tell-bearing set, so the
+    # resulting bound is a lower bound on the upper bound (conservative).
     tell_type_entries = sum(v["total"] for k, v in type_counts.items() if k in types_with_tells)
     share_tell_types = tell_type_entries / n_hal if n_hal else 0.0
 

@@ -20,10 +20,14 @@ import argparse
 import json
 import logging
 import os
+import random
+import statistics
 import sys
 import time
 from pathlib import Path
 from typing import Any
+
+import numpy as np
 
 # ---------------------------------------------------------------------------
 # Ensure hallmark package is importable when run as a script
@@ -92,7 +96,6 @@ def stratified_sample(
     with a hard floor of 5 per bucket; remaining slots are distributed
     proportionally over buckets that still have room.
     """
-    import random
 
     rng = random.Random(seed)
 
@@ -176,7 +179,6 @@ def flush_summary(
 ) -> None:
     if not records:
         return
-    import statistics
 
     n = len(records)
     parse_failures = sum(1 for r in records if r.get("parse_failure", False))
@@ -184,9 +186,7 @@ def flush_summary(
     wall_times = [r.get("wall_clock_seconds", 0.0) for r in records]
     prompt_tokens_list = [r.get("prompt_tokens", DEFAULT_PROMPT_TOKENS) for r in records]
 
-    sorted_tokens = sorted(output_tokens_list)
-    p95_idx = max(0, int(0.95 * n) - 1)
-    p95_output_tokens = sorted_tokens[p95_idx]
+    p95_output_tokens = int(np.percentile(output_tokens_list, 95)) if output_tokens_list else 0
 
     mean_output = statistics.mean(output_tokens_list) if output_tokens_list else 0.0
     mean_prompt = (
@@ -279,10 +279,8 @@ def run_entry(
             elapsed = time.monotonic() - start
 
             pred = _parse_llm_response(content, entry.bibtex_key)
-            parse_failure = pred.reason.startswith(("[Error fallback]", "[Salvaged]")) and (
-                "Parse error" in pred.reason or "parse" in pred.reason.lower()
-            )
-            # A salvaged result is not a full parse failure
+            # [Salvaged] predictions are partial successes, NOT parse failures.
+            # Only treat [Error fallback] + "Parse error" as a true parse failure.
             parse_failure = (
                 pred.reason.startswith("[Error fallback]") and "Parse error" in pred.reason
             )

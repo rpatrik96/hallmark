@@ -40,7 +40,8 @@ DESIGN_ALIGNED_TYPES = {
     "swapped_authors",  # enum value for author_mismatch
     "preprint_as_published",
     "hybrid_fabrication",
-    # Tier-3 main types are in between; include for completeness but not in gap
+    # Tier-3 main types are included in the gap calculation (they are part of
+    # the design-aligned aggregate reported in the paper).
     "near_miss_title",
     "plausible_fabrication",
 }
