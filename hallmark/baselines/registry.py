@@ -596,8 +596,10 @@ def _register_builtins() -> None:
         BaselineInfo(
             name="llm_agentic_anthropic",
             description=(
-                "Claude Sonnet 4.5 with tool-use: resolve_doi, search_crossref, "
-                "search_openalex, search_arxiv (up to 5 tool calls per entry)"
+                "Claude Sonnet 4.6 with tool-use: resolve_doi, search_crossref, "
+                "search_openalex, search_arxiv (up to 5 tool calls per entry). "
+                "Native Anthropic SDK; for the OpenRouter-routed path used in "
+                "the paper, see scripts/parallel_agentic_btu_test_public.py."
             ),
             runner=_run_llm_agentic_anthropic,
             pip_packages=["anthropic"],
@@ -640,7 +642,11 @@ def _register_builtins() -> None:
     register(
         BaselineInfo(
             name="llm_agentic_btu_anthropic",
-            description=("Claude Sonnet 4.5 agentic harness with bibtex-updater as only tool"),
+            description=(
+                "Claude Sonnet 4.6 agentic harness with bibtex-updater as only "
+                "tool (native Anthropic SDK; OpenRouter-routed equivalent used "
+                "in the paper)."
+            ),
             runner=_run_llm_agentic_btu_anthropic,
             pip_packages=["anthropic"],
             cli_commands=["bibtex-check"],

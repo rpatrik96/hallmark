@@ -44,7 +44,7 @@ MAX_TOOL_CALLS = 5
 
 # Model identifiers — pinned to date-stamped versions for reproducibility.
 OPENAI_MODEL = "gpt-5.1"
-ANTHROPIC_MODEL = "claude-sonnet-4-5-20250929"
+ANTHROPIC_MODEL = "claude-sonnet-4-6"
 
 SYSTEM_PROMPT = """\
 You are a citation verification expert with access to bibliographic lookup tools.
