@@ -106,6 +106,13 @@
       "split": "test_public",
       "num_entries": 831,
       "f1_hallucination": 0.8445692883895131
+    },
+    "llm_agentic_btu_openai_test_public.json": {
+      "sha256": "9f6a9763cc16d22999d6683520f629463d0211161ff64d83236a525b1e5aefea",
+      "baseline": "llm_agentic_btu_openai",
+      "split": "test_public",
+      "num_entries": 831,
+      "f1_hallucination": 0.8846487424111014
     }
   },
   "environment": {
