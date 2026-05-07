@@ -74,12 +74,13 @@ Any user of the tool would benefit from these.
 
 ## LLM Baselines (OpenAI, Anthropic, OpenRouter)
 - `llm_openai` — GPT-5.1 via `OPENAI_API_KEY`
-- `llm_anthropic` — Claude Sonnet 4.5 via `ANTHROPIC_API_KEY`
+- `llm_anthropic` — Claude Sonnet 4.6 via `ANTHROPIC_API_KEY`
 - `llm_openrouter_{deepseek_r1,deepseek_v3,qwen,mistral,gemini_flash}` — via `OPENROUTER_API_KEY` (uses `openai` SDK with custom `base_url`)
 - `llm_openrouter_gemini_flash` — Gemini 2.5 Flash via `OPENROUTER_API_KEY`
 - Model configs live in `OPENROUTER_MODELS` dict in `hallmark/baselines/llm_verifier.py`
 - `_verify_with_openai_compatible()` is the shared helper for all OpenAI-SDK-based providers
 - Generation script: `scripts/generate_llm_hallucinations.py --backend openrouter --model deepseek/deepseek-r1`
+- Parallel evaluators: `scripts/parallel_resume_test_public.py` (zero-shot), `scripts/parallel_agentic_btu_test_public.py` (agentic) — use for long-running LLM evals with checkpoint recovery
 
 ## Key Conventions
 - Optional dependencies (choix, harcx, openai, anthropic) use lazy imports

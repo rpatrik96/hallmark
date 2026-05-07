@@ -104,6 +104,20 @@ python scripts/run_all_baselines.py --baselines doi_only,bibtexupdater --paralle
 python scripts/run_all_baselines.py --baselines free --skip-unavailable
 ```
 
+### Resume long-running LLM evaluations in parallel
+
+For LLM-based baselines that take >1 hour sequentially, use the parallel-resume scripts to checkpoint and resume:
+
+```bash
+# Resume zero-shot OpenRouter LLM baselines across multiple processes
+python scripts/parallel_resume_test_public.py --split test_public --num-workers 4
+
+# Resume agentic verifiers (BTU, multi-tool, tool-augmented) with Sonnet 4.6
+python scripts/parallel_agentic_btu_test_public.py --split test_public --verifier agentic_btu_openai
+```
+
+Both scripts support checkpointing and can safely resume interrupted runs without recomputing completed entries.
+
 ### View the leaderboard
 
 ```bash
@@ -327,7 +341,7 @@ HALLMARK also wraps several external citation verification tools as baselines:
 | Baseline | Model | Provider | API Key Env Var |
 |----------|-------|----------|----------------|
 | `llm_openai` | GPT-5.1 | OpenAI | `OPENAI_API_KEY` |
-| `llm_anthropic` | Claude Sonnet 4.5 | Anthropic | `ANTHROPIC_API_KEY` |
+| `llm_anthropic` | Claude Sonnet 4.6 | Anthropic | `ANTHROPIC_API_KEY` |
 | `llm_openrouter_deepseek_r1` | DeepSeek R1 | OpenRouter | `OPENROUTER_API_KEY` |
 | `llm_openrouter_deepseek_v3` | DeepSeek V3.2 | OpenRouter | `OPENROUTER_API_KEY` |
 | `llm_openrouter_qwen` | Qwen 3 235B | OpenRouter | `OPENROUTER_API_KEY` |
