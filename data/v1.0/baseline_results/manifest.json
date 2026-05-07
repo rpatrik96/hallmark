@@ -99,6 +99,13 @@
       "split": "test_public",
       "num_entries": 831,
       "f1_hallucination": 0.9012875536480687
+    },
+    "llm_tool_augmented_test_public.json": {
+      "sha256": "19ee0866533cc8b4d17c854e2adce0cedf7c51ebbe15cbe40537d646ba304b57",
+      "baseline": "llm_tool_augmented",
+      "split": "test_public",
+      "num_entries": 831,
+      "f1_hallucination": 0.8445692883895131
     }
   },
   "environment": {
