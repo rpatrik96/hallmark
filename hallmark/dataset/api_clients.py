@@ -24,6 +24,8 @@ CROSSREF_API_BASE = "https://api.crossref.org/works"
 S2_API_BASE = "https://api.semanticscholar.org/graph/v1"
 DBLP_API_BASE = "https://dblp.org/search/publ/api"
 ARXIV_API_BASE = "https://export.arxiv.org/api/query"
+BIORXIV_API_BASE = "https://api.biorxiv.org"
+PUBMED_API_BASE = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils"
 
 
 # ---------------------------------------------------------------------------
@@ -243,3 +245,191 @@ class DBLPClient:
         (the older ``venue:<key>/<year>`` format returns 0 results for recent years).
         """
         return self.search(f"stream:{venue_key}: year:{year}", max_results=max_results)
+
+
+# ---------------------------------------------------------------------------
+# bioRxiv / medRxiv client
+# ---------------------------------------------------------------------------
+
+
+class BioRxivClient:
+    """Thin wrapper over the bioRxiv/medRxiv public API.
+
+    Endpoints used:
+        /details/{server}/{interval}/{cursor}     — list papers in a date range
+        /details/{server}/{doi}/na/json           — fetch a single paper by DOI
+
+    The ``server`` parameter is "biorxiv" or "medrxiv".
+    """
+
+    def __init__(
+        self,
+        server: str = "biorxiv",
+        user_agent: str = "HALLMARK/1.0",
+        rate_limit: float = 1.0,
+        timeout: float = 30.0,
+    ) -> None:
+        if server not in ("biorxiv", "medrxiv"):
+            raise ValueError(f"server must be 'biorxiv' or 'medrxiv', got {server!r}")
+        self._server = server
+        self._user_agent = user_agent
+        self._rate_limit = rate_limit
+        self._timeout = timeout
+
+    def _headers(self) -> dict[str, str]:
+        return {"User-Agent": self._user_agent}
+
+    def list_papers(
+        self,
+        from_date: str,
+        to_date: str,
+        max_results: int = 100,
+    ) -> list[dict]:
+        """List papers posted between from_date and to_date (YYYY-MM-DD).
+
+        Returns the merged ``collection`` records across cursors. The bioRxiv
+        API returns at most 100 records per cursor; we paginate until we have
+        ``max_results`` records or the API stops returning more.
+        """
+        results: list[dict] = []
+        cursor = 0
+        total: int | None = None
+        while len(results) < max_results:
+            time.sleep(self._rate_limit)
+            url = f"{BIORXIV_API_BASE}/details/{self._server}/{from_date}/{to_date}/{cursor}"
+            with httpx.Client(timeout=self._timeout) as client:
+                resp = _request_with_retry(client, "GET", url, headers=self._headers())
+            if resp is None:
+                break
+            try:
+                data = resp.json()
+            except Exception as e:
+                logger.error("bioRxiv JSON decode failed (%s): %s", url, e)
+                break
+            batch = data.get("collection", []) or []
+            if not batch:
+                break
+            results.extend(batch)
+            cursor += len(batch)
+            # bioRxiv reports the total in the messages block. Stop when cursor
+            # passes total or when we've collected enough.
+            if total is None:
+                msgs = data.get("messages") or []
+                if msgs and isinstance(msgs[0], dict):
+                    try:
+                        total = int(msgs[0].get("total", 0))
+                    except (TypeError, ValueError):
+                        total = None
+            if total is not None and cursor >= total:
+                break
+        return results[:max_results]
+
+    def get_paper_by_doi(self, doi: str) -> dict | None:
+        """Fetch a single paper record by DOI (returns the latest version)."""
+        time.sleep(self._rate_limit)
+        url = f"{BIORXIV_API_BASE}/details/{self._server}/{doi}/na/json"
+        with httpx.Client(timeout=self._timeout) as client:
+            resp = _request_with_retry(client, "GET", url, headers=self._headers())
+        if resp is None:
+            return None
+        try:
+            data = resp.json()
+        except Exception:
+            return None
+        coll = data.get("collection", []) or []
+        return coll[-1] if coll else None
+
+
+# ---------------------------------------------------------------------------
+# PubMed (NCBI E-utilities) client
+# ---------------------------------------------------------------------------
+
+
+class PubMedClient:
+    """Minimal NCBI E-utilities client.
+
+    Uses esearch + esummary in JSON mode. An optional API key raises the rate
+    limit from 3 req/s to 10 req/s but is not required.
+    """
+
+    def __init__(
+        self,
+        api_key: str | None = None,
+        tool: str = "HALLMARK",
+        email: str | None = None,
+        rate_limit: float = 0.4,
+        timeout: float = 30.0,
+        user_agent: str = "HALLMARK/1.0",
+    ) -> None:
+        self._api_key = api_key
+        self._tool = tool
+        self._email = email
+        self._rate_limit = rate_limit
+        self._timeout = timeout
+        self._user_agent = user_agent
+
+    def _common_params(self) -> dict[str, str]:
+        params = {"tool": self._tool, "retmode": "json"}
+        if self._api_key:
+            params["api_key"] = self._api_key
+        if self._email:
+            params["email"] = self._email
+        return params
+
+    def esearch(
+        self, term: str, retmax: int = 100, mindate: str | None = None, maxdate: str | None = None
+    ) -> list[str]:
+        """Run an E-utilities search; returns a list of PMIDs."""
+        time.sleep(self._rate_limit)
+        params = {**self._common_params(), "db": "pubmed", "term": term, "retmax": str(retmax)}
+        if mindate:
+            params["mindate"] = mindate
+            params["datetype"] = "pdat"
+        if maxdate:
+            params["maxdate"] = maxdate
+            params["datetype"] = "pdat"
+        with httpx.Client(timeout=self._timeout) as client:
+            resp = _request_with_retry(
+                client,
+                "GET",
+                f"{PUBMED_API_BASE}/esearch.fcgi",
+                params=params,
+                headers={"User-Agent": self._user_agent},
+            )
+        if resp is None:
+            return []
+        try:
+            data = resp.json()
+        except Exception:
+            return []
+        ids = data.get("esearchresult", {}).get("idlist", []) or []
+        return [str(x) for x in ids]
+
+    def esummary(self, pmids: list[str]) -> list[dict]:
+        """Fetch metadata summaries for a batch of PMIDs."""
+        if not pmids:
+            return []
+        time.sleep(self._rate_limit)
+        params = {**self._common_params(), "db": "pubmed", "id": ",".join(pmids)}
+        with httpx.Client(timeout=self._timeout) as client:
+            resp = _request_with_retry(
+                client,
+                "GET",
+                f"{PUBMED_API_BASE}/esummary.fcgi",
+                params=params,
+                headers={"User-Agent": self._user_agent},
+            )
+        if resp is None:
+            return []
+        try:
+            data = resp.json()
+        except Exception:
+            return []
+        result = data.get("result", {}) or {}
+        uids = result.get("uids", []) or []
+        out: list[dict] = []
+        for uid in uids:
+            rec = result.get(uid)
+            if isinstance(rec, dict):
+                out.append(rec)
+        return out

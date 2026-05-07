@@ -23,9 +23,13 @@ from hallmark.dataset.schema import VALID_SUBTESTS, BenchmarkEntry, GenerationMe
 logger = logging.getLogger(__name__)
 
 
-# DBLP venue keys for major conferences
-DBLP_VENUE_KEYS = {
-    # Conferences
+# DBLP venue keys grouped by research domain.
+#
+# Domain tags are used by the cross-domain scraper to keep ML and non-ML
+# venues separate. ``DBLP_VENUE_KEYS`` (kept flat for backward compatibility)
+# is the union of all groups.
+DBLP_VENUES_ML = {
+    # ML/AI conferences
     "NeurIPS": "conf/nips",
     "ICML": "conf/icml",
     "ICLR": "conf/iclr",
@@ -36,11 +40,39 @@ DBLP_VENUE_KEYS = {
     "EMNLP": "conf/emnlp",
     "AISTATS": "conf/aistats",
     "NAACL": "conf/naacl",
-    # Journals
+    # ML journals
     "JMLR": "journals/jmlr",
     "MLJ": "journals/ml",
     "TMLR": "journals/tmlr",
 }
+
+DBLP_VENUES_CS_NON_ML = {
+    # Information retrieval
+    "SIGIR": "conf/sigir",
+    # Data mining / knowledge discovery
+    "KDD": "conf/kdd",
+    "ICDM": "conf/icdm",
+    # Web / databases
+    "WWW": "conf/www",
+    "VLDB": "conf/vldb",
+    "SIGMOD": "conf/sigmod",
+    # Graphics / HCI
+    "SIGGRAPH": "conf/siggraph",
+    "CHI": "conf/chi",
+    # Systems / security
+    "OSDI": "conf/osdi",
+    "SOSP": "conf/sosp",
+    "USENIX-Security": "conf/uss",
+    "CCS": "conf/ccs",
+    # Software engineering
+    "ICSE": "conf/icse",
+    "FSE": "conf/sigsoft",
+    # Theory
+    "STOC": "conf/stoc",
+    "FOCS": "conf/focs",
+}
+
+DBLP_VENUE_KEYS = {**DBLP_VENUES_ML, **DBLP_VENUES_CS_NON_ML}
 
 # Default arXiv ML categories
 ARXIV_ML_CATEGORIES = [

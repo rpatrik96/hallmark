@@ -105,5 +105,53 @@
         "scraped": 200
       }
     }
+  },
+  "v1_1_extensions": {
+    "date_added": "2026-05-07",
+    "rationale": "Cross-domain test split (bioRxiv + PubMed + CS-non-ML DBLP venues) to evaluate detector generalization beyond ML conferences. Eval-only; v1.0 splits are byte-stable and unchanged.",
+    "splits": {
+      "test_crossdomain": {
+        "file": "test_crossdomain.jsonl",
+        "total": 500,
+        "valid": 200,
+        "hallucinated": 300,
+        "tier_distribution": {
+          "1": 80,
+          "2": 140,
+          "3": 80
+        },
+        "type_distribution": {
+          "arxiv_version_mismatch": 27,
+          "near_miss_title": 23,
+          "valid": 200,
+          "hybrid_fabrication": 19,
+          "future_date": 25,
+          "placeholder_authors": 25,
+          "preprint_as_published": 21,
+          "chimeric_title": 17,
+          "fabricated_doi": 14,
+          "merged_citation": 18,
+          "plausible_fabrication": 30,
+          "partial_author_list": 23,
+          "swapped_authors": 20,
+          "nonexistent_venue": 16,
+          "wrong_venue": 22
+        },
+        "source_distribution": {
+          "pubmed": 156,
+          "dblp_cs_non_ml": 201,
+          "biorxiv": 143
+        },
+        "generation_methods": {
+          "perturbation": 300,
+          "scraped": 200
+        },
+        "subcorpora": {
+          "biorxiv": "bioRxiv preprints (life sciences)",
+          "pubmed": "PubMed-indexed peer-reviewed papers (medical/clinical)",
+          "dblp_cs_non_ml": "DBLP CS-non-ML venues (IR, DB, graphics, systems, security, SE, theory)"
+        }
+      }
+    }
   }
 }
