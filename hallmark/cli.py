@@ -14,6 +14,7 @@ import json
 import logging
 import sys
 from pathlib import Path
+from typing import Any
 
 from hallmark.dataset.loader import filter_by_tier, filter_by_type, get_statistics, load_split
 from hallmark.dataset.schema import (
@@ -194,6 +195,20 @@ def main(argv: list[str] | None = None) -> int:
             "When used with --checkpoint-dir, re-run only entries whose previous "
             "prediction was an '[Error fallback]' — useful for patching "
             "transient network failures without re-running clean entries."
+        ),
+    )
+    eval_parser.add_argument(
+        "--workers",
+        type=int,
+        default=1,
+        metavar="N",
+        help=(
+            "Run the baseline with N concurrent threads when --workers > 1. "
+            "Routes through hallmark.baselines.concurrency.parallel_run_baseline. "
+            "Requires --checkpoint-dir. Useful for rate-limited LLM baselines "
+            "(e.g. OpenRouter models). Leave at 1 for CLI-spawning baselines "
+            "(bibtexupdater, harc, verify_citations) which do not benefit from "
+            "concurrency."
         ),
     )
 
@@ -493,6 +508,14 @@ def _cmd_evaluate(args: argparse.Namespace) -> int:
         )
         return 2
 
+    workers: int = getattr(args, "workers", 1)
+    if workers > 1 and not args.checkpoint_dir:
+        print(
+            "error: --workers > 1 requires --checkpoint-dir",
+            file=sys.stderr,
+        )
+        return 2
+
     # Get predictions
     predictions: list[Prediction]
     tool_name: str = args.tool_name or "unknown"
@@ -510,7 +533,24 @@ def _cmd_evaluate(args: argparse.Namespace) -> int:
         if args.retry_failed:
             extra_kwargs["retry_failed"] = True
         try:
-            predictions = _run_baseline(args.baseline, entries, split=args.split, **extra_kwargs)
+            if workers > 1:
+                from hallmark.baselines.concurrency import parallel_run_baseline
+
+                parallel_kwargs: dict[str, Any] = {
+                    k: v for k, v in extra_kwargs.items() if k != "checkpoint_dir"
+                }
+                parallel_kwargs["split"] = args.split
+                predictions = parallel_run_baseline(
+                    args.baseline,
+                    entries,
+                    workers=workers,
+                    checkpoint_dir=Path(args.checkpoint_dir),
+                    **parallel_kwargs,
+                )
+            else:
+                predictions = _run_baseline(
+                    args.baseline, entries, split=args.split, **extra_kwargs
+                )
         except (ImportError, ValueError) as e:
             logging.error(
                 f"Baseline '{args.baseline}' is not available: {e}\n"

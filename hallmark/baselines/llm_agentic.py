@@ -460,6 +460,7 @@ def verify_agentic_openai(
     entries: list[BlindEntry],
     model: str = OPENAI_MODEL,
     api_key: str | None = None,
+    base_url: str | None = None,
     checkpoint_dir: Path | None = None,
     cache_db_path: Path | None = None,
     max_consecutive_failures: int = 10,  # fix: raised from 3 → 10 to survive OpenRouter 429 bursts
@@ -475,6 +476,8 @@ def verify_agentic_openai(
         entries: Blind entries to verify.
         model: OpenAI model identifier.
         api_key: API key (falls back to OPENAI_API_KEY env var).
+        base_url: Override the OpenAI base URL (e.g. ``https://openrouter.ai/api/v1``
+            to route through OpenRouter without mutating ``os.environ``).
         checkpoint_dir: Directory for JSONL resume checkpoints.
         cache_db_path: Override SQLite cache path.
         max_consecutive_failures: Abort after N consecutive errors (default 10).
@@ -491,6 +494,8 @@ def verify_agentic_openai(
     client_kwargs: dict[str, Any] = {"max_retries": 8, "timeout": 120.0}
     if api_key:
         client_kwargs["api_key"] = api_key
+    if base_url:
+        client_kwargs["base_url"] = base_url
     client = openai.OpenAI(**client_kwargs)
 
     checkpoint_path: Path | None = None
@@ -669,6 +674,7 @@ def verify_agentic_btu_openai(
     entries: list[BlindEntry],
     model: str = OPENAI_MODEL,
     api_key: str | None = None,
+    base_url: str | None = None,
     checkpoint_dir: Path | None = None,
     cache_db_path: Path | None = None,
     max_consecutive_failures: int = 10,  # fix: raised from 3 → 10
@@ -687,6 +693,7 @@ def verify_agentic_btu_openai(
         entries,
         model=model,
         api_key=api_key,
+        base_url=base_url,
         checkpoint_dir=checkpoint_dir,
         cache_db_path=cache_db_path,
         max_consecutive_failures=max_consecutive_failures,
