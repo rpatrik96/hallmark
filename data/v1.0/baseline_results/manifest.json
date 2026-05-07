@@ -78,6 +78,13 @@
       "split": "test_public",
       "num_entries": 831,
       "f1_hallucination": 0.7993366500829188
+    },
+    "llm_openrouter_claude_opus_4_7_test_public.json": {
+      "sha256": "badcd605bbc3bcdbf7553a7347dc45cbc64949f2db68aa25c6bc301e261f56e2",
+      "baseline": "llm_openrouter_claude_opus_4_7",
+      "split": "test_public",
+      "num_entries": 831,
+      "f1_hallucination": 0.832116788321168
     }
   },
   "environment": {

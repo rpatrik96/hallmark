@@ -1,0 +1,149 @@
+{
+  "tool_name": "llm_openrouter_claude_opus_4_7",
+  "split_name": "test_public",
+  "num_entries": 831,
+  "num_hallucinated": 544,
+  "num_valid": 287,
+  "detection_rate": 0.7348066298342542,
+  "false_positive_rate": 0.059233449477351915,
+  "f1_hallucination": 0.832116788321168,
+  "tier_weighted_f1": 0.8506559031281534,
+  "mcc": 0.6426380371013413,
+  "macro_f1": 0.8012224455157908,
+  "union_recall_at_k": {},
+  "temporal_robustness": null,
+  "cost_efficiency": 0.016408937114796376,
+  "mean_api_calls": 1.0,
+  "ece": 0.12608433734939758,
+  "auroc": 0.8601427095565354,
+  "auprc": 0.9100726917105745,
+  "num_uncertain": 1,
+  "tier3_f1": 0.814102564102564,
+  "detection_rate_ci": null,
+  "f1_hallucination_ci": null,
+  "tier_weighted_f1_ci": null,
+  "fpr_ci": null,
+  "ece_ci": null,
+  "mcc_ci": null,
+  "tier3_f1_ci": null,
+  "per_tier_metrics": {
+    "1": {
+      "detection_rate": 0.6212121212121212,
+      "false_positive_rate": 0.059233449477351915,
+      "f1": 0.70995670995671,
+      "precision": 0.8282828282828283,
+      "num_hallucinated": 132,
+      "num_valid": 287
+    },
+    "2": {
+      "detection_rate": 0.7818930041152263,
+      "false_positive_rate": 0.059233449477351915,
+      "f1": 0.8444444444444444,
+      "precision": 0.9178743961352657,
+      "num_hallucinated": 243,
+      "num_valid": 287
+    },
+    "3": {
+      "detection_rate": 0.7559523809523809,
+      "false_positive_rate": 0.059233449477351915,
+      "f1": 0.814102564102564,
+      "precision": 0.8819444444444444,
+      "num_hallucinated": 169,
+      "num_valid": 287
+    }
+  },
+  "per_type_metrics": {
+    "arxiv_version_mismatch": {
+      "detection_rate": 0.9642857142857143,
+      "false_positive_rate": 0.0,
+      "f1": 0.9818181818181818,
+      "count": 28
+    },
+    "chimeric_title": {
+      "detection_rate": 0.9166666666666666,
+      "false_positive_rate": 0.0,
+      "f1": 0.9565217391304348,
+      "count": 24
+    },
+    "fabricated_doi": {
+      "detection_rate": 0.10344827586206896,
+      "false_positive_rate": 0.0,
+      "f1": 0.1875,
+      "count": 29
+    },
+    "future_date": {
+      "detection_rate": 0.1724137931034483,
+      "false_positive_rate": 0.0,
+      "f1": 0.29411764705882354,
+      "count": 29
+    },
+    "hybrid_fabrication": {
+      "detection_rate": 0.925,
+      "false_positive_rate": 0.0,
+      "f1": 0.961038961038961,
+      "count": 40
+    },
+    "merged_citation": {
+      "detection_rate": 1.0,
+      "false_positive_rate": 0.0,
+      "f1": 1.0,
+      "count": 29
+    },
+    "near_miss_title": {
+      "detection_rate": 0.5,
+      "false_positive_rate": 0.0,
+      "f1": 0.6666666666666666,
+      "count": 38
+    },
+    "nonexistent_venue": {
+      "detection_rate": 1.0,
+      "false_positive_rate": 0.0,
+      "f1": 1.0,
+      "count": 38
+    },
+    "partial_author_list": {
+      "detection_rate": 0.034482758620689655,
+      "false_positive_rate": 0.0,
+      "f1": 0.06666666666666667,
+      "count": 29
+    },
+    "placeholder_authors": {
+      "detection_rate": 1.0,
+      "false_positive_rate": 0.0,
+      "f1": 1.0,
+      "count": 36
+    },
+    "plausible_fabrication": {
+      "detection_rate": 0.7941176470588235,
+      "false_positive_rate": 0.0,
+      "f1": 0.8852459016393442,
+      "count": 103
+    },
+    "preprint_as_published": {
+      "detection_rate": 0.8620689655172413,
+      "false_positive_rate": 0.0,
+      "f1": 0.9259259259259259,
+      "count": 29
+    },
+    "swapped_authors": {
+      "detection_rate": 0.8035714285714286,
+      "false_positive_rate": 0.0,
+      "f1": 0.8910891089108911,
+      "count": 56
+    },
+    "valid": {
+      "detection_rate": 0.0,
+      "false_positive_rate": 0.059233449477351915,
+      "f1": 0.0,
+      "count": 287
+    },
+    "wrong_venue": {
+      "detection_rate": 0.8611111111111112,
+      "false_positive_rate": 0.0,
+      "f1": 0.9253731343283582,
+      "count": 36
+    }
+  },
+  "coverage": 1.0,
+  "coverage_adjusted_f1": 0.832116788321168
+}
