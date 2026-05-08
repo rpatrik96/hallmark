@@ -544,6 +544,11 @@ class EvaluationResult:
     coverage: float = 1.0  # fraction of entries with predictions
     coverage_adjusted_f1: float = 0.0  # F1 * coverage, penalizes selective abstention
 
+    # Type-level diagnosis metrics (populated when predicted_hallucination_type is set)
+    type_accuracy: dict[str, float] | None = None
+    type_confusion: dict[str, dict[str, int]] | None = None
+    cascade_breakdown_stats: dict[str, dict[str, int | float]] | None = None
+
     def to_dict(self) -> dict:
         return asdict(self)
 

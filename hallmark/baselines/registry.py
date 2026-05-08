@@ -797,5 +797,88 @@ def _register_builtins() -> None:
         )
     )
 
+    # --- HalluCiteChecker (port of Sakai et al., 2026) ---
+    def _run_hallucitechecker(entries: list[BlindEntry], **kw: Any) -> list[Prediction]:
+        from hallmark.baselines.hallucitechecker import run_hallucitechecker
+
+        return run_hallucitechecker(entries, **kw)
+
+    register(
+        BaselineInfo(
+            name="hallucitechecker",
+            description=(
+                "Title-based fuzzy match against CrossRef/arXiv/Semantic Scholar "
+                "(port of Sakai et al., 2026 HalluCiteChecker; uses APIs instead "
+                "of local snapshots)."
+            ),
+            runner=_run_hallucitechecker,
+            confidence_type="heuristic",
+        )
+    )
+
+    # --- CheckIfExist (port of Abbonato 2026, Algorithm 1) ---
+    def _run_checkifexist(entries: list[BlindEntry], **kw: Any) -> list[Prediction]:
+        from hallmark.baselines.checkifexist import run_checkifexist
+
+        return run_checkifexist(entries, **kw)
+
+    register(
+        BaselineInfo(
+            name="checkifexist",
+            description=(
+                "Cascading 3-source verification with cross-source author "
+                "intersection (port of Abbonato 2026 Algorithm 1)."
+            ),
+            runner=_run_checkifexist,
+            confidence_type="heuristic",
+        )
+    )
+
+    # --- DB-first cascade with hallucination-mode diagnosis ---
+    def _run_cascade(entries: list[BlindEntry], **kw: Any) -> list[Prediction]:
+        from hallmark.baselines.cascade import run_cascade
+
+        return run_cascade(entries, **kw)
+
+    register(
+        BaselineInfo(
+            name="cascade_db_diagnosis",
+            description=(
+                "DB-first cascade: bibtexupdater Stage 1 + LLM diagnoser Stage 2. "
+                "Conservative mode — UNCERTAIN entries pass through unchanged."
+            ),
+            runner=_run_cascade,
+            cli_commands=["bibtex-check"],
+            requires_api_key=True,
+            env_var="ANTHROPIC_API_KEY",
+            confidence_type="heuristic",
+            runner_kwargs={
+                "stage2_baseline": "llm_agentic_anthropic",
+                "aggressive": False,
+            },
+        )
+    )
+
+    register(
+        BaselineInfo(
+            name="cascade_db_diagnosis_aggressive",
+            description=(
+                "DB-first cascade (aggressive). Treats database lookups as gold "
+                "standard: any entry not affirmatively verified by Stage 1 or "
+                "Stage 2 is flagged HALLUCINATED. Pair with --eval-mode both to "
+                "quantify the DB-indexing-lag tax."
+            ),
+            runner=_run_cascade,
+            cli_commands=["bibtex-check"],
+            requires_api_key=True,
+            env_var="ANTHROPIC_API_KEY",
+            confidence_type="heuristic",
+            runner_kwargs={
+                "stage2_baseline": "llm_agentic_anthropic",
+                "aggressive": True,
+            },
+        )
+    )
+
 
 _register_builtins()
