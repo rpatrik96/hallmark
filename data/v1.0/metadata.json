@@ -151,48 +151,6 @@
           "pubmed": "PubMed-indexed peer-reviewed papers (medical/clinical)",
           "dblp_cs_non_ml": "DBLP CS-non-ML venues (IR, DB, graphics, systems, security, SE, theory)"
         }
-      },
-      "test_temporal_2024_2025": {
-        "file": "test_temporal_2024_2025.jsonl",
-        "total": 450,
-        "valid": 180,
-        "hallucinated": 270,
-        "tier_distribution": {
-          "1": 70,
-          "2": 130,
-          "3": 70
-        },
-        "type_distribution": {
-          "future_date": 26,
-          "valid": 180,
-          "swapped_authors": 24,
-          "chimeric_title": 14,
-          "partial_author_list": 21,
-          "merged_citation": 21,
-          "near_miss_title": 20,
-          "arxiv_version_mismatch": 28,
-          "wrong_venue": 17,
-          "preprint_as_published": 14,
-          "nonexistent_venue": 16,
-          "placeholder_authors": 18,
-          "plausible_fabrication": 22,
-          "hybrid_fabrication": 19,
-          "fabricated_doi": 10
-        },
-        "valid_year_distribution": {
-          "2024": 111,
-          "2025": 69
-        },
-        "valid_venue_distribution": {
-          "ICLR": 31,
-          "ACL": 32,
-          "EMNLP": 31,
-          "CVPR": 32,
-          "NeurIPS": 16,
-          "ICML": 18,
-          "AAAI": 20
-        },
-        "rationale": "2024-2025 ML conference papers (NeurIPS, ICML, ICLR, AAAI, CVPR, EMNLP, ACL) sourced via DBLP. Tests detector freshness against the 2024-2025 publication wave that v1.0 (2021-2023) does not cover."
       }
     },
     "data_sources": {
@@ -213,6 +171,41 @@
         },
         "rationale": "Real-world withdrawn preprints from bioRxiv and medRxiv (2023-2025). Each entry has a real DOI that resolves, a real title, and real authors \u2014 but the paper has been formally withdrawn and citing it is a real-world failure mode that no perturbation generator produces. Used as a reusable data source (analogous to real_world_incidents.jsonl); downstream split builders may sample from it.",
         "method": "BioRxivClient.find_withdrawn_papers_parallel scans the date range and filters records whose abstract begins with \"Withdrawal Statement\", \"[Withdrawn]\", or contains \"has been withdrawn\". 8-worker parallel pagination; ~10 min for the full 2023-2025 scan."
+      }
+    },
+    "upstream_updates": {
+      "temporal_supplement_merge": {
+        "file": "results/temporal_supplement/temporal_supplement_2024_2025.jsonl",
+        "date": "2026-05-08",
+        "before": {
+          "total": 448,
+          "valid": 300,
+          "hallucinated": 148
+        },
+        "after": {
+          "total": 858,
+          "valid": 440,
+          "hallucinated": 418,
+          "type_distribution": {
+            "valid": 440,
+            "future_date": 44,
+            "nonexistent_venue": 28,
+            "fabricated_doi": 20,
+            "placeholder_authors": 36,
+            "preprint_as_published": 21,
+            "hybrid_fabrication": 33,
+            "wrong_venue": 26,
+            "partial_author_list": 30,
+            "swapped_authors": 27,
+            "chimeric_title": 23,
+            "merged_citation": 22,
+            "near_miss_title": 30,
+            "plausible_fabrication": 33,
+            "arxiv_version_mismatch": 45
+          }
+        },
+        "rationale": "Merged a 450-entry independent re-scrape of NeurIPS/ICML/ICLR/AAAI/CVPR/EMNLP/ACL 2024-2025 into the existing temporal_supplement to fill type-coverage gaps (swapped_authors went from 3 to 27, merged_citation from 1 to 22). Existing entries kept verbatim so pre-computed eval JSONs in results/temporal_supplement/llm_*_temporal_*.json remain valid for that subset; new entries need fresh evals when budget allows.",
+        "merge_script": "scripts/merge_temporal_supplement.py"
       }
     }
   }
