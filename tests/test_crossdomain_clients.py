@@ -198,3 +198,126 @@ def test_dblp_hit_to_entry_strips_disambiguator_in_key() -> None:
         f"key must start with real surname, got {e.bibtex_key!r}"
     )
     assert "0001" not in e.fields["author"]
+
+
+# ---------------------------------------------------------------------------
+# Withdrawn-paper detection
+# ---------------------------------------------------------------------------
+
+
+def test_find_withdrawn_papers_parallel_aggregates_and_calls_callback() -> None:
+    """Parallel paginator should fetch all pages and report progress via callback."""
+    pages_by_cursor = {
+        0: {
+            "messages": [{"status": "ok", "total": "60"}],
+            "collection": [
+                {"doi": f"10.1101/p{i}", "title": "T", "abstract": "x"} for i in range(30)
+            ]
+            + [
+                {
+                    "doi": "10.1101/withdrawn-a",
+                    "title": "Wa",
+                    "abstract": "Withdrawal Statement: see below.",
+                }
+            ],
+        },
+        30: {
+            "messages": [{"status": "ok", "total": "60"}],
+            "collection": [
+                {"doi": f"10.1101/q{i}", "title": "T", "abstract": "x"} for i in range(29)
+            ]
+            + [{"doi": "10.1101/withdrawn-b", "title": "Wb", "abstract": "[Withdrawn] note here."}],
+        },
+    }
+
+    def fake_request(*args: Any, **kwargs: Any) -> httpx.Response:
+        url = args[2] if len(args) >= 3 else kwargs.get("url", "")
+        # Find the cursor from the URL tail (last path segment)
+        cursor = int(url.rstrip("/").rsplit("/", 1)[-1])
+        return _mock_response(pages_by_cursor[cursor])
+
+    progress: list[tuple[int, int, int]] = []
+
+    def cb(hits: list[dict], completed: int, total_pages: int) -> None:
+        progress.append((len(hits), completed, total_pages))
+
+    client = BioRxivClient(rate_limit=0.0, timeout=1.0)
+    with patch("hallmark.dataset.api_clients._request_with_retry", side_effect=fake_request):
+        out = client.find_withdrawn_papers_parallel(
+            "2024-01-01", "2024-02-01", workers=2, on_batch=cb
+        )
+
+    dois = [r["doi"] for r in out]
+    assert "10.1101/withdrawn-a" in dois
+    assert "10.1101/withdrawn-b" in dois
+    assert "10.1101/p0" not in dois, "non-withdrawn paper must not leak through"
+    # Both pages should have triggered the callback
+    assert len(progress) == 2, f"expected 2 callback invocations, got {len(progress)}"
+    # Final invocation must report completed == total_pages
+    assert progress[-1][1] == progress[-1][2]
+
+
+def test_find_withdrawn_papers_filters_on_abstract_marker() -> None:
+    """Only records whose abstract carries a withdrawal marker should be returned."""
+    page = {
+        "messages": [{"status": "ok", "total": "3"}],
+        "collection": [
+            {
+                "doi": "10.1101/keep-1",
+                "title": "Normal Paper",
+                "abstract": "We investigate transformer scaling laws and find...",
+            },
+            {
+                "doi": "10.1101/withdrawn-1",
+                "title": "A Withdrawn Paper",
+                "abstract": (
+                    "Withdrawal Statement: The authors have withdrawn this "
+                    "paper due to a critical methodological error."
+                ),
+            },
+            {
+                "doi": "10.1101/withdrawn-2",
+                "title": "Another Withdrawn Paper",
+                "abstract": "[Withdrawn] This manuscript has been withdrawn by the authors.",
+            },
+        ],
+    }
+
+    def fake_request(*args: Any, **kwargs: Any) -> httpx.Response:
+        return _mock_response(page)
+
+    client = BioRxivClient(rate_limit=0.0, timeout=1.0)
+    with patch("hallmark.dataset.api_clients._request_with_retry", side_effect=fake_request):
+        out = client.find_withdrawn_papers("2024-01-01", "2024-02-01")
+
+    dois = [r["doi"] for r in out]
+    assert "10.1101/keep-1" not in dois, "non-withdrawn paper must not be returned"
+    assert "10.1101/withdrawn-1" in dois
+    assert "10.1101/withdrawn-2" in dois
+
+
+def test_withdrawn_record_to_entry_marks_hallucinated_with_resolving_doi() -> None:
+    """Withdrawn entries are HALLUCINATED but doi_resolves stays True (the trap)."""
+    from scripts.scrape_withdrawn_incidents import _record_to_entry
+
+    rec = {
+        "title": "A Withdrawn Paper",
+        "authors": "Smith, J.; Doe, J.",
+        "date": "2024-04-15",
+        "doi": "10.1101/withdrawn-1",
+        "abstract": "Withdrawal Statement: The authors have withdrawn this manuscript "
+        "owing to a critical error in the analysis pipeline. We are working to "
+        "correct this and will resubmit a revised version.",
+    }
+    e = _record_to_entry(rec, "biorxiv")
+    assert e is not None
+    assert e.label == "HALLUCINATED"
+    assert e.generation_method == "real_world"
+    assert e.source == "biorxiv_withdrawn"
+    # The cite metadata is genuine — the DOI resolves and the title exists.
+    # The hallucination signal is cross-DB disagreement, not metadata fabrication.
+    assert e.subtests["doi_resolves"] is True
+    assert e.subtests["title_exists"] is True
+    assert e.subtests["cross_db_agreement"] is False
+    # Reason is captured in the explanation
+    assert "withdrawn" in e.explanation.lower()

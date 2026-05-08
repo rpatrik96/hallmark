@@ -194,6 +194,26 @@
         },
         "rationale": "2024-2025 ML conference papers (NeurIPS, ICML, ICLR, AAAI, CVPR, EMNLP, ACL) sourced via DBLP. Tests detector freshness against the 2024-2025 publication wave that v1.0 (2021-2023) does not cover."
       }
+    },
+    "data_sources": {
+      "biorxiv_withdrawn_incidents": {
+        "file": "biorxiv_withdrawn_incidents.jsonl",
+        "total": 310,
+        "source_distribution": {
+          "biorxiv_withdrawn": 215,
+          "medrxiv_withdrawn": 95
+        },
+        "year_distribution": {
+          "2023": 115,
+          "2024": 107,
+          "2025": 88
+        },
+        "hallucination_type": {
+          "plausible_fabrication": 310
+        },
+        "rationale": "Real-world withdrawn preprints from bioRxiv and medRxiv (2023-2025). Each entry has a real DOI that resolves, a real title, and real authors \u2014 but the paper has been formally withdrawn and citing it is a real-world failure mode that no perturbation generator produces. Used as a reusable data source (analogous to real_world_incidents.jsonl); downstream split builders may sample from it.",
+        "method": "BioRxivClient.find_withdrawn_papers_parallel scans the date range and filters records whose abstract begins with \"Withdrawal Statement\", \"[Withdrawn]\", or contains \"has been withdrawn\". 8-worker parallel pagination; ~10 min for the full 2023-2025 scan."
+      }
     }
   }
 }
