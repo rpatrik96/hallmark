@@ -59,6 +59,16 @@ def main() -> int:
     p.add_argument("--tier2", type=int, default=140)
     p.add_argument("--tier3", type=int, default=80)
     p.add_argument("--seed", type=int, default=8042)
+    p.add_argument(
+        "--key-prefix",
+        default="hallmark_xd_",
+        help="Prefix for the namespaced bibtex_key (use 'hallmark_t_' for temporal split).",
+    )
+    p.add_argument(
+        "--source-tag",
+        default="perturbation_crossdomain",
+        help="Source tag stamped onto perturbation entries that don't already have one.",
+    )
     p.add_argument("-v", "--verbose", action="store_true")
     args = p.parse_args()
 
@@ -93,7 +103,7 @@ def main() -> int:
             pass
         # Carry sub-corpus origin via source_conference if not already set by generator
         if not h.source:
-            h.source = "perturbation_crossdomain"
+            h.source = args.source_tag
 
     # Concatenate, namespace bibtex_keys to avoid collisions with v1.0 splits
     all_entries: list[BenchmarkEntry] = []
@@ -102,7 +112,7 @@ def main() -> int:
     rng.shuffle(combined)
 
     for i, e in enumerate(combined):
-        e.bibtex_key = f"hallmark_xd_{i:04d}"
+        e.bibtex_key = f"{args.key_prefix}{i:04d}"
         all_entries.append(e)
 
     save_entries(all_entries, args.output)

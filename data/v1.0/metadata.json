@@ -151,6 +151,48 @@
           "pubmed": "PubMed-indexed peer-reviewed papers (medical/clinical)",
           "dblp_cs_non_ml": "DBLP CS-non-ML venues (IR, DB, graphics, systems, security, SE, theory)"
         }
+      },
+      "test_temporal_2024_2025": {
+        "file": "test_temporal_2024_2025.jsonl",
+        "total": 450,
+        "valid": 180,
+        "hallucinated": 270,
+        "tier_distribution": {
+          "1": 70,
+          "2": 130,
+          "3": 70
+        },
+        "type_distribution": {
+          "future_date": 26,
+          "valid": 180,
+          "swapped_authors": 24,
+          "chimeric_title": 14,
+          "partial_author_list": 21,
+          "merged_citation": 21,
+          "near_miss_title": 20,
+          "arxiv_version_mismatch": 28,
+          "wrong_venue": 17,
+          "preprint_as_published": 14,
+          "nonexistent_venue": 16,
+          "placeholder_authors": 18,
+          "plausible_fabrication": 22,
+          "hybrid_fabrication": 19,
+          "fabricated_doi": 10
+        },
+        "valid_year_distribution": {
+          "2024": 111,
+          "2025": 69
+        },
+        "valid_venue_distribution": {
+          "ICLR": 31,
+          "ACL": 32,
+          "EMNLP": 31,
+          "CVPR": 32,
+          "NeurIPS": 16,
+          "ICML": 18,
+          "AAAI": 20
+        },
+        "rationale": "2024-2025 ML conference papers (NeurIPS, ICML, ICLR, AAAI, CVPR, EMNLP, ACL) sourced via DBLP. Tests detector freshness against the 2024-2025 publication wave that v1.0 (2021-2023) does not cover."
       }
     }
   }

@@ -437,6 +437,11 @@ class Prediction:
     wall_clock_seconds: float = 0.0
     api_calls: int = 0
     source: str | None = None  # "tool", "prescreening", "prescreening_override", or None
+    # Predicted hallucination mode (one of HallucinationType values) when label==HALLUCINATED.
+    # None for VALID/UNCERTAIN predictions or baselines that don't classify type.
+    predicted_hallucination_type: str | None = None
+    # Cascade stage that produced the prediction; None for non-cascade baselines.
+    cascade_stage: Literal["stage1_db", "stage2_diagnosis", "prescreening"] | None = None
 
     def __post_init__(self) -> None:
         _VALID_LABELS = {"VALID", "HALLUCINATED", "UNCERTAIN"}
@@ -448,6 +453,20 @@ class Prediction:
             raise ValueError(f"Confidence must be a finite number, got {self.confidence}")
         if not 0.0 <= self.confidence <= 1.0:
             raise ValueError(f"Confidence must be in [0, 1], got {self.confidence}")
+        if self.predicted_hallucination_type is not None:
+            valid_types = {t.value for t in HallucinationType}
+            if self.predicted_hallucination_type not in valid_types:
+                raise ValueError(
+                    f"Invalid predicted_hallucination_type: {self.predicted_hallucination_type!r}. "
+                    f"Must be one of {sorted(valid_types)} or None."
+                )
+            if self.label == "VALID":
+                raise ValueError("predicted_hallucination_type must be None when label='VALID'.")
+        _VALID_STAGES = {"stage1_db", "stage2_diagnosis", "prescreening", None}
+        if self.cascade_stage not in _VALID_STAGES:
+            raise ValueError(
+                f"Invalid cascade_stage: {self.cascade_stage!r}. Must be one of {_VALID_STAGES}."
+            )
 
     def to_dict(self) -> dict:
         return asdict(self)

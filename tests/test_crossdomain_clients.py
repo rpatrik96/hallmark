@@ -147,3 +147,54 @@ def test_strip_dblp_disambiguators_leaves_year_in_titles_alone() -> None:
     # not touch the actual year field, which is stored separately.
     raw = "John Smith and Mary Jones"
     assert _strip_dblp_disambiguators(raw) == raw
+
+
+# ---------------------------------------------------------------------------
+# dblp_hit_to_entry collision avoidance
+# ---------------------------------------------------------------------------
+
+
+def test_dblp_hit_to_entry_keys_are_unique_for_same_surname_year_firstword() -> None:
+    """Two different papers by the same surname in the same year with the same
+    first title-word must get distinct bibtex_keys."""
+    from hallmark.dataset.scraper import dblp_hit_to_entry
+
+    hit_a = {
+        "title": "On the Limits of Foundation Models",
+        "authors": {"author": [{"text": "Yiming Li"}]},
+        "year": "2024",
+        "doi": "10.1/aaa",
+        "type": "Conference and Workshop Papers",
+    }
+    hit_b = {
+        "title": "On Generalization in Vision Transformers",
+        "authors": {"author": [{"text": "Yiming Li"}]},
+        "year": "2024",
+        "doi": "10.1/bbb",
+        "type": "Conference and Workshop Papers",
+    }
+    a = dblp_hit_to_entry(hit_a, venue_name="NeurIPS")
+    b = dblp_hit_to_entry(hit_b, venue_name="NeurIPS")
+    assert a is not None and b is not None
+    assert a.bibtex_key != b.bibtex_key, (
+        f"keys must differ for distinct papers, got {a.bibtex_key!r} == {b.bibtex_key!r}"
+    )
+
+
+def test_dblp_hit_to_entry_strips_disambiguator_in_key() -> None:
+    """The bibtex_key must use the real surname, not the DBLP disambiguator suffix."""
+    from hallmark.dataset.scraper import dblp_hit_to_entry
+
+    hit = {
+        "title": "A Study on Something",
+        "authors": {"author": [{"text": "Wei Wang 0001"}]},
+        "year": "2024",
+        "doi": "10.1/abc",
+        "type": "Conference and Workshop Papers",
+    }
+    e = dblp_hit_to_entry(hit, venue_name="NeurIPS")
+    assert e is not None
+    assert e.bibtex_key.startswith("Wang2024"), (
+        f"key must start with real surname, got {e.bibtex_key!r}"
+    )
+    assert "0001" not in e.fields["author"]
