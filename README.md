@@ -23,8 +23,9 @@ HALLMARK draws on best practices from established benchmarks:
 - **2,525 annotated entries**: 773 valid (from DBLP) + 1,177 hallucinated with ground truth (public splits)
 - **6 sub-tests per entry**: DOI resolution, title matching, author consistency, venue verification, field completeness, cross-database agreement
 - **Evaluation metrics**: Detection Rate, F1, tier-weighted F1, detect@k, ECE
-- **Built-in baselines**: DOI-only, bibtex-updater, LLM-based (OpenAI, Anthropic, OpenRouter), ensemble, HaRC, verify-citations (CiteVerifier and hallucinator are available as wrapper modules but not registered in the default registry)
-- **Baseline registry**: Central discovery, availability checking, and dispatch for all baselines (17 variants)
+- **Built-in baselines**: DOI-only, bibtex-updater, HaRC, verify-citations, LLM-based (OpenAI, Anthropic, OpenRouter), agentic LLMs with tool use, ensemble, DB-first cascade with hallucination-mode diagnosis, plus ports of two recent papers — `hallucitechecker` ([Sakai et al. 2026](https://arxiv.org/abs/2604.26835)) and `checkifexist` ([Abbonato 2026](https://arxiv.org/abs/2602.15871) Algorithm 1) (CiteVerifier and hallucinator are available as wrapper modules but not registered in the default registry)
+- **Baseline registry**: Central discovery, availability checking, and dispatch for all baselines (19+ variants)
+- **Reproducible runs**: opt-in `--cache-path` flag wraps HTTP calls in a SQLite-backed `requests-cache` so re-runs reuse frozen API responses; `--timing-breakdown` and `--subtask-diagnostic` surface per-baseline performance + recognition/matching/calibration decomposition
 - **Plackett-Luce ranking**: ONEBench-inspired ranking that handles incomplete evaluation data
 - **Automated execution**: Orchestrator script and CI workflow for batch baseline evaluation
 - **Temporal analysis**: Contamination detection via pre/post-cutoff comparison
