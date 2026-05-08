@@ -249,6 +249,97 @@ def check_author_heuristics(entry: BlindEntry) -> PreScreenResult:
     )
 
 
+# Patterns for capitalized-token "fake-author" heuristics.
+# These complement check_author_heuristics: that function catches "Author1"/"AuthorA"
+# and single-letter last names; this one targets capitalized-word-followed-by-digit
+# tokens (e.g. "Smith2"), bare initial-only tokens ("X."), and majority-uppercase fields.
+_CAPITALIZED_DIGIT_TOKEN = re.compile(r"^[A-Z][a-z]*\d+$")
+_INITIAL_ONLY_TOKEN = re.compile(r"^[A-Z]\.$")
+_PURE_UPPERCASE_TOKEN = re.compile(r"^[A-Z]{2,}$")
+
+
+def _author_tokens(author_field: str) -> list[str]:
+    """Split author field on ' and ' then on whitespace within each name."""
+    tokens: list[str] = []
+    for chunk in re.split(r"\s+and\s+", author_field):
+        # Strip commas (BibTeX "Last, First" form) and split on whitespace
+        parts = [p.strip().strip(",") for p in chunk.split()]
+        tokens.extend(p for p in parts if p)
+    return tokens
+
+
+def check_capitalized_unknown_authors(entry: BlindEntry) -> PreScreenResult:
+    """Flag entries whose authors look like capitalized-token placeholders.
+
+    Local approximation of CheckIfExist's fake-author detection (which cross-validates
+    against retrieved candidates). Pre-screening runs before any API call, so this
+    instead matches surface-level placeholder patterns that ``check_author_heuristics``
+    misses:
+
+    - ``Smith2``, ``Jones3``: capitalized word followed by digits
+    - ``X.``: lone uppercase-letter-plus-period (placeholder initial)
+    - Author fields where >50% of tokens are pure uppercase words (length > 1)
+
+    Returns:
+        HALLUCINATED (confidence 0.75) if any case above triggers; otherwise UNKNOWN.
+    """
+    author_field = entry.fields.get("author", "")
+    if not author_field or not author_field.strip():
+        return PreScreenResult(
+            label="UNKNOWN",
+            confidence=0.0,
+            reason="No author field present",
+            check_name="check_capitalized_unknown_authors",
+        )
+
+    tokens = _author_tokens(author_field)
+    if not tokens:
+        return PreScreenResult(
+            label="UNKNOWN",
+            confidence=0.0,
+            reason="No tokens in author field",
+            check_name="check_capitalized_unknown_authors",
+        )
+
+    # Case 1: capitalized-word-followed-by-digit (Smith2, Jones3) or "AuthorN" (overlap-safe)
+    for token in tokens:
+        if _CAPITALIZED_DIGIT_TOKEN.match(token) and not re.fullmatch(r"Author\d+", token):
+            # Skip "Author1" / "AuthorN" — those are caught by check_author_heuristics already.
+            return PreScreenResult(
+                label="HALLUCINATED",
+                confidence=0.75,
+                reason=f"Capitalized-word-with-digit author token: {token!r}",
+                check_name="check_capitalized_unknown_authors",
+            )
+
+    # Case 2: lone "X." (single uppercase letter + period, no rest of the name)
+    for token in tokens:
+        if _INITIAL_ONLY_TOKEN.match(token):
+            return PreScreenResult(
+                label="HALLUCINATED",
+                confidence=0.75,
+                reason=f"Initial-only author token: {token!r}",
+                check_name="check_capitalized_unknown_authors",
+            )
+
+    # Case 3: >50% pure-uppercase tokens of length > 1 (e.g. "ABC DEF and GHI JKL")
+    pure_upper = sum(1 for t in tokens if _PURE_UPPERCASE_TOKEN.match(t))
+    if len(tokens) > 1 and pure_upper / len(tokens) > 0.5:
+        return PreScreenResult(
+            label="HALLUCINATED",
+            confidence=0.75,
+            reason=f"Majority pure-uppercase tokens ({pure_upper}/{len(tokens)})",
+            check_name="check_capitalized_unknown_authors",
+        )
+
+    return PreScreenResult(
+        label="UNKNOWN",
+        confidence=0.0,
+        reason="No capitalized placeholder pattern detected",
+        check_name="check_capitalized_unknown_authors",
+    )
+
+
 # Registry of checks that share the common (BlindEntry) -> PreScreenResult interface.
 # check_year_bounds is NOT included here — it takes an additional reference_year parameter
 # and is special-cased in prescreen_entry(). The type annotation reflects the common
@@ -256,6 +347,7 @@ def check_author_heuristics(entry: BlindEntry) -> PreScreenResult:
 ALL_CHECKS: list[Callable[[BlindEntry], PreScreenResult]] = [
     check_doi_resolves,
     check_author_heuristics,
+    check_capitalized_unknown_authors,
 ]
 
 
