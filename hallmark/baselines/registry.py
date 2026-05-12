@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import importlib
 import logging
+import os
 from collections.abc import Callable
 from dataclasses import dataclass, field
 from typing import Any
@@ -606,6 +607,39 @@ def _register_builtins() -> None:
             requires_api_key=True,
             is_free=False,
             env_var="ANTHROPIC_API_KEY",
+            confidence_type="probabilistic",
+        )
+    )
+
+    # --- LLM: Agentic OpenRouter Claude Sonnet 4.6 ---
+    # Routes the OpenAI-compatible agentic harness through OpenRouter to use
+    # anthropic/claude-sonnet-4.6 without requiring an Anthropic API key.
+    # Drop-in replacement for llm_agentic_anthropic; used as the Stage 2
+    # diagnoser for the cascade_db_diagnosis baselines in the paper.
+    def _run_llm_agentic_openrouter_claude_sonnet_4_6(
+        entries: list[BlindEntry], **kw: Any
+    ) -> list[Prediction]:
+        from hallmark.baselines.llm_agentic import verify_agentic_openai
+
+        kw.setdefault("model", "anthropic/claude-sonnet-4.6")
+        kw.setdefault("base_url", "https://openrouter.ai/api/v1")
+        kw.setdefault("api_key", os.environ.get("OPENROUTER_API_KEY"))
+        return verify_agentic_openai(entries, **kw)
+
+    register(
+        BaselineInfo(
+            name="llm_agentic_openrouter_claude_sonnet_4_6",
+            description=(
+                "Agentic Sonnet 4.6 via OpenRouter (anthropic/claude-sonnet-4.6) "
+                "using the OpenAI-compatible SDK. Drop-in for llm_agentic_anthropic "
+                "without an Anthropic API key; used as the Stage 2 diagnoser for "
+                "cascade_db_diagnosis baselines in the paper."
+            ),
+            runner=_run_llm_agentic_openrouter_claude_sonnet_4_6,
+            pip_packages=["openai"],
+            requires_api_key=True,
+            is_free=False,
+            env_var="OPENROUTER_API_KEY",
             confidence_type="probabilistic",
         )
     )
