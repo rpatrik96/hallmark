@@ -316,14 +316,50 @@ blind_test   = [e.to_blind() for e in test_entries]
 predictions = run_title_oracle(blind_test, reference_pool=dev_entries)
 ```
 
-## Baseline Results (dev_public, 1,119 entries)
+## Main Results (dev_public, 1,119 entries)
 
-| Baseline | Detection Rate | F1 | Tier-weighted F1 | FPR | ECE |
-|----------|:---:|:---:|:---:|:---:|:---:|
-| HaRC* | 0.155 | 0.268 | 0.188 | 0.000 | 0.361 |
-| bibtex-updater | 0.124 | 0.220 | 0.131 | 0.000 | 0.018 |
+Twelve full-coverage tools evaluated on `dev_public`. All numbers reproduce Table 1 of the paper. **Bold** = best among independent (non-co-designed) full-coverage tools. ΔFPR is the cross-split shift `test_public − dev_public`; `—` means no `test_public` evaluation.
 
-*\*Partial evaluation due to API rate limiting (HaRC: 521/1,063 entries completed).*
+| Tool | DR ↑ | FPR ↓ | F1 ↑ | MCC ↑ | TW-F1 ↑ | ECE ↓ | ΔFPR ↓ |
+|------|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
+| *Citation-database tools (with shared pre-screening)* | | | | | | | |
+| DOI-only | .256 | .195 | .361 | .093 | .314 | .143 | +0.108 |
+| *Zero-shot LLMs (sorted by FPR)* | | | | | | | |
+| Gemini 2.5 Pro | .456 | **.053** | .609 | .446 | .587 | .321 | +0.011 |
+| Claude Opus 4.7 | .733 | .060 | .824 | .672 | .840 | .112 | −0.001 |
+| Claude Sonnet 4.6 | .777 | .095 | **.840** | **.677** | **.842** | **.066** | +0.023 |
+| Gemini 2.5 Flash | .482 | .101 | .617 | .406 | .608 | .286 | +0.010 |
+| Llama 4 Maverick | .591 | .150 | .693 | .446 | .688 | .197 | +0.028 |
+| GPT-5.4 (zero-shot) | .744 | .228 | .775 | .512 | .792 | .215 | −0.005 |
+| Mistral Large | .691 | .258 | .731 | .430 | .743 | .247 | +0.045 |
+| GPT-5.1 (zero-shot) | .823 | .405 | .771 | .432 | .818 | .189 | +0.076 |
+| Qwen3-235B | .832 | .551 | .737 | .307 | .806 | .294 | +0.080 |
+| Qwen3-VL-235B | .834 | .567 | .735 | .294 | .804 | .298 | +0.085 |
+| DeepSeek-R1 | .871 | .640 | .737 | .273 | .814 | .247 | −0.310 |
+| DeepSeek-V3.2 | **.880** | .730 | .721 | .191 | .805 | .331 | +0.047 |
+| *Agentic (tool-use; up to 5 tool calls per entry)* | | | | | | | |
+| GPT-5.1 + CrossRef/OpenAlex/arXiv | .956 | .465 | .827 | .556 | .895 | .165 | +0.058 |
+| GPT-5.1 + bibtex-updater (tool optional) | .965 | .461 | .832 | .574 | .901 | .113 | −0.116 |
+| Sonnet 4.6 + bibtex-updater (tool optional) | .970 | .426 | .845 | .610 | .908 | .110 | −0.092 |
+| *Co-designed (reference upper bound)* | | | | | | | |
+| bibtex-updater | .946 | .179 | .908 | .781 | .936 | .297 | +0.159 |
+| GPT-5.1 + bibtex-updater (always-call; output in prompt) | .818 | .144 | .846 | .670 | .856 | .086 | +0.110 |
+
+DR = Detection Rate · FPR = False Positive Rate · TW-F1 = Tier-weighted F1 · MCC = Matthews Correlation Coefficient · ECE = Expected Calibration Error. The shaded *co-designed* block is a reference upper bound: `bibtex-updater`'s development overlapped with the benchmark's taxonomy design, so its scores risk construct-overfitting and should not be compared head-to-head with independent tools. `HaRC` and `verify-citations` are omitted: Semantic Scholar throttling collapses their effective coverage to <7% on `dev_public`.
+
+### Key Takeaways
+
+1. **LLMs span a wide recall–precision spectrum.** From ultra-conservative (Gemini 2.5 Pro: 46% DR, 5% FPR) to aggressive (DeepSeek-V3.2: 88% DR, 73% FPR). Claude Sonnet 4.6 and Opus 4.7 jointly lead independent tools on F1/calibration (Sonnet F1 = 0.840 / ECE = 0.066), far ahead of GPT-5.1 (F1 0.771) and the recall-aggressive open-weight cohort.
+
+2. **Agentic lookups inflate FPR.** A 5-call budget closes GPT-5.1's recall gap to `bibtex-updater` (DR 0.97 vs. 0.95), but agentic FPR remains ~2.6× higher (0.46 vs. 0.18) because the harness flags an entry whenever any one of CrossRef/OpenAlex/arXiv returns no match. F1 still trails by 7.6 pp. Substituting Sonnet 4.6 reproduces the GPT-5.1 profile within ≤3.5 pp on every metric — the FPR rise is harness-driven, not LLM-driven.
+
+3. **Base-rate precision collapse.** Extrapolated to real-world hallucination rates, every evaluated setting yields roughly one true hallucination per ten flagged citations, so recall-optimized verifiers misallocate reviewer effort.
+
+4. **Post-cutoff calibration breakdown.** On 448 papers from 2024–2025, 8 of 12 LLMs over-flag sharply (FPR up to 0.89). Sonnet 4.6 and Opus 4.7 hold FPR ≤ 0.12; GPT-5.4 (FPR 0.41) and Gemini 2.5 Pro (FPR 0.25) only partially recover.
+
+5. **A capability gap remains.** Even the highest-recall independent model misses 12% of hallucinations, with systematic weaknesses on subtle types (`near_miss_title`: 56%, `author_mismatch`: 58% for GPT-5.1). No tool dominates across regimes: `bibtex-updater` is cheapest and most temporally stable; Sonnet 4.6 / Opus 4.7 lead on FPR and PPV; the rule-based F1 lead collapses on `test_public`.
+
+See the [paper](https://github.com/rpatrik96/hallmark-paper) for the full per-tier, per-type, and temporal-robustness analyses.
 
 ### External Tool Baselines
 
