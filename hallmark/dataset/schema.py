@@ -498,6 +498,11 @@ class EvaluationResult:
     tool_name: str
     split_name: str
     num_entries: int
+    # GROUND-TRUTH entry counts (derived from BenchmarkEntry.label), NOT
+    # predicted-label counts. They are invariant across eval_mode and across
+    # baselines. For predicted-HALLUCINATED count, use confusion-matrix TP+FP.
+    # For predicted-VALID count, use TN + (the count of UNCERTAIN-collapsed-VALID
+    # in conservative mode). Only ``num_uncertain`` below is prediction-side.
     num_hallucinated: int
     num_valid: int
 
