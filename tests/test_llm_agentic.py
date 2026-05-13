@@ -155,7 +155,13 @@ class TestNormalise:
 class TestToolDefinitions:
     def test_all_tools_registered(self) -> None:
         names = {t["name"] for t in TOOL_DEFINITIONS}
-        assert names == {"resolve_doi", "search_crossref", "search_openalex", "search_arxiv"}
+        assert names == {
+            "resolve_doi",
+            "search_crossref",
+            "search_openalex",
+            "search_arxiv",
+            "search_semantic_scholar",
+        }
 
     def test_each_tool_has_required_keys(self) -> None:
         for tool in TOOL_DEFINITIONS:

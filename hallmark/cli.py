@@ -14,7 +14,7 @@ import json
 import logging
 import sys
 from pathlib import Path
-from typing import Any
+from typing import Any, Literal
 
 from hallmark.dataset.loader import filter_by_tier, filter_by_type, get_statistics, load_split
 from hallmark.dataset.schema import (
@@ -209,6 +209,66 @@ def main(argv: list[str] | None = None) -> int:
             "(e.g. OpenRouter models). Leave at 1 for CLI-spawning baselines "
             "(bibtexupdater, harc, verify_citations) which do not benefit from "
             "concurrency."
+        ),
+    )
+    eval_parser.add_argument(
+        "--eval-mode",
+        choices=["conservative", "aggressive", "both"],
+        default="conservative",
+        help=(
+            "How to score UNCERTAIN and missing predictions. 'conservative' "
+            "(default) excludes UNCERTAIN from classification metrics. "
+            "'aggressive' treats UNCERTAIN and missing predictions as "
+            "HALLUCINATED@0.55 — the 'DB-as-gold-standard' stance. 'both' "
+            "reports both side-by-side; the gap quantifies the DB-indexing-lag tax."
+        ),
+    )
+    eval_parser.add_argument(
+        "--stage2-baseline",
+        type=str,
+        default=None,
+        metavar="NAME",
+        help=(
+            "For cascade_db_diagnosis baselines: override the Stage 2 diagnoser "
+            "(default llm_agentic_anthropic). E.g. llm_agentic_openai, "
+            "llm_tool_augmented. Ignored for non-cascade baselines."
+        ),
+    )
+    eval_parser.add_argument(
+        "--timing-breakdown",
+        action="store_true",
+        default=True,
+        help=(
+            "After main metrics, print a per-baseline timing summary "
+            "(total/mean/median/p95 wall-clock and API-call counts). "
+            "Default-on; cheap. Use --no-timing-breakdown to suppress."
+        ),
+    )
+    eval_parser.add_argument(
+        "--no-timing-breakdown",
+        dest="timing_breakdown",
+        action="store_false",
+        help="Suppress the timing breakdown block.",
+    )
+    eval_parser.add_argument(
+        "--subtask-diagnostic",
+        action="store_true",
+        default=False,
+        help=(
+            "After main metrics, print a Recognition / Matching / Calibration "
+            "subtask decomposition (HalluCiteChecker-inspired)."
+        ),
+    )
+    eval_parser.add_argument(
+        "--cache-path",
+        type=str,
+        default=None,
+        metavar="PATH",
+        help=(
+            "Optional SQLite path for HTTP response caching (requests-cache). "
+            "When set, baseline HTTP calls reuse cached responses for 30 days, "
+            "supporting reproducible re-runs. Requires the optional "
+            "'requests-cache' dependency."
         ),
     )
 
@@ -532,25 +592,32 @@ def _cmd_evaluate(args: argparse.Namespace) -> int:
             extra_kwargs["checkpoint_dir"] = Path(args.checkpoint_dir)
         if args.retry_failed:
             extra_kwargs["retry_failed"] = True
-        try:
-            if workers > 1:
-                from hallmark.baselines.concurrency import parallel_run_baseline
+        if args.stage2_baseline and args.baseline.startswith("cascade_"):
+            extra_kwargs["stage2_baseline"] = args.stage2_baseline
+        from hallmark.baselines._http_cache import http_cache
 
-                parallel_kwargs: dict[str, Any] = {
-                    k: v for k, v in extra_kwargs.items() if k != "checkpoint_dir"
-                }
-                parallel_kwargs["split"] = args.split
-                predictions = parallel_run_baseline(
-                    args.baseline,
-                    entries,
-                    workers=workers,
-                    checkpoint_dir=Path(args.checkpoint_dir),
-                    **parallel_kwargs,
-                )
-            else:
-                predictions = _run_baseline(
-                    args.baseline, entries, split=args.split, **extra_kwargs
-                )
+        cache_path_arg = getattr(args, "cache_path", None)
+        cache_path = Path(cache_path_arg) if cache_path_arg else None
+        try:
+            with http_cache(cache_path):
+                if workers > 1:
+                    from hallmark.baselines.concurrency import parallel_run_baseline
+
+                    parallel_kwargs: dict[str, Any] = {
+                        k: v for k, v in extra_kwargs.items() if k != "checkpoint_dir"
+                    }
+                    parallel_kwargs["split"] = args.split
+                    predictions = parallel_run_baseline(
+                        args.baseline,
+                        entries,
+                        workers=workers,
+                        checkpoint_dir=Path(args.checkpoint_dir),
+                        **parallel_kwargs,
+                    )
+                else:
+                    predictions = _run_baseline(
+                        args.baseline, entries, split=args.split, **extra_kwargs
+                    )
         except (ImportError, ValueError) as e:
             logging.error(
                 f"Baseline '{args.baseline}' is not available: {e}\n"
@@ -581,14 +648,33 @@ def _cmd_evaluate(args: argparse.Namespace) -> int:
             return 1
 
     # Evaluate
-    result = evaluate(
-        entries=entries,
-        predictions=predictions,
-        tool_name=tool_name,
-        split_name=args.split,
-        compute_ci=args.ci,
-        strict=args.strict,
-    )
+    eval_mode_raw = getattr(args, "eval_mode", "conservative")
+    aggressive_result = None
+    if eval_mode_raw == "both":
+        both = evaluate(
+            entries=entries,
+            predictions=predictions,
+            tool_name=tool_name,
+            split_name=args.split,
+            compute_ci=args.ci,
+            strict=args.strict,
+            eval_mode="both",
+        )
+        result = both["conservative"]
+        aggressive_result = both["aggressive"]
+    else:
+        eval_mode: Literal["conservative", "aggressive"] = (
+            "aggressive" if eval_mode_raw == "aggressive" else "conservative"
+        )
+        result = evaluate(
+            entries=entries,
+            predictions=predictions,
+            tool_name=tool_name,
+            split_name=args.split,
+            compute_ci=args.ci,
+            strict=args.strict,
+            eval_mode=eval_mode,
+        )
 
     if result.coverage < 1.0:
         logging.warning(
@@ -763,6 +849,30 @@ def _cmd_evaluate(args: argparse.Namespace) -> int:
             for line in format_prescreening_breakdown(breakdown).splitlines():
                 print(f"  {line}")
 
+        # Timing breakdown (default-on, cheap) — surfaces per-baseline ms-per-stage.
+        if getattr(args, "timing_breakdown", True):
+            from hallmark.evaluation.metrics import (
+                compute_timing_breakdown,
+                format_timing_breakdown,
+            )
+
+            tb = compute_timing_breakdown(predictions)
+            print(f"{'─' * 60}")
+            for line in format_timing_breakdown(tb).splitlines():
+                print(f"  {line}")
+
+        # Subtask diagnostic (Recognition / Matching / Calibration) behind a flag.
+        if getattr(args, "subtask_diagnostic", False):
+            from hallmark.evaluation.metrics import (
+                compute_subtask_diagnostic,
+                format_subtask_diagnostic,
+            )
+
+            sd = compute_subtask_diagnostic(predictions, entries)
+            print(f"{'─' * 60}")
+            for line in format_subtask_diagnostic(sd).splitlines():
+                print(f"  {line}")
+
         print(f"{'=' * 60}\n")
 
     # By-source breakdown
@@ -788,8 +898,39 @@ def _cmd_evaluate(args: argparse.Namespace) -> int:
 
     # Save results
     if args.output:
-        Path(args.output).write_text(result.to_json())
+        if aggressive_result is not None:
+            payload = json.dumps(
+                {
+                    "conservative": json.loads(result.to_json()),
+                    "aggressive": json.loads(aggressive_result.to_json()),
+                },
+                ensure_ascii=False,
+            )
+            Path(args.output).write_text(payload)
+        else:
+            Path(args.output).write_text(result.to_json())
         logging.info(f"Results written to {args.output}")
+
+    if aggressive_result is not None:
+        logging.info(
+            "[aggressive] DR=%.3f  FPR=%s  F1=%.3f  TW-F1=%.3f  (vs conservative DR=%.3f, FPR=%s, F1=%.3f, TW-F1=%.3f)",
+            aggressive_result.detection_rate,
+            (
+                f"{aggressive_result.false_positive_rate:.3f}"
+                if aggressive_result.false_positive_rate is not None
+                else "n/a"
+            ),
+            aggressive_result.f1_hallucination,
+            aggressive_result.tier_weighted_f1,
+            result.detection_rate,
+            (
+                f"{result.false_positive_rate:.3f}"
+                if result.false_positive_rate is not None
+                else "n/a"
+            ),
+            result.f1_hallucination,
+            result.tier_weighted_f1,
+        )
 
     return 0
 

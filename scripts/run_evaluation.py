@@ -29,11 +29,30 @@ def main() -> None:
     parser.add_argument(
         "--baseline",
         required=True,
-        choices=["doi_only", "bibtexupdater", "llm_openai", "llm_anthropic"],
+        choices=[
+            "doi_only",
+            "bibtexupdater",
+            "llm_openai",
+            "llm_anthropic",
+            "cascade_db_diagnosis",
+            "cascade_db_diagnosis_aggressive",
+        ],
     )
     parser.add_argument("--data-dir", type=str)
     parser.add_argument("--version", default="v1.0")
     parser.add_argument("--output", type=str, required=True)
+    parser.add_argument(
+        "--eval-mode",
+        choices=["conservative", "aggressive", "both"],
+        default="conservative",
+        help="UNCERTAIN/missing handling. 'both' writes a {conservative, aggressive} payload.",
+    )
+    parser.add_argument(
+        "--stage2-baseline",
+        type=str,
+        default=None,
+        help="For cascade_* baselines: override Stage 2 diagnoser.",
+    )
     parser.add_argument("-v", "--verbose", action="store_true")
     args = parser.parse_args()
 
@@ -50,22 +69,53 @@ def main() -> None:
 
     logging.info(f"Loaded {len(entries)} entries from {args.split}")
 
-    predictions = _run_baseline(args.baseline, entries)
+    baseline_kwargs: dict = {}
+    if args.stage2_baseline and args.baseline.startswith("cascade_"):
+        baseline_kwargs["stage2_baseline"] = args.stage2_baseline
+    predictions = _run_baseline(args.baseline, entries, **baseline_kwargs)
     logging.info(f"Got {len(predictions)} predictions from {args.baseline}")
 
-    result = evaluate(entries, predictions, args.baseline, args.split)
-
+    import json as _json
     from pathlib import Path
 
     Path(args.output).parent.mkdir(parents=True, exist_ok=True)
-    Path(args.output).write_text(result.to_json())
-    logging.info(f"Results written to {args.output}")
 
-    # Print summary
-    print(f"\nDetection Rate: {result.detection_rate:.3f}")
-    print(f"FPR: {result.false_positive_rate:.3f}")
-    print(f"F1: {result.f1_hallucination:.3f}")
-    print(f"Tier-weighted F1: {result.tier_weighted_f1:.3f}")
+    if args.eval_mode == "both":
+        both = evaluate(entries, predictions, args.baseline, args.split, eval_mode="both")
+        result = both["conservative"]
+        agg = both["aggressive"]
+        Path(args.output).write_text(
+            _json.dumps(
+                {
+                    "conservative": _json.loads(result.to_json()),
+                    "aggressive": _json.loads(agg.to_json()),
+                },
+                ensure_ascii=False,
+            )
+        )
+        logging.info(f"Results written to {args.output}")
+        print(f"\n[conservative] DR={result.detection_rate:.3f}  F1={result.f1_hallucination:.3f}")
+        print(f"[aggressive]   DR={agg.detection_rate:.3f}  F1={agg.f1_hallucination:.3f}")
+    else:
+        eval_mode: str = args.eval_mode
+        # mypy: narrow to the literal evaluate() expects
+        from typing import Literal, cast
+
+        result = evaluate(
+            entries,
+            predictions,
+            args.baseline,
+            args.split,
+            eval_mode=cast(Literal["conservative", "aggressive"], eval_mode),
+        )
+        Path(args.output).write_text(result.to_json())
+        logging.info(f"Results written to {args.output}")
+
+        print(f"\nDetection Rate: {result.detection_rate:.3f}")
+        if result.false_positive_rate is not None:
+            print(f"FPR: {result.false_positive_rate:.3f}")
+        print(f"F1: {result.f1_hallucination:.3f}")
+        print(f"Tier-weighted F1: {result.tier_weighted_f1:.3f}")
 
 
 if __name__ == "__main__":

@@ -7,6 +7,7 @@ Each scraped entry is verified against at least 2 databases.
 from __future__ import annotations
 
 import logging
+import re
 import time
 from dataclasses import dataclass
 from datetime import date
@@ -23,9 +24,13 @@ from hallmark.dataset.schema import VALID_SUBTESTS, BenchmarkEntry, GenerationMe
 logger = logging.getLogger(__name__)
 
 
-# DBLP venue keys for major conferences
-DBLP_VENUE_KEYS = {
-    # Conferences
+# DBLP venue keys grouped by research domain.
+#
+# Domain tags are used by the cross-domain scraper to keep ML and non-ML
+# venues separate. ``DBLP_VENUE_KEYS`` (kept flat for backward compatibility)
+# is the union of all groups.
+DBLP_VENUES_ML = {
+    # ML/AI conferences
     "NeurIPS": "conf/nips",
     "ICML": "conf/icml",
     "ICLR": "conf/iclr",
@@ -36,11 +41,39 @@ DBLP_VENUE_KEYS = {
     "EMNLP": "conf/emnlp",
     "AISTATS": "conf/aistats",
     "NAACL": "conf/naacl",
-    # Journals
+    # ML journals
     "JMLR": "journals/jmlr",
     "MLJ": "journals/ml",
     "TMLR": "journals/tmlr",
 }
+
+DBLP_VENUES_CS_NON_ML = {
+    # Information retrieval
+    "SIGIR": "conf/sigir",
+    # Data mining / knowledge discovery
+    "KDD": "conf/kdd",
+    "ICDM": "conf/icdm",
+    # Web / databases
+    "WWW": "conf/www",
+    "VLDB": "conf/vldb",
+    "SIGMOD": "conf/sigmod",
+    # Graphics / HCI
+    "SIGGRAPH": "conf/siggraph",
+    "CHI": "conf/chi",
+    # Systems / security
+    "OSDI": "conf/osdi",
+    "SOSP": "conf/sosp",
+    "USENIX-Security": "conf/uss",
+    "CCS": "conf/ccs",
+    # Software engineering
+    "ICSE": "conf/icse",
+    "FSE": "conf/sigsoft",
+    # Theory
+    "STOC": "conf/stoc",
+    "FOCS": "conf/focs",
+}
+
+DBLP_VENUE_KEYS = {**DBLP_VENUES_ML, **DBLP_VENUES_CS_NON_ML}
 
 # Default arXiv ML categories
 ARXIV_ML_CATEGORIES = [
@@ -95,6 +128,14 @@ def scrape_dblp_venue(
     return hits
 
 
+_DBLP_AUTHOR_DISAMBIG_RE = re.compile(r"\s+\d{4}\b")
+
+
+def _clean_dblp_author(name: str) -> str:
+    """Strip DBLP homonym suffixes like ' 0001' from an author name."""
+    return _DBLP_AUTHOR_DISAMBIG_RE.sub("", name).strip()
+
+
 def dblp_hit_to_entry(
     hit: dict,
     venue_name: str,
@@ -108,7 +149,11 @@ def dblp_hit_to_entry(
     authors_info = hit.get("authors", {}).get("author", [])
     if isinstance(authors_info, dict):
         authors_info = [authors_info]
-    author_names = [a.get("text", a) if isinstance(a, dict) else str(a) for a in authors_info]
+    author_names = [
+        _clean_dblp_author(a.get("text", a) if isinstance(a, dict) else str(a))
+        for a in authors_info
+    ]
+    author_names = [n for n in author_names if n]
     author_str = " and ".join(author_names)
 
     year = hit.get("year", "")
@@ -119,10 +164,17 @@ def dblp_hit_to_entry(
     entry_type = hit.get("type", "")
     bibtex_type = "inproceedings" if "Conference" in entry_type else "article"
 
-    # Generate key: FirstAuthorYear
+    # Generate key: FirstAuthorYear<firstword><hash6>
+    # Hash suffix avoids collisions when the same author publishes multiple
+    # papers starting with the same word in the same year (common in large
+    # conferences like NeurIPS/ICML).
     first_author = author_names[0].split()[-1] if author_names else "unknown"
     first_word = title.split()[0].lower() if title else "untitled"
-    bibtex_key = f"{first_author}{year}{first_word}"
+    import hashlib
+
+    digest_input = f"{title}|{author_str}|{year}|{doi or url}"
+    digest = hashlib.sha1(digest_input.encode("utf-8")).hexdigest()[:6]
+    bibtex_key = f"{first_author}{year}{first_word}_{digest}"
 
     if today is None:
         today = date.today().isoformat()

@@ -308,6 +308,67 @@ def search_arxiv(query: str, limit: int = 5) -> list[dict[str, str]]:
 
 
 # ---------------------------------------------------------------------------
+# search_semantic_scholar
+# ---------------------------------------------------------------------------
+
+
+def search_semantic_scholar(query: str, limit: int = 5) -> list[dict[str, str]]:
+    """Search Semantic Scholar (public Graph API) by free-text query.
+
+    Args:
+        query: Free-text query (title, authors, etc.).
+        limit: Maximum number of results.
+
+    Returns:
+        List of normalised metadata dicts.
+
+    Raises:
+        RuntimeError: Network/API error.
+    """
+    import httpx
+
+    params = {
+        "query": query,
+        "limit": str(min(limit, 20)),
+        "fields": "title,authors,year,venue,externalIds",
+    }
+    url = "https://api.semanticscholar.org/graph/v1/paper/search?" + urllib.parse.urlencode(params)
+    headers = {"User-Agent": f"HALLMARK/1.0 (mailto:{_OPENALEX_MAILTO})"}
+
+    try:
+        resp = httpx.get(url, headers=headers, timeout=15.0, follow_redirects=True)
+    except httpx.RequestError as exc:
+        raise RuntimeError(f"Semantic Scholar search network error: {exc}") from exc
+
+    if resp.status_code != 200:
+        raise RuntimeError(f"Semantic Scholar returned HTTP {resp.status_code}")
+
+    items = resp.json().get("data", []) or []
+    results = []
+    for item in items[:limit]:
+        authors_list = item.get("authors", []) or []
+        authors_str = "; ".join(a.get("name", "") for a in authors_list if a)
+        title_str = item.get("title", "") or ""
+        venue_str = item.get("venue", "") or ""
+        year_val = item.get("year")
+        year_str = str(year_val) if year_val is not None else ""
+        external_ids = item.get("externalIds") or {}
+        doi_str = external_ids.get("DOI", "") or ""
+        results.append(
+            _normalise(
+                {
+                    "authors": authors_str,
+                    "title": title_str,
+                    "venue": venue_str,
+                    "year": year_str,
+                    "doi": doi_str,
+                }
+            )
+        )
+    return results
+
+
+# ---------------------------------------------------------------------------
 # Tool dispatch table (used by the agentic runner)
 # ---------------------------------------------------------------------------
 
@@ -385,6 +446,29 @@ def verify_with_bibtex_updater(bibtex: str) -> dict[str, str]:
         }
 
 
+_HALLUCINATION_TYPE_INSTRUCTION = """\
+When the entry is HALLUCINATED, classify the hallucination mode using exactly one of:
+`fabricated_doi`, `nonexistent_venue`, `placeholder_authors`, `future_date`,
+`chimeric_title`, `wrong_venue`, `swapped_authors`, `preprint_as_published`,
+`hybrid_fabrication`, `near_miss_title`, `plausible_fabrication`,
+`merged_citation`, `partial_author_list`, `arxiv_version_mismatch`.
+Brief definitions:
+- `fabricated_doi`: DOI does not resolve / is invented.
+- `nonexistent_venue`: venue/journal does not exist.
+- `placeholder_authors`: authors are placeholders ("Author1", "et al." alone, etc.).
+- `future_date`: year is in the future relative to publication.
+- `chimeric_title`: title combines fragments from multiple real works.
+- `wrong_venue`: real paper but cited at wrong venue.
+- `swapped_authors`: authors swapped or mismatched against the real paper.
+- `preprint_as_published`: arXiv preprint cited as published in a venue.
+- `hybrid_fabrication`: real DOI but other metadata (authors/title) doesn't match the DOI target.
+- `near_miss_title`: title differs from a real paper by small but meaningful edits.
+- `plausible_fabrication`: entirely fabricated yet plausible-sounding paper.
+- `merged_citation`: metadata combined from two real papers.
+- `partial_author_list`: real paper but author list is incomplete.
+- `arxiv_version_mismatch`: arXiv version cited as a different version (or as published).
+`predicted_hallucination_type` MUST be null when label is VALID or UNCERTAIN."""
+
 TOOL_DEFINITIONS: list[dict] = [
     {
         "name": "resolve_doi",
@@ -458,6 +542,25 @@ TOOL_DEFINITIONS: list[dict] = [
             "required": ["query"],
         },
     },
+    {
+        "name": "search_semantic_scholar",
+        "description": (
+            "Search Semantic Scholar's Graph API for publications. Returns title, "
+            "authors, year, venue, and DOI (when available)."
+        ),
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "query": {"type": "string", "description": "Free-text search query."},
+                "limit": {
+                    "type": "integer",
+                    "description": "Maximum results to return (1-20).",
+                    "default": 5,
+                },
+            },
+            "required": ["query"],
+        },
+    },
 ]
 
 # Map tool name → callable
@@ -466,6 +569,7 @@ TOOL_REGISTRY: dict[str, object] = {
     "search_crossref": search_crossref,
     "search_openalex": search_openalex,
     "search_arxiv": search_arxiv,
+    "search_semantic_scholar": search_semantic_scholar,
     "verify_with_bibtex_updater": verify_with_bibtex_updater,
 }
 

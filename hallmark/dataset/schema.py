@@ -437,6 +437,11 @@ class Prediction:
     wall_clock_seconds: float = 0.0
     api_calls: int = 0
     source: str | None = None  # "tool", "prescreening", "prescreening_override", or None
+    # Predicted hallucination mode (one of HallucinationType values) when label==HALLUCINATED.
+    # None for VALID/UNCERTAIN predictions or baselines that don't classify type.
+    predicted_hallucination_type: str | None = None
+    # Cascade stage that produced the prediction; None for non-cascade baselines.
+    cascade_stage: Literal["stage1_db", "stage2_diagnosis", "prescreening"] | None = None
 
     def __post_init__(self) -> None:
         _VALID_LABELS = {"VALID", "HALLUCINATED", "UNCERTAIN"}
@@ -448,6 +453,20 @@ class Prediction:
             raise ValueError(f"Confidence must be a finite number, got {self.confidence}")
         if not 0.0 <= self.confidence <= 1.0:
             raise ValueError(f"Confidence must be in [0, 1], got {self.confidence}")
+        if self.predicted_hallucination_type is not None:
+            valid_types = {t.value for t in HallucinationType}
+            if self.predicted_hallucination_type not in valid_types:
+                raise ValueError(
+                    f"Invalid predicted_hallucination_type: {self.predicted_hallucination_type!r}. "
+                    f"Must be one of {sorted(valid_types)} or None."
+                )
+            if self.label == "VALID":
+                raise ValueError("predicted_hallucination_type must be None when label='VALID'.")
+        _VALID_STAGES = {"stage1_db", "stage2_diagnosis", "prescreening", None}
+        if self.cascade_stage not in _VALID_STAGES:
+            raise ValueError(
+                f"Invalid cascade_stage: {self.cascade_stage!r}. Must be one of {_VALID_STAGES}."
+            )
 
     def to_dict(self) -> dict:
         return asdict(self)
@@ -479,6 +498,11 @@ class EvaluationResult:
     tool_name: str
     split_name: str
     num_entries: int
+    # GROUND-TRUTH entry counts (derived from BenchmarkEntry.label), NOT
+    # predicted-label counts. They are invariant across eval_mode and across
+    # baselines. For predicted-HALLUCINATED count, use confusion-matrix TP+FP.
+    # For predicted-VALID count, use TN + (the count of UNCERTAIN-collapsed-VALID
+    # in conservative mode). Only ``num_uncertain`` below is prediction-side.
     num_hallucinated: int
     num_valid: int
 
@@ -524,6 +548,11 @@ class EvaluationResult:
     # Coverage metrics
     coverage: float = 1.0  # fraction of entries with predictions
     coverage_adjusted_f1: float = 0.0  # F1 * coverage, penalizes selective abstention
+
+    # Type-level diagnosis metrics (populated when predicted_hallucination_type is set)
+    type_accuracy: dict[str, float] | None = None
+    type_confusion: dict[str, dict[str, int]] | None = None
+    cascade_breakdown_stats: dict[str, dict[str, int | float]] | None = None
 
     def to_dict(self) -> dict:
         return asdict(self)

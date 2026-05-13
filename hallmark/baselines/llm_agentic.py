@@ -75,14 +75,37 @@ placeholder authors).
 2. Use tools to cross-reference: resolve the DOI, or search by title/author.
 3. After gathering evidence (or after finding sufficient signal), emit your verdict.
 
+When the entry is HALLUCINATED, classify the hallucination mode using exactly one of:
+`fabricated_doi`, `nonexistent_venue`, `placeholder_authors`, `future_date`,
+`chimeric_title`, `wrong_venue`, `swapped_authors`, `preprint_as_published`,
+`hybrid_fabrication`, `near_miss_title`, `plausible_fabrication`,
+`merged_citation`, `partial_author_list`, `arxiv_version_mismatch`.
+Brief definitions:
+- `fabricated_doi`: DOI does not resolve / is invented.
+- `nonexistent_venue`: venue/journal does not exist.
+- `placeholder_authors`: authors are placeholders ("Author1", "et al." alone, etc.).
+- `future_date`: year is in the future relative to publication.
+- `chimeric_title`: title combines fragments from multiple real works.
+- `wrong_venue`: real paper but cited at wrong venue.
+- `swapped_authors`: authors swapped or mismatched against the real paper.
+- `preprint_as_published`: arXiv preprint cited as published in a venue.
+- `hybrid_fabrication`: real DOI but other metadata (authors/title) doesn't match the DOI target.
+- `near_miss_title`: title differs from a real paper by small but meaningful edits.
+- `plausible_fabrication`: entirely fabricated yet plausible-sounding paper.
+- `merged_citation`: metadata combined from two real papers.
+- `partial_author_list`: real paper but author list is incomplete.
+- `arxiv_version_mismatch`: arXiv version cited as a different version (or as published).
+
 When you are ready to give your final answer, output ONLY valid JSON — no prose, \
 no markdown fences:
 {
-    "label": "VALID" or "HALLUCINATED",
+    "label": "VALID" or "HALLUCINATED" or "UNCERTAIN",
     "confidence": 0.0 to 1.0,
+    "predicted_hallucination_type": "<one of the 14 types above, or null>",
     "reason": "concise explanation citing the evidence you found"
 }
 
+`predicted_hallucination_type` MUST be null when label is VALID or UNCERTAIN.
 Do NOT output the JSON until you have used enough tools or determined that \
 parametric knowledge is sufficient.
 """
@@ -105,13 +128,37 @@ your own judgment — the tool is evidence, not an oracle.
 4. If the first call is unambiguous, do NOT call again. Extra calls waste \
 budget.
 
+When the entry is HALLUCINATED, classify the hallucination mode using exactly one of:
+`fabricated_doi`, `nonexistent_venue`, `placeholder_authors`, `future_date`,
+`chimeric_title`, `wrong_venue`, `swapped_authors`, `preprint_as_published`,
+`hybrid_fabrication`, `near_miss_title`, `plausible_fabrication`,
+`merged_citation`, `partial_author_list`, `arxiv_version_mismatch`.
+Brief definitions:
+- `fabricated_doi`: DOI does not resolve / is invented.
+- `nonexistent_venue`: venue/journal does not exist.
+- `placeholder_authors`: authors are placeholders ("Author1", "et al." alone, etc.).
+- `future_date`: year is in the future relative to publication.
+- `chimeric_title`: title combines fragments from multiple real works.
+- `wrong_venue`: real paper but cited at wrong venue.
+- `swapped_authors`: authors swapped or mismatched against the real paper.
+- `preprint_as_published`: arXiv preprint cited as published in a venue.
+- `hybrid_fabrication`: real DOI but other metadata (authors/title) doesn't match the DOI target.
+- `near_miss_title`: title differs from a real paper by small but meaningful edits.
+- `plausible_fabrication`: entirely fabricated yet plausible-sounding paper.
+- `merged_citation`: metadata combined from two real papers.
+- `partial_author_list`: real paper but author list is incomplete.
+- `arxiv_version_mismatch`: arXiv version cited as a different version (or as published).
+
 When you are ready to give your final answer, output ONLY valid JSON — no \
 prose, no markdown fences:
 {
-    "label": "VALID" or "HALLUCINATED",
+    "label": "VALID" or "HALLUCINATED" or "UNCERTAIN",
     "confidence": 0.0 to 1.0,
+    "predicted_hallucination_type": "<one of the 14 types above, or null>",
     "reason": "concise explanation referencing the tool status and any disagreement"
 }
+
+`predicted_hallucination_type` MUST be null when label is VALID or UNCERTAIN.
 """
 
 INITIAL_USER_PROMPT = """\

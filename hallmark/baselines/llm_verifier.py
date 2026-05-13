@@ -66,12 +66,35 @@ Consider:
 4. Does the year make sense?
 5. If a DOI is present, does it look properly formatted?
 
+When the entry is HALLUCINATED, classify the hallucination mode using exactly one of:
+`fabricated_doi`, `nonexistent_venue`, `placeholder_authors`, `future_date`,
+`chimeric_title`, `wrong_venue`, `swapped_authors`, `preprint_as_published`,
+`hybrid_fabrication`, `near_miss_title`, `plausible_fabrication`,
+`merged_citation`, `partial_author_list`, `arxiv_version_mismatch`.
+Brief definitions:
+- `fabricated_doi`: DOI does not resolve / is invented.
+- `nonexistent_venue`: venue/journal does not exist.
+- `placeholder_authors`: authors are placeholders ("Author1", "et al." alone, etc.).
+- `future_date`: year is in the future relative to publication.
+- `chimeric_title`: title combines fragments from multiple real works.
+- `wrong_venue`: real paper but cited at wrong venue.
+- `swapped_authors`: authors swapped or mismatched against the real paper.
+- `preprint_as_published`: arXiv preprint cited as published in a venue.
+- `hybrid_fabrication`: real DOI but other metadata (authors/title) doesn't match the DOI target.
+- `near_miss_title`: title differs from a real paper by small but meaningful edits.
+- `plausible_fabrication`: entirely fabricated yet plausible-sounding paper.
+- `merged_citation`: metadata combined from two real papers.
+- `partial_author_list`: real paper but author list is incomplete.
+- `arxiv_version_mismatch`: arXiv version cited as a different version (or as published).
+
 Respond with JSON only:
 {{
-    "label": "VALID" or "HALLUCINATED",
+    "label": "VALID" or "HALLUCINATED" or "UNCERTAIN",
     "confidence": 0.0 to 1.0,
+    "predicted_hallucination_type": "<one of the 14 types above, or null>",
     "reason": "brief explanation"
-}}"""
+}}
+`predicted_hallucination_type` MUST be null when label is VALID or UNCERTAIN."""
 
 # Addendum appended to VERIFICATION_PROMPT when cutoff_aware=True. Tests the
 # H2 hypothesis: when explicitly reminded of the training cutoff, do LLMs route
@@ -521,6 +544,45 @@ def verify_with_anthropic(
     )
 
 
+_VALID_HALLUCINATION_TYPES: frozenset[str] = frozenset(
+    {
+        "fabricated_doi",
+        "nonexistent_venue",
+        "placeholder_authors",
+        "future_date",
+        "chimeric_title",
+        "wrong_venue",
+        "swapped_authors",
+        "preprint_as_published",
+        "hybrid_fabrication",
+        "near_miss_title",
+        "plausible_fabrication",
+        "merged_citation",
+        "partial_author_list",
+        "arxiv_version_mismatch",
+    }
+)
+
+
+def _parse_hallucination_type(raw: object, bibtex_key: str, label: str) -> str | None:
+    """Validate and return ``predicted_hallucination_type`` from LLM JSON output.
+
+    Rules:
+    - If label is not HALLUCINATED, always return None.
+    - If raw is None / "null" / "None", return None.
+    - If raw is a string not in the 14 valid types, log a warning and return None.
+    - Otherwise return the validated string.
+    """
+    if label != "HALLUCINATED":
+        return None
+    if raw is None or str(raw).lower() in ("null", "none", ""):
+        return None
+    if isinstance(raw, str) and raw in _VALID_HALLUCINATION_TYPES:
+        return raw
+    logger.warning("Unknown predicted_hallucination_type %r for %s — ignoring", raw, bibtex_key)
+    return None
+
+
 def _parse_llm_response(content: str, bibtex_key: str) -> Prediction:
     """Parse LLM JSON response into a Prediction."""
     original_content = content
@@ -589,17 +651,22 @@ def _parse_llm_response(content: str, bibtex_key: str) -> Prediction:
 
     try:
         label = data.get("label", "UNCERTAIN").upper()
-        if label not in ("VALID", "HALLUCINATED"):
+        if label not in ("VALID", "HALLUCINATED", "UNCERTAIN"):
             label = "UNCERTAIN"
 
         confidence = float(data.get("confidence", 0.5))
         confidence = max(0.0, min(1.0, confidence))
+
+        predicted_hallucination_type = _parse_hallucination_type(
+            data.get("predicted_hallucination_type"), bibtex_key, label
+        )
 
         return Prediction(
             bibtex_key=bibtex_key,
             label=label,
             confidence=confidence,
             reason=data.get("reason", ""),
+            predicted_hallucination_type=predicted_hallucination_type,
         )
     except (ValueError, TypeError) as e:
         logger.warning(f"Failed to extract fields from LLM response for {bibtex_key}: {e}")

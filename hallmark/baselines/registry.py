@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import importlib
 import logging
+import os
 from collections.abc import Callable
 from dataclasses import dataclass, field
 from typing import Any
@@ -610,6 +611,39 @@ def _register_builtins() -> None:
         )
     )
 
+    # --- LLM: Agentic OpenRouter Claude Sonnet 4.6 ---
+    # Routes the OpenAI-compatible agentic harness through OpenRouter to use
+    # anthropic/claude-sonnet-4.6 without requiring an Anthropic API key.
+    # Drop-in replacement for llm_agentic_anthropic; used as the Stage 2
+    # diagnoser for the cascade_db_diagnosis baselines in the paper.
+    def _run_llm_agentic_openrouter_claude_sonnet_4_6(
+        entries: list[BlindEntry], **kw: Any
+    ) -> list[Prediction]:
+        from hallmark.baselines.llm_agentic import verify_agentic_openai
+
+        kw.setdefault("model", "anthropic/claude-sonnet-4.6")
+        kw.setdefault("base_url", "https://openrouter.ai/api/v1")
+        kw.setdefault("api_key", os.environ.get("OPENROUTER_API_KEY"))
+        return verify_agentic_openai(entries, **kw)
+
+    register(
+        BaselineInfo(
+            name="llm_agentic_openrouter_claude_sonnet_4_6",
+            description=(
+                "Agentic Sonnet 4.6 via OpenRouter (anthropic/claude-sonnet-4.6) "
+                "using the OpenAI-compatible SDK. Drop-in for llm_agentic_anthropic "
+                "without an Anthropic API key; used as the Stage 2 diagnoser for "
+                "cascade_db_diagnosis baselines in the paper."
+            ),
+            runner=_run_llm_agentic_openrouter_claude_sonnet_4_6,
+            pip_packages=["openai"],
+            requires_api_key=True,
+            is_free=False,
+            env_var="OPENROUTER_API_KEY",
+            confidence_type="probabilistic",
+        )
+    )
+
     # --- LLM: Agentic BTU-only (OpenAI) ---
     def _run_llm_agentic_btu_openai(entries: list[BlindEntry], **kw: Any) -> list[Prediction]:
         from hallmark.baselines.llm_agentic import verify_agentic_btu_openai
@@ -794,6 +828,89 @@ def _register_builtins() -> None:
             description="Weighted vote across available free baselines",
             runner=_run_ensemble,
             confidence_type="heuristic",
+        )
+    )
+
+    # --- HalluCiteChecker (port of Sakai et al., 2026) ---
+    def _run_hallucitechecker(entries: list[BlindEntry], **kw: Any) -> list[Prediction]:
+        from hallmark.baselines.hallucitechecker import run_hallucitechecker
+
+        return run_hallucitechecker(entries, **kw)
+
+    register(
+        BaselineInfo(
+            name="hallucitechecker",
+            description=(
+                "Title-based fuzzy match against CrossRef/arXiv/Semantic Scholar "
+                "(port of Sakai et al., 2026 HalluCiteChecker; uses APIs instead "
+                "of local snapshots)."
+            ),
+            runner=_run_hallucitechecker,
+            confidence_type="heuristic",
+        )
+    )
+
+    # --- CheckIfExist (port of Abbonato 2026, Algorithm 1) ---
+    def _run_checkifexist(entries: list[BlindEntry], **kw: Any) -> list[Prediction]:
+        from hallmark.baselines.checkifexist import run_checkifexist
+
+        return run_checkifexist(entries, **kw)
+
+    register(
+        BaselineInfo(
+            name="checkifexist",
+            description=(
+                "Cascading 3-source verification with cross-source author "
+                "intersection (port of Abbonato 2026 Algorithm 1)."
+            ),
+            runner=_run_checkifexist,
+            confidence_type="heuristic",
+        )
+    )
+
+    # --- DB-first cascade with hallucination-mode diagnosis ---
+    def _run_cascade(entries: list[BlindEntry], **kw: Any) -> list[Prediction]:
+        from hallmark.baselines.cascade import run_cascade
+
+        return run_cascade(entries, **kw)
+
+    register(
+        BaselineInfo(
+            name="cascade_db_diagnosis",
+            description=(
+                "DB-first cascade: bibtexupdater Stage 1 + LLM diagnoser Stage 2. "
+                "Conservative mode — UNCERTAIN entries pass through unchanged."
+            ),
+            runner=_run_cascade,
+            cli_commands=["bibtex-check"],
+            requires_api_key=True,
+            env_var="ANTHROPIC_API_KEY",
+            confidence_type="heuristic",
+            runner_kwargs={
+                "stage2_baseline": "llm_agentic_anthropic",
+                "aggressive": False,
+            },
+        )
+    )
+
+    register(
+        BaselineInfo(
+            name="cascade_db_diagnosis_aggressive",
+            description=(
+                "DB-first cascade (aggressive). Treats database lookups as gold "
+                "standard: any entry not affirmatively verified by Stage 1 or "
+                "Stage 2 is flagged HALLUCINATED. Pair with --eval-mode both to "
+                "quantify the DB-indexing-lag tax."
+            ),
+            runner=_run_cascade,
+            cli_commands=["bibtex-check"],
+            requires_api_key=True,
+            env_var="ANTHROPIC_API_KEY",
+            confidence_type="heuristic",
+            runner_kwargs={
+                "stage2_baseline": "llm_agentic_anthropic",
+                "aggressive": True,
+            },
         )
     )
 

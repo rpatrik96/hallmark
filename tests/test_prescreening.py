@@ -6,9 +6,11 @@ import httpx
 import pytest
 
 from hallmark.baselines.prescreening import (
+    ALL_CHECKS,
     PrescreeningBreakdown,
     PreScreenResult,
     check_author_heuristics,
+    check_capitalized_unknown_authors,
     check_doi_resolves,
     check_year_bounds,
     compute_prescreening_breakdown,
@@ -276,7 +278,7 @@ class TestPrescreenEntry:
 
     @patch("hallmark.baselines.prescreening.httpx.head")
     def test_runs_all_checks(self, mock_head):
-        """Should run all three checks and return three results."""
+        """Should run every registered check and return one result per check."""
         # Mock DOI check to avoid network call
         mock_response = Mock()
         mock_response.status_code = 200
@@ -295,8 +297,8 @@ class TestPrescreenEntry:
         )
         results = prescreen_entry(entry)
 
-        # Should have 3 results (one per check)
-        assert len(results) == 3
+        # Should have one result per check (year + ALL_CHECKS).
+        assert len(results) == 1 + len(ALL_CHECKS)
 
         # Verify check names
         check_names = {r.check_name for r in results}
@@ -304,6 +306,7 @@ class TestPrescreenEntry:
             "check_doi_resolves",
             "check_year_bounds",
             "check_author_heuristics",
+            "check_capitalized_unknown_authors",
         }
 
         # All should be PreScreenResult instances
@@ -573,3 +576,60 @@ class TestPrescreeningBreakdown:
 
         assert "N/A" in text
         assert "45/50" in text
+
+
+class TestCheckCapitalizedUnknownAuthors:
+    """Tests for the capitalized-token fake-author heuristic."""
+
+    def _entry(self, author: str) -> BenchmarkEntry:
+        return BenchmarkEntry(
+            bibtex_key="test_key",
+            bibtex_type="article",
+            fields={"title": "Test", "author": author},
+            label="VALID",
+        )
+
+    def test_capitalized_word_with_digit(self):
+        """Smith2 / Jones3 patterns should be flagged."""
+        result = check_capitalized_unknown_authors(self._entry("Smith2 and Jones3"))
+        assert result.label == "HALLUCINATED"
+        assert result.confidence == 0.75
+        assert result.check_name == "check_capitalized_unknown_authors"
+
+    def test_initial_only_token(self):
+        """Lone X. (single uppercase letter + period) should be flagged."""
+        result = check_capitalized_unknown_authors(self._entry("X. and Y."))
+        assert result.label == "HALLUCINATED"
+        assert result.confidence == 0.75
+        assert "initial-only" in result.reason.lower()
+
+    def test_majority_pure_uppercase(self):
+        """Author field with >50% pure-uppercase tokens (>1 char) should be flagged."""
+        result = check_capitalized_unknown_authors(self._entry("ABCD and EFGH and IJKL"))
+        assert result.label == "HALLUCINATED"
+        assert result.confidence == 0.75
+        assert "uppercase" in result.reason.lower()
+
+    def test_normal_authors_unknown(self):
+        """Standard mixed-case authors should return UNKNOWN."""
+        result = check_capitalized_unknown_authors(self._entry("Smith, John and Doe, Jane Marie"))
+        assert result.label == "UNKNOWN"
+        assert result.confidence == 0.0
+
+    def test_missing_author(self):
+        """Missing author field should return UNKNOWN."""
+        entry = BenchmarkEntry(
+            bibtex_key="k", bibtex_type="article", fields={"title": "T"}, label="VALID"
+        )
+        result = check_capitalized_unknown_authors(entry)
+        assert result.label == "UNKNOWN"
+
+    def test_does_not_duplicate_authorN(self):
+        """AuthorN tokens are owned by check_author_heuristics — this check should
+        not also fire on them (returns UNKNOWN to avoid double-counting)."""
+        result = check_capitalized_unknown_authors(self._entry("Author1 and Author2"))
+        assert result.label == "UNKNOWN"
+
+    def test_registered_in_all_checks(self):
+        """The new check should be in the ALL_CHECKS registry so prescreen_entry runs it."""
+        assert check_capitalized_unknown_authors in ALL_CHECKS

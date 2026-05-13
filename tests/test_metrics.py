@@ -1908,3 +1908,346 @@ class TestBootstrapCI:
         assert result.tier_weighted_f1_ci is None
         assert result.fpr_ci is None
         assert result.mcc_ci is None
+
+
+# ---------------------------------------------------------------------------
+# Dual-mode evaluate() tests
+# ---------------------------------------------------------------------------
+
+
+def _make_mixed_entries_preds():
+    """Return (entries, predictions) with VALID, HALLUCINATED, UNCERTAIN, and missing."""
+    entries = [
+        _entry("v1", "VALID"),
+        _entry("v2", "VALID"),
+        _entry("h1", "HALLUCINATED"),
+        _entry("h2", "HALLUCINATED"),
+        _entry("h3", "HALLUCINATED"),  # will be UNCERTAIN in preds
+        _entry("h4", "HALLUCINATED"),  # will be missing from preds
+    ]
+    predictions = [
+        _pred("v1", "VALID"),
+        _pred("v2", "VALID"),
+        _pred("h1", "HALLUCINATED"),
+        _pred("h2", "HALLUCINATED"),
+        _pred("h3", "UNCERTAIN"),  # uncertain
+        # h4 is missing entirely
+    ]
+    return entries, predictions
+
+
+class TestEvaluateDualMode:
+    def test_evaluate_eval_mode_both_returns_dict(self):
+        """eval_mode='both' returns dict with 'conservative' and 'aggressive' keys."""
+        entries, predictions = _make_mixed_entries_preds()
+        result = evaluate(
+            entries,
+            predictions,
+            tool_name="test",
+            split_name="dev",
+            eval_mode="both",
+        )
+        assert isinstance(result, dict)
+        assert "conservative" in result
+        assert "aggressive" in result
+
+    def test_evaluate_aggressive_dr_geq_conservative(self):
+        """Aggressive DR >= conservative DR (invariant)."""
+        entries, predictions = _make_mixed_entries_preds()
+        result = evaluate(
+            entries,
+            predictions,
+            tool_name="test",
+            split_name="dev",
+            eval_mode="both",
+        )
+        assert isinstance(result, dict)
+        assert result["aggressive"].detection_rate >= result["conservative"].detection_rate
+
+    def test_evaluate_aggressive_fpr_geq_conservative(self):
+        """Aggressive FPR >= conservative FPR (invariant)."""
+        entries, predictions = _make_mixed_entries_preds()
+        result = evaluate(
+            entries,
+            predictions,
+            tool_name="test",
+            split_name="dev",
+            eval_mode="both",
+        )
+        assert isinstance(result, dict)
+        cons_fpr = result["conservative"].false_positive_rate or 0.0
+        aggr_fpr = result["aggressive"].false_positive_rate or 0.0
+        assert aggr_fpr >= cons_fpr
+
+    def test_evaluate_aggressive_treats_uncertain_as_hall(self):
+        """UNCERTAIN entries: conservative excludes them from metrics; aggressive remaps to HALL.
+
+        Conservative protocol: UNCERTAIN predictions excluded from confusion matrix entirely,
+        so h2 (UNCERTAIN) contributes neither TP nor FN → DR computed over h1 only → 1.0.
+
+        Aggressive protocol: h2 UNCERTAIN → HALLUCINATED@0.55 → TP → DR stays 1.0.
+        But the key difference is FPR: if a VALID entry gets UNCERTAIN in conservative mode,
+        it's excluded (no FP), whereas in aggressive mode it becomes HALLUCINATED (FP=1).
+        """
+        entries = [
+            _entry("v1", "VALID"),  # will be UNCERTAIN in preds → FPR difference
+            _entry("h1", "HALLUCINATED"),
+        ]
+        predictions = [
+            _pred("v1", "UNCERTAIN"),  # valid entry, uncertain prediction
+            _pred("h1", "HALLUCINATED"),
+        ]
+        cons = evaluate(
+            entries, predictions, tool_name="t", split_name="dev", eval_mode="conservative"
+        )
+        aggr = evaluate(
+            entries, predictions, tool_name="t", split_name="dev", eval_mode="aggressive"
+        )
+        # Conservative: v1 UNCERTAIN excluded → FPR denominator = 0 (no valid in CM) → None or 0
+        # Aggressive: v1 UNCERTAIN → HALLUCINATED → FP → FPR > 0
+        # DR invariant: aggressive >= conservative
+        assert aggr.detection_rate >= cons.detection_rate
+        # Aggressive FPR must be higher (v1 counted as FP)
+        cons_fpr = cons.false_positive_rate or 0.0
+        aggr_fpr = aggr.false_positive_rate or 0.0
+        assert aggr_fpr >= cons_fpr
+        # In aggressive mode, v1 (VALID GT) → HALLUCINATED pred → FP → FPR = 1.0
+        assert aggr_fpr == pytest.approx(1.0)
+
+    def test_evaluate_missing_predictions_aggressive(self):
+        """Missing keys: aggressive treats as HALLUCINATED, conservative as VALID."""
+        entries = [
+            _entry("v1", "VALID"),
+            _entry("h1", "HALLUCINATED"),  # has prediction
+            _entry("h2", "HALLUCINATED"),  # NO prediction
+        ]
+        predictions = [
+            _pred("v1", "VALID"),
+            _pred("h1", "HALLUCINATED"),
+            # h2 intentionally missing
+        ]
+        cons = evaluate(
+            entries, predictions, tool_name="t", split_name="dev", eval_mode="conservative"
+        )
+        aggr = evaluate(
+            entries, predictions, tool_name="t", split_name="dev", eval_mode="aggressive"
+        )
+        # Conservative: h2 missing → treated as VALID (fn) → DR = 1/2 = 0.5
+        assert cons.detection_rate == pytest.approx(0.5)
+        # Aggressive: h2 missing → treated as HALLUCINATED → DR = 2/2 = 1.0
+        assert aggr.detection_rate == pytest.approx(1.0)
+        # Aggressive FPR: v1 predicted VALID → no FP, FPR = 0
+        # Conservative FPR: same, = 0
+        assert cons.false_positive_rate == pytest.approx(0.0)
+        assert aggr.false_positive_rate == pytest.approx(0.0)
+
+    def test_evaluate_conservative_default(self):
+        """eval_mode defaults to 'conservative' and returns EvaluationResult."""
+        entries, predictions = _make_mixed_entries_preds()
+        result = evaluate(entries, predictions, tool_name="test", split_name="dev")
+        # Not a dict — single EvaluationResult
+        from hallmark.dataset.schema import EvaluationResult
+
+        assert isinstance(result, EvaluationResult)
+
+    def test_evaluate_new_fields_populated(self):
+        """type_accuracy, type_confusion, and cascade_breakdown_stats are always set."""
+        entries, predictions = _make_mixed_entries_preds()
+        result = evaluate(entries, predictions, tool_name="test", split_name="dev")
+        assert result.type_accuracy is not None
+        assert result.type_confusion is not None
+        assert result.cascade_breakdown_stats is not None
+
+
+# ---------------------------------------------------------------------------
+# TimingBreakdown
+# ---------------------------------------------------------------------------
+
+
+class TestTimingBreakdown:
+    """Tests for compute_timing_breakdown / format_timing_breakdown."""
+
+    def _pred_with_timing(
+        self,
+        key: str,
+        seconds: float,
+        api_calls: int,
+        reason: str = "",
+    ) -> Prediction:
+        return Prediction(
+            bibtex_key=key,
+            label="VALID",
+            confidence=0.5,
+            wall_clock_seconds=seconds,
+            api_calls=api_calls,
+            reason=reason,
+        )
+
+    def test_empty_list(self):
+        from hallmark.evaluation.metrics import compute_timing_breakdown
+
+        b = compute_timing_breakdown([])
+        assert b.total_seconds == 0.0
+        assert b.mean_seconds_per_entry == 0.0
+        assert b.median_seconds_per_entry == 0.0
+        assert b.p95_seconds_per_entry == 0.0
+        assert b.total_api_calls == 0
+        assert b.mean_api_calls_per_entry == 0.0
+        assert b.entries_with_api_errors == 0
+
+    def test_all_zero_time(self):
+        from hallmark.evaluation.metrics import compute_timing_breakdown
+
+        preds = [self._pred_with_timing(f"k{i}", 0.0, 0) for i in range(5)]
+        b = compute_timing_breakdown(preds)
+        assert b.total_seconds == 0.0
+        assert b.mean_seconds_per_entry == 0.0
+        assert b.p95_seconds_per_entry == 0.0
+        assert b.total_api_calls == 0
+        assert b.entries_with_api_errors == 0
+
+    def test_mixed_timings(self):
+        from hallmark.evaluation.metrics import compute_timing_breakdown
+
+        preds = [
+            self._pred_with_timing("a", 1.0, 1),
+            self._pred_with_timing("b", 2.0, 2),
+            self._pred_with_timing("c", 3.0, 3),
+            self._pred_with_timing("d", 4.0, 4),
+        ]
+        b = compute_timing_breakdown(preds)
+        assert b.total_seconds == pytest.approx(10.0)
+        assert b.mean_seconds_per_entry == pytest.approx(2.5)
+        assert b.median_seconds_per_entry == pytest.approx(2.5)
+        # p95 with linear interpolation across [1,2,3,4]
+        assert b.p95_seconds_per_entry > 3.5
+        assert b.total_api_calls == 10
+        assert b.mean_api_calls_per_entry == pytest.approx(2.5)
+        assert b.entries_with_api_errors == 0
+
+    def test_api_errors_counted(self):
+        from hallmark.evaluation.metrics import compute_timing_breakdown
+
+        preds = [
+            self._pred_with_timing("a", 1.0, 1, reason="ok"),
+            self._pred_with_timing("b", 2.0, 0, reason="[Error fallback] timeout"),
+            self._pred_with_timing("c", 1.5, 0, reason="[Error fallback] 500"),
+        ]
+        b = compute_timing_breakdown(preds)
+        assert b.entries_with_api_errors == 2
+        assert b.total_api_calls == 1
+
+    def test_format_includes_summary_lines(self):
+        from hallmark.evaluation.metrics import (
+            TimingBreakdown,
+            format_timing_breakdown,
+        )
+
+        b = TimingBreakdown(
+            total_seconds=12.5,
+            mean_seconds_per_entry=1.25,
+            median_seconds_per_entry=1.0,
+            p95_seconds_per_entry=2.5,
+            total_api_calls=10,
+            mean_api_calls_per_entry=1.0,
+            entries_with_api_errors=1,
+        )
+        text = format_timing_breakdown(b)
+        assert "Timing breakdown" in text
+        assert "12.50s" in text
+        assert "Total API calls" in text
+
+
+# ---------------------------------------------------------------------------
+# SubtaskDiagnostic
+# ---------------------------------------------------------------------------
+
+
+class TestSubtaskDiagnostic:
+    """Tests for compute_subtask_diagnostic / format_subtask_diagnostic."""
+
+    def test_empty_inputs(self):
+        from hallmark.evaluation.metrics import compute_subtask_diagnostic
+
+        d = compute_subtask_diagnostic([], [])
+        assert d.recognition_accuracy == 0.0
+        assert d.matching_accuracy == 0.0
+        assert d.calibration_ece is None
+        assert d.num_recognition_evaluated == 0
+        assert d.num_matching_evaluated == 0
+
+    def test_recognition_perfect_no_matching(self):
+        from hallmark.evaluation.metrics import compute_subtask_diagnostic
+
+        entries = [
+            _entry("v1", "VALID"),
+            _entry("h1", "HALLUCINATED", h_type="fabricated_doi"),
+        ]
+        preds = [_pred("v1", "VALID", 0.9), _pred("h1", "HALLUCINATED", 0.8)]
+        d = compute_subtask_diagnostic(preds, entries)
+        assert d.recognition_accuracy == 1.0
+        assert d.num_recognition_evaluated == 2
+        # No predicted_hallucination_type set → matching denom is 0.
+        assert d.num_matching_evaluated == 0
+        assert d.matching_accuracy == 0.0
+
+    def test_matching_partial(self):
+        from hallmark.evaluation.metrics import compute_subtask_diagnostic
+
+        entries = [
+            _entry("h1", "HALLUCINATED", h_type="fabricated_doi"),
+            _entry("h2", "HALLUCINATED", h_type="future_date"),
+        ]
+        preds = [
+            Prediction(
+                bibtex_key="h1",
+                label="HALLUCINATED",
+                confidence=0.8,
+                predicted_hallucination_type="fabricated_doi",
+            ),
+            Prediction(
+                bibtex_key="h2",
+                label="HALLUCINATED",
+                confidence=0.8,
+                predicted_hallucination_type="fabricated_doi",  # wrong
+            ),
+        ]
+        d = compute_subtask_diagnostic(preds, entries)
+        assert d.num_matching_evaluated == 2
+        assert d.matching_accuracy == 0.5
+
+    def test_uncertain_excluded_from_recognition(self):
+        from hallmark.evaluation.metrics import compute_subtask_diagnostic
+
+        entries = [
+            _entry("v1", "VALID"),
+            _entry("h1", "HALLUCINATED"),
+        ]
+        preds = [
+            _pred("v1", "VALID", 0.7),
+            Prediction(bibtex_key="h1", label="UNCERTAIN", confidence=0.5),
+        ]
+        d = compute_subtask_diagnostic(preds, entries)
+        # Only v1 contributes to recognition.
+        assert d.num_recognition_evaluated == 1
+        assert d.recognition_accuracy == 1.0
+
+    def test_format_renders_lines(self):
+        from hallmark.evaluation.metrics import (
+            SubtaskDiagnostic,
+            format_subtask_diagnostic,
+        )
+
+        d = SubtaskDiagnostic(
+            recognition_accuracy=0.8,
+            matching_accuracy=0.5,
+            calibration_ece=0.123,
+            num_recognition_evaluated=10,
+            num_matching_evaluated=4,
+        )
+        text = format_subtask_diagnostic(d)
+        assert "Recognition" in text
+        assert "Matching" in text
+        assert "Calibration" in text
+        assert "0.800" in text
+        assert "0.123" in text

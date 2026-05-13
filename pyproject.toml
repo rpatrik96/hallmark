@@ -48,6 +48,13 @@ scraping = [
 analysis = [
     "scikit-learn>=1.0",
 ]
+# Optional infrastructure for reproducible HALLMARK eval runs:
+# requests-cache wraps HTTP calls in a SQLite-backed cache so re-runs
+# reuse frozen API responses (see hallmark/baselines/_http_cache.py and
+# the --cache-path CLI flag).
+reproducibility = [
+    "requests-cache>=1.0",
+]
 dev = [
     "pytest>=7.0",
     "pytest-cov>=4.0",

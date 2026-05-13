@@ -113,7 +113,103 @@ def run_bibtex_check(
         academic_only: Skip web/book/working-paper checks (default: True).
         skip_prescreening: Skip pre-screening checks (default: False).
     """
+    predictions, _ = run_bibtex_check_with_status(
+        entries,
+        extra_args=extra_args,
+        timeout=timeout,
+        rate_limit=rate_limit,
+        academic_only=academic_only,
+        skip_prescreening=skip_prescreening,
+    )
+    return predictions
 
+
+def run_bibtex_check_with_status(
+    entries: list[BlindEntry],
+    extra_args: list[str] | None = None,
+    timeout: float = 7200.0,
+    rate_limit: int = 120,
+    academic_only: bool = True,
+    skip_prescreening: bool = False,
+    **_kw: object,
+) -> tuple[list[Prediction], dict[str, str]]:
+    """Run bibtex-check and return both predictions and raw per-entry status strings.
+
+    Same behaviour as ``run_bibtex_check`` for the predictions list; additionally
+    returns a status dict that a downstream cascade orchestrator can use to route
+    entries to the next stage.
+
+    Status vocabulary
+    -----------------
+    Values are the raw ``status`` field from the bibtex-check JSONL output, e.g.:
+
+    - ``"verified"`` — found in at least one academic database and metadata matches
+    - ``"not_found"`` — no database returned a matching record
+    - ``"title_mismatch"`` / ``"author_mismatch"`` / ``"year_mismatch"`` /
+      ``"venue_mismatch"`` — found but a field differs from the claimed value
+    - ``"partial_match"`` — some fields match, others do not
+    - ``"api_error"`` — transient API failure; treated conservatively as VALID
+    - ``"future_date"`` / ``"invalid_year"`` — pre-API year validation failed
+    - ``"doi_not_found"`` — DOI returned HTTP 404
+    - ``"preprint_only"`` — paper exists only as a preprint, not at the claimed venue
+    - ``"published_version_exists"`` — informational; published version was found
+    - ``"url_verified"`` / ``"url_accessible"`` / ``"url_not_found"`` /
+      ``"url_content_mismatch"`` — web-reference results (academic_only=False only)
+    - ``"book_verified"`` / ``"book_not_found"`` — book-reference results
+    - ``"working_paper_verified"`` / ``"working_paper_not_found"``
+    - ``"skipped"`` — entry was skipped by bibtex-check (e.g. unsupported entry type)
+
+    Sentinel values (not from bibtex-check itself)
+    -----------------------------------------------
+    - ``"missing"`` — bibtex-check produced no JSONL record for this key (e.g. the
+      process timed out before reaching it, or the entry was dropped).  The
+      prediction for this key is a conservative VALID backfill.
+    - ``"prescreening_override"`` — pre-screening changed the final verdict relative
+      to the raw bibtex-check result (e.g. pre-screening flagged HALLUCINATED while
+      the tool returned VALID).  The cascade orchestrator should treat the prediction
+      as already decided and not re-route these entries to another stage.
+
+    Args:
+        entries: Benchmark entries to verify.
+        extra_args: Additional CLI arguments for bibtex-check.
+        timeout: Timeout in seconds (default: 7200).
+        rate_limit: API requests per minute (default: 120).
+        academic_only: Skip web/book/working-paper checks (default: True).
+        skip_prescreening: Skip pre-screening checks (default: False).
+
+    Returns:
+        A 2-tuple ``(predictions, status_dict)`` where ``status_dict`` maps every
+        input ``bibtex_key`` to a status string.  The dict is guaranteed to contain
+        an entry for every key in ``entries``.
+    """
+    all_keys: list[str] = [e.bibtex_key for e in entries]
+
+    # Step 1: Run the subprocess on all entries to get raw tool predictions.
+    # The reason string encodes the raw status as "Status: <status>[; ...]".
+    tool_predictions = _run_bibtex_check_subprocess(
+        entries,
+        extra_args=extra_args,
+        timeout=timeout,
+        rate_limit=rate_limit,
+        academic_only=academic_only,
+    )
+
+    # Step 2: Extract raw status from each tool prediction's reason string.
+    tool_key_to_status: dict[str, str] = {}
+    for pred in tool_predictions:
+        reason = pred.reason or ""
+        if reason.startswith("Status: "):
+            raw_status = reason.split(";")[0].removeprefix("Status: ").strip()
+        else:
+            raw_status = "skipped"
+        tool_key_to_status[pred.bibtex_key] = raw_status
+
+    # Step 3: Determine which keys produced no JSONL output (timeout / dropped).
+    tool_key_set = {p.bibtex_key for p in tool_predictions}
+    missing_keys: set[str] = {e.bibtex_key for e in entries} - tool_key_set
+
+    # Step 4: Obtain the final merged predictions via run_with_prescreening,
+    # which handles backfill and pre-screening merge in one pass.
     def _run_tool(tool_entries: list[BlindEntry]) -> list[Prediction]:
         return _run_bibtex_check_subprocess(
             tool_entries,
@@ -123,12 +219,36 @@ def run_bibtex_check(
             academic_only=academic_only,
         )
 
-    return run_with_prescreening(
+    final_predictions = run_with_prescreening(
         entries,
         _run_tool,
         skip_prescreening=skip_prescreening,
         backfill_reason="Entry not in bibtex-check output",
     )
+
+    # Step 5: Detect pre-screening overrides by comparing final label to tool label.
+    # An override occurred when pre-screening changed the verdict (tool said VALID
+    # but pre-screening raised it to HALLUCINATED, or no tool record existed and
+    # pre-screening provided the prediction).
+    tool_key_to_label: dict[str, str] = {p.bibtex_key: p.label for p in tool_predictions}
+    final_key_to_label: dict[str, str] = {p.bibtex_key: p.label for p in final_predictions}
+
+    # Step 6: Build status dict — guaranteed to cover every input key.
+    status_dict: dict[str, str] = {}
+    for key in all_keys:
+        if key in missing_keys:
+            # No tool output; pre-screening may have provided a prediction, but
+            # either way the tool had no verdict — report as "missing".
+            # If pre-screening also changed the outcome we still prefer "missing"
+            # over "prescreening_override" since the tool never ran for this key.
+            status_dict[key] = "missing"
+        elif not skip_prescreening and final_key_to_label.get(key) != tool_key_to_label.get(key):
+            # Pre-screening changed the label relative to the raw tool result.
+            status_dict[key] = "prescreening_override"
+        else:
+            status_dict[key] = tool_key_to_status.get(key, "missing")
+
+    return final_predictions, status_dict
 
 
 def _run_bibtex_check_subprocess(
