@@ -31,6 +31,21 @@ HALLMARK draws on best practices from established benchmarks:
 - **Temporal analysis**: Contamination detection via pre/post-cutoff comparison
 - **Community contributions**: ONEBench-style ever-expanding sample pool
 
+## Headline cascade results (v1.1)
+
+`cascade_db_diagnosis` — Stage 1 bibtex-updater + Stage 2 Claude Sonnet 4.6 (via OpenRouter, up to 5 tool calls), conservative vs aggressive scoring of residual `UNCERTAIN`:
+
+| Split          | Mode         |   DR  |  FPR  |   F1  | Tier-3 F1 | AUROC |
+|----------------|--------------|------:|------:|------:|----------:|------:|
+| `dev_public`   | conservative | 0.976 | 0.559 | 0.760 |     0.417 | 0.833 |
+| `dev_public`   | **aggressive** | 0.983 | 0.560 | 0.815 | **0.570** | 0.740 |
+| `test_public`  | conservative | 0.972 | 0.456 | 0.854 |     0.596 | 0.867 |
+| `test_public`  | **aggressive** | 0.978 | 0.456 | 0.882 | **0.707** | 0.805 |
+| `stress_test`  | conservative | 0.969 |   —   | 0.985 |     0.983 |   —   |
+| `stress_test`  | **aggressive** | 0.975 |   —   | 0.987 |     0.986 |   —   |
+
+Aggressive promotion of residual `UNCERTAIN` (the "DB-as-gold-standard" stance) lifts Tier-3 F1 by **+11.1 pp on `test_public`** and **+15.3 pp on `dev_public`** at ≤0.1 pp FPR cost; the trade is paid in rank-discrimination (AUROC −6.2 / −9.3 pp). Runner-level (`cascade_db_diagnosis_aggressive`) and evaluator-level (`--eval-mode aggressive`) promotion paths agree to within ~1 pp on every metric. Full JSONs (incl. per-tier/per-type breakdowns) in [`data/v1.0/baseline_results/`](data/v1.0/baseline_results/); see paper §Stage-2 diagnosis cascade for analysis.
+
 ## Installation
 
 ```bash
@@ -81,6 +96,17 @@ Using `pipx` isolates each tool's `bibtexparser` 1.x from your project environme
 ```bash
 # Run DOI-only baseline on the dev split
 hallmark evaluate --split dev_public --baseline doi_only
+
+# Run the v1.1 cascade with aggressive scoring (DB as gold standard).
+# Stage 2 LLM diagnoser is routed through OpenRouter — set OPENROUTER_API_KEY.
+hallmark evaluate --split dev_public --baseline cascade_db_diagnosis_aggressive \
+    --stage2-baseline llm_agentic_openrouter_claude_sonnet_4_6
+
+# Re-score the same predictions under both eval modes (conservative + aggressive)
+# in a single payload — the gap quantifies the abstention/indexing-lag tax.
+hallmark evaluate --split dev_public --baseline cascade_db_diagnosis \
+    --stage2-baseline llm_agentic_openrouter_claude_sonnet_4_6 \
+    --eval-mode both
 
 # Run with custom predictions
 hallmark evaluate --split dev_public --predictions my_predictions.jsonl --tool-name my-tool
