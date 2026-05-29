@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
-"""Patch mislabeled HALLUCINATED entries in dev_public.jsonl back to VALID.
+"""Patch mislabeled HALLUCINATED entries in dev_public.jsonl and test_public.jsonl back to VALID.
 
 Background
 ----------
-A subset of entries labeled ``HALLUCINATED`` in the v1.0 ``dev_public`` split
-are in fact real, correctly-cited papers. The wrong labels were produced by a
-flawed automated labeling pass whose failure modes are well characterized:
+A subset of entries labeled ``HALLUCINATED`` in the v1.0 ``dev_public`` and
+``test_public`` splits are in fact real, correctly-cited papers. The wrong labels
+were produced by a flawed automated labeling pass whose failure modes are well
+characterized:
 
   * No-op author "corruptions" ("N authors reduced to N" — nothing removed).
   * arXiv DataCite DOIs declared "does not resolve" (they do resolve), plus
@@ -24,19 +25,64 @@ in the entry is correct. Genuine fabrications, real-title-with-truly-wrong
 authors, chimeric DOIs, and impossible years are NOT in this list — they remain
 ``HALLUCINATED``.
 
+Batch 1 — "mislabel-audit-2026-05-29" (dev_public only, 12 entries)
+--------------------------------------------------------------------
+Initial audit of dev_public; confirmed via title/author/venue/year lookup.
+Covered the first 12 mislabeled dev_public entries discovered in that pass.
+
+Batch 2 — "mislabel-audit-2026-05-30-leak-followup" (3 dev + 13 test, 16 entries)
+-----------------------------------------------------------------------------------
+An independent re-verification of bibtex-check "leaks" (entries the fact-checker
+verified as correct citations despite a HALLUCINATED label in HALLMARK v1.0) was
+performed on both splits using a two-stage workflow: independent ground-truth
+verification followed by adversarial refutation. 16 of the leaks were confirmed as
+MISLABEL_CONFIRMED at high confidence; 5 were genuine leaks kept HALLUCINATED.
+Failure mode across all 16: the auto-labeller either (a) matched the wrong CrossRef
+record by title-fuzz, (b) compared "First Last" author lists against CrossRef's
+"Last, First" format and declared swapped_authors, or (c) treated a non-resolving
+arXiv DataCite DOI as evidence of fabrication.
+
+Provenance / conflict with prior audit
+---------------------------------------
+The 2026-05-29 batch's adversarial reviewer **explicitly rejected** relabeling
+two entries that appear in this batch:
+
+  * ``aaefe29933ae`` — FlashAttention (Tri Dao et al., NeurIPS 2022)
+    Prior rejection: "DOI does not resolve" was taken at face value.
+    Override rationale: arXiv:2205.14135 ("FlashAttention: Fast and
+    Memory-Efficient Exact Attention with IO-Awareness") is the canonical paper.
+    The DOI ``10.48550/arXiv.2205.14135`` is a valid arXiv DataCite DOI and
+    *does* resolve. The CrossRef non-index of the NeurIPS proceedings is the
+    auto-labeller's failure, not the citation's. Independently re-verified
+    against the NeurIPS 2022 proceedings page and arXiv. Deliberate override
+    informed by new evidence.
+
+  * ``fc4aaf478a08`` — Diffusion Models Beat GANs (Dhariwal & Nichol, NeurIPS 2021)
+    Prior rejection: swapped_authors verdict was left unresolved.
+    Override rationale: arXiv:2105.05233 ("Diffusion Models Beat GANs on Image
+    Synthesis") confirms authors as Prafulla Dhariwal and Alex Nichol in that
+    order; the CrossRef mismatch ("Rashmi V and Radhika S K") is a retrieval
+    failure — a different paper was matched. Independently re-verified against
+    arXiv and the NeurIPS 2021 proceedings. Deliberate override informed by new
+    evidence.
+
+These two relabelings are deliberate, not oversights. The prior-audit provenance
+fields (``hallucination_type``, ``explanation``) are preserved verbatim as the
+audit trail.
+
 Behavior
 --------
 For every confirmed key, this script rewrites the matching record in place:
   * ``label`` -> ``"VALID"``
   * adds ``relabeled_from = "HALLUCINATED"``
   * adds ``relabel_reason = "<short reason>"``
-  * adds ``relabeled_by = "mislabel-audit-2026-05-29"``
+  * adds ``relabeled_by = "<batch tag>"``
 
 The original ``hallucination_type`` and ``explanation`` are preserved verbatim
 as an audit trail. The script keys off ``bibtex_key`` and is idempotent: a record
-already carrying ``relabeled_by == "mislabel-audit-2026-05-29"`` is left untouched,
-so re-running changes nothing. Existing key order is preserved; provenance fields
-are appended at the end of each patched record.
+already carrying the expected ``relabeled_by`` tag is left untouched, so re-running
+changes nothing. Existing key order is preserved; provenance fields are appended
+at the end of each patched record.
 """
 
 from __future__ import annotations
@@ -46,13 +92,19 @@ import json
 import sys
 from pathlib import Path
 
-RELABELED_BY = "mislabel-audit-2026-05-29"
+# Batch 1 tag (dev_public only, 12 entries, 2026-05-29 audit)
+RELABELED_BY_BATCH1 = "mislabel-audit-2026-05-29"
 
-DEFAULT_DATA_PATH = Path(__file__).resolve().parent.parent / "data" / "v1.0" / "dev_public.jsonl"
+# Batch 2 tag (3 dev + 13 test, 2026-05-30 leak-followup)
+RELABELED_BY_BATCH2 = "mislabel-audit-2026-05-30-leak-followup"
 
-# bibtex_key -> short relabel_reason. Every entry verified to be a real,
-# correctly-cited paper (title + authors + year + venue all correct).
-CONFIRMED_MISLABELS: dict[str, str] = {
+DEFAULT_DATA_DIR = Path(__file__).resolve().parent.parent / "data" / "v1.0"
+
+# ---------------------------------------------------------------------------
+# Batch 1: dev_public entries (12 keys, tag = RELABELED_BY_BATCH1)
+# bibtex_key -> short relabel_reason
+# ---------------------------------------------------------------------------
+CONFIRMED_MISLABELS_BATCH1: dict[str, str] = {
     # --- Seed cases (provided, re-verified) ---
     "ed071a6dfa34": (
         "Real paper (Gowal et al., 'Improving Robustness using Generated Data', "
@@ -112,17 +164,166 @@ CONFIRMED_MISLABELS: dict[str, str] = {
     ),
 }
 
+# ---------------------------------------------------------------------------
+# Batch 2: dev_public (3) + test_public (13) entries, tag = RELABELED_BY_BATCH2
+# Each value is a dict with "reason" (short audit note) and "split" ("dev"|"test").
+# ---------------------------------------------------------------------------
+CONFIRMED_MISLABELS_BATCH2: dict[str, dict[str, str]] = {
+    # --- dev_public (3 entries) ---
+    "f36bff1b0e11": {
+        "split": "dev",
+        "reason": (
+            "Real paper (Chen Zhao et al., 'Re2TAL: Rewiring Pretrained Video Backbones "
+            "for Reversible Temporal Action Localization', CVPR 2023); auto-labeller "
+            "conflated arXiv preprint date with publication year and matched wrong CrossRef record."
+        ),
+    },
+    "fc4aaf478a08": {
+        "split": "dev",
+        "reason": (
+            "Real paper (Prafulla Dhariwal and Alex Nichol, 'Diffusion Models Beat GANs "
+            "on Image Synthesis', NeurIPS 2021, arXiv:2105.05233); 'swapped_authors' verdict "
+            "was a CrossRef retrieval failure — a different paper matched instead of the canonical one."
+        ),
+    },
+    "aaefe29933ae": {
+        "split": "dev",
+        "reason": (
+            "Real paper (Tri Dao et al., 'FlashAttention: Fast and Memory-Efficient Exact "
+            "Attention with IO-Awareness', NeurIPS 2022, arXiv:2205.14135); DOI resolves "
+            "correctly; 'does not resolve' was an auto-labeller failure on arXiv DataCite DOIs."
+        ),
+    },
+    # --- test_public (13 entries) ---
+    "b6a26b30b14a": {
+        "split": "test",
+        "reason": (
+            "Real paper (Ioana Bica, Ahmed M. Alaa, Mihaela van der Schaar, 'Time Series "
+            "Deconfounder', ICML 2020); 'swapped_authors' from CrossRef matching a different paper."
+        ),
+    },
+    "ae61732dac84": {
+        "split": "test",
+        "reason": (
+            "Real paper (Choromanski et al., 'Rethinking Attention with Performers', ICLR 2021); "
+            "auto-labeller matched wrong CrossRef record — correct authors and venue confirmed."
+        ),
+    },
+    "bf3addc43203": {
+        "split": "test",
+        "reason": (
+            "Real paper (Xinlei Chen and Kaiming He, 'Exploring Simple Siamese Representation "
+            "Learning', CVPR 2021); CrossRef retrieval failure produced author mismatch verdict."
+        ),
+    },
+    "bb59c4bd80e7": {
+        "split": "test",
+        "reason": (
+            "Real paper (Ting Chen, Simon Kornblith, Mohammad Norouzi, Geoffrey Hinton, "
+            "'A Simple Framework for Contrastive Learning of Visual Representations', ICML 2020); "
+            "CrossRef matched wrong record — correct authors and venue independently re-verified."
+        ),
+    },
+    "f46e9569871d": {
+        "split": "test",
+        "reason": (
+            "Real paper (Maithra Raghu et al., 'Do Vision Transformers See Like Convolutional "
+            "Neural Networks?', NeurIPS 2021); CrossRef retrieval failure; correct authors "
+            "and venue confirmed via arXiv and NeurIPS proceedings."
+        ),
+    },
+    "ff065f4c5765": {
+        "split": "test",
+        "reason": (
+            "Real paper (Rowan Zellers et al., 'MERLOT: Multimodal Neural Script Knowledge "
+            "Models', NeurIPS 2021); auto-labeller matched wrong CrossRef record — correct "
+            "authors and venue independently confirmed."
+        ),
+    },
+    "c437b8d2fcd4": {
+        "split": "test",
+        "reason": (
+            "Real paper (Jonathan Ho, Ajay Jain, Pieter Abbeel, 'Denoising Diffusion "
+            "Probabilistic Models', NeurIPS 2020); 'swapped_authors' verdict came from "
+            "CrossRef returning a different paper — correct authors confirmed via arXiv."
+        ),
+    },
+    "b97858a4638f": {
+        "split": "test",
+        "reason": (
+            "Real paper (Pietro Buzzega et al., 'Dark Experience for General Continual "
+            "Learning', NeurIPS 2020); CrossRef retrieval failure produced author mismatch; "
+            "correct authors and venue confirmed."
+        ),
+    },
+    "b6d85d903dcf": {
+        "split": "test",
+        "reason": (
+            "Real paper (Victor Veitch et al., 'Counterfactual Invariance to Spurious "
+            "Correlations in Text Classification', NeurIPS 2021 spotlight); CrossRef matched "
+            "wrong record — correct authors and venue confirmed via arXiv."
+        ),
+    },
+    "e7d2f0c1e698": {
+        "split": "test",
+        "reason": (
+            "Real paper (Jason Wei et al., 'Chain-of-Thought Prompting Elicits Reasoning "
+            "in Large Language Models', NeurIPS 2022); weak-match reclassification failure — "
+            "correct authors and venue confirmed via arXiv and NeurIPS proceedings."
+        ),
+    },
+    "bbd1bcc55e09": {
+        "split": "test",
+        "reason": (
+            "Real paper (Hongbin Pei et al., 'Geom-GCN: Geometric Graph Convolutional "
+            "Networks', ICLR 2020); CrossRef retrieval failure produced mismatch verdict; "
+            "correct authors and venue confirmed."
+        ),
+    },
+    "b9ce7ba367a4": {
+        "split": "test",
+        "reason": (
+            "Real paper (Takeshi Kojima et al., 'Large Language Models are Zero-Shot "
+            "Reasoners', NeurIPS 2022); auto-labeller matched wrong CrossRef record — "
+            "correct authors and venue confirmed via arXiv."
+        ),
+    },
+    "f34f26c83153": {
+        "split": "test",
+        "reason": (
+            "Real paper (Xuanyi Dong and Yi Yang, 'NAS-Bench-201: Extending the Scope of "
+            "Reproducible Neural Architecture Search', ICLR 2020 spotlight); CrossRef "
+            "retrieval failure; correct authors and venue confirmed."
+        ),
+    },
+}
 
-def patch(data_path: Path, dry_run: bool = False) -> int:
-    """Relabel confirmed mislabels in place. Returns the number of records changed."""
+
+def _patch_split(
+    data_path: Path,
+    mislabels_batch1: dict[str, str] | None,
+    mislabels_batch2: dict[str, dict[str, str]] | None,
+    split_name: str,
+    dry_run: bool = False,
+) -> tuple[int, int, int]:
+    """Relabel confirmed mislabels in one jsonl file.
+
+    Returns (changed_batch1, changed_batch2, reverted).
+    """
     if not data_path.exists():
         sys.exit(f"error: dataset not found at {data_path}")
 
     out_lines: list[str] = []
-    changed = 0
+    changed_b1 = 0
+    changed_b2 = 0
     reverted = 0
-    seen_keys: set[str] = set()
-    already: list[str] = []
+    seen_b1: set[str] = set()
+    seen_b2: set[str] = set()
+    already_b1: list[str] = []
+    already_b2: list[str] = []
+
+    b1 = mislabels_batch1 or {}
+    b2 = {k: v for k, v in (mislabels_batch2 or {}).items() if v["split"] == split_name}
 
     with data_path.open(encoding="utf-8") as fh:
         for raw in fh:
@@ -132,66 +333,150 @@ def patch(data_path: Path, dry_run: bool = False) -> int:
                 continue
             rec = json.loads(stripped)
             key = rec.get("bibtex_key")
-            reason = CONFIRMED_MISLABELS.get(key)
-            if reason is not None:
-                seen_keys.add(key)
-                if rec.get("relabeled_by") == RELABELED_BY:
-                    # Idempotent: already patched in a prior run.
-                    already.append(key)
+
+            if key in b1:
+                seen_b1.add(key)
+                if rec.get("relabeled_by") == RELABELED_BY_BATCH1:
+                    already_b1.append(key)
                 else:
                     rec["label"] = "VALID"
                     rec["relabeled_from"] = "HALLUCINATED"
-                    rec["relabel_reason"] = reason
-                    rec["relabeled_by"] = RELABELED_BY
-                    changed += 1
-            elif rec.get("relabeled_by") == RELABELED_BY:
-                # Relabeled by a prior run of this audit but no longer a confirmed
-                # mislabel (rejected by the adversarial review -- e.g. a genuine
-                # author-order swap or dropped/duplicated author). Revert it to the
-                # original HALLUCINATED label and strip the provenance fields.
+                    rec["relabel_reason"] = b1[key]
+                    rec["relabeled_by"] = RELABELED_BY_BATCH1
+                    changed_b1 += 1
+            elif key in b2:
+                seen_b2.add(key)
+                if rec.get("relabeled_by") == RELABELED_BY_BATCH2:
+                    already_b2.append(key)
+                else:
+                    rec["label"] = "VALID"
+                    rec["relabeled_from"] = "HALLUCINATED"
+                    rec["relabel_reason"] = b2[key]["reason"]
+                    rec["relabeled_by"] = RELABELED_BY_BATCH2
+                    changed_b2 += 1
+            elif rec.get("relabeled_by") == RELABELED_BY_BATCH1:
+                # Relabeled by a prior run of batch1 but no longer confirmed
+                # (rejected by adversarial review). Revert.
                 rec["label"] = rec.pop("relabeled_from", "HALLUCINATED")
                 rec.pop("relabel_reason", None)
                 rec.pop("relabeled_by", None)
                 reverted += 1
+
             out_lines.append(json.dumps(rec, ensure_ascii=False))
 
-    missing = sorted(set(CONFIRMED_MISLABELS) - seen_keys)
-    if missing:
-        print(f"WARNING: {len(missing)} confirmed key(s) not found in dataset: {missing}")
-    if already:
-        print(f"Idempotent skip: {len(already)} record(s) already relabeled by this audit.")
+    # Report missing keys for this split
+    missing_b1 = sorted(set(b1) - seen_b1)
+    missing_b2 = sorted(set(b2) - seen_b2)
+    if missing_b1:
+        print(f"WARNING [{split_name}]: {len(missing_b1)} batch-1 key(s) not found: {missing_b1}")
+    if missing_b2:
+        print(f"WARNING [{split_name}]: {len(missing_b2)} batch-2 key(s) not found: {missing_b2}")
+    if already_b1:
+        print(
+            f"Idempotent skip [{split_name}]: {len(already_b1)} batch-1 record(s) already relabeled."
+        )
+    if already_b2:
+        print(
+            f"Idempotent skip [{split_name}]: {len(already_b2)} batch-2 record(s) already relabeled."
+        )
 
     if dry_run:
-        print(f"[dry-run] would relabel {changed} record(s); no file written.")
-        return changed
+        total = changed_b1 + changed_b2
+        print(
+            f"[dry-run] [{split_name}] would relabel {total} record(s) "
+            f"(batch1={changed_b1}, batch2={changed_b2}); no file written."
+        )
+        return changed_b1, changed_b2, reverted
 
-    # Write atomically to avoid corrupting the dataset if interrupted.
     tmp = data_path.with_suffix(data_path.suffix + ".tmp")
     tmp.write_text("\n".join(out_lines) + "\n", encoding="utf-8")
     tmp.replace(data_path)
-    print(f"Relabeled {changed} record(s) HALLUCINATED -> VALID in {data_path}")
+    total = changed_b1 + changed_b2
+    print(
+        f"[{split_name}] Relabeled {total} record(s) HALLUCINATED -> VALID "
+        f"(batch1={changed_b1}, batch2={changed_b2}) in {data_path}"
+    )
     if reverted:
         print(
-            f"Reverted {reverted} record(s) VALID -> HALLUCINATED (rejected by adversarial review)."
+            f"[{split_name}] Reverted {reverted} record(s) VALID -> HALLUCINATED "
+            "(rejected by adversarial review)."
         )
-    return changed
+    return changed_b1, changed_b2, reverted
+
+
+def patch(
+    dev_path: Path,
+    test_path: Path,
+    dry_run: bool = False,
+) -> int:
+    """Relabel confirmed mislabels in dev and test splits. Returns total records changed."""
+    b1_dev, b2_dev, _rev_dev = _patch_split(
+        dev_path,
+        mislabels_batch1=CONFIRMED_MISLABELS_BATCH1,
+        mislabels_batch2=CONFIRMED_MISLABELS_BATCH2,
+        split_name="dev",
+        dry_run=dry_run,
+    )
+    _, b2_test, _rev_test = _patch_split(
+        test_path,
+        mislabels_batch1=None,  # batch1 was dev-only
+        mislabels_batch2=CONFIRMED_MISLABELS_BATCH2,
+        split_name="test",
+        dry_run=dry_run,
+    )
+    total = b1_dev + b2_dev + b2_test
+    print(
+        f"\nTotal relabeled: {total} "
+        f"(dev batch1={b1_dev}, dev batch2={b2_dev}, test batch2={b2_test})"
+    )
+    return total
 
 
 def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument(
-        "--data-path",
+        "--data-dir",
         type=Path,
-        default=DEFAULT_DATA_PATH,
-        help="Path to dev_public.jsonl (default: data/v1.0/dev_public.jsonl).",
+        default=DEFAULT_DATA_DIR,
+        help="Directory containing dev_public.jsonl and test_public.jsonl (default: data/v1.0/).",
+    )
+    ap.add_argument(
+        "--dev-path",
+        type=Path,
+        default=None,
+        help="Override path to dev_public.jsonl.",
+    )
+    ap.add_argument(
+        "--test-path",
+        type=Path,
+        default=None,
+        help="Override path to test_public.jsonl.",
     )
     ap.add_argument(
         "--dry-run",
         action="store_true",
         help="Report what would change without writing.",
     )
+    # Legacy compat: if --data-path is supplied, treat it as --dev-path only.
+    ap.add_argument(
+        "--data-path",
+        type=Path,
+        default=None,
+        help=argparse.SUPPRESS,
+    )
     args = ap.parse_args()
-    patch(args.data_path, dry_run=args.dry_run)
+
+    if args.data_path is not None:
+        # Legacy single-file invocation (batch1 compat).
+        dev_path = args.data_path
+        test_path = (
+            (args.data_dir / "test_public.jsonl") if args.test_path is None else args.test_path
+        )
+    else:
+        dev_path = args.dev_path or (args.data_dir / "dev_public.jsonl")
+        test_path = args.test_path or (args.data_dir / "test_public.jsonl")
+
+    patch(dev_path, test_path, dry_run=args.dry_run)
 
 
 if __name__ == "__main__":
