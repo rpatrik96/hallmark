@@ -42,10 +42,19 @@ record by title-fuzz, (b) compared "First Last" author lists against CrossRef's
 "Last, First" format and declared swapped_authors, or (c) treated a non-resolving
 arXiv DataCite DOI as evidence of fabrication.
 
+Batch 3 — "mislabel-audit-2026-05-30-postfix-followup" (1 dev + 1 test, 2 entries)
+-------------------------------------------------------------------------------------
+A post-fix re-run after applying bibtex-check FIX 1+2+3+5 surfaced two additional
+entries that the patched tool now verifies as correct but HALLMARK still labels
+HALLUCINATED. Both were independently confirmed (verify + adversarial refute,
+high-conf) as real, correctly-cited papers. Failure mode identical to batch 2:
+arXiv DataCite DOIs not indexed by CrossRef caused the auto-labeller to emit
+``plausible_fabrication`` for canonical, well-known papers (Imagen, AdaFed).
+
 Provenance / conflict with prior audit
 ---------------------------------------
 The 2026-05-29 batch's adversarial reviewer **explicitly rejected** relabeling
-two entries that appear in this batch:
+two entries that appear in batch 2, and one entry that appears in batch 3:
 
   * ``aaefe29933ae`` — FlashAttention (Tri Dao et al., NeurIPS 2022)
     Prior rejection: "DOI does not resolve" was taken at face value.
@@ -66,7 +75,18 @@ two entries that appear in this batch:
     arXiv and the NeurIPS 2021 proceedings. Deliberate override informed by new
     evidence.
 
-These two relabelings are deliberate, not oversights. The prior-audit provenance
+  * ``fa77166308b0`` — Imagen (Saharia et al., NeurIPS 2022) — relabeled in batch 3
+    Prior rejection: insufficient evidence at the time of the 2026-05-29 audit.
+    Override rationale: arXiv:2205.11487 ("Photorealistic Text-to-Image Diffusion
+    Models with Deep Language Understanding") confirms the 14-author list (Chitwan
+    Saharia, William Chan, Saurabh Saxena, Lala Li, Jay Whang, Emily Denton,
+    Seyed Kamyar Seyed Ghasemipour, Burcu Karagol Ayan, S. Sara Mahdavi, Rapha
+    Gontijo Lopes, Tim Salimans, Jonathan Ho, David J. Fleet, Mohammad Norouzi)
+    and acceptance at NeurIPS 2022. CrossRef non-indexing of the NeurIPS proceedings
+    is the auto-labeller's failure. Independently re-verified on arXiv.
+    Deliberate override informed by new evidence.
+
+All three relabelings are deliberate, not oversights. The prior-audit provenance
 fields (``hallucination_type``, ``explanation``) are preserved verbatim as the
 audit trail.
 
@@ -97,6 +117,9 @@ RELABELED_BY_BATCH1 = "mislabel-audit-2026-05-29"
 
 # Batch 2 tag (3 dev + 13 test, 2026-05-30 leak-followup)
 RELABELED_BY_BATCH2 = "mislabel-audit-2026-05-30-leak-followup"
+
+# Batch 3 tag (1 dev + 1 test, 2026-05-30 post-fix re-run)
+RELABELED_BY_BATCH3 = "mislabel-audit-2026-05-30-postfix-followup"
 
 DEFAULT_DATA_DIR = Path(__file__).resolve().parent.parent / "data" / "v1.0"
 
@@ -299,16 +322,44 @@ CONFIRMED_MISLABELS_BATCH2: dict[str, dict[str, str]] = {
 }
 
 
+# ---------------------------------------------------------------------------
+# Batch 3: dev_public (1) + test_public (1) entries, tag = RELABELED_BY_BATCH3
+# Each value is a dict with "reason" and "split" ("dev"|"test").
+# ---------------------------------------------------------------------------
+CONFIRMED_MISLABELS_BATCH3: dict[str, dict[str, str]] = {
+    # --- dev_public (1 entry) ---
+    "fa77166308b0": {
+        "split": "dev",
+        "reason": (
+            "Real paper (Chitwan Saharia et al., 'Photorealistic Text-to-Image Diffusion "
+            "Models with Deep Language Understanding' [Imagen], NeurIPS 2022, arXiv:2205.11487); "
+            "'plausible_fabrication' was a CrossRef non-index failure on the NeurIPS proceedings — "
+            "14-author list and venue confirmed via arXiv."
+        ),
+    },
+    # --- test_public (1 entry) ---
+    "f746e1c10ae9": {
+        "split": "test",
+        "reason": (
+            "Real paper (Sashank Reddi et al., 'Adaptive Federated Optimization' [AdaFed], "
+            "ICLR 2021, arXiv:2003.00295); 'plausible_fabrication' was a CrossRef non-index "
+            "failure — correct authors and venue confirmed via arXiv."
+        ),
+    },
+}
+
+
 def _patch_split(
     data_path: Path,
     mislabels_batch1: dict[str, str] | None,
     mislabels_batch2: dict[str, dict[str, str]] | None,
+    mislabels_batch3: dict[str, dict[str, str]] | None,
     split_name: str,
     dry_run: bool = False,
-) -> tuple[int, int, int]:
+) -> tuple[int, int, int, int]:
     """Relabel confirmed mislabels in one jsonl file.
 
-    Returns (changed_batch1, changed_batch2, reverted).
+    Returns (changed_batch1, changed_batch2, changed_batch3, reverted).
     """
     if not data_path.exists():
         sys.exit(f"error: dataset not found at {data_path}")
@@ -316,14 +367,18 @@ def _patch_split(
     out_lines: list[str] = []
     changed_b1 = 0
     changed_b2 = 0
+    changed_b3 = 0
     reverted = 0
     seen_b1: set[str] = set()
     seen_b2: set[str] = set()
+    seen_b3: set[str] = set()
     already_b1: list[str] = []
     already_b2: list[str] = []
+    already_b3: list[str] = []
 
     b1 = mislabels_batch1 or {}
     b2 = {k: v for k, v in (mislabels_batch2 or {}).items() if v["split"] == split_name}
+    b3 = {k: v for k, v in (mislabels_batch3 or {}).items() if v["split"] == split_name}
 
     with data_path.open(encoding="utf-8") as fh:
         for raw in fh:
@@ -354,6 +409,16 @@ def _patch_split(
                     rec["relabel_reason"] = b2[key]["reason"]
                     rec["relabeled_by"] = RELABELED_BY_BATCH2
                     changed_b2 += 1
+            elif key in b3:
+                seen_b3.add(key)
+                if rec.get("relabeled_by") == RELABELED_BY_BATCH3:
+                    already_b3.append(key)
+                else:
+                    rec["label"] = "VALID"
+                    rec["relabeled_from"] = "HALLUCINATED"
+                    rec["relabel_reason"] = b3[key]["reason"]
+                    rec["relabeled_by"] = RELABELED_BY_BATCH3
+                    changed_b3 += 1
             elif rec.get("relabeled_by") == RELABELED_BY_BATCH1:
                 # Relabeled by a prior run of batch1 but no longer confirmed
                 # (rejected by adversarial review). Revert.
@@ -367,10 +432,13 @@ def _patch_split(
     # Report missing keys for this split
     missing_b1 = sorted(set(b1) - seen_b1)
     missing_b2 = sorted(set(b2) - seen_b2)
+    missing_b3 = sorted(set(b3) - seen_b3)
     if missing_b1:
         print(f"WARNING [{split_name}]: {len(missing_b1)} batch-1 key(s) not found: {missing_b1}")
     if missing_b2:
         print(f"WARNING [{split_name}]: {len(missing_b2)} batch-2 key(s) not found: {missing_b2}")
+    if missing_b3:
+        print(f"WARNING [{split_name}]: {len(missing_b3)} batch-3 key(s) not found: {missing_b3}")
     if already_b1:
         print(
             f"Idempotent skip [{split_name}]: {len(already_b1)} batch-1 record(s) already relabeled."
@@ -379,29 +447,33 @@ def _patch_split(
         print(
             f"Idempotent skip [{split_name}]: {len(already_b2)} batch-2 record(s) already relabeled."
         )
+    if already_b3:
+        print(
+            f"Idempotent skip [{split_name}]: {len(already_b3)} batch-3 record(s) already relabeled."
+        )
 
     if dry_run:
-        total = changed_b1 + changed_b2
+        total = changed_b1 + changed_b2 + changed_b3
         print(
             f"[dry-run] [{split_name}] would relabel {total} record(s) "
-            f"(batch1={changed_b1}, batch2={changed_b2}); no file written."
+            f"(batch1={changed_b1}, batch2={changed_b2}, batch3={changed_b3}); no file written."
         )
-        return changed_b1, changed_b2, reverted
+        return changed_b1, changed_b2, changed_b3, reverted
 
     tmp = data_path.with_suffix(data_path.suffix + ".tmp")
     tmp.write_text("\n".join(out_lines) + "\n", encoding="utf-8")
     tmp.replace(data_path)
-    total = changed_b1 + changed_b2
+    total = changed_b1 + changed_b2 + changed_b3
     print(
         f"[{split_name}] Relabeled {total} record(s) HALLUCINATED -> VALID "
-        f"(batch1={changed_b1}, batch2={changed_b2}) in {data_path}"
+        f"(batch1={changed_b1}, batch2={changed_b2}, batch3={changed_b3}) in {data_path}"
     )
     if reverted:
         print(
             f"[{split_name}] Reverted {reverted} record(s) VALID -> HALLUCINATED "
             "(rejected by adversarial review)."
         )
-    return changed_b1, changed_b2, reverted
+    return changed_b1, changed_b2, changed_b3, reverted
 
 
 def patch(
@@ -410,24 +482,27 @@ def patch(
     dry_run: bool = False,
 ) -> int:
     """Relabel confirmed mislabels in dev and test splits. Returns total records changed."""
-    b1_dev, b2_dev, _rev_dev = _patch_split(
+    b1_dev, b2_dev, b3_dev, _rev_dev = _patch_split(
         dev_path,
         mislabels_batch1=CONFIRMED_MISLABELS_BATCH1,
         mislabels_batch2=CONFIRMED_MISLABELS_BATCH2,
+        mislabels_batch3=CONFIRMED_MISLABELS_BATCH3,
         split_name="dev",
         dry_run=dry_run,
     )
-    _, b2_test, _rev_test = _patch_split(
+    _, b2_test, b3_test, _rev_test = _patch_split(
         test_path,
         mislabels_batch1=None,  # batch1 was dev-only
         mislabels_batch2=CONFIRMED_MISLABELS_BATCH2,
+        mislabels_batch3=CONFIRMED_MISLABELS_BATCH3,
         split_name="test",
         dry_run=dry_run,
     )
-    total = b1_dev + b2_dev + b2_test
+    total = b1_dev + b2_dev + b3_dev + b2_test + b3_test
     print(
         f"\nTotal relabeled: {total} "
-        f"(dev batch1={b1_dev}, dev batch2={b2_dev}, test batch2={b2_test})"
+        f"(dev batch1={b1_dev}, dev batch2={b2_dev}, dev batch3={b3_dev}, "
+        f"test batch2={b2_test}, test batch3={b3_test})"
     )
     return total
 
