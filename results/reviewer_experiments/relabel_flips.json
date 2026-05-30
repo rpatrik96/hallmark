@@ -1,0 +1,37 @@
+{
+  "dev_public": [
+    "d0f7f9c72c33",
+    "f802800935ef",
+    "c65faf378a95",
+    "b939e55d7555",
+    "a24129d1c5e5",
+    "e9e08922a057",
+    "db9d82ff3f94",
+    "ff2931c3228f",
+    "dae1eb71d49a",
+    "ded9f5844e90"
+  ],
+  "test_public": [
+    "cff2f0bb469f",
+    "eae03804fd48",
+    "c62f826741b3",
+    "d632f7211d63",
+    "c3e070166df2",
+    "e8e1379d3939",
+    "e7e5083fa94f",
+    "c5b31d38c496",
+    "d27ac16ca85a",
+    "d87ce678eb11"
+  ],
+  "test_hidden": [
+    "f8d03d9c62d8",
+    "a1ba775dc84c",
+    "fa328ba7db5c",
+    "e016dccfffd1",
+    "de22eeceb9cc",
+    "b7c28dc201cb",
+    "ffcacbc8e456",
+    "c71f7ac5e0e3",
+    "e2ed60d91a4d"
+  ]
+}
