@@ -1,0 +1,1000 @@
+{
+  "labels": "post-relabel (fix/dev-public-mislabel-audit)",
+  "pi_grid": [
+    0.01,
+    0.02,
+    0.03,
+    0.04,
+    0.05
+  ],
+  "pertype_full": {
+    "doi_only": {
+      "kind": "summary",
+      "per_type_dr": {
+        "fabricated_doi": 0.59,
+        "nonexistent_venue": 0.125,
+        "placeholder_authors": 0.235,
+        "future_date": 1.0,
+        "chimeric_title": 0.143,
+        "wrong_venue": 0.2,
+        "swapped_authors": 0.206,
+        "preprint_as_published": 0.129,
+        "hybrid_fabrication": 0.261,
+        "near_miss_title": 0.086,
+        "plausible_fabrication": 0.036
+      },
+      "per_type_count": {
+        "fabricated_doi": 61,
+        "nonexistent_venue": 32,
+        "placeholder_authors": 34,
+        "future_date": 31,
+        "chimeric_title": 35,
+        "wrong_venue": 35,
+        "swapped_authors": 68,
+        "preprint_as_published": 31,
+        "hybrid_fabrication": 46,
+        "near_miss_title": 35,
+        "plausible_fabrication": 84
+      }
+    },
+    "llm_openai": {
+      "kind": "offline",
+      "per_type_dr": {
+        "fabricated_doi": 1.0,
+        "nonexistent_venue": 1.0,
+        "placeholder_authors": 1.0,
+        "future_date": 1.0,
+        "chimeric_title": 0.894,
+        "wrong_venue": 0.851,
+        "swapped_authors": 0.448,
+        "preprint_as_published": 0.742,
+        "hybrid_fabrication": 1.0,
+        "near_miss_title": 0.577,
+        "plausible_fabrication": 0.934
+      },
+      "per_type_count": {
+        "fabricated_doi": 39,
+        "nonexistent_venue": 39,
+        "placeholder_authors": 41,
+        "future_date": 30,
+        "chimeric_title": 47,
+        "wrong_venue": 47,
+        "swapped_authors": 67,
+        "preprint_as_published": 31,
+        "hybrid_fabrication": 26,
+        "near_miss_title": 52,
+        "plausible_fabrication": 76
+      }
+    },
+    "llm_openai_gpt-5.4": {
+      "kind": "offline",
+      "per_type_dr": {
+        "fabricated_doi": 0.974,
+        "nonexistent_venue": 1.0,
+        "placeholder_authors": 0.927,
+        "future_date": 1.0,
+        "chimeric_title": 0.872,
+        "wrong_venue": 0.766,
+        "swapped_authors": 0.433,
+        "preprint_as_published": 0.581,
+        "hybrid_fabrication": 0.962,
+        "near_miss_title": 0.462,
+        "plausible_fabrication": 0.895
+      },
+      "per_type_count": {
+        "fabricated_doi": 39,
+        "nonexistent_venue": 39,
+        "placeholder_authors": 41,
+        "future_date": 30,
+        "chimeric_title": 47,
+        "wrong_venue": 47,
+        "swapped_authors": 67,
+        "preprint_as_published": 31,
+        "hybrid_fabrication": 26,
+        "near_miss_title": 52,
+        "plausible_fabrication": 76
+      }
+    },
+    "llm_openrouter_claude_sonnet_4_6": {
+      "kind": "summary",
+      "per_type_dr": {
+        "fabricated_doi": 0.821,
+        "nonexistent_venue": 1.0,
+        "placeholder_authors": 0.956,
+        "future_date": 1.0,
+        "chimeric_title": 0.907,
+        "wrong_venue": 0.761,
+        "swapped_authors": 0.612,
+        "preprint_as_published": 0.742,
+        "hybrid_fabrication": 0.8,
+        "near_miss_title": 0.366,
+        "plausible_fabrication": 0.845
+      },
+      "per_type_count": {
+        "fabricated_doi": 39,
+        "nonexistent_venue": 40,
+        "placeholder_authors": 45,
+        "future_date": 30,
+        "chimeric_title": 43,
+        "wrong_venue": 46,
+        "swapped_authors": 67,
+        "preprint_as_published": 31,
+        "hybrid_fabrication": 45,
+        "near_miss_title": 41,
+        "plausible_fabrication": 116
+      }
+    },
+    "llm_openrouter_claude_opus_4_7": {
+      "kind": "summary",
+      "per_type_dr": {
+        "fabricated_doi": 0.436,
+        "nonexistent_venue": 0.975,
+        "placeholder_authors": 1.0,
+        "future_date": 0.1,
+        "chimeric_title": 0.977,
+        "wrong_venue": 0.891,
+        "swapped_authors": 0.701,
+        "preprint_as_published": 0.806,
+        "hybrid_fabrication": 0.822,
+        "near_miss_title": 0.463,
+        "plausible_fabrication": 0.81
+      },
+      "per_type_count": {
+        "fabricated_doi": 39,
+        "nonexistent_venue": 40,
+        "placeholder_authors": 45,
+        "future_date": 30,
+        "chimeric_title": 43,
+        "wrong_venue": 46,
+        "swapped_authors": 67,
+        "preprint_as_published": 31,
+        "hybrid_fabrication": 45,
+        "near_miss_title": 41,
+        "plausible_fabrication": 116
+      }
+    },
+    "llm_openrouter_deepseek_r1": {
+      "kind": "offline",
+      "per_type_dr": {
+        "fabricated_doi": 1.0,
+        "nonexistent_venue": 1.0,
+        "placeholder_authors": 1.0,
+        "future_date": 1.0,
+        "chimeric_title": 0.867,
+        "wrong_venue": 0.957,
+        "swapped_authors": 0.657,
+        "preprint_as_published": 0.9,
+        "hybrid_fabrication": 1.0,
+        "near_miss_title": 0.731,
+        "plausible_fabrication": 0.974
+      },
+      "per_type_count": {
+        "fabricated_doi": 39,
+        "nonexistent_venue": 39,
+        "placeholder_authors": 41,
+        "future_date": 30,
+        "chimeric_title": 47,
+        "wrong_venue": 47,
+        "swapped_authors": 67,
+        "preprint_as_published": 31,
+        "hybrid_fabrication": 26,
+        "near_miss_title": 52,
+        "plausible_fabrication": 76
+      }
+    },
+    "llm_openrouter_deepseek_v3": {
+      "kind": "offline",
+      "per_type_dr": {
+        "fabricated_doi": 1.0,
+        "nonexistent_venue": 1.0,
+        "placeholder_authors": 1.0,
+        "future_date": 1.0,
+        "chimeric_title": 0.979,
+        "wrong_venue": 0.915,
+        "swapped_authors": 0.716,
+        "preprint_as_published": 0.839,
+        "hybrid_fabrication": 1.0,
+        "near_miss_title": 0.788,
+        "plausible_fabrication": 0.961
+      },
+      "per_type_count": {
+        "fabricated_doi": 39,
+        "nonexistent_venue": 39,
+        "placeholder_authors": 41,
+        "future_date": 30,
+        "chimeric_title": 47,
+        "wrong_venue": 47,
+        "swapped_authors": 67,
+        "preprint_as_published": 31,
+        "hybrid_fabrication": 26,
+        "near_miss_title": 52,
+        "plausible_fabrication": 76
+      }
+    },
+    "llm_openrouter_qwen": {
+      "kind": "offline",
+      "per_type_dr": {
+        "fabricated_doi": 1.0,
+        "nonexistent_venue": 1.0,
+        "placeholder_authors": 0.902,
+        "future_date": 1.0,
+        "chimeric_title": 0.83,
+        "wrong_venue": 0.915,
+        "swapped_authors": 0.522,
+        "preprint_as_published": 0.903,
+        "hybrid_fabrication": 0.885,
+        "near_miss_title": 0.673,
+        "plausible_fabrication": 0.987
+      },
+      "per_type_count": {
+        "fabricated_doi": 39,
+        "nonexistent_venue": 39,
+        "placeholder_authors": 41,
+        "future_date": 30,
+        "chimeric_title": 47,
+        "wrong_venue": 47,
+        "swapped_authors": 67,
+        "preprint_as_published": 31,
+        "hybrid_fabrication": 26,
+        "near_miss_title": 52,
+        "plausible_fabrication": 76
+      }
+    },
+    "llm_openrouter_mistral": {
+      "kind": "offline",
+      "per_type_dr": {
+        "fabricated_doi": 0.974,
+        "nonexistent_venue": 0.974,
+        "placeholder_authors": 0.927,
+        "future_date": 1.0,
+        "chimeric_title": 0.809,
+        "wrong_venue": 0.689,
+        "swapped_authors": 0.348,
+        "preprint_as_published": 0.452,
+        "hybrid_fabrication": 0.923,
+        "near_miss_title": 0.558,
+        "plausible_fabrication": 0.842
+      },
+      "per_type_count": {
+        "fabricated_doi": 39,
+        "nonexistent_venue": 39,
+        "placeholder_authors": 41,
+        "future_date": 30,
+        "chimeric_title": 47,
+        "wrong_venue": 47,
+        "swapped_authors": 67,
+        "preprint_as_published": 31,
+        "hybrid_fabrication": 26,
+        "near_miss_title": 52,
+        "plausible_fabrication": 76
+      }
+    },
+    "llm_openrouter_gemini_flash": {
+      "kind": "offline",
+      "per_type_dr": {
+        "fabricated_doi": 0.943,
+        "nonexistent_venue": 0.513,
+        "placeholder_authors": 0.463,
+        "future_date": 1.0,
+        "chimeric_title": 0.5,
+        "wrong_venue": 0.587,
+        "swapped_authors": 0.106,
+        "preprint_as_published": 0.419,
+        "hybrid_fabrication": 0.692,
+        "near_miss_title": 0.22,
+        "plausible_fabrication": 0.64
+      },
+      "per_type_count": {
+        "fabricated_doi": 39,
+        "nonexistent_venue": 39,
+        "placeholder_authors": 41,
+        "future_date": 30,
+        "chimeric_title": 47,
+        "wrong_venue": 47,
+        "swapped_authors": 67,
+        "preprint_as_published": 31,
+        "hybrid_fabrication": 26,
+        "near_miss_title": 52,
+        "plausible_fabrication": 76
+      }
+    },
+    "llm_openrouter_llama_4_maverick": {
+      "kind": "offline",
+      "per_type_dr": {
+        "fabricated_doi": 1.0,
+        "nonexistent_venue": 0.949,
+        "placeholder_authors": 0.61,
+        "future_date": 1.0,
+        "chimeric_title": 0.596,
+        "wrong_venue": 0.617,
+        "swapped_authors": 0.194,
+        "preprint_as_published": 0.548,
+        "hybrid_fabrication": 0.692,
+        "near_miss_title": 0.269,
+        "plausible_fabrication": 0.842
+      },
+      "per_type_count": {
+        "fabricated_doi": 39,
+        "nonexistent_venue": 39,
+        "placeholder_authors": 41,
+        "future_date": 30,
+        "chimeric_title": 47,
+        "wrong_venue": 47,
+        "swapped_authors": 67,
+        "preprint_as_published": 31,
+        "hybrid_fabrication": 26,
+        "near_miss_title": 52,
+        "plausible_fabrication": 76
+      }
+    },
+    "llm_openrouter_gemini_pro": {
+      "kind": "offline",
+      "per_type_dr": {
+        "fabricated_doi": 0.703,
+        "nonexistent_venue": 0.571,
+        "placeholder_authors": 0.805,
+        "future_date": 0.857,
+        "chimeric_title": 0.614,
+        "wrong_venue": 0.422,
+        "swapped_authors": 0.106,
+        "preprint_as_published": 0.1,
+        "hybrid_fabrication": 0.846,
+        "near_miss_title": 0.196,
+        "plausible_fabrication": 0.68
+      },
+      "per_type_count": {
+        "fabricated_doi": 39,
+        "nonexistent_venue": 39,
+        "placeholder_authors": 41,
+        "future_date": 30,
+        "chimeric_title": 47,
+        "wrong_venue": 47,
+        "swapped_authors": 67,
+        "preprint_as_published": 31,
+        "hybrid_fabrication": 26,
+        "near_miss_title": 52,
+        "plausible_fabrication": 76
+      }
+    },
+    "llm_openrouter_qwen_max": {
+      "kind": "offline",
+      "per_type_dr": {
+        "fabricated_doi": 1.0,
+        "nonexistent_venue": 1.0,
+        "placeholder_authors": 0.927,
+        "future_date": 1.0,
+        "chimeric_title": 0.915,
+        "wrong_venue": 0.851,
+        "swapped_authors": 0.522,
+        "preprint_as_published": 0.806,
+        "hybrid_fabrication": 0.923,
+        "near_miss_title": 0.712,
+        "plausible_fabrication": 0.974
+      },
+      "per_type_count": {
+        "fabricated_doi": 39,
+        "nonexistent_venue": 39,
+        "placeholder_authors": 41,
+        "future_date": 30,
+        "chimeric_title": 47,
+        "wrong_venue": 47,
+        "swapped_authors": 67,
+        "preprint_as_published": 31,
+        "hybrid_fabrication": 26,
+        "near_miss_title": 52,
+        "plausible_fabrication": 76
+      }
+    }
+  },
+  "codesign_pertype": {
+    "kind": "summary",
+    "per_type_dr": {
+      "fabricated_doi": 0.949,
+      "nonexistent_venue": 0.925,
+      "placeholder_authors": 1.0,
+      "future_date": 1.0,
+      "chimeric_title": 0.977,
+      "wrong_venue": 0.978,
+      "swapped_authors": 0.94,
+      "preprint_as_published": 1.0,
+      "hybrid_fabrication": 0.911,
+      "near_miss_title": 0.927,
+      "plausible_fabrication": 0.897
+    },
+    "note": "summary-only on dev: per-type hallucinated buckets carried from published (moved keys are real papers wrongly typed; buckets not safely decremented). FLAG F5 — treat as approximately unchanged."
+  },
+  "ppv_sweep": {
+    "rows": [
+      {
+        "tool": "Gemini 2.5 Pro",
+        "dr": 0.476,
+        "fpr": 0.05,
+        "ppv": {
+          "0.01": 0.0877,
+          "0.02": 0.1627,
+          "0.03": 0.2274,
+          "0.04": 0.284,
+          "0.05": 0.3338
+        },
+        "ppv_pct_at_2pct": 16.3
+      },
+      {
+        "tool": "Claude Opus 4.7",
+        "dr": 0.752,
+        "fpr": 0.072,
+        "ppv": {
+          "0.01": 0.0953,
+          "0.02": 0.1755,
+          "0.03": 0.244,
+          "0.04": 0.303,
+          "0.05": 0.3545
+        },
+        "ppv_pct_at_2pct": 17.6
+      },
+      {
+        "tool": "Gemini 2.5 Flash",
+        "dr": 0.5,
+        "fpr": 0.1,
+        "ppv": {
+          "0.01": 0.0481,
+          "0.02": 0.0926,
+          "0.03": 0.1339,
+          "0.04": 0.1724,
+          "0.05": 0.2083
+        },
+        "ppv_pct_at_2pct": 9.3
+      },
+      {
+        "tool": "Claude Sonnet 4.6",
+        "dr": 0.781,
+        "fpr": 0.127,
+        "ppv": {
+          "0.01": 0.0586,
+          "0.02": 0.1117,
+          "0.03": 0.16,
+          "0.04": 0.2042,
+          "0.05": 0.2448
+        },
+        "ppv_pct_at_2pct": 11.2
+      },
+      {
+        "tool": "Llama 4 Maverick",
+        "dr": 0.614,
+        "fpr": 0.146,
+        "ppv": {
+          "0.01": 0.0407,
+          "0.02": 0.0789,
+          "0.03": 0.1149,
+          "0.04": 0.1489,
+          "0.05": 0.181
+        },
+        "ppv_pct_at_2pct": 7.9
+      },
+      {
+        "tool": "GPT-5.4",
+        "dr": 0.767,
+        "fpr": 0.228,
+        "ppv": {
+          "0.01": 0.0329,
+          "0.02": 0.0643,
+          "0.03": 0.0942,
+          "0.04": 0.1229,
+          "0.05": 0.1504
+        },
+        "ppv_pct_at_2pct": 6.4
+      },
+      {
+        "tool": "Mistral Large",
+        "dr": 0.716,
+        "fpr": 0.25,
+        "ppv": {
+          "0.01": 0.0281,
+          "0.02": 0.0552,
+          "0.03": 0.0813,
+          "0.04": 0.1065,
+          "0.05": 0.1308
+        },
+        "ppv_pct_at_2pct": 5.5
+      },
+      {
+        "tool": "GPT-5.1",
+        "dr": 0.837,
+        "fpr": 0.411,
+        "ppv": {
+          "0.01": 0.0201,
+          "0.02": 0.0399,
+          "0.03": 0.0592,
+          "0.04": 0.0781,
+          "0.05": 0.0967
+        },
+        "ppv_pct_at_2pct": 4.0
+      },
+      {
+        "tool": "Qwen3-235B",
+        "dr": 0.86,
+        "fpr": 0.533,
+        "ppv": {
+          "0.01": 0.016,
+          "0.02": 0.0318,
+          "0.03": 0.0475,
+          "0.04": 0.0629,
+          "0.05": 0.0782
+        },
+        "ppv_pct_at_2pct": 3.2
+      },
+      {
+        "tool": "Qwen3-VL-235B",
+        "dr": 0.86,
+        "fpr": 0.551,
+        "ppv": {
+          "0.01": 0.0155,
+          "0.02": 0.0309,
+          "0.03": 0.0461,
+          "0.04": 0.0611,
+          "0.05": 0.0759
+        },
+        "ppv_pct_at_2pct": 3.1
+      },
+      {
+        "tool": "DeepSeek-R1",
+        "dr": 0.896,
+        "fpr": 0.623,
+        "ppv": {
+          "0.01": 0.0143,
+          "0.02": 0.0285,
+          "0.03": 0.0426,
+          "0.04": 0.0566,
+          "0.05": 0.0704
+        },
+        "ppv_pct_at_2pct": 2.9
+      },
+      {
+        "tool": "DeepSeek-V3.2",
+        "dr": 0.911,
+        "fpr": 0.702,
+        "ppv": {
+          "0.01": 0.0129,
+          "0.02": 0.0258,
+          "0.03": 0.0386,
+          "0.04": 0.0513,
+          "0.05": 0.0639
+        },
+        "ppv_pct_at_2pct": 2.6
+      },
+      {
+        "tool": "DOI-only",
+        "dr": 0.268,
+        "fpr": 0.185,
+        "ppv": {
+          "0.01": 0.0144,
+          "0.02": 0.0287,
+          "0.03": 0.0429,
+          "0.04": 0.057,
+          "0.05": 0.0709
+        },
+        "ppv_pct_at_2pct": 2.9
+      },
+      {
+        "tool": "bibtex-updater",
+        "dr": 0.969,
+        "fpr": 0.193,
+        "ppv": {
+          "0.01": 0.0483,
+          "0.02": 0.0929,
+          "0.03": 0.1344,
+          "0.04": 0.173,
+          "0.05": 0.209
+        },
+        "ppv_pct_at_2pct": 9.3
+      }
+    ],
+    "fpr_ascending_order": [
+      [
+        "Gemini 2.5 Pro",
+        0.05
+      ],
+      [
+        "Claude Opus 4.7",
+        0.072
+      ],
+      [
+        "Gemini 2.5 Flash",
+        0.1
+      ],
+      [
+        "Claude Sonnet 4.6",
+        0.127
+      ],
+      [
+        "Llama 4 Maverick",
+        0.146
+      ],
+      [
+        "DOI-only",
+        0.185
+      ],
+      [
+        "bibtex-updater",
+        0.193
+      ],
+      [
+        "GPT-5.4",
+        0.228
+      ],
+      [
+        "Mistral Large",
+        0.25
+      ],
+      [
+        "GPT-5.1",
+        0.411
+      ],
+      [
+        "Qwen3-235B",
+        0.533
+      ],
+      [
+        "Qwen3-VL-235B",
+        0.551
+      ],
+      [
+        "DeepSeek-R1",
+        0.623
+      ],
+      [
+        "DeepSeek-V3.2",
+        0.702
+      ]
+    ],
+    "ppv_at_2pct_descending_order": [
+      [
+        "Claude Opus 4.7",
+        17.6
+      ],
+      [
+        "Gemini 2.5 Pro",
+        16.3
+      ],
+      [
+        "Claude Sonnet 4.6",
+        11.2
+      ],
+      [
+        "bibtex-updater",
+        9.3
+      ],
+      [
+        "Gemini 2.5 Flash",
+        9.3
+      ],
+      [
+        "Llama 4 Maverick",
+        7.9
+      ],
+      [
+        "GPT-5.4",
+        6.4
+      ],
+      [
+        "Mistral Large",
+        5.5
+      ],
+      [
+        "GPT-5.1",
+        4.0
+      ],
+      [
+        "Qwen3-235B",
+        3.2
+      ],
+      [
+        "Qwen3-VL-235B",
+        3.1
+      ],
+      [
+        "DOI-only",
+        2.9
+      ],
+      [
+        "DeepSeek-R1",
+        2.9
+      ],
+      [
+        "DeepSeek-V3.2",
+        2.6
+      ]
+    ]
+  },
+  "cascade_t3": {
+    "dev cons": {
+      "t3_f1_faithful": 0.417,
+      "t3_dr": 0.96,
+      "t3_precision": 0.266,
+      "t3_num_hallucinated": 173,
+      "stale_field_tier3_f1": 0.41702127659574467,
+      "stale_field_auroc": 0.8330427518070539,
+      "auroc_recomputable": false
+    },
+    "test cons": {
+      "t3_f1_faithful": 0.596,
+      "t3_dr": 0.948,
+      "t3_precision": 0.434,
+      "t3_num_hallucinated": 155,
+      "stale_field_tier3_f1": 0.5963855421686747,
+      "stale_field_auroc": 0.8669147683131595,
+      "auroc_recomputable": false
+    },
+    "dev agg": {
+      "t3_f1_faithful": 0.57,
+      "t3_dr": 0.977,
+      "t3_precision": 0.402,
+      "t3_num_hallucinated": 173,
+      "stale_field_tier3_f1": 0.5700934579439253,
+      "stale_field_auroc": 0.739903718006228,
+      "auroc_recomputable": false
+    },
+    "test agg": {
+      "t3_f1_faithful": 0.707,
+      "t3_dr": 0.968,
+      "t3_precision": 0.556,
+      "t3_num_hallucinated": 155,
+      "stale_field_tier3_f1": 0.7068965517241379,
+      "stale_field_auroc": 0.804615443738471,
+      "auroc_recomputable": false
+    }
+  },
+  "uncertain": {
+    "bibtexupdater": {
+      "dev_public": {
+        "num_uncertain": 0,
+        "num_entries": 1119,
+        "pct": 0.0
+      },
+      "test_public": {
+        "num_uncertain": 0,
+        "num_entries": 831,
+        "pct": 0.0
+      }
+    },
+    "doi_only": {
+      "dev_public": {
+        "num_uncertain": 0,
+        "num_entries": 1068,
+        "pct": 0.0
+      },
+      "test_public": {
+        "num_uncertain": 0,
+        "num_entries": 831,
+        "pct": 0.0
+      }
+    },
+    "harc": {
+      "dev_public": {
+        "num_uncertain": 0,
+        "num_entries": 1119,
+        "pct": 0.0
+      }
+    },
+    "llm_agentic_btu_openai": {
+      "dev_public": {
+        "num_uncertain": 0,
+        "num_entries": 1119,
+        "pct": 0.0
+      },
+      "test_public": {
+        "num_uncertain": 0,
+        "num_entries": 831,
+        "pct": 0.0
+      }
+    },
+    "llm_agentic_btu_sonnet_4_6": {
+      "dev_public": {
+        "num_uncertain": 0,
+        "num_entries": 1119,
+        "pct": 0.0
+      },
+      "test_public": {
+        "num_uncertain": 0,
+        "num_entries": 831,
+        "pct": 0.0
+      }
+    },
+    "llm_agentic_openai": {
+      "dev_public": {
+        "num_uncertain": 0,
+        "num_entries": 1119,
+        "pct": 0.0
+      },
+      "test_public": {
+        "num_uncertain": 0,
+        "num_entries": 831,
+        "pct": 0.0
+      }
+    },
+    "llm_openai": {
+      "dev_public": {
+        "num_uncertain": 0,
+        "num_entries": 1119,
+        "pct": 0.0
+      },
+      "test_public": {
+        "num_uncertain": 0,
+        "num_entries": 831,
+        "pct": 0.0
+      }
+    },
+    "llm_openai_gpt-5.4": {
+      "dev_public": {
+        "num_uncertain": 0,
+        "num_entries": 1119,
+        "pct": 0.0
+      },
+      "test_public": {
+        "num_uncertain": null,
+        "num_entries": 831,
+        "pct": null
+      }
+    },
+    "llm_openrouter_claude_opus_4_7": {
+      "dev_public": {
+        "num_uncertain": 0,
+        "num_entries": 1119,
+        "pct": 0.0
+      },
+      "test_public": {
+        "num_uncertain": 1,
+        "num_entries": 831,
+        "pct": 0.1
+      }
+    },
+    "llm_openrouter_claude_sonnet_4_6": {
+      "dev_public": {
+        "num_uncertain": 0,
+        "num_entries": 1119,
+        "pct": 0.0
+      },
+      "test_public": {
+        "num_uncertain": 0,
+        "num_entries": 831,
+        "pct": 0.0
+      }
+    },
+    "llm_openrouter_deepseek_r1": {
+      "dev_public": {
+        "num_uncertain": 18,
+        "num_entries": 1119,
+        "pct": 1.6
+      },
+      "test_public": {
+        "num_uncertain": 180,
+        "num_entries": 831,
+        "pct": 21.7
+      }
+    },
+    "llm_openrouter_deepseek_v3": {
+      "dev_public": {
+        "num_uncertain": 0,
+        "num_entries": 1119,
+        "pct": 0.0
+      },
+      "test_public": {
+        "num_uncertain": 0,
+        "num_entries": 831,
+        "pct": 0.0
+      }
+    },
+    "llm_openrouter_gemini_flash": {
+      "dev_public": {
+        "num_uncertain": 13,
+        "num_entries": 1119,
+        "pct": 1.2
+      },
+      "test_public": {
+        "num_uncertain": 0,
+        "num_entries": 831,
+        "pct": 0.0
+      }
+    },
+    "llm_openrouter_gemini_pro": {
+      "dev_public": {
+        "num_uncertain": 37,
+        "num_entries": 1119,
+        "pct": 3.3
+      },
+      "test_public": {
+        "num_uncertain": 77,
+        "num_entries": 831,
+        "pct": 9.3
+      }
+    },
+    "llm_openrouter_llama_4_maverick": {
+      "dev_public": {
+        "num_uncertain": 0,
+        "num_entries": 1119,
+        "pct": 0.0
+      },
+      "test_public": {
+        "num_uncertain": 1,
+        "num_entries": 831,
+        "pct": 0.1
+      }
+    },
+    "llm_openrouter_mistral": {
+      "dev_public": {
+        "num_uncertain": 12,
+        "num_entries": 1119,
+        "pct": 1.1
+      },
+      "test_public": {
+        "num_uncertain": 0,
+        "num_entries": 831,
+        "pct": 0.0
+      }
+    },
+    "llm_openrouter_qwen": {
+      "dev_public": {
+        "num_uncertain": 2,
+        "num_entries": 1119,
+        "pct": 0.2
+      },
+      "test_public": {
+        "num_uncertain": 1,
+        "num_entries": 831,
+        "pct": 0.1
+      }
+    },
+    "llm_openrouter_qwen_max": {
+      "dev_public": {
+        "num_uncertain": 1,
+        "num_entries": 1119,
+        "pct": 0.1
+      },
+      "test_public": {
+        "num_uncertain": 0,
+        "num_entries": 831,
+        "pct": 0.0
+      }
+    },
+    "llm_tool_augmented": {
+      "test_public": {
+        "num_uncertain": 0,
+        "num_entries": 831,
+        "pct": 0.0
+      }
+    }
+  },
+  "mcc_confusion": {
+    "bibtexupdater/dev_public": {
+      "TP": 587,
+      "FP": 99,
+      "FN": 19,
+      "TN": 414,
+      "mcc_new": 0.794,
+      "mcc_old_stored": null
+    },
+    "bibtexupdater/test_public": {
+      "TP": 474,
+      "FP": 105,
+      "FN": 45,
+      "TN": 207,
+      "mcc_new": 0.608,
+      "mcc_old_stored": 0.5669193490618452
+    },
+    "doi_only/dev_public": {
+      "TP": 149,
+      "FP": 95,
+      "FN": 406,
+      "TN": 418,
+      "mcc_new": 0.099,
+      "mcc_old_stored": null
+    },
+    "doi_only/test_public": {
+      "TP": 201,
+      "FP": 87,
+      "FN": 318,
+      "TN": 225,
+      "mcc_new": 0.11,
+      "mcc_old_stored": 0.06629507651314782
+    }
+  }
+}

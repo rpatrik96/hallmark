@@ -1,0 +1,164 @@
+{
+  "d0f7f9c72c33": {
+    "label": "VALID",
+    "confidence": 0.6685,
+    "reason": "Status: verified",
+    "source": "tool"
+  },
+  "ed071a6dfa34": {
+    "label": "VALID",
+    "confidence": 0.6685,
+    "reason": "Status: verified",
+    "source": "tool"
+  },
+  "fa77166308b0": {
+    "label": "HALLUCINATED",
+    "confidence": 0.42000000000000004,
+    "reason": "Status: author_mismatch; Mismatched: ['author']",
+    "source": "tool"
+  },
+  "d7bd062b5e1b": {
+    "label": "VALID",
+    "confidence": 0.6685,
+    "reason": "Status: verified",
+    "source": "tool"
+  },
+  "f802800935ef": {
+    "label": "VALID",
+    "confidence": 0.6685,
+    "reason": "Status: verified",
+    "source": "tool"
+  },
+  "c65faf378a95": {
+    "label": "HALLUCINATED",
+    "confidence": 0.4095,
+    "reason": "Status: partial_match; Mismatched: ['title', 'author', 'year', 'venue']",
+    "source": "tool"
+  },
+  "eaa48be036ab": {
+    "label": "HALLUCINATED",
+    "confidence": 0.364,
+    "reason": "Status: partial_match; Mismatched: ['title', 'author', 'venue']",
+    "source": "tool"
+  },
+  "b939e55d7555": {
+    "label": "HALLUCINATED",
+    "confidence": 0.364,
+    "reason": "Status: partial_match; Mismatched: ['author', 'venue']",
+    "source": "tool"
+  },
+  "a4d318041956": {
+    "label": "VALID",
+    "confidence": 0.6685,
+    "reason": "Status: verified",
+    "source": "tool"
+  },
+  "dccb0bb90563": {
+    "label": "VALID",
+    "confidence": 0.6685,
+    "reason": "Status: verified",
+    "source": "tool"
+  },
+  "bb8032fd12d8": {
+    "label": "HALLUCINATED",
+    "confidence": 0.42000000000000004,
+    "reason": "Status: author_mismatch; Mismatched: ['author']",
+    "source": "tool"
+  },
+  "c337460709f1": {
+    "label": "HALLUCINATED",
+    "confidence": 0.5109859154929577,
+    "reason": "Status: hallucinated; Mismatched: ['title', 'author', 'year', 'venue']",
+    "source": "tool"
+  },
+  "e2c14cf2d74b": {
+    "label": "VALID",
+    "confidence": 0.635075,
+    "reason": "Status: verified",
+    "source": "tool"
+  },
+  "a24129d1c5e5": {
+    "label": "HALLUCINATED",
+    "confidence": 0.42000000000000004,
+    "reason": "Status: author_mismatch; Mismatched: ['author']",
+    "source": "tool"
+  },
+  "e9e08922a057": {
+    "label": "HALLUCINATED",
+    "confidence": 0.364,
+    "reason": "Status: partial_match; Mismatched: ['author', 'venue']",
+    "source": "tool"
+  },
+  "db9d82ff3f94": {
+    "label": "HALLUCINATED",
+    "confidence": 0.6176842105263157,
+    "reason": "Status: hallucinated; Mismatched: ['title', 'author', 'venue']",
+    "source": "tool"
+  },
+  "ec7fc7e09a4f": {
+    "label": "HALLUCINATED",
+    "confidence": 0.364,
+    "reason": "Status: partial_match; Mismatched: ['title', 'author', 'venue']",
+    "source": "tool"
+  },
+  "ff2931c3228f": {
+    "label": "VALID",
+    "confidence": 0.6685,
+    "reason": "Status: verified",
+    "source": "tool"
+  },
+  "dae1eb71d49a": {
+    "label": "VALID",
+    "confidence": 0.5,
+    "reason": "Entry not in bibtex-check output",
+    "source": "tool"
+  },
+  "f36bff1b0e11": {
+    "label": "VALID",
+    "confidence": 0.6685,
+    "reason": "Status: verified",
+    "source": "tool"
+  },
+  "ded9f5844e90": {
+    "label": "VALID",
+    "confidence": 0.6685,
+    "reason": "Status: verified",
+    "source": "tool"
+  },
+  "fc4aaf478a08": {
+    "label": "VALID",
+    "confidence": 0.6685,
+    "reason": "Status: verified",
+    "source": "tool"
+  },
+  "cdfcc07dff9e": {
+    "label": "VALID",
+    "confidence": 0.6685,
+    "reason": "Status: verified",
+    "source": "tool"
+  },
+  "b4268fa6464e": {
+    "label": "HALLUCINATED",
+    "confidence": 0.42000000000000004,
+    "reason": "Status: author_mismatch; Mismatched: ['author']",
+    "source": "tool"
+  },
+  "aaefe29933ae": {
+    "label": "VALID",
+    "confidence": 0.5,
+    "reason": "Entry not in bibtex-check output",
+    "source": "tool"
+  },
+  "c252e8ceaebd": {
+    "label": "VALID",
+    "confidence": 0.6685,
+    "reason": "Status: verified",
+    "source": "tool"
+  },
+  "a0478afc6fb9": {
+    "label": "HALLUCINATED",
+    "confidence": 0.4095,
+    "reason": "Status: partial_match; Mismatched: ['title', 'author', 'year', 'venue']",
+    "source": "tool"
+  }
+}

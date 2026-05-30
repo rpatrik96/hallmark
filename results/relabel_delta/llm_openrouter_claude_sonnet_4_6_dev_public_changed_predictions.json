@@ -1,0 +1,164 @@
+{
+  "d0f7f9c72c33": {
+    "label": "VALID",
+    "confidence": 0.95,
+    "reason": "IBRNet is a well-known real paper published at CVPR 2021. The authors (Qianqian Wang, Zhicheng Wang, Kyle Genova, Pratul Srinivasan, Howard Zhou, Jonathan Barron, Ricardo Martin-Brualla, Noah Snavely,",
+    "source": null
+  },
+  "ed071a6dfa34": {
+    "label": "HALLUCINATED",
+    "confidence": 0.75,
+    "reason": "The paper 'Improving Robustness using Generated Data' by Gowal et al. is a real NeurIPS 2021 paper, but the DOI provided (10.48550/arXiv.2104.09425) is the arXiv preprint DOI rather than the official ",
+    "source": null
+  },
+  "fa77166308b0": {
+    "label": "HALLUCINATED",
+    "confidence": 0.75,
+    "reason": "The paper 'Photorealistic Text-to-Image Diffusion Models with Deep Language Understanding' (Imagen) is real and was published at NeurIPS 2022. However, the DOI provided (10.48550/arXiv.2205.11487) is ",
+    "source": null
+  },
+  "d7bd062b5e1b": {
+    "label": "HALLUCINATED",
+    "confidence": 0.92,
+    "reason": "BLIP-2 is a real paper by these authors (Junnan Li, Dongxu Li, Silvio Savarese, Steven Hoi) with the correct title and arXiv ID 2301.12597. However, the paper was published at ICML 2023 is debatable -",
+    "source": null
+  },
+  "f802800935ef": {
+    "label": "VALID",
+    "confidence": 0.95,
+    "reason": "ImageBind is a well-known real paper published at CVPR 2023 by researchers from Meta AI. The authors (Rohit Girdhar, Alaaeldin El-Nouby, Zhuang Liu, Mannat Singh, Kalyan Vasudev Alwala, Armand Joulin,",
+    "source": null
+  },
+  "c65faf378a95": {
+    "label": "HALLUCINATED",
+    "confidence": 0.95,
+    "reason": "The OPT paper (arXiv:2205.01068) by Susan Zhang et al. is a real publication, but it was released as an arXiv preprint and was NOT published at ACL. The DOI points to the arXiv preprint (10.48550/arXi",
+    "source": null
+  },
+  "eaa48be036ab": {
+    "label": "HALLUCINATED",
+    "confidence": 0.88,
+    "reason": "The paper 'Barlow Twins: Self-Supervised Learning via Redundancy Reduction' by Zbontar et al. is a real paper published at ICML 2021. However, the DOI provided (10.48550/arXiv.2103.03230) is an arXiv ",
+    "source": null
+  },
+  "b939e55d7555": {
+    "label": "HALLUCINATED",
+    "confidence": 0.95,
+    "reason": "PaLM: Scaling Language Modeling with Pathways is a real paper by these authors, and the DOI (10.48550/arXiv.2204.02311) is a valid arXiv DOI. However, the paper is cited as appearing in ICML, which is",
+    "source": null
+  },
+  "a4d318041956": {
+    "label": "VALID",
+    "confidence": 0.82,
+    "reason": "The paper 'Person Re-Identification Using Heterogeneous Local Graph Attention Networks' by Zhong Zhang, Haijia Zhang, and Shuang Liu appears to be a real CVPR 2021 publication. The DOI format is consi",
+    "source": null
+  },
+  "dccb0bb90563": {
+    "label": "VALID",
+    "confidence": 0.95,
+    "reason": "This is the well-known Vision Transformer (ViT) paper by Dosovitskiy et al. The title, authors, venue (ICLR 2021), and DOI all match the real publication. The DOI points to the arXiv preprint (2010.11",
+    "source": null
+  },
+  "bb8032fd12d8": {
+    "label": "HALLUCINATED",
+    "confidence": 0.92,
+    "reason": "This is the real InstructGPT paper by Ouyang et al. (2022), but it is cited as a NeurIPS proceedings paper while using an arXiv DOI (10.48550/arXiv.2203.02155). The paper was indeed published at NeurI",
+    "source": null
+  },
+  "c337460709f1": {
+    "label": "HALLUCINATED",
+    "confidence": 0.62,
+    "reason": "While the authors (Mao, Chakrabarti, Sarkar) are real researchers who collaborate on network statistics, I cannot verify that a paper with this exact title appeared at ICML 2021. The topic and author ",
+    "source": null
+  },
+  "e2c14cf2d74b": {
+    "label": "VALID",
+    "confidence": 0.82,
+    "reason": "This is a real paper by Ohad Rubin, Jonathan Herzig, and Jonathan Berant titled 'Learning to Retrieve Prompts for In-Context Learning', published at NAACL 2022. The DOI 10.48550/arXiv.2112.08633 point",
+    "source": null
+  },
+  "a24129d1c5e5": {
+    "label": "HALLUCINATED",
+    "confidence": 0.85,
+    "reason": "The DOI '10.48550/arXiv.2204.14198' is an arXiv preprint DOI, but the paper is cited as a NeurIPS proceedings paper. The real Flamingo paper was published at NeurIPS 2022 and would have a different pr",
+    "source": null
+  },
+  "e9e08922a057": {
+    "label": "HALLUCINATED",
+    "confidence": 0.92,
+    "reason": "PaLM (arXiv:2204.02311) is a real paper by Google researchers, but it was published in JMLR (Journal of Machine Learning Research) in 2023, not at ICML. The DOI points to the arXiv preprint (10.48550/",
+    "source": null
+  },
+  "db9d82ff3f94": {
+    "label": "HALLUCINATED",
+    "confidence": 0.95,
+    "reason": "The paper 'Constitutional AI: Harmlessness from AI Feedback' by Bai et al. is a real Anthropic paper with arXiv ID 2212.08073. However, it was published as an arXiv preprint and was NOT published at I",
+    "source": null
+  },
+  "ec7fc7e09a4f": {
+    "label": "HALLUCINATED",
+    "confidence": 0.78,
+    "reason": "The paper 'UAST: Uncertainty-Aware Siamese Tracking' by these authors appears to be a real publication, but it was published at ECCV 2022, not ICML 2022. Visual object tracking papers are rarely publi",
+    "source": null
+  },
+  "ff2931c3228f": {
+    "label": "VALID",
+    "confidence": 0.95,
+    "reason": "This is a well-known paper by Xinlei Chen, Saining Xie, and Kaiming He titled 'An Empirical Study of Training Self-Supervised Vision Transformers' (also known as MoCo v3). It was presented at ICCV 202",
+    "source": null
+  },
+  "dae1eb71d49a": {
+    "label": "HALLUCINATED",
+    "confidence": 0.85,
+    "reason": "The AlphaFold paper by Jumper et al. (2021) in Nature with DOI 10.1038/s41586-021-03819-2 is a real, well-known publication. However, the BibTeX entry is malformed and truncated — the author list is c",
+    "source": null
+  },
+  "f36bff1b0e11": {
+    "label": "HALLUCINATED",
+    "confidence": 0.82,
+    "reason": "The paper 'Re2TAL' by these authors is real and was presented at CVPR 2023, but the year field incorrectly states 2022. The DOI correctly references CVPR 2023 (CVPR52729.2023), creating an internal in",
+    "source": null
+  },
+  "ded9f5844e90": {
+    "label": "VALID",
+    "confidence": 0.92,
+    "reason": "TensoRF: Tensorial Radiance Fields is a well-known real paper by Anpei Chen, Zexiang Xu, Andreas Geiger, Jingyi Yu, and Hao Su, published at ECCV 2022. The authors are all real researchers in the neur",
+    "source": null
+  },
+  "fc4aaf478a08": {
+    "label": "HALLUCINATED",
+    "confidence": 0.92,
+    "reason": "The paper 'Diffusion Models Beat GANs on Image Synthesis' by Prafulla Dhariwal and Alexander Nichol is a real paper (arXiv:2105.05233). However, the DOI provided (10.48550/arXiv.2105.05233) is the arX",
+    "source": null
+  },
+  "cdfcc07dff9e": {
+    "label": "HALLUCINATED",
+    "confidence": 0.9,
+    "reason": "The paper 'Diffusion Models Beat GANs on Image Synthesis' by Prafulla Dhariwal and Alexander Nichol is a real and well-known paper. The DOI (10.48550/arXiv.2105.05233) is a valid arXiv DOI. However, t",
+    "source": null
+  },
+  "b4268fa6464e": {
+    "label": "HALLUCINATED",
+    "confidence": 0.92,
+    "reason": "The Flamingo paper (arXiv:2204.14198) is a real paper by Alayrac et al. from DeepMind, but it was published at NeurIPS 2022 as a conference paper, not just as an arXiv preprint. However, the DOI used ",
+    "source": null
+  },
+  "aaefe29933ae": {
+    "label": "HALLUCINATED",
+    "confidence": 0.85,
+    "reason": "FlashAttention is a real paper by Tri Dao, Daniel Y. Fu, Stefano Ermon, Atri Rudra, and Christopher Ré, published at NeurIPS 2022. The DOI provided (10.48550/arXiv.2205.14135) is an arXiv DOI, not the",
+    "source": null
+  },
+  "c252e8ceaebd": {
+    "label": "VALID",
+    "confidence": 0.78,
+    "reason": "Random Feature Attention is a real paper by these exact authors published at ICLR 2021. The title, authors, venue, and year are all correct. The DOI points to the arXiv preprint (10.48550/arXiv.2103.0",
+    "source": null
+  },
+  "a0478afc6fb9": {
+    "label": "HALLUCINATED",
+    "confidence": 0.92,
+    "reason": "The paper 'Classifier-Free Diffusion Guidance' by Jonathan Ho and Tim Salimans is a real and well-known work, and the arXiv ID 2207.12598 is correct. However, this paper was originally presented as a ",
+    "source": null
+  }
+}

@@ -2,21 +2,21 @@
   "version": "1.0",
   "files": {
     "bibtexupdater_dev_public.json": {
-      "sha256": "92b0a053ca5dd7f3bc39a432de3e8f3400a2b34b7d1e48427c608f410b6b11b1",
+      "sha256": "e613e62b69b43ae3c9db0c633a1d034d85f844bf119ff6ad8004136a9e360be6",
       "baseline": "bibtexupdater",
       "split": "dev_public",
       "num_entries": 1119,
-      "f1_hallucination": 0.908
+      "f1_hallucination": 0.9086687306501547
     },
     "harc_dev_public.json": {
-      "sha256": "29b82104a144463a1ef45a6cb801245cc6533219281673bd5175244ee95d1201",
+      "sha256": "0ffd87e4bf301839912b3464cb033b3eff4b994fbf64ce8e2acb058e31cf1636",
       "baseline": "harc",
       "split": "dev_public",
       "num_entries": 521,
       "f1_hallucination": 0.26829268292682923
     },
     "v1.0/baseline_results/llm_agentic_btu_openai_dev_public.json": {
-      "sha256": "b6ec05d80f592f5ae42d20c77aed108a0d65febfd5c86736ba553af6bd702cda",
+      "sha256": "c3545fea4b9bb6001146fa135e15989781e4fe757b08689a8eb11a2dc82ad407",
       "baseline": "llm_agentic_btu_openai",
       "split": "dev_public",
       "environment": {
@@ -27,7 +27,7 @@
       }
     },
     "v1.0/baseline_results/llm_agentic_openai_dev_public.json": {
-      "sha256": "7e877e5bf9ab6a5a9eb925e4ab0edeb40016af6d306f104a3200edd63e6f08ed",
+      "sha256": "704377dd833fb67370cb0a713883bc4bdd1856d2d8fd703248a4ebbdb5f1eba1",
       "baseline": "llm_agentic_openai",
       "split": "dev_public",
       "environment": {
@@ -38,95 +38,95 @@
       }
     },
     "bibtexupdater_test_public.json": {
-      "sha256": "fac21f68c0f226e874e7074f5d14de3d449fbedde4fda7ebf8e79881d398749d",
+      "sha256": "e6ea57cae2cd07704f08d6bc5d0db8fccb0a8a2144d1cfd0d3caffb29882d03e",
       "baseline": "bibtexupdater",
       "split": "test_public",
       "num_entries": 831,
-      "f1_hallucination": 0.8584149599287623
+      "f1_hallucination": 0.8633879781420764
     },
     "llm_openrouter_gemini_flash_test_public.json": {
-      "sha256": "3a76472ec2963a80ec34de44b57cfbc8f2b5491a1bd1ef054afc45eda8084916",
+      "sha256": "92e214dddaf601a17da430d2dbe2d4e4f5fedaa6741f9cdcbadf55c09073ee75",
       "baseline": "llm_openrouter_gemini_flash",
       "split": "test_public",
       "num_entries": 831,
-      "f1_hallucination": 0.6269368295589988
+      "f1_hallucination": 0.6437346437346437
     },
     "llm_openrouter_qwen_max_test_public.json": {
-      "sha256": "2dc13b3cbaeff9dbe9792aad631248aa587bd06c1ee47cd9d97a1b1fdbc99c29",
+      "sha256": "d056b6dec811bbd02114a993bd033fe023ce493f42ce3b60ced096d34c3917e2",
       "baseline": "llm_openrouter_qwen_max",
       "split": "test_public",
       "num_entries": 831,
-      "f1_hallucination": 0.8026208026208026
+      "f1_hallucination": 0.8043478260869565
     },
     "llm_openrouter_mistral_test_public.json": {
-      "sha256": "852bc87051ebadb734f23581d8633b7c3f8f71ef35a79e7d688a769cdec6a774",
+      "sha256": "2f71622e7f10c85a8c150e70e722c4dbcf67279c6e2070151f5883221ebdf417",
       "baseline": "llm_openrouter_mistral",
       "split": "test_public",
       "num_entries": 831,
-      "f1_hallucination": 0.723963599595551
+      "f1_hallucination": 0.7406639004149379
     },
     "llm_openrouter_llama_4_maverick_test_public.json": {
-      "sha256": "bad3c7b03580cfcba68eb94793717b7cad6843db33e126334b096b432855c503",
+      "sha256": "3747f84716fb0c78ccf573f0acee9db083f3823192b4d0a76460c2364bb85bf4",
       "baseline": "llm_openrouter_llama_4_maverick",
       "split": "test_public",
       "num_entries": 831,
-      "f1_hallucination": 0.7114967462039045
+      "f1_hallucination": 0.7290969899665551
     },
     "llm_openrouter_qwen_test_public.json": {
-      "sha256": "ddc24f45ebb4edec1f4e9a58f4c5cd4a93585af879e6ee83b339bed795eb670a",
+      "sha256": "8fbe6f79acba8de6618131ec2c3819ab7391e0eb8ecebf34ae3ef60c1f052f81",
       "baseline": "llm_openrouter_qwen",
       "split": "test_public",
       "num_entries": 831,
-      "f1_hallucination": 0.7993366500829188
+      "f1_hallucination": 0.7976291278577476
     },
     "llm_openrouter_claude_opus_4_7_test_public.json": {
-      "sha256": "badcd605bbc3bcdbf7553a7347dc45cbc64949f2db68aa25c6bc301e261f56e2",
+      "sha256": "76ac6ee463bc94091e93125333b8ff8f3ae98461d6ff7f31b7667be599ce0b45",
       "baseline": "llm_openrouter_claude_opus_4_7",
       "split": "test_public",
       "num_entries": 831,
-      "f1_hallucination": 0.832116788321168
+      "f1_hallucination": 0.8458244111349036
     },
     "llm_openrouter_deepseek_r1_test_public.json": {
-      "sha256": "d6a4dae5189fafb05cbe1ca4e875e60b30a5e5fbcc20fa45e283d42a085a7db2",
+      "sha256": "1be5ff175483727ffd35644f394b0fe556dc958acddf0e6a2af95ead9689ab6d",
       "baseline": "llm_openrouter_deepseek_r1",
       "split": "test_public",
       "num_entries": 831,
-      "f1_hallucination": 0.8018979833926453
+      "f1_hallucination": 0.8116646415552855
     },
     "llm_agentic_btu_sonnet_4_6_test_public.json": {
-      "sha256": "1c87a5d9e09caf2c79a10e84318b4873f60f0cdafa5285f638aff8a0d2581f44",
+      "sha256": "0963a85c4f81f985824784389e3b8a890d3d6aabaa992070d42acdb115ad875c",
       "baseline": "llm_agentic_btu_sonnet_4_6",
       "split": "test_public",
       "num_entries": 831,
-      "f1_hallucination": 0.9012875536480687
+      "f1_hallucination": 0.9017543859649122
     },
     "llm_tool_augmented_test_public.json": {
-      "sha256": "19ee0866533cc8b4d17c854e2adce0cedf7c51ebbe15cbe40537d646ba304b57",
+      "sha256": "7d7733e0363906790592d11a953af83590024f0c54d7b56e290680dfa6a3e836",
       "baseline": "llm_tool_augmented",
       "split": "test_public",
       "num_entries": 831,
-      "f1_hallucination": 0.8445692883895131
+      "f1_hallucination": 0.8513902205177373
     },
     "llm_agentic_btu_openai_test_public.json": {
-      "sha256": "9f6a9763cc16d22999d6683520f629463d0211161ff64d83236a525b1e5aefea",
+      "sha256": "f8001545cd20f90ea06bd9a13590c74d5e32491a0a573c59fa249de2edc92f20",
       "baseline": "llm_agentic_btu_openai",
       "split": "test_public",
       "num_entries": 831,
-      "f1_hallucination": 0.8846487424111014
+      "f1_hallucination": 0.8829787234042553
     },
     "doi_only_test_public.json": {
-      "sha256": "ca7da1f544e24bf38e6f96c606adda2da1d9c5600290a4e3e7ceba2d08861e7d",
+      "sha256": "01b17dca247bdd80613355482f31f5853ad0013711af27f41e45fb3537f2a631",
       "baseline": "doi_only",
       "split": "test_public",
       "num_entries": 831,
-      "f1_hallucination": 0.4831730769230769
+      "f1_hallucination": 0.4981412639405204
     },
     "llm_agentic_openai_test_public.json": {
-      "sha256": "2f3a62ba468bc2dfa026e344e4996e4c2bfd9fac8fc9088f26d42d9a9701a1c9",
+      "sha256": "72c88ccfbfb11e51a2e84307649b31da6d8ff9695871412b9cea7e4349bacc93",
       "baseline": "llm_agentic_openai",
       "split": "test_public",
       "num_entries": 831,
-      "f1_hallucination": 0.8500414250207126
+      "f1_hallucination": 0.8274111675126905
     }
   },
   "environment": {

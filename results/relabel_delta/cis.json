@@ -1,0 +1,1363 @@
+{
+  "meta": {
+    "description": "Stratified 95% bootstrap CIs (DR/FPR/F1/TW-F1/MCC) + paired bootstrap significance for headline tool pairs, computed against the post-relabel labels via compute_persisted_cis() and paired_bootstrap_test().",
+    "n_bootstrap": 10000,
+    "seed": 42,
+    "confidence": 0.95,
+    "labels": "post-relabel (fix/dev-public-mislabel-audit)",
+    "split_counts": {
+      "dev_public": {
+        "num_entries": 1119,
+        "num_valid": 513,
+        "num_hallucinated": 606
+      },
+      "test_public": {
+        "num_entries": 831,
+        "num_valid": 312,
+        "num_hallucinated": 519
+      }
+    }
+  },
+  "tools": {
+    "dev_public": {
+      "llm_openrouter_deepseek_r1": {
+        "ci_available": true,
+        "point_estimate": {
+          "detection_rate": 0.8957983193277311,
+          "false_positive_rate": 0.6225296442687747,
+          "f1_hallucination": 0.7387387387387387,
+          "tier_weighted_f1": 0.8247895944912013,
+          "mcc": 0.3237169245042363
+        },
+        "ci": {
+          "detection_rate": [
+            0.8722689075630252,
+            0.9175084175084175
+          ],
+          "false_positive_rate": [
+            0.5798816568047337,
+            0.6640627389621541
+          ],
+          "f1_hallucination": [
+            0.7224174279690794,
+            0.7548476454293629
+          ],
+          "tier_weighted_f1": [
+            0.8085750011150924,
+            0.8401518641662963
+          ],
+          "mcc": [
+            0.2705646411318025,
+            0.37501303758239024
+          ]
+        },
+        "ci_provenance": {
+          "computed": true,
+          "source": "per_entry_predictions",
+          "seed": 42,
+          "n_bootstrap": 10000,
+          "confidence": 0.95,
+          "num_predictions": 1119
+        }
+      },
+      "llm_openrouter_deepseek_v3": {
+        "ci_available": true,
+        "point_estimate": {
+          "detection_rate": 0.9108910891089109,
+          "false_positive_rate": 0.7017543859649122,
+          "f1_hallucination": 0.7272727272727273,
+          "tier_weighted_f1": 0.8213627992633517,
+          "mcc": 0.2683753724849901
+        },
+        "ci": {
+          "detection_rate": [
+            0.8894389438943895,
+            0.9323432343234324
+          ],
+          "false_positive_rate": [
+            0.6608187134502924,
+            0.7407407407407407
+          ],
+          "f1_hallucination": [
+            0.7127792662546091,
+            0.7418723405187235
+          ],
+          "tier_weighted_f1": [
+            0.8064989828536596,
+            0.8358864949783986
+          ],
+          "mcc": [
+            0.21496668672145605,
+            0.3206387083255222
+          ]
+        },
+        "ci_provenance": {
+          "computed": true,
+          "source": "per_entry_predictions",
+          "seed": 42,
+          "n_bootstrap": 10000,
+          "confidence": 0.95,
+          "num_predictions": 1119
+        }
+      },
+      "llm_openrouter_gemini_flash": {
+        "ci_available": true,
+        "point_estimate": {
+          "detection_rate": 0.5,
+          "false_positive_rate": 0.1,
+          "f1_hallucination": 0.6306878306878306,
+          "tier_weighted_f1": 0.627831715210356,
+          "mcc": 0.42904965393989725
+        },
+        "ci": {
+          "detection_rate": [
+            0.4654270921609414,
+            0.5351170568561873
+          ],
+          "false_positive_rate": [
+            0.07450980392156863,
+            0.12720156555772993
+          ],
+          "f1_hallucination": [
+            0.5984719548375697,
+            0.661795407098121
+          ],
+          "tier_weighted_f1": [
+            0.591858060252928,
+            0.662083735160771
+          ],
+          "mcc": [
+            0.38261728156682356,
+            0.47286551713747416
+          ]
+        },
+        "ci_provenance": {
+          "computed": true,
+          "source": "per_entry_predictions",
+          "seed": 42,
+          "n_bootstrap": 10000,
+          "confidence": 0.95,
+          "num_predictions": 1119
+        }
+      },
+      "llm_openrouter_mistral": {
+        "ci_available": true,
+        "point_estimate": {
+          "detection_rate": 0.7164429530201343,
+          "false_positive_rate": 0.25048923679060664,
+          "f1_hallucination": 0.7419635099913119,
+          "tier_weighted_f1": 0.7652733118971062,
+          "mcc": 0.4645798071032467
+        },
+        "ci": {
+          "detection_rate": [
+            0.6835016835016835,
+            0.7483221476510067
+          ],
+          "false_positive_rate": [
+            0.21330724070450097,
+            0.2890625
+          ],
+          "f1_hallucination": [
+            0.7173144876325089,
+            0.7656940760389036
+          ],
+          "tier_weighted_f1": [
+            0.7380261521395679,
+            0.7910526428079415
+          ],
+          "mcc": [
+            0.41552261431298576,
+            0.5133025724439912
+          ]
+        },
+        "ci_provenance": {
+          "computed": true,
+          "source": "per_entry_predictions",
+          "seed": 42,
+          "n_bootstrap": 10000,
+          "confidence": 0.95,
+          "num_predictions": 1119
+        }
+      },
+      "llm_openrouter_qwen": {
+        "ci_available": true,
+        "point_estimate": {
+          "detection_rate": 0.859504132231405,
+          "false_positive_rate": 0.533203125,
+          "f1_hallucination": 0.7439198855507868,
+          "tier_weighted_f1": 0.8212334113973458,
+          "mcc": 0.3582795197744753
+        },
+        "ci": {
+          "detection_rate": [
+            0.8347107438016529,
+            0.8842975206611571
+          ],
+          "false_positive_rate": [
+            0.48927875243664715,
+            0.5764837747964681
+          ],
+          "f1_hallucination": [
+            0.7258522727272727,
+            0.7616320687186828
+          ],
+          "tier_weighted_f1": [
+            0.8040269886253829,
+            0.8380582524271845
+          ],
+          "mcc": [
+            0.30539196837032984,
+            0.40930671142257097
+          ]
+        },
+        "ci_provenance": {
+          "computed": true,
+          "source": "per_entry_predictions",
+          "seed": 42,
+          "n_bootstrap": 10000,
+          "confidence": 0.95,
+          "num_predictions": 1119
+        }
+      },
+      "llm_openrouter_gemini_pro": {
+        "ci_available": true,
+        "point_estimate": {
+          "detection_rate": 0.47594501718213056,
+          "false_positive_rate": 0.05,
+          "f1_hallucination": 0.6266968325791855,
+          "tier_weighted_f1": 0.6092413006274957,
+          "mcc": 0.47342290258534103
+        },
+        "ci": {
+          "detection_rate": [
+            0.44194107452339687,
+            0.5104538753928998
+          ],
+          "false_positive_rate": [
+            0.032,
+            0.06986027944111776
+          ],
+          "f1_hallucination": [
+            0.5945330296127562,
+            0.6578366445916115
+          ],
+          "tier_weighted_f1": [
+            0.5729286689172194,
+            0.6440489432703003
+          ],
+          "mcc": [
+            0.43371033185062535,
+            0.5106515592971038
+          ]
+        },
+        "ci_provenance": {
+          "computed": true,
+          "source": "per_entry_predictions",
+          "seed": 42,
+          "n_bootstrap": 10000,
+          "confidence": 0.95,
+          "num_predictions": 1119
+        }
+      },
+      "llm_openrouter_qwen_max": {
+        "ci_available": true,
+        "point_estimate": {
+          "detection_rate": 0.8597359735973598,
+          "false_positive_rate": 0.55078125,
+          "f1_hallucination": 0.7395315826827539,
+          "tier_weighted_f1": 0.817864077669903,
+          "mcc": 0.34217878709677196
+        },
+        "ci": {
+          "detection_rate": [
+            0.834983498349835,
+            0.8844884488448845
+          ],
+          "false_positive_rate": [
+            0.5078125,
+            0.5937591911764705
+          ],
+          "f1_hallucination": [
+            0.7218259629101285,
+            0.7576202545225355
+          ],
+          "tier_weighted_f1": [
+            0.800159196440452,
+            0.835122699386503
+          ],
+          "mcc": [
+            0.28968084923838555,
+            0.39447378699001806
+          ]
+        },
+        "ci_provenance": {
+          "computed": true,
+          "source": "per_entry_predictions",
+          "seed": 42,
+          "n_bootstrap": 10000,
+          "confidence": 0.95,
+          "num_predictions": 1119
+        }
+      },
+      "llm_openrouter_llama_4_maverick": {
+        "ci_available": true,
+        "point_estimate": {
+          "detection_rate": 0.6138613861386139,
+          "false_positive_rate": 0.14619883040935672,
+          "f1_hallucination": 0.7065527065527065,
+          "tier_weighted_f1": 0.708885616102111,
+          "mcc": 0.4757613909976541
+        },
+        "ci": {
+          "detection_rate": [
+            0.5808580858085809,
+            0.6452145214521452
+          ],
+          "false_positive_rate": [
+            0.11695906432748537,
+            0.17738791423001948
+          ],
+          "f1_hallucination": [
+            0.6796856037621359,
+            0.732314286323541
+          ],
+          "tier_weighted_f1": [
+            0.6787126082806563,
+            0.736995514282915
+          ],
+          "mcc": [
+            0.4303798957313321,
+            0.5197032007889442
+          ]
+        },
+        "ci_provenance": {
+          "computed": true,
+          "source": "per_entry_predictions",
+          "seed": 42,
+          "n_bootstrap": 10000,
+          "confidence": 0.95,
+          "num_predictions": 1119
+        }
+      },
+      "llm_openai": {
+        "ci_available": true,
+        "point_estimate": {
+          "detection_rate": 0.8366336633663366,
+          "false_positive_rate": 0.41130604288499023,
+          "f1_hallucination": 0.7658610271903323,
+          "tier_weighted_f1": 0.8217620787657328,
+          "mcc": 0.44196122903673984
+        },
+        "ci": {
+          "detection_rate": [
+            0.8118811881188119,
+            0.8613861386138614
+          ],
+          "false_positive_rate": [
+            0.37037037037037035,
+            0.45419103313840153
+          ],
+          "f1_hallucination": [
+            0.7472035794183444,
+            0.7845226230927584
+          ],
+          "tier_weighted_f1": [
+            0.8027995059695349,
+            0.8402950359939607
+          ],
+          "mcc": [
+            0.39307487630160437,
+            0.48981763587437166
+          ]
+        },
+        "ci_provenance": {
+          "computed": true,
+          "source": "per_entry_predictions",
+          "seed": 42,
+          "n_bootstrap": 10000,
+          "confidence": 0.95,
+          "num_predictions": 1119
+        }
+      },
+      "llm_openai_gpt-5.4": {
+        "ci_available": true,
+        "point_estimate": {
+          "detection_rate": 0.7673267326732673,
+          "false_positive_rate": 0.22807017543859648,
+          "f1_hallucination": 0.7828282828282829,
+          "tier_weighted_f1": 0.8070329670329669,
+          "mcc": 0.5378260009870626
+        },
+        "ci": {
+          "detection_rate": [
+            0.7392739273927392,
+            0.7970297029702971
+          ],
+          "false_positive_rate": [
+            0.19298245614035087,
+            0.2651072124756335
+          ],
+          "f1_hallucination": [
+            0.761181434599156,
+            0.8047342301162335
+          ],
+          "tier_weighted_f1": [
+            0.7844904326594262,
+            0.8293746658454583
+          ],
+          "mcc": [
+            0.4912448189432944,
+            0.5848962610604324
+          ]
+        },
+        "ci_provenance": {
+          "computed": true,
+          "source": "per_entry_predictions",
+          "seed": 42,
+          "n_bootstrap": 10000,
+          "confidence": 0.95,
+          "num_predictions": 1119
+        }
+      },
+      "llm_agentic_btu_sonnet_4_6": {
+        "ci_available": true,
+        "point_estimate": {
+          "detection_rate": 0.9900990099009901,
+          "false_positive_rate": 0.43079922027290446,
+          "f1_hallucination": 0.8409250175192712,
+          "tier_weighted_f1": 0.912541868254559,
+          "mcc": 0.6304634874967052
+        },
+        "ci": {
+          "detection_rate": [
+            0.9818481848184818,
+            0.9966996699669967
+          ],
+          "false_positive_rate": [
+            0.38791423001949316,
+            0.47368421052631576
+          ],
+          "f1_hallucination": [
+            0.827538247566064,
+            0.8542999289267945
+          ],
+          "tier_weighted_f1": [
+            0.903845618269588,
+            0.921003620606827
+          ],
+          "mcc": [
+            0.5947528748017267,
+            0.6649349323955821
+          ]
+        },
+        "ci_provenance": {
+          "computed": true,
+          "source": "per_entry_predictions",
+          "seed": 42,
+          "n_bootstrap": 10000,
+          "confidence": 0.95,
+          "num_predictions": 1119
+        }
+      },
+      "llm_agentic_btu_openai": {
+        "ci_available": true,
+        "point_estimate": {
+          "detection_rate": 0.9801980198019802,
+          "false_positive_rate": 0.4697855750487329,
+          "f1_hallucination": 0.8244274809160305,
+          "tier_weighted_f1": 0.8997028231797919,
+          "mcc": 0.5844048904692085
+        },
+        "ci": {
+          "detection_rate": [
+            0.9686468646864687,
+            0.9900990099009901
+          ],
+          "false_positive_rate": [
+            0.4269005847953216,
+            0.5126705653021443
+          ],
+          "f1_hallucination": [
+            0.8108108108108109,
+            0.8380685273074737
+          ],
+          "tier_weighted_f1": [
+            0.8894658273775896,
+            0.9094955904049864
+          ],
+          "mcc": [
+            0.5454265651331794,
+            0.6218225525734451
+          ]
+        },
+        "ci_provenance": {
+          "computed": true,
+          "source": "per_entry_predictions",
+          "seed": 42,
+          "n_bootstrap": 10000,
+          "confidence": 0.95,
+          "num_predictions": 1119
+        }
+      },
+      "llm_agentic_openai": {
+        "ci_available": true,
+        "point_estimate": {
+          "detection_rate": 0.966996699669967,
+          "false_positive_rate": 0.4775828460038986,
+          "f1_hallucination": 0.8155880306193459,
+          "tier_weighted_f1": 0.8922044013427826,
+          "mcc": 0.5577948465034472
+        },
+        "ci": {
+          "detection_rate": [
+            0.9537953795379538,
+            0.9785478547854786
+          ],
+          "false_positive_rate": [
+            0.4327485380116959,
+            0.52046783625731
+          ],
+          "f1_hallucination": [
+            0.8016472203157172,
+            0.8300283286118979
+          ],
+          "tier_weighted_f1": [
+            0.881544487281737,
+            0.9026217228464419
+          ],
+          "mcc": [
+            0.5171842909314605,
+            0.5981878577336269
+          ]
+        },
+        "ci_provenance": {
+          "computed": true,
+          "source": "per_entry_predictions",
+          "seed": 42,
+          "n_bootstrap": 10000,
+          "confidence": 0.95,
+          "num_predictions": 1119
+        }
+      },
+      "bibtexupdater": {
+        "ci_available": false,
+        "point_estimate": {
+          "detection_rate": 0.9686468646864687,
+          "false_positive_rate": 0.19298245614035087,
+          "f1_hallucination": 0.9086687306501547,
+          "tier_weighted_f1": 0.9436060365369341,
+          "mcc": null
+        },
+        "ci": {
+          "detection_rate": null,
+          "false_positive_rate": null,
+          "f1_hallucination": null,
+          "tier_weighted_f1": null,
+          "mcc": null
+        },
+        "ci_provenance": {
+          "computed": false,
+          "reason": "summary-only tool: no full-coverage per-entry prediction file is stored (released aggregate was reconstructed from confusion-matrix deltas on the ~27 relabel keys, not from per-entry predictions). Per the delta-eval decision the tool is NOT re-run to obtain CIs; point estimate only.",
+          "seed": 42,
+          "n_bootstrap": 10000,
+          "confidence": 0.95
+        }
+      },
+      "doi_only": {
+        "ci_available": false,
+        "point_estimate": {
+          "detection_rate": 0.26846846846846845,
+          "false_positive_rate": 0.18518518518518517,
+          "f1_hallucination": 0.3729662077596996,
+          "tier_weighted_f1": 0.32932862190812723,
+          "mcc": null
+        },
+        "ci": {
+          "detection_rate": null,
+          "false_positive_rate": null,
+          "f1_hallucination": null,
+          "tier_weighted_f1": null,
+          "mcc": null
+        },
+        "ci_provenance": {
+          "computed": false,
+          "reason": "summary-only tool: no full-coverage per-entry prediction file is stored (released aggregate was reconstructed from confusion-matrix deltas on the ~27 relabel keys, not from per-entry predictions). Per the delta-eval decision the tool is NOT re-run to obtain CIs; point estimate only.",
+          "seed": 42,
+          "n_bootstrap": 10000,
+          "confidence": 0.95
+        }
+      },
+      "llm_openrouter_claude_sonnet_4_6": {
+        "ci_available": false,
+        "point_estimate": {
+          "detection_rate": 0.7805280528052805,
+          "false_positive_rate": 0.1267056530214425,
+          "f1_hallucination": 0.8269230769230769,
+          "tier_weighted_f1": 0.8340080971659918,
+          "mcc": 0.6520420226244813
+        },
+        "ci": {
+          "detection_rate": null,
+          "false_positive_rate": null,
+          "f1_hallucination": null,
+          "tier_weighted_f1": null,
+          "mcc": null
+        },
+        "ci_provenance": {
+          "computed": false,
+          "reason": "summary-only tool: no full-coverage per-entry prediction file is stored (released aggregate was reconstructed from confusion-matrix deltas on the ~27 relabel keys, not from per-entry predictions). Per the delta-eval decision the tool is NOT re-run to obtain CIs; point estimate only.",
+          "seed": 42,
+          "n_bootstrap": 10000,
+          "confidence": 0.95
+        }
+      },
+      "llm_openrouter_claude_opus_4_7": {
+        "ci_available": false,
+        "point_estimate": {
+          "detection_rate": 0.7524752475247525,
+          "false_positive_rate": 0.07212475633528265,
+          "f1_hallucination": 0.8298453139217471,
+          "tier_weighted_f1": 0.8514492753623188,
+          "mcc": 0.6828370399896286
+        },
+        "ci": {
+          "detection_rate": null,
+          "false_positive_rate": null,
+          "f1_hallucination": null,
+          "tier_weighted_f1": null,
+          "mcc": null
+        },
+        "ci_provenance": {
+          "computed": false,
+          "reason": "summary-only tool: no full-coverage per-entry prediction file is stored (released aggregate was reconstructed from confusion-matrix deltas on the ~27 relabel keys, not from per-entry predictions). Per the delta-eval decision the tool is NOT re-run to obtain CIs; point estimate only.",
+          "seed": 42,
+          "n_bootstrap": 10000,
+          "confidence": 0.95
+        }
+      }
+    },
+    "test_public": {
+      "llm_openrouter_deepseek_r1": {
+        "ci_available": true,
+        "point_estimate": {
+          "detection_rate": 0.8087167070217918,
+          "false_positive_rate": 0.31932773109243695,
+          "f1_hallucination": 0.8116646415552855,
+          "tier_weighted_f1": 0.8421725239616614,
+          "mcc": 0.48810947357489404
+        },
+        "ci": {
+          "detection_rate": [
+            0.7719683255309827,
+            0.8430924828947973
+          ],
+          "false_positive_rate": [
+            0.2610619469026549,
+            0.379746835443038
+          ],
+          "f1_hallucination": [
+            0.7846534653465347,
+            0.8368803292358179
+          ],
+          "tier_weighted_f1": [
+            0.8154339064423834,
+            0.8666233128875112
+          ],
+          "mcc": [
+            0.4183548040598895,
+            0.5556354198994994
+          ]
+        },
+        "ci_provenance": {
+          "computed": true,
+          "source": "per_entry_predictions",
+          "seed": 42,
+          "n_bootstrap": 10000,
+          "confidence": 0.95,
+          "num_predictions": 831
+        }
+      },
+      "llm_openrouter_deepseek_v3": {
+        "ci_available": true,
+        "point_estimate": {
+          "detection_rate": 0.9113680154142582,
+          "false_positive_rate": 0.7275641025641025,
+          "f1_hallucination": 0.7760459392945036,
+          "tier_weighted_f1": 0.8507596067917784,
+          "mcc": 0.24424802494564685
+        },
+        "ci": {
+          "detection_rate": [
+            0.8882466281310212,
+            0.9344894026974951
+          ],
+          "false_positive_rate": [
+            0.6762820512820513,
+            0.7756410256410257
+          ],
+          "f1_hallucination": [
+            0.7604251839738349,
+            0.7914262159934047
+          ],
+          "tier_weighted_f1": [
+            0.8346241457858771,
+            0.8660436137071651
+          ],
+          "mcc": [
+            0.17636483861738578,
+            0.31132806056453255
+          ]
+        },
+        "ci_provenance": {
+          "computed": true,
+          "source": "per_entry_predictions",
+          "seed": 42,
+          "n_bootstrap": 10000,
+          "confidence": 0.95,
+          "num_predictions": 831
+        }
+      },
+      "llm_openrouter_gemini_flash": {
+        "ci_available": true,
+        "point_estimate": {
+          "detection_rate": 0.5048169556840078,
+          "false_positive_rate": 0.10576923076923077,
+          "f1_hallucination": 0.6437346437346437,
+          "tier_weighted_f1": 0.635,
+          "mcc": 0.4038242658608639
+        },
+        "ci": {
+          "detection_rate": [
+            0.4662813102119461,
+            0.5433526011560693
+          ],
+          "false_positive_rate": [
+            0.07371794871794872,
+            0.14102564102564102
+          ],
+          "f1_hallucination": [
+            0.6097867001254705,
+            0.6765144706482192
+          ],
+          "tier_weighted_f1": [
+            0.5965356821488009,
+            0.6719611470964066
+          ],
+          "mcc": [
+            0.35372465615039417,
+            0.45255398503427136
+          ]
+        },
+        "ci_provenance": {
+          "computed": true,
+          "source": "per_entry_predictions",
+          "seed": 42,
+          "n_bootstrap": 10000,
+          "confidence": 0.95,
+          "num_predictions": 831
+        }
+      },
+      "llm_openrouter_gemini_pro": {
+        "ci_available": true,
+        "point_estimate": {
+          "detection_rate": 0.4582441113490364,
+          "false_positive_rate": 0.059233449477351915,
+          "f1_hallucination": 0.6131805157593123,
+          "tier_weighted_f1": 0.6098783106657123,
+          "mcc": 0.42026870790731363
+        },
+        "ci": {
+          "detection_rate": [
+            0.4184549356223176,
+            0.49786324786324787
+          ],
+          "false_positive_rate": [
+            0.03436426116838488,
+            0.08784259611724395
+          ],
+          "f1_hallucination": [
+            0.5748148148148148,
+            0.6496453900709219
+          ],
+          "tier_weighted_f1": [
+            0.568642160540135,
+            0.6490627641517889
+          ],
+          "mcc": [
+            0.374146285496349,
+            0.4653212986275006
+          ]
+        },
+        "ci_provenance": {
+          "computed": true,
+          "source": "per_entry_predictions",
+          "seed": 42,
+          "n_bootstrap": 10000,
+          "confidence": 0.95,
+          "num_predictions": 831
+        }
+      },
+      "llm_openrouter_mistral": {
+        "ci_available": true,
+        "point_estimate": {
+          "detection_rate": 0.6878612716763006,
+          "false_positive_rate": 0.28205128205128205,
+          "f1_hallucination": 0.7406639004149379,
+          "tier_weighted_f1": 0.7613390928725701,
+          "mcc": 0.39401254696324023
+        },
+        "ci": {
+          "detection_rate": [
+            0.651252408477842,
+            0.7244701348747592
+          ],
+          "false_positive_rate": [
+            0.23397435897435898,
+            0.3333333333333333
+          ],
+          "f1_hallucination": [
+            0.7130977130977132,
+            0.7674902863946856
+          ],
+          "tier_weighted_f1": [
+            0.7319972830742798,
+            0.7902548808276703
+          ],
+          "mcc": [
+            0.33391950621560035,
+            0.4534502101094747
+          ]
+        },
+        "ci_provenance": {
+          "computed": true,
+          "source": "per_entry_predictions",
+          "seed": 42,
+          "n_bootstrap": 10000,
+          "confidence": 0.95,
+          "num_predictions": 831
+        }
+      },
+      "llm_openrouter_qwen": {
+        "ci_available": true,
+        "point_estimate": {
+          "detection_rate": 0.9092664092664092,
+          "false_positive_rate": 0.6153846153846154,
+          "f1_hallucination": 0.7976291278577476,
+          "tier_weighted_f1": 0.8650613357564744,
+          "mcc": 0.3550584552502823
+        },
+        "ci": {
+          "detection_rate": [
+            0.8861003861003861,
+            0.9323017408123792
+          ],
+          "false_positive_rate": [
+            0.5608974358974359,
+            0.6698717948717948
+          ],
+          "f1_hallucination": [
+            0.7809835132388095,
+            0.8143100511073254
+          ],
+          "tier_weighted_f1": [
+            0.8487349535564322,
+            0.8803611738148984
+          ],
+          "mcc": [
+            0.2896637918795701,
+            0.4194718437702801
+          ]
+        },
+        "ci_provenance": {
+          "computed": true,
+          "source": "per_entry_predictions",
+          "seed": 42,
+          "n_bootstrap": 10000,
+          "confidence": 0.95,
+          "num_predictions": 831
+        }
+      },
+      "llm_openrouter_qwen_max": {
+        "ci_available": true,
+        "point_estimate": {
+          "detection_rate": 0.9267822736030829,
+          "false_positive_rate": 0.6282051282051282,
+          "f1_hallucination": 0.8043478260869565,
+          "tier_weighted_f1": 0.8749439713133124,
+          "mcc": 0.3721027183709518
+        },
+        "ci": {
+          "detection_rate": [
+            0.905587668593449,
+            0.9479768786127167
+          ],
+          "false_positive_rate": [
+            0.5737179487179487,
+            0.6826923076923077
+          ],
+          "f1_hallucination": [
+            0.7886855241264559,
+            0.8198653198653199
+          ],
+          "tier_weighted_f1": [
+            0.8605072463768115,
+            0.888492417484389
+          ],
+          "mcc": [
+            0.30837166501219454,
+            0.4344139667207175
+          ]
+        },
+        "ci_provenance": {
+          "computed": true,
+          "source": "per_entry_predictions",
+          "seed": 42,
+          "n_bootstrap": 10000,
+          "confidence": 0.95,
+          "num_predictions": 831
+        }
+      },
+      "llm_openrouter_llama_4_maverick": {
+        "ci_available": true,
+        "point_estimate": {
+          "detection_rate": 0.6312741312741312,
+          "false_positive_rate": 0.16666666666666666,
+          "f1_hallucination": 0.7290969899665551,
+          "tier_weighted_f1": 0.728211009174312,
+          "mcc": 0.45177322064478104
+        },
+        "ci": {
+          "detection_rate": [
+            0.5953757225433526,
+            0.667953667953668
+          ],
+          "false_positive_rate": [
+            0.125,
+            0.20833333333333334
+          ],
+          "f1_hallucination": [
+            0.6997742663656884,
+            0.7575418994413408
+          ],
+          "tier_weighted_f1": [
+            0.6960611405055849,
+            0.7591973244147157
+          ],
+          "mcc": [
+            0.3987585303145946,
+            0.5055145437845081
+          ]
+        },
+        "ci_provenance": {
+          "computed": true,
+          "source": "per_entry_predictions",
+          "seed": 42,
+          "n_bootstrap": 10000,
+          "confidence": 0.95,
+          "num_predictions": 831
+        }
+      },
+      "llm_openrouter_claude_opus_4_7": {
+        "ci_available": true,
+        "point_estimate": {
+          "detection_rate": 0.7625482625482626,
+          "false_positive_rate": 0.0673076923076923,
+          "f1_hallucination": 0.8458244111349036,
+          "tier_weighted_f1": 0.8706128863279203,
+          "mcc": 0.6734889089219546
+        },
+        "ci": {
+          "detection_rate": [
+            0.7374517374517374,
+            0.7872340425531915
+          ],
+          "false_positive_rate": [
+            0.041666666666666664,
+            0.09615384615384616
+          ],
+          "f1_hallucination": [
+            0.8279569892473118,
+            0.8632036780234024
+          ],
+          "tier_weighted_f1": [
+            0.8515376458112407,
+            0.8886587527428234
+          ],
+          "mcc": [
+            0.6377620704844575,
+            0.7087628211796065
+          ]
+        },
+        "ci_provenance": {
+          "computed": true,
+          "source": "per_entry_predictions",
+          "seed": 42,
+          "n_bootstrap": 10000,
+          "confidence": 0.95,
+          "num_predictions": 831
+        }
+      },
+      "llm_openrouter_claude_sonnet_4_6": {
+        "ci_available": true,
+        "point_estimate": {
+          "detection_rate": 0.8208092485549133,
+          "false_positive_rate": 0.125,
+          "f1_hallucination": 0.8658536585365855,
+          "tier_weighted_f1": 0.8715313463514902,
+          "mcc": 0.6787098526822191
+        },
+        "ci": {
+          "detection_rate": [
+            0.7938342967244701,
+            0.8459055876685928
+          ],
+          "false_positive_rate": [
+            0.08974358974358974,
+            0.16346153846153846
+          ],
+          "f1_hallucination": [
+            0.846774193548387,
+            0.8841893252769385
+          ],
+          "tier_weighted_f1": [
+            0.8520833333333334,
+            0.8900203665987779
+          ],
+          "mcc": [
+            0.6336577009465434,
+            0.7218894869231389
+          ]
+        },
+        "ci_provenance": {
+          "computed": true,
+          "source": "per_entry_predictions",
+          "seed": 42,
+          "n_bootstrap": 10000,
+          "confidence": 0.95,
+          "num_predictions": 831
+        }
+      },
+      "llm_openai": {
+        "ci_available": true,
+        "point_estimate": {
+          "detection_rate": 0.8516377649325626,
+          "false_positive_rate": 0.4807692307692308,
+          "f1_hallucination": 0.7956795679567956,
+          "tier_weighted_f1": 0.8458233890214797,
+          "mcc": 0.3967538592565057
+        },
+        "ci": {
+          "detection_rate": [
+            0.8227360308285164,
+            0.8786127167630058
+          ],
+          "false_positive_rate": [
+            0.42628205128205127,
+            0.5352564102564102
+          ],
+          "f1_hallucination": [
+            0.7752899396619212,
+            0.8157423971377459
+          ],
+          "tier_weighted_f1": [
+            0.8253654760640494,
+            0.8649168566756489
+          ],
+          "mcc": [
+            0.3315458426923617,
+            0.4597817650321245
+          ]
+        },
+        "ci_provenance": {
+          "computed": true,
+          "source": "per_entry_predictions",
+          "seed": 42,
+          "n_bootstrap": 10000,
+          "confidence": 0.95,
+          "num_predictions": 831
+        }
+      },
+      "llm_openai_gpt-5.4": {
+        "ci_available": true,
+        "point_estimate": {
+          "detection_rate": 0.7803468208092486,
+          "false_positive_rate": 0.22435897435897437,
+          "f1_hallucination": 0.8148893360160966,
+          "tier_weighted_f1": 0.8330749354005168,
+          "mcc": 0.5440696126795418
+        },
+        "ci": {
+          "detection_rate": [
+            0.7475915221579962,
+            0.8111753371868978
+          ],
+          "false_positive_rate": [
+            0.1794871794871795,
+            0.2724358974358974
+          ],
+          "f1_hallucination": [
+            0.7912952845799015,
+            0.8371628371628371
+          ],
+          "tier_weighted_f1": [
+            0.808599332891593,
+            0.8552431362120703
+          ],
+          "mcc": [
+            0.4879270088001687,
+            0.5974843020971878
+          ]
+        },
+        "ci_provenance": {
+          "computed": true,
+          "source": "per_entry_predictions",
+          "seed": 42,
+          "n_bootstrap": 10000,
+          "confidence": 0.95,
+          "num_predictions": 831
+        }
+      },
+      "llm_agentic_btu_openai": {
+        "ci_available": true,
+        "point_estimate": {
+          "detection_rate": 0.9595375722543352,
+          "false_positive_rate": 0.3557692307692308,
+          "f1_hallucination": 0.8829787234042553,
+          "tier_weighted_f1": 0.9266055045871561,
+          "mcc": 0.6607637047505635
+        },
+        "ci": {
+          "detection_rate": [
+            0.9421965317919075,
+            0.9749518304431599
+          ],
+          "false_positive_rate": [
+            0.30128205128205127,
+            0.41025641025641024
+          ],
+          "f1_hallucination": [
+            0.8673196794300979,
+            0.8988361683079678
+          ],
+          "tier_weighted_f1": [
+            0.9137606593930315,
+            0.9388127853881278
+          ],
+          "mcc": [
+            0.6098544698832703,
+            0.711019848155781
+          ]
+        },
+        "ci_provenance": {
+          "computed": true,
+          "source": "per_entry_predictions",
+          "seed": 42,
+          "n_bootstrap": 10000,
+          "confidence": 0.95,
+          "num_predictions": 831
+        }
+      },
+      "llm_agentic_openai": {
+        "ci_available": true,
+        "point_estimate": {
+          "detection_rate": 0.9421965317919075,
+          "false_positive_rate": 0.5576923076923077,
+          "f1_hallucination": 0.8274111675126905,
+          "tier_weighted_f1": 0.8881875563570785,
+          "mcc": 0.46360774870650817
+        },
+        "ci": {
+          "detection_rate": [
+            0.9248554913294798,
+            0.9595375722543352
+          ],
+          "false_positive_rate": [
+            0.5032051282051282,
+            0.6122596153846143
+          ],
+          "f1_hallucination": [
+            0.8122400523988864,
+            0.8424677611803308
+          ],
+          "tier_weighted_f1": [
+            0.8743706098303451,
+            0.9014336917562723
+          ],
+          "mcc": [
+            0.40446562905607875,
+            0.5202241894313374
+          ]
+        },
+        "ci_provenance": {
+          "computed": true,
+          "source": "per_entry_predictions",
+          "seed": 42,
+          "n_bootstrap": 10000,
+          "confidence": 0.95,
+          "num_predictions": 831
+        }
+      },
+      "llm_agentic_btu_sonnet_4_6": {
+        "ci_available": true,
+        "point_estimate": {
+          "detection_rate": 0.9903660886319846,
+          "false_positive_rate": 0.34294871794871795,
+          "f1_hallucination": 0.9017543859649122,
+          "tier_weighted_f1": 0.945750452079566,
+          "mcc": 0.7214228206083263
+        },
+        "ci": {
+          "detection_rate": [
+            0.9807321772639692,
+            0.9980732177263969
+          ],
+          "false_positive_rate": [
+            0.2916666666666667,
+            0.3974358974358974
+          ],
+          "f1_hallucination": [
+            0.887923544743701,
+            0.9155555555555557
+          ],
+          "tier_weighted_f1": [
+            0.9365147233445276,
+            0.9545454545454546
+          ],
+          "mcc": [
+            0.6775003407087237,
+            0.7634890876146568
+          ]
+        },
+        "ci_provenance": {
+          "computed": true,
+          "source": "per_entry_predictions",
+          "seed": 42,
+          "n_bootstrap": 10000,
+          "confidence": 0.95,
+          "num_predictions": 831
+        }
+      },
+      "llm_tool_augmented": {
+        "ci_available": true,
+        "point_estimate": {
+          "detection_rate": 0.8554913294797688,
+          "false_positive_rate": 0.2564102564102564,
+          "f1_hallucination": 0.8513902205177373,
+          "tier_weighted_f1": 0.8778325123152709,
+          "mcc": 0.601051580824634
+        },
+        "ci": {
+          "detection_rate": [
+            0.8265895953757225,
+            0.882466281310212
+          ],
+          "false_positive_rate": [
+            0.20833333333333334,
+            0.3076923076923077
+          ],
+          "f1_hallucination": [
+            0.8307692307692308,
+            0.8714011516314779
+          ],
+          "tier_weighted_f1": [
+            0.8572869389813415,
+            0.8968222855011633
+          ],
+          "mcc": [
+            0.5461174569527761,
+            0.6550626648770119
+          ]
+        },
+        "ci_provenance": {
+          "computed": true,
+          "source": "per_entry_predictions",
+          "seed": 42,
+          "n_bootstrap": 10000,
+          "confidence": 0.95,
+          "num_predictions": 831
+        }
+      },
+      "bibtexupdater": {
+        "ci_available": false,
+        "point_estimate": {
+          "detection_rate": 0.9132947976878613,
+          "false_positive_rate": 0.33653846153846156,
+          "f1_hallucination": 0.8633879781420764,
+          "tier_weighted_f1": 0.9036201222378938,
+          "mcc": 0.6075944497039321
+        },
+        "ci": {
+          "detection_rate": null,
+          "false_positive_rate": null,
+          "f1_hallucination": null,
+          "tier_weighted_f1": null,
+          "mcc": null
+        },
+        "ci_provenance": {
+          "computed": false,
+          "reason": "summary-only tool: no full-coverage per-entry prediction file is stored (released aggregate was reconstructed from confusion-matrix deltas on the ~27 relabel keys, not from per-entry predictions). Per the delta-eval decision the tool is NOT re-run to obtain CIs; point estimate only.",
+          "seed": 42,
+          "n_bootstrap": 10000,
+          "confidence": 0.95
+        }
+      },
+      "doi_only": {
+        "ci_available": false,
+        "point_estimate": {
+          "detection_rate": 0.3872832369942196,
+          "false_positive_rate": 0.27884615384615385,
+          "f1_hallucination": 0.4981412639405204,
+          "tier_weighted_f1": 0.4549125168236878,
+          "mcc": 0.11034245548673816
+        },
+        "ci": {
+          "detection_rate": null,
+          "false_positive_rate": null,
+          "f1_hallucination": null,
+          "tier_weighted_f1": null,
+          "mcc": null
+        },
+        "ci_provenance": {
+          "computed": false,
+          "reason": "summary-only tool: no full-coverage per-entry prediction file is stored (released aggregate was reconstructed from confusion-matrix deltas on the ~27 relabel keys, not from per-entry predictions). Per the delta-eval decision the tool is NOT re-run to obtain CIs; point estimate only.",
+          "seed": 42,
+          "n_bootstrap": 10000,
+          "confidence": 0.95
+        }
+      }
+    }
+  },
+  "paired_significance": {
+    "sonnet_vs_opus_f1__test_public": {
+      "available": true,
+      "pair": "llm_openrouter_claude_sonnet_4_6_vs_llm_openrouter_claude_opus_4_7",
+      "higher_f1_tool": "llm_openrouter_claude_sonnet_4_6",
+      "lower_f1_tool": "llm_openrouter_claude_opus_4_7",
+      "metric": "f1_hallucination",
+      "observed_diff": 0.020029247401681882,
+      "p_value_one_sided": 0.0243,
+      "p_value_two_sided": 0.0486,
+      "cohens_h": 0.05705387952798979,
+      "significant_at_0.05_two_sided": true,
+      "n_bootstrap": 10000,
+      "seed": 42,
+      "note": "Stratified paired bootstrap on per-entry predictions (NEW labels). p-value is conservative (raw-null, not null-centred). A oriented as the higher-F1 tool; two-sided is one-sided*2."
+    },
+    "sonnet_vs_opus_f1__dev_public": {
+      "available": false,
+      "reason": "paired bootstrap test requires per-entry predictions for BOTH tools on dev_public; missing per-entry predictions for: ['llm_openrouter_claude_sonnet_4_6', 'llm_openrouter_claude_opus_4_7']. These are summary-only on this split (delta-eval decision: not re-run). Use point-estimate language for this comparison.",
+      "metric": "f1_hallucination"
+    },
+    "bibtexupdater_vs_sonnet_f1__dev_public": {
+      "available": false,
+      "reason": "paired bootstrap test requires per-entry predictions for BOTH tools on dev_public; missing per-entry predictions for: ['bibtexupdater', 'llm_openrouter_claude_sonnet_4_6']. These are summary-only on this split (delta-eval decision: not re-run). Use point-estimate language for this comparison.",
+      "metric": "f1_hallucination"
+    },
+    "bibtexupdater_vs_sonnet_f1__test_public": {
+      "available": false,
+      "reason": "paired bootstrap test requires per-entry predictions for BOTH tools on test_public; missing per-entry predictions for: ['bibtexupdater']. These are summary-only on this split (delta-eval decision: not re-run). Use point-estimate language for this comparison.",
+      "metric": "f1_hallucination"
+    }
+  }
+}
