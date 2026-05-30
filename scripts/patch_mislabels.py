@@ -51,6 +51,16 @@ high-conf) as real, correctly-cited papers. Failure mode identical to batch 2:
 arXiv DataCite DOIs not indexed by CrossRef caused the auto-labeller to emit
 ``plausible_fabrication`` for canonical, well-known papers (Imagen, AdaFed).
 
+Batch 4 — "mislabel-audit-2026-05-30-cnv-followup" (1 dev, 1 entry)
+---------------------------------------------------------------------
+Follow-up to the v1.1.0 bibtex-check CNV venue fix (rpatrik96/bibtexupdater@ea63b7d):
+the fix added PLATFORM_MARKERS and _strip_track_decorations, routing arXiv-only
+preprint venue strings to NON_COMPARABLE instead of a failed match — lifting
+``a0478afc6fb9`` (Classifier-Free Diffusion Guidance, Ho & Salimans) from
+``unconfirmed`` (venue) to ``verified``, which exposed its ``swapped_authors``
+mislabel. Same arXiv-DOI/CrossRef wrong-record failure mode as batch 2/3 (joins
+the FlashAttention/DDPM/Imagen pattern).
+
 Provenance / conflict with prior audit
 ---------------------------------------
 The 2026-05-29 batch's adversarial reviewer **explicitly rejected** relabeling
@@ -120,6 +130,9 @@ RELABELED_BY_BATCH2 = "mislabel-audit-2026-05-30-leak-followup"
 
 # Batch 3 tag (1 dev + 1 test, 2026-05-30 post-fix re-run)
 RELABELED_BY_BATCH3 = "mislabel-audit-2026-05-30-postfix-followup"
+
+# Batch 4 tag (1 dev, 2026-05-30 CNV venue-fix follow-up)
+RELABELED_BY_BATCH4 = "mislabel-audit-2026-05-30-cnv-followup"
 
 DEFAULT_DATA_DIR = Path(__file__).resolve().parent.parent / "data" / "v1.0"
 
@@ -349,17 +362,39 @@ CONFIRMED_MISLABELS_BATCH3: dict[str, dict[str, str]] = {
 }
 
 
+# ---------------------------------------------------------------------------
+# Batch 4: dev_public (1) entry, tag = RELABELED_BY_BATCH4
+# Surfaced by the v1.1.0 bibtex-check CNV venue fix (ea63b7d).
+# Each value is a dict with "reason" and "split" ("dev"|"test").
+# ---------------------------------------------------------------------------
+CONFIRMED_MISLABELS_BATCH4: dict[str, dict[str, str]] = {
+    # --- dev_public (1 entry) ---
+    "a0478afc6fb9": {
+        "split": "dev",
+        "reason": (
+            "Real paper (Jonathan Ho and Tim Salimans, 'Classifier-Free Diffusion Guidance', "
+            "NeurIPS 2022 Workshop on Score-Based Methods, arXiv:2207.12598); "
+            "'swapped_authors' tag came from a CrossRef title-fuzz match onto an unrelated "
+            "record ('jialiang jiang'); exact 2-author list and venue confirmed via arXiv. "
+            "Surfaced by the v1.1.0 bibtex-check CNV venue fix that lifted the entry from "
+            "'unconfirmed' (venue) to 'verified'."
+        ),
+    },
+}
+
+
 def _patch_split(
     data_path: Path,
     mislabels_batch1: dict[str, str] | None,
     mislabels_batch2: dict[str, dict[str, str]] | None,
     mislabels_batch3: dict[str, dict[str, str]] | None,
+    mislabels_batch4: dict[str, dict[str, str]] | None,
     split_name: str,
     dry_run: bool = False,
-) -> tuple[int, int, int, int]:
+) -> tuple[int, int, int, int, int]:
     """Relabel confirmed mislabels in one jsonl file.
 
-    Returns (changed_batch1, changed_batch2, changed_batch3, reverted).
+    Returns (changed_batch1, changed_batch2, changed_batch3, changed_batch4, reverted).
     """
     if not data_path.exists():
         sys.exit(f"error: dataset not found at {data_path}")
@@ -368,17 +403,21 @@ def _patch_split(
     changed_b1 = 0
     changed_b2 = 0
     changed_b3 = 0
+    changed_b4 = 0
     reverted = 0
     seen_b1: set[str] = set()
     seen_b2: set[str] = set()
     seen_b3: set[str] = set()
+    seen_b4: set[str] = set()
     already_b1: list[str] = []
     already_b2: list[str] = []
     already_b3: list[str] = []
+    already_b4: list[str] = []
 
     b1 = mislabels_batch1 or {}
     b2 = {k: v for k, v in (mislabels_batch2 or {}).items() if v["split"] == split_name}
     b3 = {k: v for k, v in (mislabels_batch3 or {}).items() if v["split"] == split_name}
+    b4 = {k: v for k, v in (mislabels_batch4 or {}).items() if v["split"] == split_name}
 
     with data_path.open(encoding="utf-8") as fh:
         for raw in fh:
@@ -419,6 +458,16 @@ def _patch_split(
                     rec["relabel_reason"] = b3[key]["reason"]
                     rec["relabeled_by"] = RELABELED_BY_BATCH3
                     changed_b3 += 1
+            elif key in b4:
+                seen_b4.add(key)
+                if rec.get("relabeled_by") == RELABELED_BY_BATCH4:
+                    already_b4.append(key)
+                else:
+                    rec["label"] = "VALID"
+                    rec["relabeled_from"] = "HALLUCINATED"
+                    rec["relabel_reason"] = b4[key]["reason"]
+                    rec["relabeled_by"] = RELABELED_BY_BATCH4
+                    changed_b4 += 1
             elif rec.get("relabeled_by") == RELABELED_BY_BATCH1:
                 # Relabeled by a prior run of batch1 but no longer confirmed
                 # (rejected by adversarial review). Revert.
@@ -433,12 +482,15 @@ def _patch_split(
     missing_b1 = sorted(set(b1) - seen_b1)
     missing_b2 = sorted(set(b2) - seen_b2)
     missing_b3 = sorted(set(b3) - seen_b3)
+    missing_b4 = sorted(set(b4) - seen_b4)
     if missing_b1:
         print(f"WARNING [{split_name}]: {len(missing_b1)} batch-1 key(s) not found: {missing_b1}")
     if missing_b2:
         print(f"WARNING [{split_name}]: {len(missing_b2)} batch-2 key(s) not found: {missing_b2}")
     if missing_b3:
         print(f"WARNING [{split_name}]: {len(missing_b3)} batch-3 key(s) not found: {missing_b3}")
+    if missing_b4:
+        print(f"WARNING [{split_name}]: {len(missing_b4)} batch-4 key(s) not found: {missing_b4}")
     if already_b1:
         print(
             f"Idempotent skip [{split_name}]: {len(already_b1)} batch-1 record(s) already relabeled."
@@ -451,29 +503,33 @@ def _patch_split(
         print(
             f"Idempotent skip [{split_name}]: {len(already_b3)} batch-3 record(s) already relabeled."
         )
+    if already_b4:
+        print(
+            f"Idempotent skip [{split_name}]: {len(already_b4)} batch-4 record(s) already relabeled."
+        )
 
     if dry_run:
-        total = changed_b1 + changed_b2 + changed_b3
+        total = changed_b1 + changed_b2 + changed_b3 + changed_b4
         print(
             f"[dry-run] [{split_name}] would relabel {total} record(s) "
-            f"(batch1={changed_b1}, batch2={changed_b2}, batch3={changed_b3}); no file written."
+            f"(batch1={changed_b1}, batch2={changed_b2}, batch3={changed_b3}, batch4={changed_b4}); no file written."
         )
-        return changed_b1, changed_b2, changed_b3, reverted
+        return changed_b1, changed_b2, changed_b3, changed_b4, reverted
 
     tmp = data_path.with_suffix(data_path.suffix + ".tmp")
     tmp.write_text("\n".join(out_lines) + "\n", encoding="utf-8")
     tmp.replace(data_path)
-    total = changed_b1 + changed_b2 + changed_b3
+    total = changed_b1 + changed_b2 + changed_b3 + changed_b4
     print(
         f"[{split_name}] Relabeled {total} record(s) HALLUCINATED -> VALID "
-        f"(batch1={changed_b1}, batch2={changed_b2}, batch3={changed_b3}) in {data_path}"
+        f"(batch1={changed_b1}, batch2={changed_b2}, batch3={changed_b3}, batch4={changed_b4}) in {data_path}"
     )
     if reverted:
         print(
             f"[{split_name}] Reverted {reverted} record(s) VALID -> HALLUCINATED "
             "(rejected by adversarial review)."
         )
-    return changed_b1, changed_b2, changed_b3, reverted
+    return changed_b1, changed_b2, changed_b3, changed_b4, reverted
 
 
 def patch(
@@ -482,27 +538,29 @@ def patch(
     dry_run: bool = False,
 ) -> int:
     """Relabel confirmed mislabels in dev and test splits. Returns total records changed."""
-    b1_dev, b2_dev, b3_dev, _rev_dev = _patch_split(
+    b1_dev, b2_dev, b3_dev, b4_dev, _rev_dev = _patch_split(
         dev_path,
         mislabels_batch1=CONFIRMED_MISLABELS_BATCH1,
         mislabels_batch2=CONFIRMED_MISLABELS_BATCH2,
         mislabels_batch3=CONFIRMED_MISLABELS_BATCH3,
+        mislabels_batch4=CONFIRMED_MISLABELS_BATCH4,
         split_name="dev",
         dry_run=dry_run,
     )
-    _, b2_test, b3_test, _rev_test = _patch_split(
+    _, b2_test, b3_test, b4_test, _rev_test = _patch_split(
         test_path,
         mislabels_batch1=None,  # batch1 was dev-only
         mislabels_batch2=CONFIRMED_MISLABELS_BATCH2,
         mislabels_batch3=CONFIRMED_MISLABELS_BATCH3,
+        mislabels_batch4=CONFIRMED_MISLABELS_BATCH4,
         split_name="test",
         dry_run=dry_run,
     )
-    total = b1_dev + b2_dev + b3_dev + b2_test + b3_test
+    total = b1_dev + b2_dev + b3_dev + b4_dev + b2_test + b3_test + b4_test
     print(
         f"\nTotal relabeled: {total} "
-        f"(dev batch1={b1_dev}, dev batch2={b2_dev}, dev batch3={b3_dev}, "
-        f"test batch2={b2_test}, test batch3={b3_test})"
+        f"(dev batch1={b1_dev}, dev batch2={b2_dev}, dev batch3={b3_dev}, dev batch4={b4_dev}, "
+        f"test batch2={b2_test}, test batch3={b3_test}, test batch4={b4_test})"
     )
     return total
 
