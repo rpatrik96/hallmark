@@ -404,6 +404,74 @@ class TestExpectedSubtests:
             assert subtests["cross_db_agreement"] is False, f"{ht}: cross_db_agreement not False"
 
 
+class TestCanaryEmissionScanner:
+    """Tests for the canary contamination-emission scanner."""
+
+    def test_guid_string_consistency(self):
+        """CANARY_STRING is built from the single-source-of-truth GUID."""
+        from hallmark.dataset.schema import CANARY_GUID, CANARY_STRING
+
+        assert CANARY_GUID in CANARY_STRING
+        # No drift: the documented historical value.
+        assert CANARY_GUID == "a]3D#f9K$mP2!xR7"
+
+    def test_scan_text_detects_guid(self):
+        """Positive: GUID present -> detected."""
+        from hallmark.dataset.schema import CANARY_GUID, scan_text_for_canary
+
+        found = scan_text_for_canary(f"some model output mentioning {CANARY_GUID} verbatim")
+        assert CANARY_GUID in found
+
+    def test_scan_text_detects_full_sentence(self):
+        """Positive: full canary sentence -> both markers detected."""
+        from hallmark.dataset.schema import (
+            CANARY_GUID,
+            CANARY_STRING,
+            scan_text_for_canary,
+        )
+
+        found = scan_text_for_canary(f"... {CANARY_STRING} ...")
+        assert CANARY_GUID in found
+        assert CANARY_STRING in found
+
+    def test_scan_text_clean(self):
+        """Negative: absent -> clean (empty list)."""
+        from hallmark.dataset.schema import scan_text_for_canary
+
+        assert scan_text_for_canary("a perfectly ordinary citation with no canary") == []
+
+    def test_scan_text_empty(self):
+        from hallmark.dataset.schema import scan_text_for_canary
+
+        assert scan_text_for_canary("") == []
+
+    def test_scan_record_detects_guid_in_nested_field(self):
+        """Positive: GUID buried in a nested record field -> detected."""
+        from hallmark.dataset.schema import CANARY_GUID, scan_record_for_canary
+
+        record = {
+            "bibtex_key": "x",
+            "label": "VALID",
+            "confidence": 0.9,
+            "reason": f"I have seen {CANARY_GUID} before",
+            "api_sources_queried": ["crossref"],
+        }
+        found = scan_record_for_canary(record)
+        assert CANARY_GUID in found
+
+    def test_scan_record_clean(self):
+        """Negative: ordinary prediction record -> clean."""
+        from hallmark.dataset.schema import scan_record_for_canary
+
+        record = {
+            "bibtex_key": "x",
+            "label": "HALLUCINATED",
+            "confidence": 0.8,
+            "reason": "DOI does not resolve",
+        }
+        assert scan_record_for_canary(record) == []
+
+
 class TestSchemaVersion:
     def test_default_schema_version(self):
         """BenchmarkEntry defaults to schema_version='1.0'."""

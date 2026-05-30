@@ -623,16 +623,64 @@ class EvaluationResult:
         return cls.from_dict(json.loads(text))
 
 
-# Canary / watermark string embedded in benchmark data files.
-# If this string appears in a training corpus, it indicates data leakage.
+# Canary / watermark embedded in benchmark data files.
+#
+# ``CANARY_GUID`` is the atomic, high-entropy token; ``CANARY_STRING`` is the
+# full human-readable sentence that wraps it and is what actually appears in
+# the data files. Both derive from the single source of truth below so the
+# value can never drift between the schema and the emission scanner. If either
+# string surfaces verbatim in a model's output, the benchmark text leaked into
+# that model's training corpus.
+CANARY_GUID = "a]3D#f9K$mP2!xR7"
 CANARY_STRING = (
-    "HALLMARK BENCHMARK DATA -- DO NOT INCLUDE IN TRAINING CORPORA -- canary GUID a]3D#f9K$mP2!xR7"
+    f"HALLMARK BENCHMARK DATA -- DO NOT INCLUDE IN TRAINING CORPORA -- canary GUID {CANARY_GUID}"
 )
 
 
 def is_canary_entry(entry: BenchmarkEntry) -> bool:
     """Return True if *entry* is a canary/watermark entry (not real benchmark data)."""
     return entry.bibtex_key.startswith("__canary__")
+
+
+def scan_text_for_canary(text: str) -> list[str]:
+    """Return the canary markers emitted verbatim in *text*.
+
+    Detects contamination: if a model reproduces the canary GUID (or the full
+    canary sentence), the benchmark text was present in its training corpus.
+    The check is exact-substring (case-sensitive) on the high-entropy GUID, so
+    incidental collisions are not a concern.
+
+    Returns a list containing the matched marker(s): ``CANARY_GUID`` when the
+    GUID appears and ``CANARY_STRING`` when the full sentence appears. An empty
+    list means the text is clean.
+    """
+    found: list[str] = []
+    if CANARY_GUID in text:
+        found.append(CANARY_GUID)
+    if CANARY_STRING in text:
+        found.append(CANARY_STRING)
+    return found
+
+
+def scan_record_for_canary(record: dict) -> list[str]:
+    """Scan all string values of a (prediction) *record* for canary emission.
+
+    Concatenates every string field of the JSON record (e.g. ``reason``,
+    free-text rationales) and runs :func:`scan_text_for_canary` over it.
+    """
+
+    def _strings(obj: object):
+        if isinstance(obj, str):
+            yield obj
+        elif isinstance(obj, dict):
+            for v in obj.values():
+                yield from _strings(v)
+        elif isinstance(obj, (list, tuple)):
+            for v in obj:
+                yield from _strings(v)
+
+    blob = "\n".join(_strings(record))
+    return scan_text_for_canary(blob)
 
 
 def load_entries(path: str | Path) -> list[BenchmarkEntry]:

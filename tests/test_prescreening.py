@@ -596,12 +596,47 @@ class TestCheckCapitalizedUnknownAuthors:
         assert result.confidence == 0.75
         assert result.check_name == "check_capitalized_unknown_authors"
 
-    def test_initial_only_token(self):
-        """Lone X. (single uppercase letter + period) should be flagged."""
+    def test_initial_only_field(self):
+        """An author field that reduces entirely to initials (X. and Y.) should be flagged."""
         result = check_capitalized_unknown_authors(self._entry("X. and Y."))
         assert result.label == "HALLUCINATED"
         assert result.confidence == 0.75
-        assert "initial-only" in result.reason.lower()
+        assert "initials" in result.reason.lower()
+
+    def test_lone_initial_placeholder(self):
+        """A genuine placeholder field that is a single lone initial 'A.' should be flagged."""
+        result = check_capitalized_unknown_authors(self._entry("A."))
+        assert result.label == "HALLUCINATED"
+        assert result.confidence == 0.75
+        assert "initials" in result.reason.lower()
+
+    def test_all_initials_multi_author(self):
+        """Every author being initials-only ('A. B. and C. D.') should be flagged."""
+        result = check_capitalized_unknown_authors(self._entry("A. B. and C. D."))
+        assert result.label == "HALLUCINATED"
+        assert result.confidence == 0.75
+
+    def test_middle_initial_full_name_not_flagged(self):
+        """A real author with a mid-name initial ('John A. Smith') must NOT be flagged.
+
+        Regression guard for the Case-2 false positive that tripped on any lone 'X.'
+        token regardless of a surrounding surname.
+        """
+        result = check_capitalized_unknown_authors(self._entry("John A. Smith"))
+        assert result.label == "UNKNOWN"
+        assert result.confidence == 0.0
+
+    def test_middle_initial_bibtex_comma_form_not_flagged(self):
+        """BibTeX 'Last, First M.' form with a middle initial must NOT be flagged."""
+        result = check_capitalized_unknown_authors(self._entry("Smith, John A. and Doe, Jane B."))
+        assert result.label == "UNKNOWN"
+        assert result.confidence == 0.0
+
+    def test_one_real_author_among_initials_not_flagged(self):
+        """If at least one author has a real surname, the field is not initials-only."""
+        result = check_capitalized_unknown_authors(self._entry("A. and Smith, John"))
+        assert result.label == "UNKNOWN"
+        assert result.confidence == 0.0
 
     def test_majority_pure_uppercase(self):
         """Author field with >50% pure-uppercase tokens (>1 char) should be flagged."""

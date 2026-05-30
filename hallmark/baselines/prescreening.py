@@ -252,20 +252,43 @@ def check_author_heuristics(entry: BlindEntry) -> PreScreenResult:
 # Patterns for capitalized-token "fake-author" heuristics.
 # These complement check_author_heuristics: that function catches "Author1"/"AuthorA"
 # and single-letter last names; this one targets capitalized-word-followed-by-digit
-# tokens (e.g. "Smith2"), bare initial-only tokens ("X."), and majority-uppercase fields.
+# tokens (e.g. "Smith2"), fields that reduce entirely to initials/placeholders (e.g.
+# "A." or "A. B. and C. D."), and majority-uppercase fields.
 _CAPITALIZED_DIGIT_TOKEN = re.compile(r"^[A-Z][a-z]*\d+$")
 _INITIAL_ONLY_TOKEN = re.compile(r"^[A-Z]\.$")
+# A bare single uppercase letter with no period ("A") — also counts as an initial when
+# deciding whether a whole name reduces to initials (e.g. "A B" has no real surname).
+_BARE_INITIAL_TOKEN = re.compile(r"^[A-Z]$")
 _PURE_UPPERCASE_TOKEN = re.compile(r"^[A-Z]{2,}$")
 
 
-def _author_tokens(author_field: str) -> list[str]:
-    """Split author field on ' and ' then on whitespace within each name."""
-    tokens: list[str] = []
+def _author_chunks(author_field: str) -> list[list[str]]:
+    """Split the author field into per-author token lists.
+
+    Splits on ' and ' to separate distinct authors, then on whitespace (and stripping
+    BibTeX "Last, First" commas) within each author. Returns one token list per author,
+    preserving the author boundary that a flat token list discards — Case 2 needs this
+    boundary to decide whether a *whole name* reduces to initials.
+    """
+    chunks: list[list[str]] = []
     for chunk in re.split(r"\s+and\s+", author_field):
-        # Strip commas (BibTeX "Last, First" form) and split on whitespace
         parts = [p.strip().strip(",") for p in chunk.split()]
-        tokens.extend(p for p in parts if p)
-    return tokens
+        tokens = [p for p in parts if p]
+        if tokens:
+            chunks.append(tokens)
+    return chunks
+
+
+def _is_initials_only_name(tokens: list[str]) -> bool:
+    """True when every token of a single author name is an initial/placeholder.
+
+    A name reduces to initials when it carries no real surname — every token is either
+    a lone "X." initial or a bare single uppercase letter "X". A mid-name initial inside
+    a full name (e.g. "John A. Smith") has real-word tokens, so this returns False.
+    """
+    if not tokens:
+        return False
+    return all(_INITIAL_ONLY_TOKEN.match(t) or _BARE_INITIAL_TOKEN.match(t) for t in tokens)
 
 
 def check_capitalized_unknown_authors(entry: BlindEntry) -> PreScreenResult:
@@ -277,7 +300,9 @@ def check_capitalized_unknown_authors(entry: BlindEntry) -> PreScreenResult:
     misses:
 
     - ``Smith2``, ``Jones3``: capitalized word followed by digits
-    - ``X.``: lone uppercase-letter-plus-period (placeholder initial)
+    - whole field reduces to initials/placeholders, i.e. *every* author name carries
+      no real surname (e.g. ``A.`` alone, or ``A. B. and C. D.``). A mid-name initial
+      inside a full name (``John A. Smith``) is left untouched — that is a real author.
     - Author fields where >50% of tokens are pure uppercase words (length > 1)
 
     Returns:
@@ -292,14 +317,15 @@ def check_capitalized_unknown_authors(entry: BlindEntry) -> PreScreenResult:
             check_name="check_capitalized_unknown_authors",
         )
 
-    tokens = _author_tokens(author_field)
-    if not tokens:
+    chunks = _author_chunks(author_field)
+    if not chunks:
         return PreScreenResult(
             label="UNKNOWN",
             confidence=0.0,
             reason="No tokens in author field",
             check_name="check_capitalized_unknown_authors",
         )
+    tokens = [t for chunk in chunks for t in chunk]
 
     # Case 1: capitalized-word-followed-by-digit (Smith2, Jones3) or "AuthorN" (overlap-safe)
     for token in tokens:
@@ -312,15 +338,17 @@ def check_capitalized_unknown_authors(entry: BlindEntry) -> PreScreenResult:
                 check_name="check_capitalized_unknown_authors",
             )
 
-    # Case 2: lone "X." (single uppercase letter + period, no rest of the name)
-    for token in tokens:
-        if _INITIAL_ONLY_TOKEN.match(token):
-            return PreScreenResult(
-                label="HALLUCINATED",
-                confidence=0.75,
-                reason=f"Initial-only author token: {token!r}",
-                check_name="check_capitalized_unknown_authors",
-            )
+    # Case 2: the WHOLE field reduces to initials/placeholders — every author name is
+    # initials-only with no real surname (e.g. "A.", "A. B. and C. D."). A mid-name
+    # initial inside a full name ("John A. Smith") leaves real-word tokens, so that name
+    # is NOT initials-only and the field is not flagged here.
+    if all(_is_initials_only_name(chunk) for chunk in chunks):
+        return PreScreenResult(
+            label="HALLUCINATED",
+            confidence=0.75,
+            reason=f"All authors reduce to initials/placeholders: {author_field!r}",
+            check_name="check_capitalized_unknown_authors",
+        )
 
     # Case 3: >50% pure-uppercase tokens of length > 1 (e.g. "ABC DEF and GHI JKL")
     pure_upper = sum(1 for t in tokens if _PURE_UPPERCASE_TOKEN.match(t))
