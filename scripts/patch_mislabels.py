@@ -380,6 +380,18 @@ CONFIRMED_MISLABELS_BATCH4: dict[str, dict[str, str]] = {
             "'unconfirmed' (venue) to 'verified'."
         ),
     },
+    "b1ff805837a9": {
+        "split": "test",
+        "reason": (
+            "Real paper (Alexander Quinn Nichol and Prafulla Dhariwal, "
+            "'Improved Denoising Diffusion Probabilistic Models', "
+            "ICML 2021 / PMLR v139 pp. 8162-8171, arXiv:2102.09672); "
+            "'plausible_fabrication' was a CrossRef non-index failure on the arXiv "
+            "DataCite DOI - the 2-author list, year, and venue confirmed via "
+            "proceedings.mlr.press/v139/nichol21a.html. Surfaced by the v1.1.0 "
+            "bibtex-check CNV venue fix."
+        ),
+    },
 }
 
 
