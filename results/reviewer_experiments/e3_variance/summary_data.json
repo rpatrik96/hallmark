@@ -1,0 +1,107 @@
+{
+  "config": {
+    "split": "dev_public",
+    "n": 150,
+    "seed": 42,
+    "n_runs": 3,
+    "model": "gpt-5.1",
+    "n_hallucinated": 85,
+    "n_valid": 65,
+    "subsample_frac_hallucinated": 0.5666666666666667,
+    "population_frac_hallucinated": 0.5656836461126006,
+    "temperature": "1.0 (forced by API)"
+  },
+  "per_run": [
+    {
+      "run": 1,
+      "detection_rate": 0.9647058823529412,
+      "false_positive_rate": 0.5384615384615384,
+      "f1_hallucination": 0.8118811881188118,
+      "mcc": 0.5098880919581354
+    },
+    {
+      "run": 2,
+      "detection_rate": 0.9647058823529412,
+      "false_positive_rate": 0.5230769230769231,
+      "f1_hallucination": 0.8159203980099502,
+      "mcc": 0.5227032880527414
+    },
+    {
+      "run": 3,
+      "detection_rate": 0.9647058823529412,
+      "false_positive_rate": 0.5230769230769231,
+      "f1_hallucination": 0.8159203980099502,
+      "mcc": 0.5227032880527414
+    }
+  ],
+  "aggregate": {
+    "detection_rate": {
+      "mean": 0.9647058823529412,
+      "std": 0.0,
+      "min": 0.9647058823529412,
+      "max": 0.9647058823529412,
+      "values": [
+        0.9647058823529412,
+        0.9647058823529412,
+        0.9647058823529412
+      ]
+    },
+    "false_positive_rate": {
+      "mean": 0.5282051282051282,
+      "std": 0.00888231183368652,
+      "min": 0.5230769230769231,
+      "max": 0.5384615384615384,
+      "values": [
+        0.5384615384615384,
+        0.5230769230769231,
+        0.5230769230769231
+      ]
+    },
+    "f1_hallucination": {
+      "mean": 0.814573994712904,
+      "std": 0.002332038917962139,
+      "min": 0.8118811881188118,
+      "max": 0.8159203980099502,
+      "values": [
+        0.8118811881188118,
+        0.8159203980099502,
+        0.8159203980099502
+      ]
+    },
+    "mcc": {
+      "mean": 0.518431556021206,
+      "std": 0.007398856914938561,
+      "min": 0.5098880919581354,
+      "max": 0.5227032880527414,
+      "values": [
+        0.5098880919581354,
+        0.5227032880527414,
+        0.5227032880527414
+      ]
+    }
+  },
+  "label_flips": {
+    "n_flipped": 1,
+    "flipped_keys": [
+      "c8761718cfb5"
+    ],
+    "pairwise_disagreements": {
+      "run1_vs_run2": 1,
+      "run1_vs_run3": 1,
+      "run2_vs_run3": 0
+    },
+    "prediction_sets_identical": false
+  },
+  "total_api_calls": 450,
+  "published_gaps": {
+    "sonnet46_minus_gpt51_f1": 0.069,
+    "sonnet46_minus_opus47_f1": 0.016
+  },
+  "ranking_stability": {
+    "f1_run_to_run_std": 0.002332038917962139,
+    "sonnet_gpt51_gap_within_std": false,
+    "sonnet_opus_gap_within_std": false,
+    "sonnet_gpt51_gap_over_std_ratio": 29.587842410578602,
+    "sonnet_opus_gap_over_std_ratio": 6.86094896477185
+  }
+}
