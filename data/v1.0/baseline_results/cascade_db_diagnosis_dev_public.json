@@ -2,14 +2,14 @@
   "tool_name": "cascade_db_diagnosis",
   "split_name": "dev_public",
   "num_entries": 1119,
-  "num_hallucinated": 633,
-  "num_valid": 486,
-  "detection_rate": 0.9758771929824561,
-  "false_positive_rate": 0.5590062111801242,
-  "f1_hallucination": 0.7600341588385996,
-  "tier_weighted_f1": 0.8537431829449678,
-  "mcc": 0.48885563066819215,
-  "macro_f1": 0.6812900638606011,
+  "num_hallucinated": 606,
+  "num_valid": 513,
+  "detection_rate": 0.9743589743589743,
+  "false_positive_rate": 0.5823529411764706,
+  "f1_hallucination": 0.7307692307692307,
+  "tier_weighted_f1": 0.839445901573267,
+  "mcc": 0.45817296034160027,
+  "macro_f1": 0.6555753510794382,
   "union_recall_at_k": {},
   "temporal_robustness": null,
   "cost_efficiency": 0.09215776662088042,
@@ -28,28 +28,28 @@
   "tier3_f1_ci": null,
   "per_tier_metrics": {
     "1": {
-      "detection_rate": 0.9921875,
-      "false_positive_rate": 0.5590062111801242,
+      "detection_rate": 0.9935064935064936,
+      "false_positive_rate": 0.5823529411764706,
       "f1": 0.4838095238095238,
       "precision": 0.3198992443324937,
       "num_hallucinated": 154,
-      "num_valid": 486
+      "num_valid": 513
     },
     "2": {
-      "detection_rate": 0.9734513274336283,
-      "false_positive_rate": 0.5590062111801242,
+      "detection_rate": 0.9713261648745519,
+      "false_positive_rate": 0.5823529411764706,
       "f1": 0.6145251396648044,
       "precision": 0.4489795918367347,
-      "num_hallucinated": 292,
-      "num_valid": 486
+      "num_hallucinated": 279,
+      "num_valid": 513
     },
     "3": {
-      "detection_rate": 0.9607843137254902,
-      "false_positive_rate": 0.5590062111801242,
+      "detection_rate": 0.9595375722543352,
+      "false_positive_rate": 0.5823529411764706,
       "f1": 0.41702127659574467,
       "precision": 0.266304347826087,
-      "num_hallucinated": 187,
-      "num_valid": 486
+      "num_hallucinated": 173,
+      "num_valid": 513
     }
   },
   "per_type_metrics": {
@@ -133,9 +133,9 @@
     },
     "valid": {
       "detection_rate": 0.0,
-      "false_positive_rate": 0.5590062111801242,
+      "false_positive_rate": 0.5823529411764706,
       "f1": 0.0,
-      "count": 486
+      "count": 513
     },
     "wrong_venue": {
       "detection_rate": 0.9743589743589743,

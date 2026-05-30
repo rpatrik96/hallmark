@@ -1,0 +1,164 @@
+[
+  {
+    "bibtex_key": "d0f7f9c72c33",
+    "old_label": "HALLUCINATED",
+    "new_label": "VALID",
+    "category": "flip_valid"
+  },
+  {
+    "bibtex_key": "ed071a6dfa34",
+    "old_label": "HALLUCINATED",
+    "new_label": "VALID",
+    "category": "extra_relabel"
+  },
+  {
+    "bibtex_key": "fa77166308b0",
+    "old_label": "HALLUCINATED",
+    "new_label": "VALID",
+    "category": "extra_relabel"
+  },
+  {
+    "bibtex_key": "d7bd062b5e1b",
+    "old_label": "HALLUCINATED",
+    "new_label": "VALID",
+    "category": "extra_relabel"
+  },
+  {
+    "bibtex_key": "f802800935ef",
+    "old_label": "HALLUCINATED",
+    "new_label": "VALID",
+    "category": "flip_valid"
+  },
+  {
+    "bibtex_key": "c65faf378a95",
+    "old_label": "HALLUCINATED",
+    "new_label": "VALID",
+    "category": "flip_valid"
+  },
+  {
+    "bibtex_key": "eaa48be036ab",
+    "old_label": "HALLUCINATED",
+    "new_label": "VALID",
+    "category": "extra_relabel"
+  },
+  {
+    "bibtex_key": "b939e55d7555",
+    "old_label": "HALLUCINATED",
+    "new_label": "VALID",
+    "category": "flip_valid"
+  },
+  {
+    "bibtex_key": "a4d318041956",
+    "old_label": "HALLUCINATED",
+    "new_label": "VALID",
+    "category": "extra_relabel"
+  },
+  {
+    "bibtex_key": "dccb0bb90563",
+    "old_label": "HALLUCINATED",
+    "new_label": "VALID",
+    "category": "extra_relabel"
+  },
+  {
+    "bibtex_key": "bb8032fd12d8",
+    "old_label": "HALLUCINATED",
+    "new_label": "VALID",
+    "category": "extra_relabel"
+  },
+  {
+    "bibtex_key": "c337460709f1",
+    "old_label": "HALLUCINATED",
+    "new_label": "VALID",
+    "category": "extra_relabel"
+  },
+  {
+    "bibtex_key": "e2c14cf2d74b",
+    "old_label": "HALLUCINATED",
+    "new_label": "VALID",
+    "category": "extra_relabel"
+  },
+  {
+    "bibtex_key": "a24129d1c5e5",
+    "old_label": "HALLUCINATED",
+    "new_label": "VALID",
+    "category": "flip_valid"
+  },
+  {
+    "bibtex_key": "e9e08922a057",
+    "old_label": "HALLUCINATED",
+    "new_label": "VALID",
+    "category": "flip_valid"
+  },
+  {
+    "bibtex_key": "db9d82ff3f94",
+    "old_label": "HALLUCINATED",
+    "new_label": "VALID",
+    "category": "flip_valid"
+  },
+  {
+    "bibtex_key": "ec7fc7e09a4f",
+    "old_label": "HALLUCINATED",
+    "new_label": "VALID",
+    "category": "extra_relabel"
+  },
+  {
+    "bibtex_key": "ff2931c3228f",
+    "old_label": "HALLUCINATED",
+    "new_label": "VALID",
+    "category": "flip_valid"
+  },
+  {
+    "bibtex_key": "dae1eb71d49a",
+    "old_label": "HALLUCINATED",
+    "new_label": "VALID",
+    "category": "flip_valid"
+  },
+  {
+    "bibtex_key": "f36bff1b0e11",
+    "old_label": "HALLUCINATED",
+    "new_label": "VALID",
+    "category": "extra_relabel"
+  },
+  {
+    "bibtex_key": "ded9f5844e90",
+    "old_label": "HALLUCINATED",
+    "new_label": "VALID",
+    "category": "flip_valid"
+  },
+  {
+    "bibtex_key": "fc4aaf478a08",
+    "old_label": "HALLUCINATED",
+    "new_label": "VALID",
+    "category": "extra_relabel"
+  },
+  {
+    "bibtex_key": "cdfcc07dff9e",
+    "old_label": "HALLUCINATED",
+    "new_label": "VALID",
+    "category": "extra_relabel"
+  },
+  {
+    "bibtex_key": "b4268fa6464e",
+    "old_label": "HALLUCINATED",
+    "new_label": "VALID",
+    "category": "extra_relabel"
+  },
+  {
+    "bibtex_key": "aaefe29933ae",
+    "old_label": "HALLUCINATED",
+    "new_label": "VALID",
+    "category": "extra_relabel"
+  },
+  {
+    "bibtex_key": "c252e8ceaebd",
+    "old_label": "HALLUCINATED",
+    "new_label": "VALID",
+    "category": "extra_relabel"
+  },
+  {
+    "bibtex_key": "a0478afc6fb9",
+    "old_label": "HALLUCINATED",
+    "new_label": "VALID",
+    "category": "extra_relabel"
+  }
+]

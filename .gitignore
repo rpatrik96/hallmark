@@ -48,6 +48,10 @@ results/*.jsonl
 results/*.csv
 !results/history.jsonl
 
+# Relabeller resolution cache (~65MB) + per-entry proposal (~2MB, >500KB limit) — regenerable from arXiv/DataCite/OpenAlex
+results/reviewer_experiments/relabel_resolution_cache.json
+results/reviewer_experiments/relabel_proposal.json
+
 # LaTeX auxiliary files
 *.aux
 *.fdb_latexmk

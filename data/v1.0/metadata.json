@@ -1,212 +1,215 @@
 {
-  "version": "1.0",
-  "build_date": "2026-02-20",
-  "seed": 8042,
-  "total_entries": 2525,
-  "splits": {
-    "dev_public": {
-      "file": "dev_public.jsonl",
-      "total": 1119,
-      "valid": 486,
-      "hallucinated": 633,
-      "tier_distribution": {
-        "1": 155,
-        "2": 292,
-        "3": 186
-      },
-      "type_distribution": {
-        "arxiv_version_mismatch": 30,
-        "chimeric_title": 43,
-        "fabricated_doi": 39,
-        "future_date": 30,
-        "hybrid_fabrication": 45,
-        "merged_citation": 30,
-        "near_miss_title": 41,
-        "nonexistent_venue": 40,
-        "partial_author_list": 30,
-        "placeholder_authors": 45,
-        "plausible_fabrication": 116,
-        "preprint_as_published": 31,
-        "swapped_authors": 67,
-        "wrong_venue": 46
-      },
-      "generation_methods": {
-        "adversarial": 60,
-        "llm_generated": 113,
-        "perturbation": 414,
-        "real_world": 46,
-        "scraped": 486
-      },
-      "count": 1119
-    },
-    "test_public": {
-      "file": "test_public.jsonl",
-      "total": 831,
-      "generation_methods": {
-        "adversarial": 59,
-        "llm_generated": 90,
-        "perturbation": 361,
-        "real_world": 34,
-        "scraped": 287
-      },
-      "count": 831,
-      "valid": 287,
-      "hallucinated": 544,
-      "type_distribution": {
-        "arxiv_version_mismatch": 28,
-        "chimeric_title": 24,
-        "fabricated_doi": 29,
-        "future_date": 29,
-        "hybrid_fabrication": 40,
-        "merged_citation": 29,
-        "near_miss_title": 38,
-        "nonexistent_venue": 38,
-        "partial_author_list": 29,
-        "placeholder_authors": 36,
-        "plausible_fabrication": 103,
-        "preprint_as_published": 29,
-        "swapped_authors": 56,
-        "wrong_venue": 36
-      },
-      "tier_distribution": {
-        "1": 134,
-        "2": 243,
-        "3": 167
-      }
-    },
-    "stress_test": {
-      "file": "stress_test.jsonl",
-      "total": 122,
-      "valid": 1,
-      "hallucinated": 121,
-      "tier_distribution": {
-        "2": 85,
-        "3": 36
-      },
-      "type_distribution": {
-        "arxiv_version_mismatch": 36,
-        "merged_citation": 46,
-        "partial_author_list": 39
-      },
-      "generation_methods": {
-        "canary": 1,
-        "perturbation": 121
-      },
-      "count": 122
-    },
-    "test_hidden": {
-      "file": "test_hidden.jsonl",
-      "total": 453,
-      "generation_methods": {
-        "adversarial": 6,
-        "llm_generated": 77,
-        "perturbation": 142,
-        "real_world": 28,
-        "scraped": 200
-      }
-    }
-  },
-  "v1_1_extensions": {
-    "date_added": "2026-05-07",
-    "rationale": "Cross-domain test split (bioRxiv + PubMed + CS-non-ML DBLP venues) to evaluate detector generalization beyond ML conferences. Eval-only; v1.0 splits are byte-stable and unchanged.",
+    "version": "1.0",
+    "build_date": "2026-02-20",
+    "seed": 8042,
+    "total_entries": 2526,
     "splits": {
-      "test_crossdomain": {
-        "file": "test_crossdomain.jsonl",
-        "total": 500,
-        "valid": 200,
-        "hallucinated": 300,
-        "tier_distribution": {
-          "1": 80,
-          "2": 140,
-          "3": 80
+        "dev_public": {
+            "file": "dev_public.jsonl",
+            "total": 1119,
+            "valid": 513,
+            "hallucinated": 606,
+            "tier_distribution": {
+                "1": 149,
+                "2": 280,
+                "3": 177
+            },
+            "type_distribution": {
+                "arxiv_version_mismatch": 49,
+                "chimeric_title": 47,
+                "fabricated_doi": 39,
+                "future_date": 30,
+                "hybrid_fabrication": 26,
+                "merged_citation": 30,
+                "near_miss_title": 52,
+                "nonexistent_venue": 39,
+                "partial_author_list": 32,
+                "placeholder_authors": 41,
+                "plausible_fabrication": 76,
+                "preprint_as_published": 31,
+                "swapped_authors": 67,
+                "wrong_venue": 47
+            },
+            "generation_methods": {
+                "adversarial": 60,
+                "llm_generated": 113,
+                "perturbation": 414,
+                "real_world": 46,
+                "scraped": 486
+            },
+            "count": 1119
         },
-        "type_distribution": {
-          "arxiv_version_mismatch": 27,
-          "near_miss_title": 23,
-          "valid": 200,
-          "hybrid_fabrication": 19,
-          "future_date": 25,
-          "placeholder_authors": 25,
-          "preprint_as_published": 21,
-          "chimeric_title": 17,
-          "fabricated_doi": 14,
-          "merged_citation": 18,
-          "plausible_fabrication": 30,
-          "partial_author_list": 23,
-          "swapped_authors": 20,
-          "nonexistent_venue": 16,
-          "wrong_venue": 22
+        "test_public": {
+            "file": "test_public.jsonl",
+            "total": 831,
+            "generation_methods": {
+                "adversarial": 59,
+                "llm_generated": 90,
+                "perturbation": 361,
+                "real_world": 34,
+                "scraped": 287
+            },
+            "count": 831,
+            "valid": 312,
+            "hallucinated": 519,
+            "type_distribution": {
+                "arxiv_version_mismatch": 45,
+                "chimeric_title": 23,
+                "fabricated_doi": 29,
+                "future_date": 29,
+                "hybrid_fabrication": 29,
+                "merged_citation": 29,
+                "near_miss_title": 40,
+                "nonexistent_venue": 37,
+                "partial_author_list": 31,
+                "placeholder_authors": 35,
+                "plausible_fabrication": 66,
+                "preprint_as_published": 29,
+                "swapped_authors": 63,
+                "wrong_venue": 34
+            },
+            "tier_distribution": {
+                "1": 130,
+                "2": 238,
+                "3": 151
+            }
         },
-        "source_distribution": {
-          "pubmed": 156,
-          "dblp_cs_non_ml": 201,
-          "biorxiv": 143
+        "stress_test": {
+            "file": "stress_test.jsonl",
+            "total": 122,
+            "valid": 1,
+            "hallucinated": 121,
+            "tier_distribution": {
+                "2": 85,
+                "3": 36
+            },
+            "type_distribution": {
+                "arxiv_version_mismatch": 36,
+                "merged_citation": 46,
+                "partial_author_list": 39
+            },
+            "generation_methods": {
+                "canary": 1,
+                "perturbation": 121
+            },
+            "count": 122
         },
-        "generation_methods": {
-          "perturbation": 300,
-          "scraped": 200
-        },
-        "subcorpora": {
-          "biorxiv": "bioRxiv preprints (life sciences)",
-          "pubmed": "PubMed-indexed peer-reviewed papers (medical/clinical)",
-          "dblp_cs_non_ml": "DBLP CS-non-ML venues (IR, DB, graphics, systems, security, SE, theory)"
+        "test_hidden": {
+            "file": "test_hidden.jsonl",
+            "total": 454,
+            "generation_methods": {
+                "adversarial": 6,
+                "canary": 1,
+                "llm_generated": 77,
+                "perturbation": 142,
+                "real_world": 28,
+                "scraped": 200
+            },
+            "valid": 210,
+            "hallucinated": 244
         }
-      }
     },
-    "data_sources": {
-      "biorxiv_withdrawn_incidents": {
-        "file": "biorxiv_withdrawn_incidents.jsonl",
-        "total": 310,
-        "source_distribution": {
-          "biorxiv_withdrawn": 215,
-          "medrxiv_withdrawn": 95
+    "v1_1_extensions": {
+        "date_added": "2026-05-07",
+        "rationale": "Cross-domain test split (bioRxiv + PubMed + CS-non-ML DBLP venues) to evaluate detector generalization beyond ML conferences. Eval-only; v1.0 splits are byte-stable and unchanged.",
+        "splits": {
+            "test_crossdomain": {
+                "file": "test_crossdomain.jsonl",
+                "total": 500,
+                "valid": 200,
+                "hallucinated": 300,
+                "tier_distribution": {
+                    "1": 80,
+                    "2": 140,
+                    "3": 80
+                },
+                "type_distribution": {
+                    "valid": 200,
+                    "arxiv_version_mismatch": 27,
+                    "chimeric_title": 17,
+                    "fabricated_doi": 14,
+                    "future_date": 25,
+                    "hybrid_fabrication": 19,
+                    "merged_citation": 18,
+                    "near_miss_title": 23,
+                    "nonexistent_venue": 16,
+                    "partial_author_list": 23,
+                    "placeholder_authors": 25,
+                    "plausible_fabrication": 30,
+                    "preprint_as_published": 21,
+                    "swapped_authors": 20,
+                    "wrong_venue": 22
+                },
+                "source_distribution": {
+                    "biorxiv": 143,
+                    "dblp_cs_non_ml": 201,
+                    "pubmed": 156
+                },
+                "generation_methods": {
+                    "perturbation": 300,
+                    "scraped": 200
+                },
+                "subcorpora": {
+                    "biorxiv": "bioRxiv preprints (life sciences)",
+                    "pubmed": "PubMed-indexed peer-reviewed papers (medical/clinical)",
+                    "dblp_cs_non_ml": "DBLP CS-non-ML venues (IR, DB, graphics, systems, security, SE, theory)"
+                }
+            }
         },
-        "year_distribution": {
-          "2023": 115,
-          "2024": 107,
-          "2025": 88
+        "data_sources": {
+            "biorxiv_withdrawn_incidents": {
+                "file": "biorxiv_withdrawn_incidents.jsonl",
+                "total": 310,
+                "source_distribution": {
+                    "biorxiv_withdrawn": 215,
+                    "medrxiv_withdrawn": 95
+                },
+                "year_distribution": {
+                    "2023": 115,
+                    "2024": 107,
+                    "2025": 88
+                },
+                "hallucination_type": {
+                    "plausible_fabrication": 310
+                },
+                "rationale": "Real-world withdrawn preprints from bioRxiv and medRxiv (2023-2025). Each entry has a real DOI that resolves, a real title, and real authors — but the paper has been formally withdrawn and citing it is a real-world failure mode that no perturbation generator produces. Used as a reusable data source (analogous to real_world_incidents.jsonl); downstream split builders may sample from it.",
+                "method": "BioRxivClient.find_withdrawn_papers_parallel scans the date range and filters records whose abstract begins with \"Withdrawal Statement\", \"[Withdrawn]\", or contains \"has been withdrawn\". 8-worker parallel pagination; ~10 min for the full 2023-2025 scan."
+            }
         },
-        "hallucination_type": {
-          "plausible_fabrication": 310
-        },
-        "rationale": "Real-world withdrawn preprints from bioRxiv and medRxiv (2023-2025). Each entry has a real DOI that resolves, a real title, and real authors \u2014 but the paper has been formally withdrawn and citing it is a real-world failure mode that no perturbation generator produces. Used as a reusable data source (analogous to real_world_incidents.jsonl); downstream split builders may sample from it.",
-        "method": "BioRxivClient.find_withdrawn_papers_parallel scans the date range and filters records whose abstract begins with \"Withdrawal Statement\", \"[Withdrawn]\", or contains \"has been withdrawn\". 8-worker parallel pagination; ~10 min for the full 2023-2025 scan."
-      }
-    },
-    "upstream_updates": {
-      "temporal_supplement_merge": {
-        "file": "results/temporal_supplement/temporal_supplement_2024_2025.jsonl",
-        "date": "2026-05-08",
-        "before": {
-          "total": 448,
-          "valid": 300,
-          "hallucinated": 148
-        },
-        "after": {
-          "total": 858,
-          "valid": 440,
-          "hallucinated": 418,
-          "type_distribution": {
-            "valid": 440,
-            "future_date": 44,
-            "nonexistent_venue": 28,
-            "fabricated_doi": 20,
-            "placeholder_authors": 36,
-            "preprint_as_published": 21,
-            "hybrid_fabrication": 33,
-            "wrong_venue": 26,
-            "partial_author_list": 30,
-            "swapped_authors": 27,
-            "chimeric_title": 23,
-            "merged_citation": 22,
-            "near_miss_title": 30,
-            "plausible_fabrication": 33,
-            "arxiv_version_mismatch": 45
-          }
-        },
-        "rationale": "Merged a 450-entry independent re-scrape of NeurIPS/ICML/ICLR/AAAI/CVPR/EMNLP/ACL 2024-2025 into the existing temporal_supplement to fill type-coverage gaps (swapped_authors went from 3 to 27, merged_citation from 1 to 22). Existing entries kept verbatim so pre-computed eval JSONs in results/temporal_supplement/llm_*_temporal_*.json remain valid for that subset; new entries need fresh evals when budget allows.",
-        "merge_script": "scripts/merge_temporal_supplement.py"
-      }
+        "upstream_updates": {
+            "temporal_supplement_merge": {
+                "file": "results/temporal_supplement/temporal_supplement_2024_2025.jsonl",
+                "date": "2026-05-08",
+                "before": {
+                    "total": 448,
+                    "valid": 300,
+                    "hallucinated": 148
+                },
+                "after": {
+                    "total": 858,
+                    "valid": 440,
+                    "hallucinated": 418,
+                    "type_distribution": {
+                        "valid": 440,
+                        "future_date": 44,
+                        "nonexistent_venue": 28,
+                        "fabricated_doi": 20,
+                        "placeholder_authors": 36,
+                        "preprint_as_published": 21,
+                        "hybrid_fabrication": 33,
+                        "wrong_venue": 26,
+                        "partial_author_list": 30,
+                        "swapped_authors": 27,
+                        "chimeric_title": 23,
+                        "merged_citation": 22,
+                        "near_miss_title": 30,
+                        "plausible_fabrication": 33,
+                        "arxiv_version_mismatch": 45
+                    }
+                },
+                "rationale": "Merged a 450-entry independent re-scrape of NeurIPS/ICML/ICLR/AAAI/CVPR/EMNLP/ACL 2024-2025 into the existing temporal_supplement to fill type-coverage gaps (swapped_authors went from 3 to 27, merged_citation from 1 to 22). Existing entries kept verbatim so pre-computed eval JSONs in results/temporal_supplement/llm_*_temporal_*.json remain valid for that subset; new entries need fresh evals when budget allows.",
+                "merge_script": "scripts/merge_temporal_supplement.py"
+            }
+        }
     }
-  }
 }

@@ -1,0 +1,152 @@
+{
+  "b6a26b30b14a": {
+    "label": "VALID",
+    "confidence": 0.85,
+    "reason": "[Stage 1: bibtex-check verified] Status: verified",
+    "cascade_stage": "stage1_db"
+  },
+  "cff2f0bb469f": {
+    "label": "VALID",
+    "confidence": 0.85,
+    "reason": "[Stage 1: bibtex-check verified] Status: verified",
+    "cascade_stage": "stage1_db"
+  },
+  "eae03804fd48": {
+    "label": "VALID",
+    "confidence": 0.85,
+    "reason": "[Stage 1: bibtex-check verified] Status: verified",
+    "cascade_stage": "stage1_db"
+  },
+  "ae61732dac84": {
+    "label": "HALLUCINATED",
+    "confidence": 0.85,
+    "reason": "[Stage 1: bibtex-check author_mismatch] Status: author_mismatch; Mismatched: ['author']",
+    "cascade_stage": "stage1_db"
+  },
+  "c62f826741b3": {
+    "label": "HALLUCINATED",
+    "confidence": 0.85,
+    "reason": "[Stage 1: bibtex-check venue_mismatch] Status: venue_mismatch; Mismatched: ['venue']",
+    "cascade_stage": "stage1_db"
+  },
+  "bb59c4bd80e7": {
+    "label": "VALID",
+    "confidence": 0.85,
+    "reason": "[Stage 1: bibtex-check verified] Status: verified",
+    "cascade_stage": "stage1_db"
+  },
+  "bf3addc43203": {
+    "label": "VALID",
+    "confidence": 0.85,
+    "reason": "[Stage 1: bibtex-check verified] Status: verified",
+    "cascade_stage": "stage1_db"
+  },
+  "d632f7211d63": {
+    "label": "UNCERTAIN",
+    "confidence": 0.5,
+    "reason": "[Stage 2: llm_agentic_openrouter_claude_sonnet_4_6] [Agentic] Max tool calls (5) exceeded",
+    "cascade_stage": "stage2_diagnosis"
+  },
+  "c3e070166df2": {
+    "label": "HALLUCINATED",
+    "confidence": 0.93,
+    "reason": "[Stage 2: llm_agentic_openrouter_claude_sonnet_4_6] [Agentic|tool|tools=resolve_doi,search_arxiv,search_semantic_scholar",
+    "cascade_stage": "stage2_diagnosis"
+  },
+  "f46e9569871d": {
+    "label": "VALID",
+    "confidence": 0.85,
+    "reason": "[Stage 1: bibtex-check verified] Status: verified",
+    "cascade_stage": "stage1_db"
+  },
+  "f746e1c10ae9": {
+    "label": "HALLUCINATED",
+    "confidence": 0.88,
+    "reason": "[Stage 2: llm_agentic_openrouter_claude_sonnet_4_6] [Agentic|tool|tools=resolve_doi,search_crossref,search_semantic_scho",
+    "cascade_stage": "stage2_diagnosis"
+  },
+  "ff065f4c5765": {
+    "label": "VALID",
+    "confidence": 0.85,
+    "reason": "[Stage 1: bibtex-check verified] Status: verified",
+    "cascade_stage": "stage1_db"
+  },
+  "e8e1379d3939": {
+    "label": "VALID",
+    "confidence": 0.85,
+    "reason": "[Stage 1: bibtex-check verified] Status: verified",
+    "cascade_stage": "stage1_db"
+  },
+  "c437b8d2fcd4": {
+    "label": "VALID",
+    "confidence": 0.85,
+    "reason": "[Stage 1: bibtex-check verified] Status: verified",
+    "cascade_stage": "stage1_db"
+  },
+  "b97858a4638f": {
+    "label": "VALID",
+    "confidence": 0.85,
+    "reason": "[Stage 1: bibtex-check verified] Status: verified",
+    "cascade_stage": "stage1_db"
+  },
+  "b6d85d903dcf": {
+    "label": "HALLUCINATED",
+    "confidence": 0.85,
+    "reason": "[Stage 1: bibtex-check author_mismatch] Status: author_mismatch; Mismatched: ['author']",
+    "cascade_stage": "stage1_db"
+  },
+  "e7d2f0c1e698": {
+    "label": "VALID",
+    "confidence": 0.85,
+    "reason": "[Stage 1: bibtex-check verified] Status: verified",
+    "cascade_stage": "stage1_db"
+  },
+  "e7e5083fa94f": {
+    "label": "HALLUCINATED",
+    "confidence": 0.85,
+    "reason": "[Stage 1: bibtex-check venue_mismatch] Status: venue_mismatch; Mismatched: ['venue']",
+    "cascade_stage": "stage1_db"
+  },
+  "b1ff805837a9": {
+    "label": "VALID",
+    "confidence": 0.85,
+    "reason": "[Stage 1: bibtex-check verified] Status: verified",
+    "cascade_stage": "stage1_db"
+  },
+  "bbd1bcc55e09": {
+    "label": "VALID",
+    "confidence": 0.85,
+    "reason": "[Stage 1: bibtex-check verified] Status: verified",
+    "cascade_stage": "stage1_db"
+  },
+  "c5b31d38c496": {
+    "label": "VALID",
+    "confidence": 0.85,
+    "reason": "[Stage 1: bibtex-check verified] Status: verified",
+    "cascade_stage": "stage1_db"
+  },
+  "d27ac16ca85a": {
+    "label": "HALLUCINATED",
+    "confidence": 0.85,
+    "reason": "[Stage 1: bibtex-check author_mismatch] Status: author_mismatch; Mismatched: ['author']",
+    "cascade_stage": "stage1_db"
+  },
+  "d87ce678eb11": {
+    "label": "HALLUCINATED",
+    "confidence": 0.92,
+    "reason": "[Stage 2: llm_agentic_openrouter_claude_sonnet_4_6] [Agentic|tool|tools=resolve_doi,search_semantic_scholar,search_arxiv",
+    "cascade_stage": "stage2_diagnosis"
+  },
+  "b9ce7ba367a4": {
+    "label": "VALID",
+    "confidence": 0.85,
+    "reason": "[Stage 1: bibtex-check verified] Status: verified",
+    "cascade_stage": "stage1_db"
+  },
+  "f34f26c83153": {
+    "label": "VALID",
+    "confidence": 0.85,
+    "reason": "[Stage 1: bibtex-check verified] Status: verified",
+    "cascade_stage": "stage1_db"
+  }
+}

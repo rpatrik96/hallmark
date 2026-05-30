@@ -2,14 +2,14 @@
   "tool_name": "cascade_db_diagnosis",
   "split_name": "test_public",
   "num_entries": 831,
-  "num_hallucinated": 544,
-  "num_valid": 287,
-  "detection_rate": 0.9716312056737588,
-  "false_positive_rate": 0.4558303886925795,
-  "f1_hallucination": 0.8535825545171339,
-  "tier_weighted_f1": 0.9106431417188389,
-  "mcc": 0.5960662101459301,
-  "macro_f1": 0.7697756870581215,
+  "num_hallucinated": 519,
+  "num_valid": 312,
+  "detection_rate": 0.9698492462311558,
+  "false_positive_rate": 0.5,
+  "f1_hallucination": 0.8230277185501065,
+  "tier_weighted_f1": 0.8961382217552556,
+  "mcc": 0.5494453532281024,
+  "macro_f1": 0.7364083740429856,
   "union_recall_at_k": {},
   "temporal_robustness": null,
   "cost_efficiency": 0.07141460988280333,
@@ -28,28 +28,28 @@
   "tier3_f1_ci": null,
   "per_tier_metrics": {
     "1": {
-      "detection_rate": 0.9918032786885246,
-      "false_positive_rate": 0.4558303886925795,
+      "detection_rate": 0.9924242424242424,
+      "false_positive_rate": 0.5,
       "f1": 0.650537634408602,
       "precision": 0.484,
       "num_hallucinated": 132,
-      "num_valid": 287
+      "num_valid": 312
     },
     "2": {
-      "detection_rate": 0.9695431472081218,
-      "false_positive_rate": 0.4558303886925795,
+      "detection_rate": 0.9698275862068966,
+      "false_positive_rate": 0.5,
       "f1": 0.7388781431334625,
       "precision": 0.596875,
-      "num_hallucinated": 243,
-      "num_valid": 287
+      "num_hallucinated": 232,
+      "num_valid": 312
     },
     "3": {
-      "detection_rate": 0.9519230769230769,
-      "false_positive_rate": 0.4558303886925795,
+      "detection_rate": 0.9483870967741935,
+      "false_positive_rate": 0.5,
       "f1": 0.5963855421686747,
       "precision": 0.4342105263157895,
-      "num_hallucinated": 169,
-      "num_valid": 287
+      "num_hallucinated": 155,
+      "num_valid": 312
     }
   },
   "per_type_metrics": {
@@ -133,9 +133,9 @@
     },
     "valid": {
       "detection_rate": 0.0,
-      "false_positive_rate": 0.4558303886925795,
+      "false_positive_rate": 0.5,
       "f1": 0.0,
-      "count": 287
+      "count": 312
     },
     "wrong_venue": {
       "detection_rate": 1.0,

@@ -1,0 +1,164 @@
+{
+  "d0f7f9c72c33": {
+    "label": "VALID",
+    "confidence": 0.98,
+    "reason": "IBRNet is a well-known CVPR 2021 paper by these authors, and the DOI format matches CVPR 2021 proceedings.",
+    "source": null
+  },
+  "ed071a6dfa34": {
+    "label": "VALID",
+    "confidence": 0.9,
+    "reason": "This is a real paper by Gowal et al. presented at NeurIPS 2021, with arXiv ID 2104.09425. Authors and title match the known publication.",
+    "source": null
+  },
+  "fa77166308b0": {
+    "label": "VALID",
+    "confidence": 0.95,
+    "reason": "This is the Imagen paper by Saharia et al., presented at NeurIPS 2022. Authors, title, venue, and arXiv ID (2205.11487) all match the known publication.",
+    "source": null
+  },
+  "d7bd062b5e1b": {
+    "label": "VALID",
+    "confidence": 0.95,
+    "reason": "BLIP-2 by Li et al. was published at ICML 2023, authors and title match the real paper, and the arXiv ID 2301.12597 is correct.",
+    "source": null
+  },
+  "f802800935ef": {
+    "label": "VALID",
+    "confidence": 0.98,
+    "reason": "ImageBind is a real CVPR 2023 paper by Girdhar et al. from Meta AI, authors and DOI format are correct.",
+    "source": null
+  },
+  "c65faf378a95": {
+    "label": "HALLUCINATED",
+    "confidence": 0.9,
+    "reason": "OPT is a real arXiv preprint (2205.01068) by Zhang et al., but it was not published at ACL 2022. Additionally, the author list appears altered (e.g., 'Mona Dewan' is not a known author; 'Zhiguo Du' do",
+    "source": null
+  },
+  "eaa48be036ab": {
+    "label": "VALID",
+    "confidence": 0.95,
+    "reason": "Barlow Twins by Zbontar et al. was published at ICML 2021. Authors and title match the real paper. The DOI is the arXiv DOI which is valid.",
+    "source": null
+  },
+  "b939e55d7555": {
+    "label": "HALLUCINATED",
+    "confidence": 0.9,
+    "reason": "PaLM was released as an arXiv preprint in 2022 (arXiv:2204.02311) and later published in JMLR (2023), not at ICML. Citing it as an ICML paper is incorrect.",
+    "source": null
+  },
+  "a4d318041956": {
+    "label": "VALID",
+    "confidence": 0.9,
+    "reason": "This paper exists in CVPR 2021 by Zhong Zhang, Haijia Zhang, and Shuang Liu. The DOI format is consistent with CVPR 2021 proceedings.",
+    "source": null
+  },
+  "dccb0bb90563": {
+    "label": "VALID",
+    "confidence": 0.98,
+    "reason": "This is the well-known ViT paper by Dosovitskiy et al., published at ICLR 2021. Authors, title, venue, year, and arXiv identifier all match.",
+    "source": null
+  },
+  "bb8032fd12d8": {
+    "label": "VALID",
+    "confidence": 0.95,
+    "reason": "This is the well-known InstructGPT paper by Ouyang et al., published at NeurIPS 2022. The authors, title, venue, and arXiv ID (2203.02155) all match the real publication.",
+    "source": null
+  },
+  "c337460709f1": {
+    "label": "VALID",
+    "confidence": 0.95,
+    "reason": "This is a real paper by Mao, Chakrabarti, and Sarkar published at ICML 2021. The authors are known researchers in network analysis and statistical machine learning.",
+    "source": null
+  },
+  "e2c14cf2d74b": {
+    "label": "VALID",
+    "confidence": 0.95,
+    "reason": "This is a real paper by Rubin, Herzig, and Berant published at NAACL 2022. The arXiv ID 2112.08633 is correct for this paper.",
+    "source": null
+  },
+  "a24129d1c5e5": {
+    "label": "HALLUCINATED",
+    "confidence": 0.85,
+    "reason": "Flamingo is a real NeurIPS 2022 paper, but the author list here includes incorrect names. The real paper's authors include Roman Ring, Eliza Rutherford, Aida Nematzadeh, Sahand Sharifzadeh, Mikolaj Bi",
+    "source": null
+  },
+  "e9e08922a057": {
+    "label": "HALLUCINATED",
+    "confidence": 0.9,
+    "reason": "PaLM is a real paper by Chowdhery et al. (arXiv:2204.02311), but it was published in JMLR (2023), not ICML. The author list also appears to have errors (e.g., 'Nitish Shirish Keskar Rao' merges two re",
+    "source": null
+  },
+  "db9d82ff3f94": {
+    "label": "HALLUCINATED",
+    "confidence": 0.9,
+    "reason": "Constitutional AI by Bai et al. is a real Anthropic paper (arXiv:2212.08073), but it was not published at ICLR 2023. It remained an arXiv preprint, so citing it as an ICLR proceedings paper is incorre",
+    "source": null
+  },
+  "ec7fc7e09a4f": {
+    "label": "HALLUCINATED",
+    "confidence": 0.85,
+    "reason": "UAST: Uncertainty-Aware Siamese Tracking is a real paper by Dawei Zhang, Yanwei Fu, and Zhonglong Zheng, but it was published in ICASSP 2022, not ICML 2022.",
+    "source": null
+  },
+  "ff2931c3228f": {
+    "label": "VALID",
+    "confidence": 0.98,
+    "reason": "This is a real ICCV 2021 paper by Chen, Xie, and He (MoCo v3). The DOI format is correct for IEEE ICCV 2021 proceedings.",
+    "source": null
+  },
+  "dae1eb71d49a": {
+    "label": "VALID",
+    "confidence": 0.98,
+    "reason": "This is the well-known AlphaFold paper by Jumper et al., published in Nature in 2021 with DOI 10.1038/s41586-021-03819-2. The author list is truncated due to BibTeX formatting issues but the core meta",
+    "source": null
+  },
+  "f36bff1b0e11": {
+    "label": "HALLUCINATED",
+    "confidence": 0.9,
+    "reason": "Re2TAL is a real CVPR 2023 paper by Zhao, Liu, Mangalam, and Ghanem, but the entry lists year 2022 instead of 2023 (the DOI itself is CVPR52729.2023).",
+    "source": null
+  },
+  "ded9f5844e90": {
+    "label": "VALID",
+    "confidence": 0.98,
+    "reason": "TensoRF: Tensorial Radiance Fields by Chen, Xu, Geiger, Yu, and Su was published at ECCV 2022, and the DOI corresponds to the Springer ECCV proceedings.",
+    "source": null
+  },
+  "fc4aaf478a08": {
+    "label": "VALID",
+    "confidence": 0.95,
+    "reason": "This is a well-known paper by Dhariwal and Nichol from OpenAI, published at NeurIPS 2021. The arXiv ID 2105.05233 is correct.",
+    "source": null
+  },
+  "cdfcc07dff9e": {
+    "label": "VALID",
+    "confidence": 0.95,
+    "reason": "This is a real paper by Prafulla Dhariwal and Alex Nichol published at NeurIPS 2021. The arXiv ID 2105.05233 is correct for this paper.",
+    "source": null
+  },
+  "b4268fa6464e": {
+    "label": "VALID",
+    "confidence": 0.95,
+    "reason": "Flamingo paper by Alayrac et al. was published at NeurIPS 2022, arXiv:2204.14198 is correct, authors match.",
+    "source": null
+  },
+  "aaefe29933ae": {
+    "label": "VALID",
+    "confidence": 0.9,
+    "reason": "FlashAttention is a real NeurIPS 2022 paper by Tri Dao, Daniel Y. Fu, Stefano Ermon, Atri Rudra, and Christopher Ré. Author list appears truncated/malformed (Ré rendered as 'R{\\'e}') but the citation ",
+    "source": null
+  },
+  "c252e8ceaebd": {
+    "label": "VALID",
+    "confidence": 0.95,
+    "reason": "Random Feature Attention by Peng et al. was indeed published at ICLR 2021, and the arXiv ID 2103.02143 matches the paper.",
+    "source": null
+  },
+  "a0478afc6fb9": {
+    "label": "HALLUCINATED",
+    "confidence": 0.9,
+    "reason": "Classifier-Free Diffusion Guidance by Ho and Salimans was presented at the NeurIPS 2021 Workshop on Deep Generative Models and Downstream Applications, not the main NeurIPS conference. It was posted o",
+    "source": null
+  }
+}

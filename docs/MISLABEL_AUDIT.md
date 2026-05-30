@@ -3,7 +3,7 @@
 **Date:** 2026-05-29
 **Auditor tag:** `mislabel-audit-2026-05-29`
 **Target:** `data/v1.0/dev_public.jsonl` (1119 entries: 486 VALID, 633 HALLUCINATED)
-**Patch script:** `scripts/patch_mislabels.py`
+**Patch script:** `scripts/patch_mislabels.py` *(removed — superseded by `scripts/relabel_ground_truth.py`, which re-verifies EVERY hallucinated entry from source evidence rather than a hand-curated allow-list; this doc is retained as the historical record of the original opportunistic pass)*
 
 > **Adversarial-review correction (2026-05-29).** The first pass proposed 16
 > relabels. An independent per-entry adversarial review (one skeptic per entry,
@@ -123,5 +123,7 @@ entries (e.g. APE `ab67ecdd4887`, Least-to-Most `db9a596a4d3f`, ViT-Adapter
 - Entries whose DOI resolves to a *different* paper than the stated title
   (chimeras, e.g. `caef38397355`, `b64d4175823c`, `d29bc1a68d33`,
   `cdf7c1798d3d`) remain `HALLUCINATED`.
-- Re-running `scripts/patch_mislabels.py` is idempotent (keys already carrying
-  `relabeled_by = "mislabel-audit-2026-05-29"` are skipped).
+- The original `scripts/patch_mislabels.py` allow-list pass has been **removed**;
+  ground-truth relabeling is now done end-to-end by `scripts/relabel_ground_truth.py`,
+  which re-verifies every hallucinated entry from source evidence and is itself
+  idempotent (a warm-cache `--apply` on already-correct data is a no-op).

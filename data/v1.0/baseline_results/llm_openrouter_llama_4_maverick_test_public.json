@@ -2,23 +2,23 @@
   "tool_name": "llm_openrouter_llama_4_maverick",
   "split_name": "test_public",
   "num_entries": 831,
-  "num_hallucinated": 544,
-  "num_valid": 287,
-  "detection_rate": 0.6040515653775322,
-  "false_positive_rate": 0.17770034843205576,
-  "f1_hallucination": 0.7114967462039045,
-  "tier_weighted_f1": 0.6998892580287928,
-  "mcc": 0.4070994298827772,
-  "macro_f1": 0.6755315709339306,
+  "num_hallucinated": 519,
+  "num_valid": 312,
+  "detection_rate": 0.6312741312741312,
+  "false_positive_rate": 0.16666666666666666,
+  "f1_hallucination": 0.7290969899665551,
+  "tier_weighted_f1": 0.728211009174312,
+  "mcc": 0.45177322064478104,
+  "macro_f1": 0.7053086522571963,
   "union_recall_at_k": {},
   "temporal_robustness": null,
   "cost_efficiency": 0.06117179498029582,
   "mean_api_calls": 1.0,
-  "ece": 0.20712048192771085,
-  "auroc": 0.7265482126013052,
-  "auprc": 0.8239421591592544,
+  "ece": 0.17940963855421688,
+  "auroc": 0.7583160083160083,
+  "auprc": 0.8227285594498482,
   "num_uncertain": 1,
-  "tier3_f1": 0.5987261146496815,
+  "tier3_f1": 0.6466666666666665,
   "detection_rate_ci": null,
   "f1_hallucination_ci": null,
   "tier_weighted_f1_ci": null,
@@ -28,42 +28,42 @@
   "tier3_f1_ci": null,
   "per_tier_metrics": {
     "1": {
-      "detection_rate": 0.8939393939393939,
-      "false_positive_rate": 0.17770034843205576,
-      "f1": 0.7840531561461793,
-      "precision": 0.6982248520710059,
-      "num_hallucinated": 132,
-      "num_valid": 287
+      "detection_rate": 0.8923076923076924,
+      "false_positive_rate": 0.16666666666666666,
+      "f1": 0.7785234899328859,
+      "precision": 0.6904761904761905,
+      "num_hallucinated": 130,
+      "num_valid": 312
     },
     "2": {
-      "detection_rate": 0.4793388429752066,
-      "false_positive_rate": 0.17770034843205576,
-      "f1": 0.567237163814181,
-      "precision": 0.6946107784431138,
-      "num_hallucinated": 243,
-      "num_valid": 287
+      "detection_rate": 0.4810126582278481,
+      "false_positive_rate": 0.16666666666666666,
+      "f1": 0.56575682382134,
+      "precision": 0.6867469879518072,
+      "num_hallucinated": 238,
+      "num_valid": 312
     },
     "3": {
-      "detection_rate": 0.5562130177514792,
-      "false_positive_rate": 0.17770034843205576,
-      "f1": 0.5987261146496815,
-      "precision": 0.6482758620689655,
-      "num_hallucinated": 169,
-      "num_valid": 287
+      "detection_rate": 0.6423841059602649,
+      "false_positive_rate": 0.16666666666666666,
+      "f1": 0.6466666666666665,
+      "precision": 0.6510067114093959,
+      "num_hallucinated": 151,
+      "num_valid": 312
     }
   },
   "per_type_metrics": {
     "arxiv_version_mismatch": {
-      "detection_rate": 0.4642857142857143,
+      "detection_rate": 0.5333333333333333,
       "false_positive_rate": 0.0,
-      "f1": 0.6341463414634146,
-      "count": 28
+      "f1": 0.6956521739130436,
+      "count": 45
     },
     "chimeric_title": {
-      "detection_rate": 0.6666666666666666,
+      "detection_rate": 0.6956521739130435,
       "false_positive_rate": 0.0,
-      "f1": 0.8,
-      "count": 24
+      "f1": 0.8205128205128205,
+      "count": 23
     },
     "fabricated_doi": {
       "detection_rate": 1.0,
@@ -78,10 +78,10 @@
       "count": 29
     },
     "hybrid_fabrication": {
-      "detection_rate": 0.675,
+      "detection_rate": 0.7241379310344828,
       "false_positive_rate": 0.0,
-      "f1": 0.8059701492537313,
-      "count": 40
+      "f1": 0.8400000000000001,
+      "count": 29
     },
     "merged_citation": {
       "detection_rate": 0.6206896551724138,
@@ -90,34 +90,34 @@
       "count": 29
     },
     "near_miss_title": {
-      "detection_rate": 0.42105263157894735,
+      "detection_rate": 0.45,
       "false_positive_rate": 0.0,
-      "f1": 0.5925925925925926,
-      "count": 38
+      "f1": 0.6206896551724138,
+      "count": 40
     },
     "nonexistent_venue": {
-      "detection_rate": 0.9473684210526315,
+      "detection_rate": 0.9459459459459459,
       "false_positive_rate": 0.0,
-      "f1": 0.972972972972973,
-      "count": 38
+      "f1": 0.9722222222222222,
+      "count": 37
     },
     "partial_author_list": {
-      "detection_rate": 0.20689655172413793,
+      "detection_rate": 0.1935483870967742,
       "false_positive_rate": 0.0,
-      "f1": 0.34285714285714286,
-      "count": 29
+      "f1": 0.3243243243243243,
+      "count": 31
     },
     "placeholder_authors": {
-      "detection_rate": 0.6666666666666666,
+      "detection_rate": 0.6571428571428571,
       "false_positive_rate": 0.0,
-      "f1": 0.8,
-      "count": 36
+      "f1": 0.7931034482758621,
+      "count": 35
     },
     "plausible_fabrication": {
-      "detection_rate": 0.6310679611650486,
+      "detection_rate": 0.8333333333333334,
       "false_positive_rate": 0.0,
-      "f1": 0.7738095238095238,
-      "count": 103
+      "f1": 0.9090909090909091,
+      "count": 66
     },
     "preprint_as_published": {
       "detection_rate": 0.5517241379310345,
@@ -126,24 +126,24 @@
       "count": 29
     },
     "swapped_authors": {
-      "detection_rate": 0.2857142857142857,
+      "detection_rate": 0.3333333333333333,
       "false_positive_rate": 0.0,
-      "f1": 0.4444444444444445,
-      "count": 56
+      "f1": 0.5,
+      "count": 63
     },
     "valid": {
       "detection_rate": 0.0,
-      "false_positive_rate": 0.17770034843205576,
+      "false_positive_rate": 0.16666666666666666,
       "f1": 0.0,
-      "count": 287
+      "count": 312
     },
     "wrong_venue": {
-      "detection_rate": 0.4857142857142857,
+      "detection_rate": 0.48484848484848486,
       "false_positive_rate": 0.0,
-      "f1": 0.6538461538461539,
-      "count": 36
+      "f1": 0.653061224489796,
+      "count": 34
     }
   },
   "coverage": 1.0,
-  "coverage_adjusted_f1": 0.7114967462039045
+  "coverage_adjusted_f1": 0.7290969899665551
 }

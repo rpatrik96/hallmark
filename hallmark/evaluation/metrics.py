@@ -1239,6 +1239,222 @@ def paired_bootstrap_test(
     return (observed_diff, p_value, float(cohens_h))
 
 
+# ---------------------------------------------------------------------------
+# CI / significance persistence plumbing
+#
+# The functions below are the *reporting-path* glue that turns per-entry
+# predictions into the ``*_ci`` fields stored in result JSON artifacts and into
+# paired significance tables for tool pairs. They are deliberately deterministic
+# (seeded) and never fabricate numbers: when per-entry predictions are missing
+# they return null CIs together with a machine-readable reason, so the released
+# schema records *why* a CI is absent instead of silently emitting ``null``.
+# ---------------------------------------------------------------------------
+
+# Metric functions usable with stratified/paired bootstrap. Each takes
+# (entries, predictions) and returns a scalar. ``predictions`` may be a list
+# (lockstep with ``entries`` for bootstrap resamples) or a dict keyed by
+# bibtex_key — build_confusion_matrix / tier_weighted_f1 handle both.
+
+
+def _metric_detection_rate(entries: list[BenchmarkEntry], preds: list[Prediction]) -> float:
+    return build_confusion_matrix(entries, preds).detection_rate
+
+
+def _metric_fpr(entries: list[BenchmarkEntry], preds: list[Prediction]) -> float:
+    return build_confusion_matrix(entries, preds).false_positive_rate
+
+
+def _metric_f1(entries: list[BenchmarkEntry], preds: list[Prediction]) -> float:
+    return build_confusion_matrix(entries, preds).f1
+
+
+def _metric_mcc(entries: list[BenchmarkEntry], preds: list[Prediction]) -> float:
+    return build_confusion_matrix(entries, preds).mcc
+
+
+def _metric_tier_weighted_f1(entries: list[BenchmarkEntry], preds: list[Prediction]) -> float:
+    return tier_weighted_f1(entries, preds)
+
+
+#: Metric-name -> callable, the canonical set persisted as ``*_ci`` fields.
+PERSISTED_CI_METRICS: dict[str, Callable[[list[BenchmarkEntry], list[Prediction]], float]] = {
+    "detection_rate": _metric_detection_rate,
+    "false_positive_rate": _metric_fpr,
+    "f1_hallucination": _metric_f1,
+    "tier_weighted_f1": _metric_tier_weighted_f1,
+    "mcc": _metric_mcc,
+}
+
+#: Mapping from metric name to the result-JSON ``*_ci`` field it populates.
+CI_FIELD_FOR_METRIC: dict[str, str] = {
+    "detection_rate": "detection_rate_ci",
+    "false_positive_rate": "fpr_ci",
+    "f1_hallucination": "f1_hallucination_ci",
+    "tier_weighted_f1": "tier_weighted_f1_ci",
+    "ece": "ece_ci",
+    "mcc": "mcc_ci",
+}
+
+
+def compute_persisted_cis(
+    entries: list[BenchmarkEntry],
+    predictions: list[Prediction] | None,
+    *,
+    n_bootstrap: int = 10_000,
+    seed: int = 42,
+    confidence: float = 0.95,
+) -> dict[str, object]:
+    """Compute the bootstrap CI block persisted into a result JSON artifact.
+
+    This is the reporting-path entry point for task #9: it turns *per-entry*
+    predictions into the ``*_ci`` fields (DR, FPR, F1, TW-F1, MCC, ECE) carried
+    by :class:`~hallmark.dataset.schema.EvaluationResult`, plus a
+    ``ci_provenance`` sub-dict recording the seed, resample count, confidence
+    level, and the data source the CIs were computed from.
+
+    The computation is deterministic given ``seed``. It does **not** fabricate
+    numbers: CIs are derived from the supplied per-entry predictions only. When
+    ``predictions`` is ``None`` or empty (the tool has no stored per-entry
+    predictions), every ``*_ci`` field is ``None`` and ``ci_provenance.reason``
+    explains the omission so downstream consumers can audit it.
+
+    Args:
+        entries: Benchmark entries (ground truth) for the scored split.
+        predictions: The tool's per-entry predictions, or ``None`` if unavailable.
+        n_bootstrap: Number of stratified bootstrap resamples.
+        seed: Random seed (reproducibility).
+        confidence: Confidence level (default 0.95 -> 95% CIs).
+
+    Returns:
+        Dict containing each ``*_ci`` field (``[lower, upper]`` list or ``None``)
+        and a ``ci_provenance`` dict. The returned dict can be merged directly
+        into an ``EvaluationResult.to_dict()`` payload.
+    """
+    ci_fields = [
+        "detection_rate_ci",
+        "fpr_ci",
+        "f1_hallucination_ci",
+        "tier_weighted_f1_ci",
+        "ece_ci",
+        "mcc_ci",
+    ]
+
+    if not predictions:
+        provenance = {
+            "computed": False,
+            "reason": (
+                "no per-entry predictions available for this tool; CIs left null "
+                "(cannot be reconstructed from aggregate metrics without fabricating data)"
+            ),
+            "seed": seed,
+            "n_bootstrap": n_bootstrap,
+            "confidence": confidence,
+        }
+        out: dict[str, object] = {f: None for f in ci_fields}
+        out["ci_provenance"] = provenance
+        return out
+
+    alpha = 1.0 - confidence
+
+    # Single resampling loop for DR/FPR/F1/TW-F1/ECE/MCC — already deterministic
+    # via ``seed`` and stratified by hallucination type.
+    all_cis = _bootstrap_all_cis(
+        entries,
+        predictions,
+        n_bootstrap=n_bootstrap,
+        seed=seed,
+        alpha=alpha,
+    )
+
+    # ECE is only meaningful with >2 distinct confidence values (matches evaluate()).
+    distinct_conf = len({p.confidence for p in predictions if p.label != "UNCERTAIN"})
+    ece_ci: list[float] | None = list(all_cis["ece"]) if distinct_conf > 2 else None
+
+    # FPR is undefined when the split has no valid entries.
+    num_valid = sum(1 for e in entries if e.label == "VALID")
+    fpr_ci: list[float] | None = list(all_cis["false_positive_rate"]) if num_valid > 0 else None
+
+    result: dict[str, object] = {
+        "detection_rate_ci": list(all_cis["detection_rate"]),
+        "fpr_ci": fpr_ci,
+        "f1_hallucination_ci": list(all_cis["f1_hallucination"]),
+        "tier_weighted_f1_ci": list(all_cis["tier_weighted_f1"]),
+        "ece_ci": ece_ci,
+        "mcc_ci": list(all_cis["mcc"]),
+        "ci_provenance": {
+            "computed": True,
+            "source": "per_entry_predictions",
+            "seed": seed,
+            "n_bootstrap": n_bootstrap,
+            "confidence": confidence,
+            "num_predictions": len(predictions),
+        },
+    }
+    return result
+
+
+def paired_significance(
+    entries: list[BenchmarkEntry],
+    tool_predictions: dict[str, list[Prediction]],
+    *,
+    metric: str = "f1_hallucination",
+    n_bootstrap: int = 10_000,
+    seed: int = 42,
+    two_sided: bool = True,
+) -> dict[str, dict[str, float]]:
+    """Compute paired bootstrap significance for every ordered tool pair.
+
+    Wraps :func:`paired_bootstrap_test` so the reporting path can persist a
+    significance table (task #9). For each ordered pair ``(A, B)`` it reports the
+    observed metric difference, the paired-bootstrap p-value, and Cohen's *h*
+    effect size. Deterministic given ``seed`` (each pair uses a stable
+    per-pair seed derived from ``seed`` so results do not depend on dict order).
+
+    Args:
+        entries: Benchmark entries (ground truth).
+        tool_predictions: Mapping ``tool_name -> per-entry predictions``. Tools
+            with empty prediction lists are skipped (recorded nowhere; the caller
+            should note their absence via :func:`compute_persisted_cis`).
+        metric: One of ``PERSISTED_CI_METRICS`` keys (default ``f1_hallucination``).
+        n_bootstrap: Number of bootstrap resamples per pair.
+        seed: Base random seed (reproducibility).
+        two_sided: Two-sided p-value when True (default).
+
+    Returns:
+        Dict keyed by ``"A_vs_B"`` -> ``{observed_diff, p_value, cohens_h}``.
+    """
+    if metric not in PERSISTED_CI_METRICS:
+        raise ValueError(f"Unknown metric {metric!r}. Choose from {sorted(PERSISTED_CI_METRICS)}.")
+    metric_fn = PERSISTED_CI_METRICS[metric]
+
+    # Stable ordering: sort tools and skip those without predictions.
+    tools = sorted(name for name, preds in tool_predictions.items() if preds)
+
+    out: dict[str, dict[str, float]] = {}
+    for i, name_a in enumerate(tools):
+        for j, name_b in enumerate(tools):
+            if i >= j:
+                continue
+            # Per-pair seed keeps results independent of iteration order while
+            # remaining fully reproducible.
+            pair_seed = seed + i * 1000 + j
+            observed_diff, p_value, cohens_h = paired_bootstrap_test(
+                entries,
+                tool_predictions[name_a],
+                tool_predictions[name_b],
+                metric_fn,
+                n_bootstrap=n_bootstrap,
+                seed=pair_seed,
+                two_sided=two_sided,
+            )
+            out[f"{name_a}_vs_{name_b}"] = {
+                "observed_diff": observed_diff,
+                "p_value": p_value,
+                "cohens_h": cohens_h,
+            }
+    return out
+
+
 def tier_weight_sensitivity(
     entries: list[BenchmarkEntry],
     predictions: list[Prediction],

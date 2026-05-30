@@ -1,0 +1,164 @@
+{
+  "d0f7f9c72c33": {
+    "label": "VALID",
+    "confidence": 0.85,
+    "reason": "DOI resolves (CrossRef-verified; doi.org HEAD returned transient block) [relabel-delta correction]",
+    "source": "tool"
+  },
+  "ed071a6dfa34": {
+    "label": "VALID",
+    "confidence": 0.85,
+    "reason": "DOI resolves -> https://arxiv.org/abs/2104.09425",
+    "source": "tool"
+  },
+  "fa77166308b0": {
+    "label": "VALID",
+    "confidence": 0.85,
+    "reason": "DOI resolves -> https://arxiv.org/abs/2205.11487",
+    "source": "tool"
+  },
+  "d7bd062b5e1b": {
+    "label": "VALID",
+    "confidence": 0.85,
+    "reason": "DOI resolves -> https://arxiv.org/abs/2301.12597",
+    "source": "tool"
+  },
+  "f802800935ef": {
+    "label": "VALID",
+    "confidence": 0.85,
+    "reason": "DOI resolves (CrossRef-verified; doi.org HEAD returned transient block) [relabel-delta correction]",
+    "source": "tool"
+  },
+  "c65faf378a95": {
+    "label": "VALID",
+    "confidence": 0.85,
+    "reason": "DOI resolves -> https://arxiv.org/abs/2205.01068",
+    "source": "tool"
+  },
+  "eaa48be036ab": {
+    "label": "VALID",
+    "confidence": 0.85,
+    "reason": "DOI resolves -> https://arxiv.org/abs/2103.03230",
+    "source": "tool"
+  },
+  "b939e55d7555": {
+    "label": "VALID",
+    "confidence": 0.85,
+    "reason": "DOI resolves -> https://arxiv.org/abs/2204.02311",
+    "source": "tool"
+  },
+  "a4d318041956": {
+    "label": "VALID",
+    "confidence": 0.85,
+    "reason": "DOI resolves (CrossRef-verified; doi.org HEAD returned transient block) [relabel-delta correction]",
+    "source": "tool"
+  },
+  "dccb0bb90563": {
+    "label": "VALID",
+    "confidence": 0.85,
+    "reason": "DOI resolves -> https://arxiv.org/abs/2010.11929",
+    "source": "tool"
+  },
+  "bb8032fd12d8": {
+    "label": "VALID",
+    "confidence": 0.85,
+    "reason": "DOI resolves -> https://arxiv.org/abs/2203.02155",
+    "source": "tool"
+  },
+  "c337460709f1": {
+    "label": "VALID",
+    "confidence": 0.5,
+    "reason": "No DOI field present",
+    "source": "tool"
+  },
+  "e2c14cf2d74b": {
+    "label": "VALID",
+    "confidence": 0.85,
+    "reason": "DOI resolves -> https://arxiv.org/abs/2112.08633",
+    "source": "tool"
+  },
+  "a24129d1c5e5": {
+    "label": "VALID",
+    "confidence": 0.85,
+    "reason": "DOI resolves -> https://arxiv.org/abs/2204.14198",
+    "source": "tool"
+  },
+  "e9e08922a057": {
+    "label": "VALID",
+    "confidence": 0.85,
+    "reason": "DOI resolves -> https://arxiv.org/abs/2204.02311",
+    "source": "tool"
+  },
+  "db9d82ff3f94": {
+    "label": "VALID",
+    "confidence": 0.85,
+    "reason": "DOI resolves -> https://arxiv.org/abs/2212.08073",
+    "source": "tool"
+  },
+  "ec7fc7e09a4f": {
+    "label": "VALID",
+    "confidence": 0.5,
+    "reason": "No DOI field present",
+    "source": "tool"
+  },
+  "ff2931c3228f": {
+    "label": "VALID",
+    "confidence": 0.85,
+    "reason": "DOI resolves (CrossRef-verified; doi.org HEAD returned transient block) [relabel-delta correction]",
+    "source": "tool"
+  },
+  "dae1eb71d49a": {
+    "label": "VALID",
+    "confidence": 0.85,
+    "reason": "DOI resolves -> https://www.nature.com/articles/s41586-021-03819-2",
+    "source": "tool"
+  },
+  "f36bff1b0e11": {
+    "label": "VALID",
+    "confidence": 0.85,
+    "reason": "DOI resolves (CrossRef-verified; doi.org HEAD returned transient block) [relabel-delta correction]",
+    "source": "tool"
+  },
+  "ded9f5844e90": {
+    "label": "VALID",
+    "confidence": 0.85,
+    "reason": "DOI resolves -> https://link.springer.com/chapter/10.1007/978-3-031-19830-4_20",
+    "source": "tool"
+  },
+  "fc4aaf478a08": {
+    "label": "VALID",
+    "confidence": 0.85,
+    "reason": "DOI resolves -> https://arxiv.org/abs/2105.05233",
+    "source": "tool"
+  },
+  "cdfcc07dff9e": {
+    "label": "VALID",
+    "confidence": 0.85,
+    "reason": "DOI resolves -> https://arxiv.org/abs/2105.05233",
+    "source": "tool"
+  },
+  "b4268fa6464e": {
+    "label": "VALID",
+    "confidence": 0.85,
+    "reason": "DOI resolves -> https://arxiv.org/abs/2204.14198",
+    "source": "tool"
+  },
+  "aaefe29933ae": {
+    "label": "VALID",
+    "confidence": 0.85,
+    "reason": "DOI resolves -> https://arxiv.org/abs/2205.14135",
+    "source": "tool"
+  },
+  "c252e8ceaebd": {
+    "label": "VALID",
+    "confidence": 0.85,
+    "reason": "DOI resolves -> https://arxiv.org/abs/2103.02143",
+    "source": "tool"
+  },
+  "a0478afc6fb9": {
+    "label": "VALID",
+    "confidence": 0.85,
+    "reason": "DOI resolves -> https://arxiv.org/abs/2207.12598",
+    "source": "tool"
+  }
+}

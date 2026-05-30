@@ -2,12 +2,12 @@
   "tool_name": "bibtexupdater",
   "split_name": "dev_public",
   "num_entries": 1119,
-  "num_hallucinated": 633,
-  "num_valid": 486,
-  "detection_rate": 0.9462875197472354,
-  "false_positive_rate": 0.17901234567901234,
-  "f1_hallucination": 0.9082638362395754,
-  "tier_weighted_f1": 0.9363008442056792,
+  "num_hallucinated": 606,
+  "num_valid": 513,
+  "detection_rate": 0.9686468646864687,
+  "false_positive_rate": 0.19298245614035087,
+  "f1_hallucination": 0.9086687306501547,
+  "tier_weighted_f1": 0.9436060365369341,
   "detect_at_k": {},
   "temporal_robustness": null,
   "cost_efficiency": 0.2177017962836422,
@@ -24,27 +24,27 @@
   "per_tier_metrics": {
     "1": {
       "detection_rate": 0.9675324675324676,
-      "false_positive_rate": 0.17901234567901234,
+      "false_positive_rate": 0.19298245614035087,
       "f1": 0.764102564102564,
       "precision": 0.6313559322033898,
       "num_hallucinated": 154,
-      "num_valid": 486
+      "num_valid": 513
     },
     "2": {
-      "detection_rate": 0.9554794520547946,
-      "false_positive_rate": 0.17901234567901234,
+      "detection_rate": 0.985663082437276,
+      "false_positive_rate": 0.19298245614035087,
       "f1": 0.8480243161094225,
       "precision": 0.7622950819672131,
-      "num_hallucinated": 292,
-      "num_valid": 486
+      "num_hallucinated": 279,
+      "num_valid": 513
     },
     "3": {
-      "detection_rate": 0.9144385026737968,
-      "false_positive_rate": 0.17901234567901234,
+      "detection_rate": 0.9421965317919075,
+      "false_positive_rate": 0.19298245614035087,
       "f1": 0.7685393258426966,
       "precision": 0.6627906976744186,
-      "num_hallucinated": 187,
-      "num_valid": 486
+      "num_hallucinated": 173,
+      "num_valid": 513
     }
   },
   "per_type_metrics": {
@@ -128,9 +128,9 @@
     },
     "valid": {
       "detection_rate": 0.0,
-      "false_positive_rate": 0.17901234567901234,
+      "false_positive_rate": 0.19298245614035087,
       "f1": 0.0,
-      "count": 486
+      "count": 513
     },
     "wrong_venue": {
       "detection_rate": 0.9782608695652174,
