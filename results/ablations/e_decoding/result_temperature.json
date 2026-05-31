@@ -1,0 +1,22 @@
+{
+  "t0": {
+    "detection_rate": 1.0,
+    "false_positive_rate": 0.8076923076923077,
+    "f1_hallucination": 0.7640449438202247,
+    "num_uncertain": 0,
+    "coverage": 1.0
+  },
+  "t1": {
+    "detection_rate": 0.9705882352941176,
+    "false_positive_rate": 0.8846153846153846,
+    "f1_hallucination": 0.7333333333333333,
+    "num_uncertain": 0,
+    "coverage": 1.0
+  },
+  "flip_temp0_vs_temp1": {
+    "flips": 5,
+    "n_compared": 60,
+    "rate": 0.08333333333333333
+  },
+  "model": "deepseek/deepseek-v3.2"
+}

@@ -325,6 +325,8 @@ def search_semantic_scholar(query: str, limit: int = 5) -> list[dict[str, str]]:
     Raises:
         RuntimeError: Network/API error.
     """
+    import os
+
     import httpx
 
     params = {
@@ -333,15 +335,32 @@ def search_semantic_scholar(query: str, limit: int = 5) -> list[dict[str, str]]:
         "fields": "title,authors,year,venue,externalIds",
     }
     url = "https://api.semanticscholar.org/graph/v1/paper/search?" + urllib.parse.urlencode(params)
-    headers = {"User-Agent": f"HALLMARK/1.0 (mailto:{_OPENALEX_MAILTO})"}
+    base_headers = {"User-Agent": f"HALLMARK/1.0 (mailto:{_OPENALEX_MAILTO})"}
+    # Attach the Semantic Scholar API key when available to lift the shared-IP
+    # rate limit (otherwise the public endpoint 429s under concurrent load).
+    # Some keys are not scoped to the graph /paper/search endpoint and return
+    # 403; in that case we retry keyless (which is rate-limited but valid) so a
+    # mis-scoped key never makes search strictly worse than no key.
+    s2_key = os.environ.get("S2_API_KEY")
+    header_variants: list[dict[str, str]] = []
+    if s2_key:
+        header_variants.append({**base_headers, "x-api-key": s2_key})
+    header_variants.append(base_headers)
 
-    try:
-        resp = httpx.get(url, headers=headers, timeout=15.0, follow_redirects=True)
-    except httpx.RequestError as exc:
-        raise RuntimeError(f"Semantic Scholar search network error: {exc}") from exc
+    resp = None
+    for headers in header_variants:
+        try:
+            resp = httpx.get(url, headers=headers, timeout=15.0, follow_redirects=True)
+        except httpx.RequestError as exc:
+            raise RuntimeError(f"Semantic Scholar search network error: {exc}") from exc
+        if resp.status_code == 403 and "x-api-key" in headers and len(header_variants) > 1:
+            # Key rejected for this endpoint — fall through to the keyless variant.
+            continue
+        break
 
-    if resp.status_code != 200:
-        raise RuntimeError(f"Semantic Scholar returned HTTP {resp.status_code}")
+    if resp is None or resp.status_code != 200:
+        code = resp.status_code if resp is not None else "no-response"
+        raise RuntimeError(f"Semantic Scholar returned HTTP {code}")
 
     items = resp.json().get("data", []) or []
     results = []

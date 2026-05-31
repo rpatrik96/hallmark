@@ -1,0 +1,274 @@
+{
+  "meta": {
+    "task": "TASK B — full-coverage zero-shot Sonnet 4.6 / Opus 4.7 on dev_public (1119)",
+    "split": "dev_public",
+    "labels": "post-relabel corrected (v1.1.x, chore/paper-todo-resolution)",
+    "split_counts": {
+      "num_entries": 1119,
+      "num_hallucinated": 606,
+      "num_valid": 513
+    },
+    "temperature": 0.0,
+    "seed": 42,
+    "ci_n_bootstrap": 10000,
+    "ci_seed": 42,
+    "ci_confidence": 0.95,
+    "prompt": "hallmark.baselines.llm_verifier.VERIFICATION_PROMPT (identical to paper)",
+    "intended_to_close": [
+      "F5 per-type tab:pertype_full dev Sonnet/Opus columns",
+      "app:bootstrap dev CIs Sonnet/Opus (were ci_available=False)"
+    ],
+    "delta_eval_check": "vs results_manifest.md sec1 L61/L62 (summary-only reconstruction)",
+    "finding": "The full 1119-entry re-run (2026-05-30) does NOT reproduce the paper's published Opus/Sonnet dev aggregates (the OpenRouter Anthropic endpoint drifted since the original 2026-05-04 run, commit 493cbb3, which used the identical path/prompt/temp=0 but whose per-entry predictions were never persisted). Controlled replay of the committed temporal-supplement entries shows only 90.0% (Opus) / 75.0% (Sonnet) label agreement on identical inputs (see endpoint_drift_probe/drift_summary.json). On dev the drift compounds: Opus re-run DR=.909/FPR=.162 vs published .752/.072 (+15.7/+9.0pp). These re-run numbers are internally valid but paper-INconsistent; using them would contradict the delta-eval that all of manifest sec.11 (PPV, Pareto, takeaways) is built on. The per-entry predictions are persisted here for reproducibility, but the F5/CI TODOs are resolved by a DOCUMENTED LIMITATION (endpoint drift + unpersisted originals), not by overwriting the published numbers with these drifted ones.",
+    "endpoint_drift_replay": "results/relabel_delta/endpoint_drift_probe/drift_summary.json",
+    "drift_tolerance_pp": 5.0
+  },
+  "models": {
+    "llm_openrouter_claude_sonnet_4_6": {
+      "predictions_file": "results/checkpoints/llm_openrouter_claude_sonnet_4_6_dev_public/llm_openrouter_claude_sonnet_4_6_dev_public_predictions.jsonl",
+      "num_predictions": 1119,
+      "coverage": 1.0,
+      "num_uncertain": 21,
+      "reproduces_published_within_tolerance": false,
+      "verdict": "DIVERGES from published delta-eval beyond tolerance (endpoint drift); do NOT ship these as the paper's Sonnet/Opus dev numbers",
+      "aggregate_full_rerun": {
+        "detection_rate": 0.916,
+        "false_positive_rate": 0.165,
+        "f1_hallucination": 0.8913,
+        "tier_weighted_f1": 0.9172,
+        "mcc": 0.7562,
+        "ece": 0.058
+      },
+      "delta_eval_target_manifest_sec1": {
+        "detection_rate": 0.781,
+        "false_positive_rate": 0.127,
+        "f1_hallucination": 0.827,
+        "mcc": 0.652
+      },
+      "delta_full_minus_deltaeval": {
+        "detection_rate": 0.135,
+        "false_positive_rate": 0.038,
+        "f1_hallucination": 0.0643,
+        "mcc": 0.1042
+      },
+      "max_abs_delta_pp": 13.5,
+      "bootstrap_ci_95": {
+        "detection_rate": [
+          0.8958,
+          0.9349
+        ],
+        "false_positive_rate": [
+          0.1337,
+          0.1988
+        ],
+        "f1_hallucination": [
+          0.8753,
+          0.9064
+        ],
+        "tier_weighted_f1": [
+          0.9029,
+          0.9305
+        ],
+        "ece": [
+          0.0451,
+          0.0779
+        ],
+        "mcc": [
+          0.7191,
+          0.7912
+        ]
+      },
+      "ci_provenance": {
+        "computed": true,
+        "source": "per_entry_predictions",
+        "seed": 42,
+        "n_bootstrap": 10000,
+        "confidence": 0.95,
+        "num_predictions": 1119
+      },
+      "per_type_detection_rate": {
+        "fabricated_doi": {
+          "detection_rate": 1.0,
+          "count": 39
+        },
+        "nonexistent_venue": {
+          "detection_rate": 1.0,
+          "count": 39
+        },
+        "placeholder_authors": {
+          "detection_rate": 1.0,
+          "count": 41
+        },
+        "future_date": {
+          "detection_rate": 1.0,
+          "count": 30
+        },
+        "chimeric_title": {
+          "detection_rate": 1.0,
+          "count": 47
+        },
+        "wrong_venue": {
+          "detection_rate": 0.9783,
+          "count": 47
+        },
+        "swapped_authors": {
+          "detection_rate": 0.7313,
+          "count": 67
+        },
+        "preprint_as_published": {
+          "detection_rate": 0.9355,
+          "count": 31
+        },
+        "hybrid_fabrication": {
+          "detection_rate": 1.0,
+          "count": 26
+        },
+        "near_miss_title": {
+          "detection_rate": 0.72,
+          "count": 52
+        },
+        "plausible_fabrication": {
+          "detection_rate": 0.9865,
+          "count": 76
+        }
+      },
+      "per_type_extra_types": {
+        "arxiv_version_mismatch": {
+          "detection_rate": 1.0,
+          "count": 49
+        },
+        "merged_citation": {
+          "detection_rate": 0.9667,
+          "count": 30
+        },
+        "partial_author_list": {
+          "detection_rate": 0.5357,
+          "count": 32
+        }
+      }
+    },
+    "llm_openrouter_claude_opus_4_7": {
+      "predictions_file": "results/checkpoints/llm_openrouter_claude_opus_4_7_dev_public_zeroshot/llm_openrouter_claude_opus_4_7_dev_public_predictions.jsonl",
+      "num_predictions": 1119,
+      "coverage": 1.0,
+      "num_uncertain": 0,
+      "reproduces_published_within_tolerance": false,
+      "verdict": "DIVERGES from published delta-eval beyond tolerance (endpoint drift); do NOT ship these as the paper's Sonnet/Opus dev numbers",
+      "aggregate_full_rerun": {
+        "detection_rate": 0.9092,
+        "false_positive_rate": 0.1618,
+        "f1_hallucination": 0.8887,
+        "tier_weighted_f1": 0.9138,
+        "mcc": 0.7516,
+        "ece": 0.0578
+      },
+      "delta_eval_target_manifest_sec1": {
+        "detection_rate": 0.752,
+        "false_positive_rate": 0.072,
+        "f1_hallucination": 0.83,
+        "mcc": 0.683
+      },
+      "delta_full_minus_deltaeval": {
+        "detection_rate": 0.1572,
+        "false_positive_rate": 0.0898,
+        "f1_hallucination": 0.0587,
+        "mcc": 0.0686
+      },
+      "max_abs_delta_pp": 15.72,
+      "bootstrap_ci_95": {
+        "detection_rate": [
+          0.8894,
+          0.929
+        ],
+        "false_positive_rate": [
+          0.1306,
+          0.1949
+        ],
+        "f1_hallucination": [
+          0.8728,
+          0.9044
+        ],
+        "tier_weighted_f1": [
+          0.8992,
+          0.9277
+        ],
+        "ece": [
+          0.0576,
+          0.0963
+        ],
+        "mcc": [
+          0.7143,
+          0.7876
+        ]
+      },
+      "ci_provenance": {
+        "computed": true,
+        "source": "per_entry_predictions",
+        "seed": 42,
+        "n_bootstrap": 10000,
+        "confidence": 0.95,
+        "num_predictions": 1119
+      },
+      "per_type_detection_rate": {
+        "fabricated_doi": {
+          "detection_rate": 0.9231,
+          "count": 39
+        },
+        "nonexistent_venue": {
+          "detection_rate": 0.9744,
+          "count": 39
+        },
+        "placeholder_authors": {
+          "detection_rate": 1.0,
+          "count": 41
+        },
+        "future_date": {
+          "detection_rate": 1.0,
+          "count": 30
+        },
+        "chimeric_title": {
+          "detection_rate": 0.9787,
+          "count": 47
+        },
+        "wrong_venue": {
+          "detection_rate": 0.9149,
+          "count": 47
+        },
+        "swapped_authors": {
+          "detection_rate": 0.9552,
+          "count": 67
+        },
+        "preprint_as_published": {
+          "detection_rate": 0.871,
+          "count": 31
+        },
+        "hybrid_fabrication": {
+          "detection_rate": 1.0,
+          "count": 26
+        },
+        "near_miss_title": {
+          "detection_rate": 0.6731,
+          "count": 52
+        },
+        "plausible_fabrication": {
+          "detection_rate": 0.9868,
+          "count": 76
+        }
+      },
+      "per_type_extra_types": {
+        "arxiv_version_mismatch": {
+          "detection_rate": 0.9388,
+          "count": 49
+        },
+        "merged_citation": {
+          "detection_rate": 1.0,
+          "count": 30
+        },
+        "partial_author_list": {
+          "detection_rate": 0.4375,
+          "count": 32
+        }
+      }
+    }
+  }
+}

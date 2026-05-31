@@ -1,0 +1,26 @@
+SUPERSEDED — do not cite this file.
+
+This file originally recorded scripts/analyze_shortcuts.py on the relabeled
+dev_public split (CV 55.3% / baseline 54.2% / margin +1.1pp). That shipped
+script is NOT faithful to the paper's app:shortcuts methodology:
+
+  * It uses the wrong 8-feature set (year_length / has_url / has_venue instead
+    of the paper's title_word_count / year_numeric / has_booktitle, appendix.tex L550).
+  * Its cv=5 is unshuffled; dev_public.jsonl ends with an all-HALLUCINATED
+    scaled-up block, so fold 5 is pathological.
+  * It encodes bibtex_type via hash(type)%10, non-reproducible under
+    PYTHONHASHSEED randomization.
+
+The FAITHFUL re-fit that matches the paper's described 8 features, standardized,
+with StratifiedKFold(5, shuffle, seed=42), is in:
+
+  results/relabel_delta/refit_shortcut.py  ->  shortcut_refit.json
+
+Faithful post-relabel result (v1.1.1 dev_public, 513 valid / 606 hall):
+  majority baseline = 54.16%
+  5-fold CV accuracy = 58.80%
+  margin over baseline = +4.64pp  (below the 5pp shortcut-leakage threshold)
+
+This is the value cited in sections/analysis.tex L23 (4.6pp). appendix.tex
+L550-553 (OLD 58.5% / 56.6% / 1.9pp) still needs the same refresh — it is
+outside the analysis.tex+llm_comparison.tex edit scope of this pass.

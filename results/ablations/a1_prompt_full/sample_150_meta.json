@@ -1,0 +1,29 @@
+{
+  "n": 150,
+  "seed": 42,
+  "stratified_by": [
+    "label",
+    "difficulty_tier"
+  ],
+  "n_hallucinated": 81,
+  "n_valid": 69,
+  "allocation": {
+    "HALLUCINATED/1": {
+      "pool": 149,
+      "sampled": 20
+    },
+    "HALLUCINATED/2": {
+      "pool": 280,
+      "sampled": 37
+    },
+    "HALLUCINATED/3": {
+      "pool": 177,
+      "sampled": 24
+    },
+    "VALID/valid": {
+      "pool": 513,
+      "sampled": 69
+    }
+  },
+  "source": "data/v1.0/dev_public.jsonl"
+}

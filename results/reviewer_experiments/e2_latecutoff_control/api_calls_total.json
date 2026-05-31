@@ -1,0 +1,6 @@
+{
+  "per_model": {
+    "claude-sonnet-4-6": 300
+  },
+  "total": 300
+}

@@ -37,6 +37,15 @@ STATUS_TO_LABEL: dict[str, str] = {
     "partial_match": "HALLUCINATED",
     "hallucinated": "HALLUCINATED",
     "api_error": "VALID",  # Conservative: don't flag on errors
+    # bibtex-updater >=1.2.0 statuses
+    "unconfirmed": "VALID",  # Abstention (could-not-verify): conservative VALID
+    "given_name_substitution": "HALLUCINATED",  # Co-author given name is a different person
+    "arxiv_id_mismatch": "HALLUCINATED",  # Cited arXiv ID resolves to a different paper
+    "doi_mismatch": "HALLUCINATED",  # Cited DOI resolves to a different paper
+    "title_near_miss": "HALLUCINATED",  # --strict Levenshtein<=1 title near-miss
+    "author_truncated": "HALLUCINATED",  # --strict silent author-list truncation
+    "strict_warn_preprint_year": "VALID",  # --strict abstention: year unanchored
+    "strict_warn_cnv": "VALID",  # --strict could-not-verify promotion (abstention)
     # Pre-API validation (bibtex-check runs these before querying APIs)
     "future_date": "HALLUCINATED",  # Year > current year
     "invalid_year": "HALLUCINATED",  # Non-numeric or < 1800
@@ -70,6 +79,14 @@ STATUS_TO_CONFIDENCE: dict[str, float] = {
     "partial_match": 0.70,
     "hallucinated": 0.90,
     "api_error": 0.30,
+    "unconfirmed": 0.45,
+    "given_name_substitution": 0.75,
+    "arxiv_id_mismatch": 0.90,
+    "doi_mismatch": 0.90,
+    "title_near_miss": 0.80,
+    "author_truncated": 0.70,
+    "strict_warn_preprint_year": 0.40,
+    "strict_warn_cnv": 0.40,
     "future_date": 0.95,
     "invalid_year": 0.70,
     "doi_not_found": 0.85,
@@ -382,12 +399,25 @@ def _parse_jsonl_output(
 
             key = record.get("key", "")
             status = record.get("status", "skipped")
-            confidence = record.get("confidence", STATUS_TO_CONFIDENCE.get(status, 0.5))
+            raw_confidence = record.get("confidence", STATUS_TO_CONFIDENCE.get(status, 0.5))
             mismatched = record.get("mismatched_fields", [])
             api_sources = record.get("api_sources", [])
             errors = record.get("errors", [])
 
             label = STATUS_TO_LABEL.get(status, "VALID")
+
+            # bibtex-updater >=1.2.0 emits ``confidence`` as P(entry is real/valid)
+            # (verified ~0.67, mismatch ~0.0, unconfirmed ~0.22) plus a new
+            # ``confidence_score`` field. HALLMARK's Prediction.confidence is
+            # confidence-in-the-assigned-label, so convert: VALID keeps P(real);
+            # HALLUCINATED gets 1 - P(real). We detect the 1.2.0 realness
+            # semantics by the presence of the new fields so 0.10.0 output
+            # (which already encoded label-confidence) is left unchanged.
+            is_v12_realness = "confidence_score" in record or "abstained" in record
+            if is_v12_realness and label == "HALLUCINATED":
+                confidence = 1.0 - raw_confidence
+            else:
+                confidence = raw_confidence
 
             reason_parts = [f"Status: {status}"]
             if mismatched:

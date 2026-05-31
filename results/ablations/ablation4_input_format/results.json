@@ -1,0 +1,124 @@
+{
+  "model": "deepseek/deepseek-v3.2",
+  "subset_n": 24,
+  "n_hall": 14,
+  "seed": 42,
+  "temperature": 0.0,
+  "summary": {
+    "full": {
+      "detection_rate": 1.0,
+      "false_positive_rate": 0.9,
+      "f1_hallucination": 0.7567567567567568,
+      "num_uncertain": 0,
+      "num_pred_hallucinated": 23,
+      "n": 24,
+      "n_hall": 14
+    },
+    "structured": {
+      "detection_rate": 0.9285714285714286,
+      "false_positive_rate": 0.7,
+      "f1_hallucination": 0.7647058823529412,
+      "num_uncertain": 0,
+      "num_pred_hallucinated": 20,
+      "n": 24,
+      "n_hall": 14
+    },
+    "loo_title": {
+      "detection_rate": 1.0,
+      "false_positive_rate": 0.8,
+      "f1_hallucination": 0.7777777777777778,
+      "num_uncertain": 0,
+      "num_pred_hallucinated": 22,
+      "n": 24,
+      "n_hall": 14
+    },
+    "loo_author": {
+      "detection_rate": 1.0,
+      "false_positive_rate": 1.0,
+      "f1_hallucination": 0.7368421052631579,
+      "num_uncertain": 0,
+      "num_pred_hallucinated": 24,
+      "n": 24,
+      "n_hall": 14
+    },
+    "loo_venue": {
+      "detection_rate": 0.9285714285714286,
+      "false_positive_rate": 0.8,
+      "f1_hallucination": 0.742857142857143,
+      "num_uncertain": 0,
+      "num_pred_hallucinated": 21,
+      "n": 24,
+      "n_hall": 14
+    },
+    "loo_year": {
+      "detection_rate": 0.9285714285714286,
+      "false_positive_rate": 0.9,
+      "f1_hallucination": 0.7222222222222223,
+      "num_uncertain": 0,
+      "num_pred_hallucinated": 22,
+      "n": 24,
+      "n_hall": 14
+    },
+    "loo_doi": {
+      "detection_rate": 1.0,
+      "false_positive_rate": 0.9,
+      "f1_hallucination": 0.7567567567567568,
+      "num_uncertain": 0,
+      "num_pred_hallucinated": 23,
+      "n": 24,
+      "n_hall": 14
+    }
+  },
+  "loo_deltas_vs_structured": {
+    "loo_title": {
+      "dDR_vs_structured": 0.0714285714285714,
+      "dFPR_vs_structured": 0.10000000000000009
+    },
+    "loo_author": {
+      "dDR_vs_structured": 0.0714285714285714,
+      "dFPR_vs_structured": 0.30000000000000004
+    },
+    "loo_venue": {
+      "dDR_vs_structured": 0.0,
+      "dFPR_vs_structured": 0.10000000000000009
+    },
+    "loo_year": {
+      "dDR_vs_structured": 0.0,
+      "dFPR_vs_structured": 0.20000000000000007
+    },
+    "loo_doi": {
+      "dDR_vs_structured": 0.0714285714285714,
+      "dFPR_vs_structured": 0.20000000000000007
+    }
+  },
+  "format_delta_full_vs_structured": {
+    "dDR": -0.0714285714285714,
+    "dFPR": -0.20000000000000007
+  },
+  "subset_keys": [
+    "08ebaa54f666",
+    "50e9ed6eba00",
+    "698e59351803",
+    "b13a0e12a1e4",
+    "b31c38a72d3c",
+    "b6daf1678171",
+    "b8eb1e9b062f",
+    "bacc24611796",
+    "bd60f38ee5c5",
+    "bdba1969a0b0",
+    "c080618bff76",
+    "c23bbf83b775",
+    "c65faf378a95",
+    "c903990decf9",
+    "cf1cc7a3a391",
+    "d0b822bb0b2a",
+    "da60d12f6e85",
+    "dda9d297b263",
+    "e2644111524d",
+    "e4b06f1bed30",
+    "f49fa9331fd0",
+    "f4f0873ae92a",
+    "fc02e9540601",
+    "ffe715a15b16"
+  ]
+}

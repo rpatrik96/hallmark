@@ -42,7 +42,13 @@ STATUS_TO_TYPE: dict[str, str] = {
     "url_content_mismatch": "near_miss_title",
     "book_not_found": "plausible_fabrication",
     "working_paper_not_found": "plausible_fabrication",
-    # not_found / partial_match / api_error / skipped / missing → routed to Stage 2
+    # bibtex-updater >=1.2.0 statuses with positive problem evidence
+    "arxiv_id_mismatch": "hybrid_fabrication",  # cited arXiv ID → different paper
+    "doi_mismatch": "hybrid_fabrication",  # cited DOI → different paper
+    "given_name_substitution": "swapped_authors",  # co-author given name swapped
+    "title_near_miss": "near_miss_title",  # --strict near-miss title
+    "author_truncated": "partial_author_list",  # --strict silent truncation
+    # not_found / unconfirmed / partial_match / api_error / skipped / missing → Stage 2
 }
 
 # Statuses that Stage 1 treats as definitive VALID.
@@ -62,6 +68,10 @@ ROUTE_TO_STAGE2: set[str] = {
     "api_error",
     "skipped",
     "missing",
+    # bibtex-updater >=1.2.0 abstention statuses (could-not-verify)
+    "unconfirmed",
+    "strict_warn_preprint_year",
+    "strict_warn_cnv",
 }
 
 

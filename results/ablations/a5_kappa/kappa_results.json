@@ -1,0 +1,135 @@
+{
+  "description": "A5 automated multi-rater agreement (reliability proxy, NOT human IAA). 3 independent LLM raters label blinded entries.",
+  "endpoint": "https://openrouter.ai/api/v1",
+  "computed_utc": "2026-05-31T07:05:42.962495+00:00",
+  "rater_run_dates": {
+    "claude-sonnet-4-6": "2026-05-31",
+    "deepseek-v3-2": "2026-05-31",
+    "gemini-2-5-pro": "2026-05-31"
+  },
+  "snapshot_note": "fresh dated snapshot; OpenRouter endpoint may drift vs published eval -- these are NEW numbers, not a reproduction.",
+  "raters": {
+    "claude-sonnet-4-6": "anthropic/claude-sonnet-4.6",
+    "deepseek-v3-2": "deepseek/deepseek-v3.2",
+    "gemini-2-5-pro": "google/gemini-2.5-pro"
+  },
+  "n_entries_scored": 132,
+  "uncertain_policy_headline": "binary (UNCERTAIN -> HALLUCINATED)",
+  "scale": "Landis & Koch (1977)",
+  "fleiss_kappa_binary": 0.2378,
+  "fleiss_interpretation": "fair",
+  "pairwise_cohen_kappa": {
+    "binary": {
+      "claude-sonnet-4-6__vs__deepseek-v3-2": {
+        "cohen_kappa": 0.454,
+        "percent_agreement": 0.8106,
+        "n": 132,
+        "interpretation": "moderate"
+      },
+      "claude-sonnet-4-6__vs__gemini-2-5-pro": {
+        "cohen_kappa": 0.2655,
+        "percent_agreement": 0.7879,
+        "n": 132,
+        "interpretation": "fair"
+      },
+      "deepseek-v3-2__vs__gemini-2-5-pro": {
+        "cohen_kappa": 0.0294,
+        "percent_agreement": 0.6439,
+        "n": 132,
+        "interpretation": "slight"
+      }
+    },
+    "drop": {
+      "claude-sonnet-4-6__vs__deepseek-v3-2": {
+        "cohen_kappa": 0.4403,
+        "percent_agreement": 0.7917,
+        "n": 120,
+        "interpretation": "moderate"
+      },
+      "claude-sonnet-4-6__vs__gemini-2-5-pro": {
+        "cohen_kappa": 0.2778,
+        "percent_agreement": 0.7833,
+        "n": 120,
+        "interpretation": "fair"
+      },
+      "deepseek-v3-2__vs__gemini-2-5-pro": {
+        "cohen_kappa": 0.0272,
+        "percent_agreement": 0.6412,
+        "n": 131,
+        "interpretation": "slight"
+      }
+    }
+  },
+  "per_rater_vs_gold": {
+    "claude-sonnet-4-6": {
+      "model": "anthropic/claude-sonnet-4.6",
+      "raw_label_distribution": {
+        "VALID": 20,
+        "HALLUCINATED": 100,
+        "UNCERTAIN": 12
+      },
+      "n_uncertain": 12,
+      "vs_gold_cohen_kappa": 0.3599,
+      "vs_gold_interpretation": "fair",
+      "vs_gold_accuracy": 0.7273
+    },
+    "deepseek-v3-2": {
+      "model": "deepseek/deepseek-v3.2",
+      "raw_label_distribution": {
+        "VALID": 37,
+        "HALLUCINATED": 95,
+        "UNCERTAIN": 0
+      },
+      "n_uncertain": 0,
+      "vs_gold_cohen_kappa": 0.7159,
+      "vs_gold_interpretation": "substantial",
+      "vs_gold_accuracy": 0.8712
+    },
+    "gemini-2-5-pro": {
+      "model": "google/gemini-2.5-pro",
+      "raw_label_distribution": {
+        "VALID": 26,
+        "HALLUCINATED": 105,
+        "UNCERTAIN": 1
+      },
+      "n_uncertain": 1,
+      "vs_gold_cohen_kappa": 0.0263,
+      "vs_gold_interpretation": "slight",
+      "vs_gold_accuracy": 0.5758
+    }
+  },
+  "majority_vote_vs_gold": {
+    "cohen_kappa": 0.3396,
+    "interpretation": "fair",
+    "accuracy": 0.7197
+  },
+  "majority_vote_vs_gold_by_pool": {
+    "real_world_incident": {
+      "n": 80,
+      "gold_label": "HALLUCINATED",
+      "majority_vote_accuracy": 0.975
+    },
+    "relabel_recovered": {
+      "n": 52,
+      "gold_label": "VALID",
+      "majority_vote_accuracy": 0.3269
+    }
+  },
+  "hallucination_type_agreement": {
+    "claude-sonnet-4-6__vs__deepseek-v3-2": {
+      "n_both_hallucinated": 79,
+      "n_type_agree": 26,
+      "type_agreement_rate": 0.3291
+    },
+    "claude-sonnet-4-6__vs__gemini-2-5-pro": {
+      "n_both_hallucinated": 85,
+      "n_type_agree": 39,
+      "type_agreement_rate": 0.4588
+    },
+    "deepseek-v3-2__vs__gemini-2-5-pro": {
+      "n_both_hallucinated": 76,
+      "n_type_agree": 26,
+      "type_agreement_rate": 0.3421
+    }
+  }
+}

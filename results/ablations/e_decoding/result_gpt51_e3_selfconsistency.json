@@ -1,0 +1,47 @@
+{
+  "source": "E3 reuse (GPT-5.1 temp=1, n=150 dev_public, current labels)",
+  "n_scored": 150,
+  "per_draw": [
+    {
+      "detection_rate": 0.9629629629629629,
+      "false_positive_rate": 0.5652173913043478,
+      "f1_hallucination": 0.7878787878787878,
+      "num_uncertain": 0
+    },
+    {
+      "detection_rate": 0.9629629629629629,
+      "false_positive_rate": 0.5507246376811594,
+      "f1_hallucination": 0.7918781725888325,
+      "num_uncertain": 0
+    },
+    {
+      "detection_rate": 0.9629629629629629,
+      "false_positive_rate": 0.5507246376811594,
+      "f1_hallucination": 0.7918781725888325,
+      "num_uncertain": 0
+    }
+  ],
+  "majority_vote": {
+    "detection_rate": 0.9629629629629629,
+    "false_positive_rate": 0.5507246376811594,
+    "f1_hallucination": 0.7918781725888325,
+    "num_uncertain": 0
+  },
+  "across_draw_flip": {
+    "unstable_entries": 1,
+    "n_compared": 150,
+    "rate": 0.006666666666666667
+  },
+  "f1_range": [
+    0.7878787878787878,
+    0.7918781725888325
+  ],
+  "fpr_range": [
+    0.5507246376811594,
+    0.5652173913043478
+  ],
+  "maj3_vs_mean_single": {
+    "f1_delta": 0.0013331282366815245,
+    "fpr_delta": -0.004830917874396046
+  }
+}

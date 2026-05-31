@@ -1,0 +1,41 @@
+{
+  "description": "Controlled endpoint-drift replay: re-run the SAME temporal-supplement entries through the SAME OpenRouter path (anthropic/claude-{opus-4.7,sonnet-4.6}, temp=0, seed=42, identical VERIFICATION_PROMPT) on 2026-05-30, compared label-by-label against the predictions committed 2026-05-04 (commit 493cbb3). Quantifies how much the OpenRouter Anthropic endpoint has drifted; isolates endpoint non-determinism from any label/relabel effect (same inputs, same GT).",
+  "replay_date": "2026-05-30",
+  "original_date": "2026-05-04",
+  "original_commit": "493cbb3",
+  "models": {
+    "opus": {
+      "n_common": 60,
+      "agree": 54,
+      "agreement_rate": 0.9,
+      "disagree": 6,
+      "old_label_dist": {
+        "VALID": 56,
+        "HALLUCINATED": 4
+      },
+      "new_label_dist": {
+        "VALID": 54,
+        "HALLUCINATED": 6
+      },
+      "committed_file": "results/relabel_delta/endpoint_drift_probe/opus_temporal_committed_60.jsonl",
+      "replay_file": "opus_replay_60_20260530.jsonl"
+    },
+    "sonnet": {
+      "n_common": 60,
+      "agree": 45,
+      "agreement_rate": 0.75,
+      "disagree": 15,
+      "old_label_dist": {
+        "VALID": 48,
+        "HALLUCINATED": 12
+      },
+      "new_label_dist": {
+        "VALID": 40,
+        "HALLUCINATED": 15,
+        "UNCERTAIN": 5
+      },
+      "committed_file": "results/relabel_delta/endpoint_drift_probe/sonnet_temporal_committed_60.jsonl",
+      "replay_file": "sonnet_replay_60_20260530.jsonl"
+    }
+  }
+}

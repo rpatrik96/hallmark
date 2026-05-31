@@ -1,0 +1,16 @@
+{
+  "model": "gpt-5.4 (gpt-5.4-2026-03-05)",
+  "split": "temporal_supplement_2024_2025 (canonical 448)",
+  "n": 448,
+  "num_valid": 300,
+  "num_hallucinated": 148,
+  "TP": 133,
+  "FP": 124,
+  "FN": 15,
+  "TN": 176,
+  "fpr": 0.41333333333333333,
+  "detection_rate": 0.8986486486486487,
+  "source_predictions": "results/gpt54_probe/llm_openai_gpt54_default_temporal_predictions.jsonl",
+  "source_labels": "results/temporal_supplement/temporal_supplement_2024_2025.jsonl (448 of 858 with a GPT-5.4 prediction)",
+  "note": "Self-contained per-entry join (model pred + ground-truth label) so the paper FPR 0.413 (app:gpt54-probe / analysis.tex L48) is reproducible offline without API calls. Resolves flag F10."
+}

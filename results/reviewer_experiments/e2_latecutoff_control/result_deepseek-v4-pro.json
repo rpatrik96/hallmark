@@ -1,0 +1,23 @@
+{
+  "alias": "deepseek-v4-pro",
+  "model_id": "deepseek/deepseek-v4-pro",
+  "n": 103,
+  "partial": true,
+  "partial_note": "run halted (too slow via OpenRouter); 103/300 done, valids processed first",
+  "api_calls": 103,
+  "predicted_label_dist": {
+    "VALID": 52,
+    "HALLUCINATED": 28,
+    "UNCERTAIN": 23
+  },
+  "overall": {
+    "num_valid": 102,
+    "num_hallucinated": 1,
+    "false_positive_rate": 0.2647058823529412,
+    "detection_rate": 1.0,
+    "f1_hallucination": null,
+    "num_uncertain": 23,
+    "coverage": 0.7745098039215687,
+    "fpr_ci": null
+  }
+}

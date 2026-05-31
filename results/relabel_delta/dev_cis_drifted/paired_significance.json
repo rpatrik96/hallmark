@@ -1,0 +1,9 @@
+{
+  "dev_public": {
+    "llm_openrouter_claude_opus_4_7_vs_llm_openrouter_claude_sonnet_4_6": {
+      "observed_diff": 0.0323107737718743,
+      "p_value": 1.0,
+      "cohens_h": 0.06721158650665182
+    }
+  }
+}

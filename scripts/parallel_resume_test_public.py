@@ -163,6 +163,8 @@ def call_one(
     timeout: float = 120.0,
     max_retries: int = 3,
     max_completion_tokens: int = 1024,
+    temperature: float = 0.0,
+    seed: int = 42,
 ) -> dict:
     """Make one verification call with per-request timeout and exponential backoff.
 
@@ -190,6 +192,8 @@ def call_one(
                 model=model,
                 messages=[{"role": "user", "content": prompt}],
                 max_completion_tokens=max_completion_tokens,
+                temperature=temperature,  # match the main verifier path (default 0.0)
+                seed=seed,  # determinism parity with hallmark.baselines.llm_verifier
                 timeout=timeout,  # per-request timeout — critical to prevent hangs
             )
             content = resp.choices[0].message.content or ""
@@ -202,7 +206,7 @@ def call_one(
                 "reason": reason,
                 "wall_clock_seconds": elapsed,
                 "api_calls": 1,
-                "api_sources_queried": [],
+                "api_sources_queried": [f"openrouter/{model}"],
             }
         except (
             openai.RateLimitError,
@@ -310,6 +314,18 @@ def main() -> None:
         ),
     )
     parser.add_argument(
+        "--temperature",
+        type=float,
+        default=0.0,
+        help="Sampling temperature (default 0.0, matching the main verifier path).",
+    )
+    parser.add_argument(
+        "--seed",
+        type=int,
+        default=42,
+        help="Sampling seed for determinism parity with the main verifier (default 42).",
+    )
+    parser.add_argument(
         "--dry-run",
         action="store_true",
         help="Print resume plan (done/remaining/total) and exit without API calls.",
@@ -403,6 +419,8 @@ def main() -> None:
                 args.timeout,
                 3,
                 args.max_completion_tokens,
+                args.temperature,
+                args.seed,
             ): e
             for e in remaining
         }

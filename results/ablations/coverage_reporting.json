@@ -1,0 +1,2495 @@
+{
+  "meta": {
+    "title": "Coverage / abstention-aware reporting (selective prediction)",
+    "design": "results/ablations/coverage_reporting_design.md",
+    "method": "OFFLINE re-scoring of stored per-entry predictions; NO API calls",
+    "label_version": "v1.1.1",
+    "split_counts": {
+      "dev_public": {
+        "VALID": 513,
+        "HALLUCINATED": 606,
+        "N": 1119
+      },
+      "test_public": {
+        "VALID": 312,
+        "HALLUCINATED": 519,
+        "N": 831
+      }
+    },
+    "coverage_def": "Coverage = #committed(VALID|HALL) / N = 1 - UNCERTAIN-rate",
+    "conservative_def": "UNCERTAIN excluded (build_confusion_matrix protocol)",
+    "aggressive_def": "UNCERTAIN + missing -> HALLUCINATED@0.55",
+    "btu_mapping": "cascade STAGE1_VERIFIED->VALID, STATUS_TO_TYPE->HALL, ROUTE_TO_STAGE2/unmapped->UNCERTAIN (bibtex-updater v1.2.0)",
+    "risk_coverage_def": "abstention band around the 0.5 decision boundary; abstain least-confident first; FPR/DR/F1 on committed entries at native decision"
+  },
+  "per_tool_coverage_dual": {
+    "llm_openrouter_deepseek_r1": {
+      "dev_public": {
+        "n": 1119,
+        "n_committed": 1101,
+        "n_uncertain": 18,
+        "coverage": 0.9839,
+        "conservative": {
+          "DR": 0.8958,
+          "FPR": 0.6225,
+          "F1": 0.7387
+        },
+        "aggressive": {
+          "DR": 0.8977,
+          "FPR": 0.6277,
+          "F1": 0.7391
+        }
+      },
+      "test_public": {
+        "n": 831,
+        "n_committed": 651,
+        "n_uncertain": 180,
+        "coverage": 0.7834,
+        "conservative": {
+          "DR": 0.8087,
+          "FPR": 0.3193,
+          "F1": 0.8117
+        },
+        "aggressive": {
+          "DR": 0.8478,
+          "FPR": 0.4808,
+          "F1": 0.7935
+        }
+      }
+    },
+    "llm_openrouter_deepseek_v3": {
+      "dev_public": {
+        "n": 1119,
+        "n_committed": 1119,
+        "n_uncertain": 0,
+        "coverage": 1.0,
+        "conservative": {
+          "DR": 0.9109,
+          "FPR": 0.7018,
+          "F1": 0.7273
+        },
+        "aggressive": {
+          "DR": 0.9109,
+          "FPR": 0.7018,
+          "F1": 0.7273
+        }
+      },
+      "test_public": {
+        "n": 831,
+        "n_committed": 831,
+        "n_uncertain": 0,
+        "coverage": 1.0,
+        "conservative": {
+          "DR": 0.9114,
+          "FPR": 0.7276,
+          "F1": 0.776
+        },
+        "aggressive": {
+          "DR": 0.9114,
+          "FPR": 0.7276,
+          "F1": 0.776
+        }
+      }
+    },
+    "llm_openrouter_gemini_flash": {
+      "dev_public": {
+        "n": 1119,
+        "n_committed": 1106,
+        "n_uncertain": 13,
+        "coverage": 0.9884,
+        "conservative": {
+          "DR": 0.5,
+          "FPR": 0.1,
+          "F1": 0.6307
+        },
+        "aggressive": {
+          "DR": 0.5083,
+          "FPR": 0.1053,
+          "F1": 0.6364
+        }
+      },
+      "test_public": {
+        "n": 831,
+        "n_committed": 831,
+        "n_uncertain": 0,
+        "coverage": 1.0,
+        "conservative": {
+          "DR": 0.5048,
+          "FPR": 0.1058,
+          "F1": 0.6437
+        },
+        "aggressive": {
+          "DR": 0.5048,
+          "FPR": 0.1058,
+          "F1": 0.6437
+        }
+      }
+    },
+    "llm_openrouter_mistral": {
+      "dev_public": {
+        "n": 1119,
+        "n_committed": 1107,
+        "n_uncertain": 12,
+        "coverage": 0.9893,
+        "conservative": {
+          "DR": 0.7164,
+          "FPR": 0.2505,
+          "F1": 0.742
+        },
+        "aggressive": {
+          "DR": 0.7211,
+          "FPR": 0.2534,
+          "F1": 0.7451
+        }
+      },
+      "test_public": {
+        "n": 831,
+        "n_committed": 831,
+        "n_uncertain": 0,
+        "coverage": 1.0,
+        "conservative": {
+          "DR": 0.6879,
+          "FPR": 0.2821,
+          "F1": 0.7407
+        },
+        "aggressive": {
+          "DR": 0.6879,
+          "FPR": 0.2821,
+          "F1": 0.7407
+        }
+      }
+    },
+    "llm_openrouter_qwen": {
+      "dev_public": {
+        "n": 1119,
+        "n_committed": 1117,
+        "n_uncertain": 2,
+        "coverage": 0.9982,
+        "conservative": {
+          "DR": 0.8595,
+          "FPR": 0.5332,
+          "F1": 0.7439
+        },
+        "aggressive": {
+          "DR": 0.8597,
+          "FPR": 0.5341,
+          "F1": 0.7438
+        }
+      },
+      "test_public": {
+        "n": 831,
+        "n_committed": 830,
+        "n_uncertain": 1,
+        "coverage": 0.9988,
+        "conservative": {
+          "DR": 0.9093,
+          "FPR": 0.6154,
+          "F1": 0.7976
+        },
+        "aggressive": {
+          "DR": 0.9094,
+          "FPR": 0.6154,
+          "F1": 0.798
+        }
+      }
+    },
+    "llm_openrouter_gemini_pro": {
+      "dev_public": {
+        "n": 1119,
+        "n_committed": 1082,
+        "n_uncertain": 37,
+        "coverage": 0.9669,
+        "conservative": {
+          "DR": 0.4759,
+          "FPR": 0.05,
+          "F1": 0.6267
+        },
+        "aggressive": {
+          "DR": 0.4967,
+          "FPR": 0.0741,
+          "F1": 0.637
+        }
+      },
+      "test_public": {
+        "n": 831,
+        "n_committed": 754,
+        "n_uncertain": 77,
+        "coverage": 0.9073,
+        "conservative": {
+          "DR": 0.4582,
+          "FPR": 0.0592,
+          "F1": 0.6132
+        },
+        "aggressive": {
+          "DR": 0.5125,
+          "FPR": 0.1346,
+          "F1": 0.6433
+        }
+      }
+    },
+    "llm_openrouter_qwen_max": {
+      "dev_public": {
+        "n": 1119,
+        "n_committed": 1118,
+        "n_uncertain": 1,
+        "coverage": 0.9991,
+        "conservative": {
+          "DR": 0.8597,
+          "FPR": 0.5508,
+          "F1": 0.7395
+        },
+        "aggressive": {
+          "DR": 0.8597,
+          "FPR": 0.5517,
+          "F1": 0.739
+        }
+      },
+      "test_public": {
+        "n": 831,
+        "n_committed": 831,
+        "n_uncertain": 0,
+        "coverage": 1.0,
+        "conservative": {
+          "DR": 0.9268,
+          "FPR": 0.6282,
+          "F1": 0.8043
+        },
+        "aggressive": {
+          "DR": 0.9268,
+          "FPR": 0.6282,
+          "F1": 0.8043
+        }
+      }
+    },
+    "llm_openrouter_llama_4_maverick": {
+      "dev_public": {
+        "n": 1119,
+        "n_committed": 1119,
+        "n_uncertain": 0,
+        "coverage": 1.0,
+        "conservative": {
+          "DR": 0.6139,
+          "FPR": 0.1462,
+          "F1": 0.7066
+        },
+        "aggressive": {
+          "DR": 0.6139,
+          "FPR": 0.1462,
+          "F1": 0.7066
+        }
+      },
+      "test_public": {
+        "n": 831,
+        "n_committed": 830,
+        "n_uncertain": 1,
+        "coverage": 0.9988,
+        "conservative": {
+          "DR": 0.6313,
+          "FPR": 0.1667,
+          "F1": 0.7291
+        },
+        "aggressive": {
+          "DR": 0.632,
+          "FPR": 0.1667,
+          "F1": 0.7297
+        }
+      }
+    },
+    "llm_openrouter_claude_opus_4_7": {
+      "dev_public": {
+        "coverage": null,
+        "coverage_note": "not available (summary-only / endpoint drift)",
+        "conservative": {
+          "DR": 0.752,
+          "FPR": 0.072,
+          "F1": 0.83,
+          "source": "published delta-eval point estimate (results_manifest sec1 / todo_sonnet_opus_dev.json)"
+        },
+        "aggressive": null,
+        "aggressive_note": "n/a (no usable per-entry UNCERTAIN data; drift)"
+      },
+      "test_public": {
+        "n": 831,
+        "n_committed": 830,
+        "n_uncertain": 1,
+        "coverage": 0.9988,
+        "conservative": {
+          "DR": 0.7625,
+          "FPR": 0.0673,
+          "F1": 0.8458
+        },
+        "aggressive": {
+          "DR": 0.763,
+          "FPR": 0.0673,
+          "F1": 0.8462
+        }
+      }
+    },
+    "llm_openrouter_claude_sonnet_4_6": {
+      "dev_public": {
+        "coverage": null,
+        "coverage_note": "not available (summary-only / endpoint drift)",
+        "conservative": {
+          "DR": 0.781,
+          "FPR": 0.127,
+          "F1": 0.827,
+          "source": "published delta-eval point estimate (results_manifest sec1 / todo_sonnet_opus_dev.json)"
+        },
+        "aggressive": null,
+        "aggressive_note": "n/a (no usable per-entry UNCERTAIN data; drift)"
+      },
+      "test_public": {
+        "n": 831,
+        "n_committed": 831,
+        "n_uncertain": 0,
+        "coverage": 1.0,
+        "conservative": {
+          "DR": 0.8208,
+          "FPR": 0.125,
+          "F1": 0.8659
+        },
+        "aggressive": {
+          "DR": 0.8208,
+          "FPR": 0.125,
+          "F1": 0.8659
+        }
+      }
+    },
+    "llm_openai": {
+      "dev_public": {
+        "n": 1119,
+        "n_committed": 1119,
+        "n_uncertain": 0,
+        "coverage": 1.0,
+        "conservative": {
+          "DR": 0.8366,
+          "FPR": 0.4113,
+          "F1": 0.7659
+        },
+        "aggressive": {
+          "DR": 0.8366,
+          "FPR": 0.4113,
+          "F1": 0.7659
+        }
+      },
+      "test_public": {
+        "n": 831,
+        "n_committed": 831,
+        "n_uncertain": 0,
+        "coverage": 1.0,
+        "conservative": {
+          "DR": 0.8516,
+          "FPR": 0.4808,
+          "F1": 0.7957
+        },
+        "aggressive": {
+          "DR": 0.8516,
+          "FPR": 0.4808,
+          "F1": 0.7957
+        }
+      }
+    },
+    "llm_openai_gpt_5_4": {
+      "dev_public": {
+        "n": 1119,
+        "n_committed": 1119,
+        "n_uncertain": 0,
+        "coverage": 1.0,
+        "conservative": {
+          "DR": 0.7673,
+          "FPR": 0.2281,
+          "F1": 0.7828
+        },
+        "aggressive": {
+          "DR": 0.7673,
+          "FPR": 0.2281,
+          "F1": 0.7828
+        }
+      },
+      "test_public": {
+        "n": 831,
+        "n_committed": 831,
+        "n_uncertain": 0,
+        "coverage": 1.0,
+        "conservative": {
+          "DR": 0.7803,
+          "FPR": 0.2244,
+          "F1": 0.8149
+        },
+        "aggressive": {
+          "DR": 0.7803,
+          "FPR": 0.2244,
+          "F1": 0.8149
+        }
+      }
+    },
+    "llm_agentic_openai": {
+      "dev_public": {
+        "n": 1119,
+        "n_committed": 1119,
+        "n_uncertain": 0,
+        "coverage": 1.0,
+        "conservative": {
+          "DR": 0.967,
+          "FPR": 0.4776,
+          "F1": 0.8156
+        },
+        "aggressive": {
+          "DR": 0.967,
+          "FPR": 0.4776,
+          "F1": 0.8156
+        }
+      },
+      "test_public": {
+        "n": 831,
+        "n_committed": 831,
+        "n_uncertain": 0,
+        "coverage": 1.0,
+        "conservative": {
+          "DR": 0.9422,
+          "FPR": 0.5577,
+          "F1": 0.8274
+        },
+        "aggressive": {
+          "DR": 0.9422,
+          "FPR": 0.5577,
+          "F1": 0.8274
+        }
+      }
+    },
+    "llm_agentic_btu_openai": {
+      "dev_public": {
+        "n": 1119,
+        "n_committed": 1119,
+        "n_uncertain": 0,
+        "coverage": 1.0,
+        "conservative": {
+          "DR": 0.9802,
+          "FPR": 0.4698,
+          "F1": 0.8244
+        },
+        "aggressive": {
+          "DR": 0.9802,
+          "FPR": 0.4698,
+          "F1": 0.8244
+        }
+      },
+      "test_public": {
+        "n": 831,
+        "n_committed": 831,
+        "n_uncertain": 0,
+        "coverage": 1.0,
+        "conservative": {
+          "DR": 0.9595,
+          "FPR": 0.3558,
+          "F1": 0.883
+        },
+        "aggressive": {
+          "DR": 0.9595,
+          "FPR": 0.3558,
+          "F1": 0.883
+        }
+      }
+    },
+    "llm_agentic_btu_sonnet_4_6": {
+      "dev_public": {
+        "n": 1119,
+        "n_committed": 1119,
+        "n_uncertain": 0,
+        "coverage": 1.0,
+        "conservative": {
+          "DR": 0.9901,
+          "FPR": 0.4308,
+          "F1": 0.8409
+        },
+        "aggressive": {
+          "DR": 0.9901,
+          "FPR": 0.4308,
+          "F1": 0.8409
+        }
+      },
+      "test_public": {
+        "n": 831,
+        "n_committed": 831,
+        "n_uncertain": 0,
+        "coverage": 1.0,
+        "conservative": {
+          "DR": 0.9904,
+          "FPR": 0.3429,
+          "F1": 0.9018
+        },
+        "aggressive": {
+          "DR": 0.9904,
+          "FPR": 0.3429,
+          "F1": 0.9018
+        }
+      }
+    },
+    "llm_tool_augmented": {
+      "test_public": {
+        "n": 831,
+        "n_committed": 831,
+        "n_uncertain": 0,
+        "coverage": 1.0,
+        "conservative": {
+          "DR": 0.8555,
+          "FPR": 0.2564,
+          "F1": 0.8514
+        },
+        "aggressive": {
+          "DR": 0.8555,
+          "FPR": 0.2564,
+          "F1": 0.8514
+        }
+      }
+    },
+    "bibtexupdater_v1_2_0": {
+      "dev_public": {
+        "n": 1119,
+        "n_scored_by_raw": 1112,
+        "n_missing_from_raw": 7,
+        "n_committed": 835,
+        "n_uncertain": 284,
+        "coverage": 0.7462,
+        "conservative": {
+          "DR": 0.9786,
+          "FPR": 0.0455,
+          "F1": 0.9618
+        },
+        "aggressive": {
+          "DR": 0.9868,
+          "FPR": 0.1404,
+          "F1": 0.9373
+        }
+      },
+      "test_public": {
+        "n": 831,
+        "n_scored_by_raw": 500,
+        "n_missing_from_raw": 331,
+        "n_committed": 685,
+        "n_uncertain": 146,
+        "coverage": 0.8243,
+        "conservative": {
+          "DR": 0.4467,
+          "FPR": 0.0344,
+          "F1": 0.6069
+        },
+        "aggressive": {
+          "DR": 0.58,
+          "FPR": 0.0994,
+          "F1": 0.7074
+        },
+        "INCOMPLETE": "raw BTU scored only 500/831 entries (331 missing). Coverage/DR/FPR are NOT reliable: missing entries default to committed-VALID, deflating DR and inflating apparent coverage. PENDING GEN workflow wkp97jqbb."
+      }
+    }
+  },
+  "risk_coverage": {
+    "llm_openrouter_deepseek_r1": {
+      "auroc": 0.7413,
+      "n_confidence_levels": 14,
+      "fpr_at_90_coverage": 0.5806,
+      "dr_at_90_coverage": 0.8881,
+      "f1_at_90_coverage": 0.7517,
+      "curve": [
+        {
+          "coverage": 0.95,
+          "DR": 0.8937,
+          "FPR": 0.6042,
+          "F1": 0.7475
+        },
+        {
+          "coverage": 0.8999,
+          "DR": 0.8881,
+          "FPR": 0.5806,
+          "F1": 0.7517
+        },
+        {
+          "coverage": 0.8499,
+          "DR": 0.8853,
+          "FPR": 0.5609,
+          "F1": 0.7609
+        },
+        {
+          "coverage": 0.7998,
+          "DR": 0.8802,
+          "FPR": 0.5381,
+          "F1": 0.7643
+        },
+        {
+          "coverage": 0.7498,
+          "DR": 0.875,
+          "FPR": 0.5014,
+          "F1": 0.7778
+        },
+        {
+          "coverage": 0.6997,
+          "DR": 0.8712,
+          "FPR": 0.4646,
+          "F1": 0.7917
+        },
+        {
+          "coverage": 0.6497,
+          "DR": 0.8661,
+          "FPR": 0.4116,
+          "F1": 0.8073
+        },
+        {
+          "coverage": 0.5996,
+          "DR": 0.86,
+          "FPR": 0.3653,
+          "F1": 0.8161
+        },
+        {
+          "coverage": 0.5496,
+          "DR": 0.8544,
+          "FPR": 0.3115,
+          "F1": 0.8298
+        },
+        {
+          "coverage": 0.5004,
+          "DR": 0.855,
+          "FPR": 0.3275,
+          "F1": 0.8215
+        },
+        {
+          "coverage": 0.4504,
+          "DR": 0.8493,
+          "FPR": 0.3255,
+          "F1": 0.8144
+        },
+        {
+          "coverage": 0.4004,
+          "DR": 0.8538,
+          "FPR": 0.3282,
+          "F1": 0.8105
+        },
+        {
+          "coverage": 0.3503,
+          "DR": 0.859,
+          "FPR": 0.3394,
+          "F1": 0.8159
+        },
+        {
+          "coverage": 0.3003,
+          "DR": 0.8557,
+          "FPR": 0.331,
+          "F1": 0.8157
+        },
+        {
+          "coverage": 0.2502,
+          "DR": 0.8447,
+          "FPR": 0.3277,
+          "F1": 0.8095
+        },
+        {
+          "coverage": 0.2002,
+          "DR": 0.8485,
+          "FPR": 0.3261,
+          "F1": 0.8175
+        },
+        {
+          "coverage": 0.1501,
+          "DR": 0.8723,
+          "FPR": 0.2838,
+          "F1": 0.8325
+        },
+        {
+          "coverage": 0.1001,
+          "DR": 0.8594,
+          "FPR": 0.2917,
+          "F1": 0.8271
+        },
+        {
+          "coverage": 0.05,
+          "DR": 0.9032,
+          "FPR": 0.2,
+          "F1": 0.875
+        }
+      ]
+    },
+    "llm_openrouter_deepseek_v3": {
+      "auroc": 0.6086,
+      "n_confidence_levels": 6,
+      "fpr_at_90_coverage": 0.6987,
+      "dr_at_90_coverage": 0.8998,
+      "f1_at_90_coverage": 0.711,
+      "curve": [
+        {
+          "coverage": 1.0,
+          "DR": 0.9109,
+          "FPR": 0.7018,
+          "F1": 0.7273
+        },
+        {
+          "coverage": 0.95,
+          "DR": 0.908,
+          "FPR": 0.6982,
+          "F1": 0.7269
+        },
+        {
+          "coverage": 0.8999,
+          "DR": 0.8998,
+          "FPR": 0.6987,
+          "F1": 0.711
+        },
+        {
+          "coverage": 0.8499,
+          "DR": 0.8966,
+          "FPR": 0.6965,
+          "F1": 0.7049
+        },
+        {
+          "coverage": 0.7998,
+          "DR": 0.8961,
+          "FPR": 0.6952,
+          "F1": 0.7035
+        },
+        {
+          "coverage": 0.7498,
+          "DR": 0.9021,
+          "FPR": 0.7,
+          "F1": 0.7017
+        },
+        {
+          "coverage": 0.6997,
+          "DR": 0.9037,
+          "FPR": 0.7063,
+          "F1": 0.7052
+        },
+        {
+          "coverage": 0.6497,
+          "DR": 0.9016,
+          "FPR": 0.7123,
+          "F1": 0.7026
+        },
+        {
+          "coverage": 0.5996,
+          "DR": 0.8958,
+          "FPR": 0.7025,
+          "F1": 0.7106
+        },
+        {
+          "coverage": 0.5496,
+          "DR": 0.896,
+          "FPR": 0.6875,
+          "F1": 0.7164
+        },
+        {
+          "coverage": 0.5004,
+          "DR": 0.893,
+          "FPR": 0.6973,
+          "F1": 0.7139
+        },
+        {
+          "coverage": 0.4504,
+          "DR": 0.8872,
+          "FPR": 0.6975,
+          "F1": 0.7066
+        },
+        {
+          "coverage": 0.4004,
+          "DR": 0.8843,
+          "FPR": 0.7087,
+          "F1": 0.711
+        },
+        {
+          "coverage": 0.3503,
+          "DR": 0.8879,
+          "FPR": 0.691,
+          "F1": 0.7211
+        },
+        {
+          "coverage": 0.3003,
+          "DR": 0.8901,
+          "FPR": 0.6558,
+          "F1": 0.7281
+        },
+        {
+          "coverage": 0.2502,
+          "DR": 0.8896,
+          "FPR": 0.6429,
+          "F1": 0.7366
+        },
+        {
+          "coverage": 0.2002,
+          "DR": 0.8833,
+          "FPR": 0.6635,
+          "F1": 0.7186
+        },
+        {
+          "coverage": 0.1501,
+          "DR": 0.8723,
+          "FPR": 0.5946,
+          "F1": 0.7455
+        },
+        {
+          "coverage": 0.1001,
+          "DR": 0.8333,
+          "FPR": 0.5652,
+          "F1": 0.7483
+        },
+        {
+          "coverage": 0.05,
+          "DR": 0.8438,
+          "FPR": 0.375,
+          "F1": 0.7941
+        }
+      ]
+    },
+    "llm_openrouter_gemini_flash": {
+      "auroc": 0.7392,
+      "n_confidence_levels": 5,
+      "fpr_at_90_coverage": 0.0966,
+      "dr_at_90_coverage": 0.4451,
+      "f1_at_90_coverage": 0.5783,
+      "curve": [
+        {
+          "coverage": 0.95,
+          "DR": 0.4721,
+          "FPR": 0.1024,
+          "F1": 0.603
+        },
+        {
+          "coverage": 0.8999,
+          "DR": 0.4451,
+          "FPR": 0.0966,
+          "F1": 0.5783
+        },
+        {
+          "coverage": 0.8499,
+          "DR": 0.4179,
+          "FPR": 0.083,
+          "F1": 0.556
+        },
+        {
+          "coverage": 0.7998,
+          "DR": 0.3897,
+          "FPR": 0.0746,
+          "F1": 0.5295
+        },
+        {
+          "coverage": 0.7498,
+          "DR": 0.3592,
+          "FPR": 0.0642,
+          "F1": 0.5009
+        },
+        {
+          "coverage": 0.6997,
+          "DR": 0.3217,
+          "FPR": 0.0479,
+          "F1": 0.4654
+        },
+        {
+          "coverage": 0.6497,
+          "DR": 0.2649,
+          "FPR": 0.0353,
+          "F1": 0.403
+        },
+        {
+          "coverage": 0.5996,
+          "DR": 0.1451,
+          "FPR": 0.0288,
+          "F1": 0.2434
+        },
+        {
+          "coverage": 0.5496,
+          "DR": 0.115,
+          "FPR": 0.018,
+          "F1": 0.2008
+        },
+        {
+          "coverage": 0.5004,
+          "DR": 0.07,
+          "FPR": 0.0083,
+          "F1": 0.129
+        },
+        {
+          "coverage": 0.4504,
+          "DR": 0.0237,
+          "FPR": 0.006,
+          "F1": 0.0457
+        },
+        {
+          "coverage": 0.4004,
+          "DR": 0.0203,
+          "FPR": 0.0067,
+          "F1": 0.0392
+        },
+        {
+          "coverage": 0.3503,
+          "DR": 0.0226,
+          "FPR": 0.0077,
+          "F1": 0.0435
+        },
+        {
+          "coverage": 0.3003,
+          "DR": 0.0169,
+          "FPR": 0.0092,
+          "F1": 0.0328
+        },
+        {
+          "coverage": 0.2502,
+          "DR": 0.0196,
+          "FPR": 0.0056,
+          "F1": 0.0381
+        },
+        {
+          "coverage": 0.2002,
+          "DR": 0.0,
+          "FPR": 0.0072,
+          "F1": 0.0
+        },
+        {
+          "coverage": 0.1501,
+          "DR": 0.0,
+          "FPR": 0.0095,
+          "F1": 0.0
+        },
+        {
+          "coverage": 0.1001,
+          "DR": 0.0,
+          "FPR": 0.0,
+          "F1": 0.0
+        },
+        {
+          "coverage": 0.05,
+          "DR": 0.0,
+          "FPR": 0.0,
+          "F1": 0.0
+        }
+      ]
+    },
+    "llm_openrouter_mistral": {
+      "auroc": 0.7438,
+      "n_confidence_levels": 5,
+      "fpr_at_90_coverage": 0.2415,
+      "dr_at_90_coverage": 0.705,
+      "f1_at_90_coverage": 0.7364,
+      "curve": [
+        {
+          "coverage": 0.95,
+          "DR": 0.7098,
+          "FPR": 0.2424,
+          "F1": 0.7402
+        },
+        {
+          "coverage": 0.8999,
+          "DR": 0.705,
+          "FPR": 0.2415,
+          "F1": 0.7364
+        },
+        {
+          "coverage": 0.8499,
+          "DR": 0.714,
+          "FPR": 0.2432,
+          "F1": 0.741
+        },
+        {
+          "coverage": 0.7998,
+          "DR": 0.7155,
+          "FPR": 0.247,
+          "F1": 0.7411
+        },
+        {
+          "coverage": 0.7498,
+          "DR": 0.7143,
+          "FPR": 0.2318,
+          "F1": 0.748
+        },
+        {
+          "coverage": 0.6997,
+          "DR": 0.7069,
+          "FPR": 0.2167,
+          "F1": 0.7475
+        },
+        {
+          "coverage": 0.6497,
+          "DR": 0.6862,
+          "FPR": 0.2209,
+          "F1": 0.732
+        },
+        {
+          "coverage": 0.5996,
+          "DR": 0.6831,
+          "FPR": 0.2131,
+          "F1": 0.7342
+        },
+        {
+          "coverage": 0.5496,
+          "DR": 0.6967,
+          "FPR": 0.1915,
+          "F1": 0.7496
+        },
+        {
+          "coverage": 0.5004,
+          "DR": 0.6974,
+          "FPR": 0.1758,
+          "F1": 0.7558
+        },
+        {
+          "coverage": 0.4504,
+          "DR": 0.6974,
+          "FPR": 0.1717,
+          "F1": 0.756
+        },
+        {
+          "coverage": 0.4004,
+          "DR": 0.6792,
+          "FPR": 0.1538,
+          "F1": 0.7494
+        },
+        {
+          "coverage": 0.3503,
+          "DR": 0.6731,
+          "FPR": 0.1413,
+          "F1": 0.7487
+        },
+        {
+          "coverage": 0.3003,
+          "DR": 0.6798,
+          "FPR": 0.1456,
+          "F1": 0.7516
+        },
+        {
+          "coverage": 0.2502,
+          "DR": 0.7421,
+          "FPR": 0.1901,
+          "F1": 0.7867
+        },
+        {
+          "coverage": 0.2002,
+          "DR": 0.8,
+          "FPR": 0.2911,
+          "F1": 0.8169
+        },
+        {
+          "coverage": 0.1501,
+          "DR": 0.9098,
+          "FPR": 0.5,
+          "F1": 0.8672
+        },
+        {
+          "coverage": 0.1001,
+          "DR": 0.8676,
+          "FPR": 0.4773,
+          "F1": 0.7973
+        },
+        {
+          "coverage": 0.05,
+          "DR": 0.8333,
+          "FPR": 0.5,
+          "F1": 0.7895
+        }
+      ]
+    },
+    "llm_openrouter_qwen": {
+      "auroc": 0.6945,
+      "n_confidence_levels": 4,
+      "fpr_at_90_coverage": 0.5074,
+      "dr_at_90_coverage": 0.8526,
+      "f1_at_90_coverage": 0.7419,
+      "curve": [
+        {
+          "coverage": 0.95,
+          "DR": 0.8576,
+          "FPR": 0.5154,
+          "F1": 0.7479
+        },
+        {
+          "coverage": 0.8999,
+          "DR": 0.8526,
+          "FPR": 0.5074,
+          "F1": 0.7419
+        },
+        {
+          "coverage": 0.8499,
+          "DR": 0.8498,
+          "FPR": 0.4989,
+          "F1": 0.7427
+        },
+        {
+          "coverage": 0.7998,
+          "DR": 0.8439,
+          "FPR": 0.4846,
+          "F1": 0.7421
+        },
+        {
+          "coverage": 0.7498,
+          "DR": 0.84,
+          "FPR": 0.4602,
+          "F1": 0.7507
+        },
+        {
+          "coverage": 0.6997,
+          "DR": 0.8349,
+          "FPR": 0.4438,
+          "F1": 0.7513
+        },
+        {
+          "coverage": 0.6497,
+          "DR": 0.8247,
+          "FPR": 0.4366,
+          "F1": 0.7477
+        },
+        {
+          "coverage": 0.5996,
+          "DR": 0.8156,
+          "FPR": 0.4185,
+          "F1": 0.7478
+        },
+        {
+          "coverage": 0.5496,
+          "DR": 0.8012,
+          "FPR": 0.3925,
+          "F1": 0.7424
+        },
+        {
+          "coverage": 0.5004,
+          "DR": 0.798,
+          "FPR": 0.3498,
+          "F1": 0.7572
+        },
+        {
+          "coverage": 0.4504,
+          "DR": 0.7887,
+          "FPR": 0.3138,
+          "F1": 0.7614
+        },
+        {
+          "coverage": 0.4004,
+          "DR": 0.7642,
+          "FPR": 0.2648,
+          "F1": 0.7576
+        },
+        {
+          "coverage": 0.3503,
+          "DR": 0.7385,
+          "FPR": 0.203,
+          "F1": 0.7599
+        },
+        {
+          "coverage": 0.3003,
+          "DR": 0.7215,
+          "FPR": 0.1629,
+          "F1": 0.7575
+        },
+        {
+          "coverage": 0.2502,
+          "DR": 0.6396,
+          "FPR": 0.142,
+          "F1": 0.6893
+        },
+        {
+          "coverage": 0.2002,
+          "DR": 0.6341,
+          "FPR": 0.1408,
+          "F1": 0.6753
+        },
+        {
+          "coverage": 0.1501,
+          "DR": 0.7077,
+          "FPR": 0.1359,
+          "F1": 0.736
+        },
+        {
+          "coverage": 0.1001,
+          "DR": 0.7547,
+          "FPR": 0.1186,
+          "F1": 0.8
+        },
+        {
+          "coverage": 0.05,
+          "DR": 0.8649,
+          "FPR": 0.0526,
+          "F1": 0.9143
+        }
+      ]
+    },
+    "llm_openrouter_gemini_pro": {
+      "auroc": null,
+      "n_confidence_levels": 5,
+      "fpr_at_90_coverage": 0.0429,
+      "dr_at_90_coverage": 0.4865,
+      "f1_at_90_coverage": 0.6372,
+      "curve": [
+        {
+          "coverage": 0.95,
+          "DR": 0.4841,
+          "FPR": 0.0463,
+          "F1": 0.635
+        },
+        {
+          "coverage": 0.8999,
+          "DR": 0.4865,
+          "FPR": 0.0429,
+          "F1": 0.6372
+        },
+        {
+          "coverage": 0.8499,
+          "DR": 0.4612,
+          "FPR": 0.0431,
+          "F1": 0.6123
+        },
+        {
+          "coverage": 0.7998,
+          "DR": 0.4319,
+          "FPR": 0.0426,
+          "F1": 0.5841
+        },
+        {
+          "coverage": 0.7498,
+          "DR": 0.4425,
+          "FPR": 0.0433,
+          "F1": 0.594
+        },
+        {
+          "coverage": 0.6997,
+          "DR": 0.4469,
+          "FPR": 0.0409,
+          "F1": 0.5985
+        },
+        {
+          "coverage": 0.6497,
+          "DR": 0.4524,
+          "FPR": 0.0421,
+          "F1": 0.6038
+        },
+        {
+          "coverage": 0.5996,
+          "DR": 0.4608,
+          "FPR": 0.0426,
+          "F1": 0.6112
+        },
+        {
+          "coverage": 0.5496,
+          "DR": 0.4512,
+          "FPR": 0.0472,
+          "F1": 0.6009
+        },
+        {
+          "coverage": 0.5004,
+          "DR": 0.437,
+          "FPR": 0.0414,
+          "F1": 0.59
+        },
+        {
+          "coverage": 0.4504,
+          "DR": 0.4262,
+          "FPR": 0.0462,
+          "F1": 0.5778
+        },
+        {
+          "coverage": 0.4004,
+          "DR": 0.4286,
+          "FPR": 0.0519,
+          "F1": 0.5776
+        },
+        {
+          "coverage": 0.3503,
+          "DR": 0.4271,
+          "FPR": 0.0518,
+          "F1": 0.5782
+        },
+        {
+          "coverage": 0.3003,
+          "DR": 0.4337,
+          "FPR": 0.0529,
+          "F1": 0.583
+        },
+        {
+          "coverage": 0.2502,
+          "DR": 0.4437,
+          "FPR": 0.0435,
+          "F1": 0.5972
+        },
+        {
+          "coverage": 0.2002,
+          "DR": 0.4018,
+          "FPR": 0.0536,
+          "F1": 0.5521
+        },
+        {
+          "coverage": 0.1501,
+          "DR": 0.4074,
+          "FPR": 0.0575,
+          "F1": 0.5546
+        },
+        {
+          "coverage": 0.1001,
+          "DR": 0.3684,
+          "FPR": 0.0545,
+          "F1": 0.5185
+        },
+        {
+          "coverage": 0.05,
+          "DR": 0.3226,
+          "FPR": 0.04,
+          "F1": 0.4762
+        }
+      ]
+    },
+    "llm_openrouter_qwen_max": {
+      "auroc": null,
+      "n_confidence_levels": 4,
+      "fpr_at_90_coverage": 0.5302,
+      "dr_at_90_coverage": 0.8582,
+      "f1_at_90_coverage": 0.7426,
+      "curve": [
+        {
+          "coverage": 0.95,
+          "DR": 0.8598,
+          "FPR": 0.5397,
+          "F1": 0.7474
+        },
+        {
+          "coverage": 0.8999,
+          "DR": 0.8582,
+          "FPR": 0.5302,
+          "F1": 0.7426
+        },
+        {
+          "coverage": 0.8499,
+          "DR": 0.8585,
+          "FPR": 0.5241,
+          "F1": 0.7464
+        },
+        {
+          "coverage": 0.7998,
+          "DR": 0.8598,
+          "FPR": 0.5244,
+          "F1": 0.7466
+        },
+        {
+          "coverage": 0.7498,
+          "DR": 0.8553,
+          "FPR": 0.5053,
+          "F1": 0.755
+        },
+        {
+          "coverage": 0.6997,
+          "DR": 0.849,
+          "FPR": 0.4942,
+          "F1": 0.7579
+        },
+        {
+          "coverage": 0.6497,
+          "DR": 0.8399,
+          "FPR": 0.486,
+          "F1": 0.7553
+        },
+        {
+          "coverage": 0.5996,
+          "DR": 0.8338,
+          "FPR": 0.4897,
+          "F1": 0.7542
+        },
+        {
+          "coverage": 0.5496,
+          "DR": 0.8338,
+          "FPR": 0.4586,
+          "F1": 0.7638
+        },
+        {
+          "coverage": 0.5004,
+          "DR": 0.8307,
+          "FPR": 0.4274,
+          "F1": 0.7715
+        },
+        {
+          "coverage": 0.4504,
+          "DR": 0.8282,
+          "FPR": 0.385,
+          "F1": 0.785
+        },
+        {
+          "coverage": 0.4004,
+          "DR": 0.8185,
+          "FPR": 0.3492,
+          "F1": 0.7896
+        },
+        {
+          "coverage": 0.3503,
+          "DR": 0.8035,
+          "FPR": 0.3006,
+          "F1": 0.7965
+        },
+        {
+          "coverage": 0.3003,
+          "DR": 0.7857,
+          "FPR": 0.2571,
+          "F1": 0.7979
+        },
+        {
+          "coverage": 0.2502,
+          "DR": 0.8125,
+          "FPR": 0.2,
+          "F1": 0.828
+        },
+        {
+          "coverage": 0.2002,
+          "DR": 0.7115,
+          "FPR": 0.2,
+          "F1": 0.7327
+        },
+        {
+          "coverage": 0.1501,
+          "DR": 0.7647,
+          "FPR": 0.2169,
+          "F1": 0.7738
+        },
+        {
+          "coverage": 0.1001,
+          "DR": 0.8448,
+          "FPR": 0.2407,
+          "F1": 0.8167
+        },
+        {
+          "coverage": 0.05,
+          "DR": 0.9189,
+          "FPR": 0.3158,
+          "F1": 0.8831
+        }
+      ]
+    },
+    "llm_openrouter_llama_4_maverick": {
+      "auroc": null,
+      "n_confidence_levels": 7,
+      "fpr_at_90_coverage": 0.1208,
+      "dr_at_90_coverage": 0.6037,
+      "f1_at_90_coverage": 0.706,
+      "curve": [
+        {
+          "coverage": 1.0,
+          "DR": 0.6139,
+          "FPR": 0.1462,
+          "F1": 0.7066
+        },
+        {
+          "coverage": 0.95,
+          "DR": 0.6109,
+          "FPR": 0.1333,
+          "F1": 0.7074
+        },
+        {
+          "coverage": 0.8999,
+          "DR": 0.6037,
+          "FPR": 0.1208,
+          "F1": 0.706
+        },
+        {
+          "coverage": 0.8499,
+          "DR": 0.5952,
+          "FPR": 0.1062,
+          "F1": 0.7038
+        },
+        {
+          "coverage": 0.7998,
+          "DR": 0.5853,
+          "FPR": 0.0972,
+          "F1": 0.6985
+        },
+        {
+          "coverage": 0.7498,
+          "DR": 0.5613,
+          "FPR": 0.094,
+          "F1": 0.679
+        },
+        {
+          "coverage": 0.6997,
+          "DR": 0.4973,
+          "FPR": 0.092,
+          "F1": 0.6216
+        },
+        {
+          "coverage": 0.6497,
+          "DR": 0.4532,
+          "FPR": 0.0732,
+          "F1": 0.5882
+        },
+        {
+          "coverage": 0.5996,
+          "DR": 0.3918,
+          "FPR": 0.0605,
+          "F1": 0.5327
+        },
+        {
+          "coverage": 0.5496,
+          "DR": 0.3056,
+          "FPR": 0.0413,
+          "F1": 0.4477
+        },
+        {
+          "coverage": 0.5004,
+          "DR": 0.2207,
+          "FPR": 0.0288,
+          "F1": 0.3481
+        },
+        {
+          "coverage": 0.4504,
+          "DR": 0.08,
+          "FPR": 0.0122,
+          "F1": 0.1451
+        },
+        {
+          "coverage": 0.4004,
+          "DR": 0.0136,
+          "FPR": 0.0033,
+          "F1": 0.0267
+        },
+        {
+          "coverage": 0.3503,
+          "DR": 0.0167,
+          "FPR": 0.0037,
+          "F1": 0.0325
+        },
+        {
+          "coverage": 0.3003,
+          "DR": 0.0189,
+          "FPR": 0.0043,
+          "F1": 0.0367
+        },
+        {
+          "coverage": 0.2502,
+          "DR": 0.022,
+          "FPR": 0.0053,
+          "F1": 0.0426
+        },
+        {
+          "coverage": 0.2002,
+          "DR": 0.0267,
+          "FPR": 0.0067,
+          "F1": 0.0513
+        },
+        {
+          "coverage": 0.1501,
+          "DR": 0.0182,
+          "FPR": 0.0,
+          "F1": 0.0357
+        },
+        {
+          "coverage": 0.1001,
+          "DR": 0.0294,
+          "FPR": 0.0,
+          "F1": 0.0571
+        },
+        {
+          "coverage": 0.05,
+          "DR": 0.0,
+          "FPR": 0.0,
+          "F1": 0.0
+        }
+      ]
+    },
+    "llm_openrouter_claude_opus_4_7": {
+      "auroc": 0.9056,
+      "n_confidence_levels": 11,
+      "fpr_at_90_coverage": 0.0951,
+      "dr_at_90_coverage": 0.9026,
+      "f1_at_90_coverage": 0.9086,
+      "curve": [
+        {
+          "coverage": 1.0,
+          "DR": 0.9092,
+          "FPR": 0.1618,
+          "F1": 0.8887
+        },
+        {
+          "coverage": 0.95,
+          "DR": 0.9075,
+          "FPR": 0.1245,
+          "F1": 0.9012
+        },
+        {
+          "coverage": 0.8999,
+          "DR": 0.9026,
+          "FPR": 0.0951,
+          "F1": 0.9086
+        },
+        {
+          "coverage": 0.8499,
+          "DR": 0.8959,
+          "FPR": 0.0803,
+          "F1": 0.9089
+        },
+        {
+          "coverage": 0.7998,
+          "DR": 0.8899,
+          "FPR": 0.08,
+          "F1": 0.9031
+        },
+        {
+          "coverage": 0.7498,
+          "DR": 0.8875,
+          "FPR": 0.0744,
+          "F1": 0.903
+        },
+        {
+          "coverage": 0.6997,
+          "DR": 0.8774,
+          "FPR": 0.0673,
+          "F1": 0.8982
+        },
+        {
+          "coverage": 0.6497,
+          "DR": 0.8615,
+          "FPR": 0.0622,
+          "F1": 0.8889
+        },
+        {
+          "coverage": 0.5996,
+          "DR": 0.8434,
+          "FPR": 0.0564,
+          "F1": 0.8778
+        },
+        {
+          "coverage": 0.5496,
+          "DR": 0.819,
+          "FPR": 0.0574,
+          "F1": 0.8559
+        },
+        {
+          "coverage": 0.5004,
+          "DR": 0.8173,
+          "FPR": 0.054,
+          "F1": 0.8564
+        },
+        {
+          "coverage": 0.4504,
+          "DR": 0.8115,
+          "FPR": 0.0511,
+          "F1": 0.8564
+        },
+        {
+          "coverage": 0.4004,
+          "DR": 0.8,
+          "FPR": 0.0504,
+          "F1": 0.85
+        },
+        {
+          "coverage": 0.3503,
+          "DR": 0.777,
+          "FPR": 0.0533,
+          "F1": 0.8333
+        },
+        {
+          "coverage": 0.3003,
+          "DR": 0.7638,
+          "FPR": 0.0526,
+          "F1": 0.8255
+        },
+        {
+          "coverage": 0.2502,
+          "DR": 0.7736,
+          "FPR": 0.0517,
+          "F1": 0.8325
+        },
+        {
+          "coverage": 0.2002,
+          "DR": 0.7931,
+          "FPR": 0.0511,
+          "F1": 0.8466
+        },
+        {
+          "coverage": 0.1501,
+          "DR": 0.8689,
+          "FPR": 0.0467,
+          "F1": 0.8908
+        },
+        {
+          "coverage": 0.1001,
+          "DR": 0.881,
+          "FPR": 0.0429,
+          "F1": 0.9024
+        },
+        {
+          "coverage": 0.05,
+          "DR": 0.9444,
+          "FPR": 0.0,
+          "F1": 0.9714
+        }
+      ],
+      "caveat": "drift-affected operating point (OpenRouter Anthropic endpoint drifted vs the published run); curve SHAPE/AUROC are drift-immune (deterministic re-score of stored confidences). Appendix-only; the Table-2 conservative cells use the published delta-eval point estimates instead."
+    },
+    "llm_openrouter_claude_sonnet_4_6": {
+      "auroc": 0.9281,
+      "n_confidence_levels": 18,
+      "fpr_at_90_coverage": 0.1197,
+      "dr_at_90_coverage": 0.9227,
+      "f1_at_90_coverage": 0.9136,
+      "curve": [
+        {
+          "coverage": 0.95,
+          "DR": 0.9168,
+          "FPR": 0.1399,
+          "F1": 0.9012
+        },
+        {
+          "coverage": 0.8999,
+          "DR": 0.9227,
+          "FPR": 0.1197,
+          "F1": 0.9136
+        },
+        {
+          "coverage": 0.8499,
+          "DR": 0.9295,
+          "FPR": 0.0939,
+          "F1": 0.9269
+        },
+        {
+          "coverage": 0.7998,
+          "DR": 0.9347,
+          "FPR": 0.1,
+          "F1": 0.9291
+        },
+        {
+          "coverage": 0.7498,
+          "DR": 0.9448,
+          "FPR": 0.106,
+          "F1": 0.9319
+        },
+        {
+          "coverage": 0.6997,
+          "DR": 0.9533,
+          "FPR": 0.1021,
+          "F1": 0.9398
+        },
+        {
+          "coverage": 0.6497,
+          "DR": 0.9603,
+          "FPR": 0.1137,
+          "F1": 0.9416
+        },
+        {
+          "coverage": 0.5996,
+          "DR": 0.9692,
+          "FPR": 0.1099,
+          "F1": 0.946
+        },
+        {
+          "coverage": 0.5496,
+          "DR": 0.9728,
+          "FPR": 0.0972,
+          "F1": 0.9547
+        },
+        {
+          "coverage": 0.5004,
+          "DR": 0.9798,
+          "FPR": 0.0841,
+          "F1": 0.9644
+        },
+        {
+          "coverage": 0.4504,
+          "DR": 0.9841,
+          "FPR": 0.0847,
+          "F1": 0.9672
+        },
+        {
+          "coverage": 0.4004,
+          "DR": 0.9823,
+          "FPR": 0.097,
+          "F1": 0.9636
+        },
+        {
+          "coverage": 0.3503,
+          "DR": 0.9802,
+          "FPR": 0.1,
+          "F1": 0.963
+        },
+        {
+          "coverage": 0.3003,
+          "DR": 0.9821,
+          "FPR": 0.1071,
+          "F1": 0.9649
+        },
+        {
+          "coverage": 0.2502,
+          "DR": 0.9845,
+          "FPR": 0.1264,
+          "F1": 0.9645
+        },
+        {
+          "coverage": 0.2002,
+          "DR": 0.9808,
+          "FPR": 0.1324,
+          "F1": 0.9623
+        },
+        {
+          "coverage": 0.1501,
+          "DR": 0.975,
+          "FPR": 0.1042,
+          "F1": 0.9669
+        },
+        {
+          "coverage": 0.1001,
+          "DR": 0.961,
+          "FPR": 0.1143,
+          "F1": 0.9548
+        },
+        {
+          "coverage": 0.05,
+          "DR": 0.9459,
+          "FPR": 0.1579,
+          "F1": 0.9333
+        }
+      ],
+      "caveat": "drift-affected operating point (OpenRouter Anthropic endpoint drifted vs the published run); curve SHAPE/AUROC are drift-immune (deterministic re-score of stored confidences). Appendix-only; the Table-2 conservative cells use the published delta-eval point estimates instead."
+    },
+    "llm_openai": {
+      "auroc": null,
+      "n_confidence_levels": 9,
+      "fpr_at_90_coverage": 0.3728,
+      "dr_at_90_coverage": 0.8258,
+      "f1_at_90_coverage": 0.7738,
+      "curve": [
+        {
+          "coverage": 1.0,
+          "DR": 0.8366,
+          "FPR": 0.4113,
+          "F1": 0.7659
+        },
+        {
+          "coverage": 0.95,
+          "DR": 0.8287,
+          "FPR": 0.3897,
+          "F1": 0.7689
+        },
+        {
+          "coverage": 0.8999,
+          "DR": 0.8258,
+          "FPR": 0.3728,
+          "F1": 0.7738
+        },
+        {
+          "coverage": 0.8499,
+          "DR": 0.8227,
+          "FPR": 0.3472,
+          "F1": 0.7792
+        },
+        {
+          "coverage": 0.7998,
+          "DR": 0.8154,
+          "FPR": 0.3209,
+          "F1": 0.7852
+        },
+        {
+          "coverage": 0.7498,
+          "DR": 0.8086,
+          "FPR": 0.2914,
+          "F1": 0.7916
+        },
+        {
+          "coverage": 0.6997,
+          "DR": 0.7991,
+          "FPR": 0.258,
+          "F1": 0.7982
+        },
+        {
+          "coverage": 0.6497,
+          "DR": 0.7927,
+          "FPR": 0.2114,
+          "F1": 0.8105
+        },
+        {
+          "coverage": 0.5996,
+          "DR": 0.7909,
+          "FPR": 0.1745,
+          "F1": 0.8194
+        },
+        {
+          "coverage": 0.5496,
+          "DR": 0.7781,
+          "FPR": 0.148,
+          "F1": 0.8193
+        },
+        {
+          "coverage": 0.5004,
+          "DR": 0.7508,
+          "FPR": 0.1293,
+          "F1": 0.8051
+        },
+        {
+          "coverage": 0.4504,
+          "DR": 0.7262,
+          "FPR": 0.1079,
+          "F1": 0.7958
+        },
+        {
+          "coverage": 0.4004,
+          "DR": 0.6941,
+          "FPR": 0.0961,
+          "F1": 0.7735
+        },
+        {
+          "coverage": 0.3503,
+          "DR": 0.6379,
+          "FPR": 0.078,
+          "F1": 0.7351
+        },
+        {
+          "coverage": 0.3003,
+          "DR": 0.62,
+          "FPR": 0.0753,
+          "F1": 0.7237
+        },
+        {
+          "coverage": 0.2502,
+          "DR": 0.5952,
+          "FPR": 0.0649,
+          "F1": 0.7109
+        },
+        {
+          "coverage": 0.2002,
+          "DR": 0.6224,
+          "FPR": 0.0556,
+          "F1": 0.7349
+        },
+        {
+          "coverage": 0.1501,
+          "DR": 0.5231,
+          "FPR": 0.0583,
+          "F1": 0.6476
+        },
+        {
+          "coverage": 0.1001,
+          "DR": 0.381,
+          "FPR": 0.0286,
+          "F1": 0.5333
+        },
+        {
+          "coverage": 0.05,
+          "DR": 0.1,
+          "FPR": 0.0,
+          "F1": 0.1818
+        }
+      ]
+    },
+    "llm_openai_gpt_5_4": {
+      "auroc": 0.8339,
+      "n_confidence_levels": 9,
+      "fpr_at_90_coverage": 0.222,
+      "dr_at_90_coverage": 0.8111,
+      "f1_at_90_coverage": 0.8161,
+      "curve": [
+        {
+          "coverage": 1.0,
+          "DR": 0.7673,
+          "FPR": 0.2281,
+          "F1": 0.7828
+        },
+        {
+          "coverage": 0.95,
+          "DR": 0.7925,
+          "FPR": 0.2333,
+          "F1": 0.7986
+        },
+        {
+          "coverage": 0.8999,
+          "DR": 0.8111,
+          "FPR": 0.222,
+          "F1": 0.8161
+        },
+        {
+          "coverage": 0.8499,
+          "DR": 0.8045,
+          "FPR": 0.1691,
+          "F1": 0.8316
+        },
+        {
+          "coverage": 0.7998,
+          "DR": 0.8023,
+          "FPR": 0.1583,
+          "F1": 0.8364
+        },
+        {
+          "coverage": 0.7498,
+          "DR": 0.8089,
+          "FPR": 0.1499,
+          "F1": 0.845
+        },
+        {
+          "coverage": 0.6997,
+          "DR": 0.8164,
+          "FPR": 0.1406,
+          "F1": 0.8533
+        },
+        {
+          "coverage": 0.6497,
+          "DR": 0.8207,
+          "FPR": 0.1404,
+          "F1": 0.8571
+        },
+        {
+          "coverage": 0.5996,
+          "DR": 0.8288,
+          "FPR": 0.1269,
+          "F1": 0.8664
+        },
+        {
+          "coverage": 0.5496,
+          "DR": 0.8357,
+          "FPR": 0.125,
+          "F1": 0.8683
+        },
+        {
+          "coverage": 0.5004,
+          "DR": 0.839,
+          "FPR": 0.1139,
+          "F1": 0.8728
+        },
+        {
+          "coverage": 0.4504,
+          "DR": 0.8514,
+          "FPR": 0.1154,
+          "F1": 0.8811
+        },
+        {
+          "coverage": 0.4004,
+          "DR": 0.8529,
+          "FPR": 0.1023,
+          "F1": 0.8889
+        },
+        {
+          "coverage": 0.3503,
+          "DR": 0.8514,
+          "FPR": 0.1119,
+          "F1": 0.8889
+        },
+        {
+          "coverage": 0.3003,
+          "DR": 0.8591,
+          "FPR": 0.0948,
+          "F1": 0.9
+        },
+        {
+          "coverage": 0.2502,
+          "DR": 0.8698,
+          "FPR": 0.0795,
+          "F1": 0.9126
+        },
+        {
+          "coverage": 0.2002,
+          "DR": 0.8834,
+          "FPR": 0.082,
+          "F1": 0.9231
+        },
+        {
+          "coverage": 0.1501,
+          "DR": 0.8803,
+          "FPR": 0.0392,
+          "F1": 0.9279
+        },
+        {
+          "coverage": 0.1001,
+          "DR": 0.8831,
+          "FPR": 0.0286,
+          "F1": 0.9315
+        },
+        {
+          "coverage": 0.05,
+          "DR": 0.8378,
+          "FPR": 0.0,
+          "F1": 0.9118
+        }
+      ]
+    },
+    "llm_agentic_openai": {
+      "auroc": null,
+      "n_confidence_levels": 11,
+      "fpr_at_90_coverage": 0.4232,
+      "dr_at_90_coverage": 0.9637,
+      "f1_at_90_coverage": 0.8329,
+      "curve": [
+        {
+          "coverage": 1.0,
+          "DR": 0.967,
+          "FPR": 0.4776,
+          "F1": 0.8156
+        },
+        {
+          "coverage": 0.95,
+          "DR": 0.9652,
+          "FPR": 0.4549,
+          "F1": 0.821
+        },
+        {
+          "coverage": 0.8999,
+          "DR": 0.9637,
+          "FPR": 0.4232,
+          "F1": 0.8329
+        },
+        {
+          "coverage": 0.8499,
+          "DR": 0.9621,
+          "FPR": 0.3877,
+          "F1": 0.8467
+        },
+        {
+          "coverage": 0.7998,
+          "DR": 0.96,
+          "FPR": 0.3443,
+          "F1": 0.8602
+        },
+        {
+          "coverage": 0.7498,
+          "DR": 0.9575,
+          "FPR": 0.3016,
+          "F1": 0.8732
+        },
+        {
+          "coverage": 0.6997,
+          "DR": 0.9549,
+          "FPR": 0.2471,
+          "F1": 0.8905
+        },
+        {
+          "coverage": 0.6497,
+          "DR": 0.9531,
+          "FPR": 0.2174,
+          "F1": 0.8966
+        },
+        {
+          "coverage": 0.5996,
+          "DR": 0.9493,
+          "FPR": 0.1622,
+          "F1": 0.914
+        },
+        {
+          "coverage": 0.5496,
+          "DR": 0.9441,
+          "FPR": 0.1127,
+          "F1": 0.9277
+        },
+        {
+          "coverage": 0.5004,
+          "DR": 0.9371,
+          "FPR": 0.093,
+          "F1": 0.9294
+        },
+        {
+          "coverage": 0.4504,
+          "DR": 0.9358,
+          "FPR": 0.0753,
+          "F1": 0.9341
+        },
+        {
+          "coverage": 0.4004,
+          "DR": 0.9292,
+          "FPR": 0.0586,
+          "F1": 0.9354
+        },
+        {
+          "coverage": 0.3503,
+          "DR": 0.9091,
+          "FPR": 0.0556,
+          "F1": 0.9195
+        },
+        {
+          "coverage": 0.3003,
+          "DR": 0.8769,
+          "FPR": 0.0388,
+          "F1": 0.9048
+        },
+        {
+          "coverage": 0.2502,
+          "DR": 0.7975,
+          "FPR": 0.0249,
+          "F1": 0.8571
+        },
+        {
+          "coverage": 0.2002,
+          "DR": 0.7209,
+          "FPR": 0.0055,
+          "F1": 0.8267
+        },
+        {
+          "coverage": 0.1501,
+          "DR": 0.8065,
+          "FPR": 0.0073,
+          "F1": 0.8772
+        },
+        {
+          "coverage": 0.1001,
+          "DR": 0.7895,
+          "FPR": 0.0108,
+          "F1": 0.8571
+        },
+        {
+          "coverage": 0.05,
+          "DR": 0.6667,
+          "FPR": 0.02,
+          "F1": 0.7273
+        }
+      ]
+    },
+    "llm_agentic_btu_openai": {
+      "auroc": null,
+      "n_confidence_levels": 15,
+      "fpr_at_90_coverage": 0.4271,
+      "dr_at_90_coverage": 0.985,
+      "f1_at_90_coverage": 0.8336,
+      "curve": [
+        {
+          "coverage": 1.0,
+          "DR": 0.9802,
+          "FPR": 0.4698,
+          "F1": 0.8244
+        },
+        {
+          "coverage": 0.95,
+          "DR": 0.9807,
+          "FPR": 0.4503,
+          "F1": 0.8275
+        },
+        {
+          "coverage": 0.8999,
+          "DR": 0.985,
+          "FPR": 0.4271,
+          "F1": 0.8336
+        },
+        {
+          "coverage": 0.8499,
+          "DR": 0.9901,
+          "FPR": 0.3937,
+          "F1": 0.8465
+        },
+        {
+          "coverage": 0.7998,
+          "DR": 0.9896,
+          "FPR": 0.347,
+          "F1": 0.8644
+        },
+        {
+          "coverage": 0.7498,
+          "DR": 0.9886,
+          "FPR": 0.3233,
+          "F1": 0.8665
+        },
+        {
+          "coverage": 0.6997,
+          "DR": 0.9878,
+          "FPR": 0.2968,
+          "F1": 0.8745
+        },
+        {
+          "coverage": 0.6497,
+          "DR": 0.9866,
+          "FPR": 0.2704,
+          "F1": 0.879
+        },
+        {
+          "coverage": 0.5996,
+          "DR": 0.9882,
+          "FPR": 0.2387,
+          "F1": 0.8901
+        },
+        {
+          "coverage": 0.5496,
+          "DR": 0.9871,
+          "FPR": 0.1993,
+          "F1": 0.9037
+        },
+        {
+          "coverage": 0.5004,
+          "DR": 0.9856,
+          "FPR": 0.1555,
+          "F1": 0.9192
+        },
+        {
+          "coverage": 0.4504,
+          "DR": 0.9876,
+          "FPR": 0.1027,
+          "F1": 0.9407
+        },
+        {
+          "coverage": 0.4004,
+          "DR": 0.9855,
+          "FPR": 0.0954,
+          "F1": 0.9401
+        },
+        {
+          "coverage": 0.3503,
+          "DR": 0.9942,
+          "FPR": 0.0995,
+          "F1": 0.9366
+        },
+        {
+          "coverage": 0.3003,
+          "DR": 0.9926,
+          "FPR": 0.11,
+          "F1": 0.9215
+        },
+        {
+          "coverage": 0.2502,
+          "DR": 0.9907,
+          "FPR": 0.1279,
+          "F1": 0.903
+        },
+        {
+          "coverage": 0.2002,
+          "DR": 0.9895,
+          "FPR": 0.1705,
+          "F1": 0.891
+        },
+        {
+          "coverage": 0.1501,
+          "DR": 1.0,
+          "FPR": 0.25,
+          "F1": 0.8889
+        },
+        {
+          "coverage": 0.1001,
+          "DR": 1.0,
+          "FPR": 0.439,
+          "F1": 0.8875
+        },
+        {
+          "coverage": 0.05,
+          "DR": 1.0,
+          "FPR": 1.0,
+          "F1": 0.8211
+        }
+      ]
+    },
+    "llm_agentic_btu_sonnet_4_6": {
+      "auroc": null,
+      "n_confidence_levels": 20,
+      "fpr_at_90_coverage": 0.342,
+      "dr_at_90_coverage": 0.9949,
+      "f1_at_90_coverage": 0.8869,
+      "curve": [
+        {
+          "coverage": 1.0,
+          "DR": 0.9901,
+          "FPR": 0.4308,
+          "F1": 0.8409
+        },
+        {
+          "coverage": 0.95,
+          "DR": 0.9933,
+          "FPR": 0.3849,
+          "F1": 0.8665
+        },
+        {
+          "coverage": 0.8999,
+          "DR": 0.9949,
+          "FPR": 0.342,
+          "F1": 0.8869
+        },
+        {
+          "coverage": 0.8499,
+          "DR": 0.9982,
+          "FPR": 0.2846,
+          "F1": 0.9116
+        },
+        {
+          "coverage": 0.7998,
+          "DR": 0.9982,
+          "FPR": 0.2212,
+          "F1": 0.9359
+        },
+        {
+          "coverage": 0.7498,
+          "DR": 0.9981,
+          "FPR": 0.198,
+          "F1": 0.9461
+        },
+        {
+          "coverage": 0.6997,
+          "DR": 1.0,
+          "FPR": 0.1774,
+          "F1": 0.9566
+        },
+        {
+          "coverage": 0.6497,
+          "DR": 1.0,
+          "FPR": 0.1555,
+          "F1": 0.9635
+        },
+        {
+          "coverage": 0.5996,
+          "DR": 1.0,
+          "FPR": 0.129,
+          "F1": 0.9701
+        },
+        {
+          "coverage": 0.5496,
+          "DR": 1.0,
+          "FPR": 0.1144,
+          "F1": 0.973
+        },
+        {
+          "coverage": 0.5004,
+          "DR": 1.0,
+          "FPR": 0.125,
+          "F1": 0.9703
+        },
+        {
+          "coverage": 0.4504,
+          "DR": 1.0,
+          "FPR": 0.1138,
+          "F1": 0.9726
+        },
+        {
+          "coverage": 0.4004,
+          "DR": 1.0,
+          "FPR": 0.0867,
+          "F1": 0.9787
+        },
+        {
+          "coverage": 0.3503,
+          "DR": 1.0,
+          "FPR": 0.097,
+          "F1": 0.9754
+        },
+        {
+          "coverage": 0.3003,
+          "DR": 1.0,
+          "FPR": 0.1017,
+          "F1": 0.9732
+        },
+        {
+          "coverage": 0.2502,
+          "DR": 1.0,
+          "FPR": 0.1075,
+          "F1": 0.974
+        },
+        {
+          "coverage": 0.2002,
+          "DR": 1.0,
+          "FPR": 0.1268,
+          "F1": 0.9714
+        },
+        {
+          "coverage": 0.1501,
+          "DR": 1.0,
+          "FPR": 0.1364,
+          "F1": 0.9764
+        },
+        {
+          "coverage": 0.1001,
+          "DR": 1.0,
+          "FPR": 0.3333,
+          "F1": 0.9749
+        },
+        {
+          "coverage": 0.05,
+          "DR": 1.0,
+          "FPR": 0.5714,
+          "F1": 0.9608
+        }
+      ]
+    }
+  },
+  "could_not_compute": [
+    {
+      "tool": "llm_tool_augmented",
+      "split": "dev_public",
+      "reason": "no per-entry prediction file for this split"
+    },
+    {
+      "tool": "bibtexupdater_v1_2_0",
+      "split": "test_public",
+      "reason": "raw incomplete (500/831 entries scored); pending GEN workflow wkp97jqbb"
+    }
+  ]
+}
