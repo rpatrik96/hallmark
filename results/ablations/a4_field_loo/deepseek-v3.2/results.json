@@ -1,0 +1,115 @@
+{
+  "model_key": "deepseek-v3.2",
+  "model_id": "deepseek/deepseek-v3.2",
+  "endpoint": "openrouter.ai/api/v1",
+  "n": 150,
+  "n_hall": 81,
+  "seed": 42,
+  "temperature": 0.0,
+  "summary": {
+    "full": {
+      "detection_rate": 1.0,
+      "false_positive_rate": 0.9565217391304348,
+      "f1_hallucination": 0.7105263157894737,
+      "num_uncertain": 0,
+      "num_pred_hallucinated": 147,
+      "n": 150,
+      "n_hall": 81
+    },
+    "structured": {
+      "detection_rate": 0.9753086419753086,
+      "false_positive_rate": 0.8115942028985508,
+      "f1_hallucination": 0.7314814814814815,
+      "num_uncertain": 0,
+      "num_pred_hallucinated": 135,
+      "n": 150,
+      "n_hall": 81
+    },
+    "loo_title": {
+      "detection_rate": 0.9875,
+      "false_positive_rate": 0.9402985074626866,
+      "f1_hallucination": 0.7117117117117117,
+      "num_uncertain": 3,
+      "num_pred_hallucinated": 142,
+      "n": 150,
+      "n_hall": 81,
+      "n_drop_affected": 150
+    },
+    "loo_author": {
+      "detection_rate": 0.9873417721518988,
+      "false_positive_rate": 0.8955223880597015,
+      "f1_hallucination": 0.7188940092165899,
+      "num_uncertain": 4,
+      "num_pred_hallucinated": 138,
+      "n": 150,
+      "n_hall": 81,
+      "n_drop_affected": 150
+    },
+    "loo_venue": {
+      "detection_rate": 0.9259259259259259,
+      "false_positive_rate": 0.8260869565217391,
+      "f1_hallucination": 0.7042253521126761,
+      "num_uncertain": 0,
+      "num_pred_hallucinated": 132,
+      "n": 150,
+      "n_hall": 81,
+      "n_drop_affected": 139
+    },
+    "loo_year": {
+      "detection_rate": 0.9259259259259259,
+      "false_positive_rate": 0.7536231884057971,
+      "f1_hallucination": 0.721153846153846,
+      "num_uncertain": 0,
+      "num_pred_hallucinated": 127,
+      "n": 150,
+      "n_hall": 81,
+      "n_drop_affected": 150
+    },
+    "loo_doi": {
+      "detection_rate": 0.9629629629629629,
+      "false_positive_rate": 0.8405797101449275,
+      "f1_hallucination": 0.7188940092165897,
+      "num_uncertain": 0,
+      "num_pred_hallucinated": 136,
+      "n": 150,
+      "n_hall": 81,
+      "n_drop_affected": 71
+    }
+  },
+  "loo_deltas_vs_structured": {
+    "loo_title": {
+      "dropped_field": "title",
+      "n_drop_affected": 150,
+      "dDR_vs_structured": 0.012191358024691401,
+      "dFPR_vs_structured": 0.12870430456413584
+    },
+    "loo_author": {
+      "dropped_field": "authors",
+      "n_drop_affected": 150,
+      "dDR_vs_structured": 0.012033130176590134,
+      "dFPR_vs_structured": 0.08392818516115075
+    },
+    "loo_venue": {
+      "dropped_field": "venue",
+      "n_drop_affected": 139,
+      "dDR_vs_structured": -0.04938271604938271,
+      "dFPR_vs_structured": 0.01449275362318836
+    },
+    "loo_year": {
+      "dropped_field": "year",
+      "n_drop_affected": 150,
+      "dDR_vs_structured": -0.04938271604938271,
+      "dFPR_vs_structured": -0.05797101449275366
+    },
+    "loo_doi": {
+      "dropped_field": "doi",
+      "n_drop_affected": 71,
+      "dDR_vs_structured": -0.012345679012345734,
+      "dFPR_vs_structured": 0.02898550724637672
+    }
+  },
+  "format_delta_full_vs_structured": {
+    "dDR": -0.024691358024691357,
+    "dFPR": -0.14492753623188404
+  }
+}

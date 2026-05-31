@@ -1,0 +1,27 @@
+{
+  "description": "A5 inter-annotator-agreement substrate: real-world hallucinated incidents + relabel-recovered real papers.",
+  "pre_relabel_ref": "f58f779",
+  "n_entries": 132,
+  "pool_counts": {
+    "real_world_hallucinated": 80,
+    "relabel_recovered_valid": 52
+  },
+  "gold_label_distribution": {
+    "VALID": 52,
+    "HALLUCINATED": 80
+  },
+  "blinded_fields_exposed": [
+    "bibtex_key",
+    "bibtex_type",
+    "fields",
+    "raw_bibtex"
+  ],
+  "blinded_fields_hidden": [
+    "label",
+    "hallucination_type",
+    "explanation",
+    "source",
+    "generation_method",
+    "difficulty_tier"
+  ]
+}

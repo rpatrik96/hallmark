@@ -1,0 +1,115 @@
+{
+  "model_key": "gemini-2.5-flash",
+  "model_id": "google/gemini-2.5-flash",
+  "endpoint": "openrouter.ai/api/v1",
+  "n": 150,
+  "n_hall": 81,
+  "seed": 42,
+  "temperature": 0.0,
+  "summary": {
+    "full": {
+      "detection_rate": 0.5432098765432098,
+      "false_positive_rate": 0.10144927536231885,
+      "f1_hallucination": 0.6666666666666666,
+      "num_uncertain": 0,
+      "num_pred_hallucinated": 51,
+      "n": 150,
+      "n_hall": 81
+    },
+    "structured": {
+      "detection_rate": 0.6172839506172839,
+      "false_positive_rate": 0.14492753623188406,
+      "f1_hallucination": 0.7092198581560284,
+      "num_uncertain": 0,
+      "num_pred_hallucinated": 60,
+      "n": 150,
+      "n_hall": 81
+    },
+    "loo_title": {
+      "detection_rate": 0.7887323943661971,
+      "false_positive_rate": 0.5,
+      "f1_hallucination": 0.7088607594936709,
+      "num_uncertain": 17,
+      "num_pred_hallucinated": 87,
+      "n": 150,
+      "n_hall": 81,
+      "n_drop_affected": 150
+    },
+    "loo_author": {
+      "detection_rate": 0.7088607594936709,
+      "false_positive_rate": 0.3333333333333333,
+      "f1_hallucination": 0.7088607594936709,
+      "num_uncertain": 2,
+      "num_pred_hallucinated": 79,
+      "n": 150,
+      "n_hall": 81,
+      "n_drop_affected": 150
+    },
+    "loo_venue": {
+      "detection_rate": 0.5185185185185185,
+      "false_positive_rate": 0.10144927536231885,
+      "f1_hallucination": 0.6461538461538462,
+      "num_uncertain": 0,
+      "num_pred_hallucinated": 49,
+      "n": 150,
+      "n_hall": 81,
+      "n_drop_affected": 139
+    },
+    "loo_year": {
+      "detection_rate": 0.5925925925925926,
+      "false_positive_rate": 0.2753623188405797,
+      "f1_hallucination": 0.6486486486486487,
+      "num_uncertain": 0,
+      "num_pred_hallucinated": 67,
+      "n": 150,
+      "n_hall": 81,
+      "n_drop_affected": 150
+    },
+    "loo_doi": {
+      "detection_rate": 0.4691358024691358,
+      "false_positive_rate": 0.14492753623188406,
+      "f1_hallucination": 0.5891472868217054,
+      "num_uncertain": 0,
+      "num_pred_hallucinated": 48,
+      "n": 150,
+      "n_hall": 81,
+      "n_drop_affected": 71
+    }
+  },
+  "loo_deltas_vs_structured": {
+    "loo_title": {
+      "dropped_field": "title",
+      "n_drop_affected": 150,
+      "dDR_vs_structured": 0.17144844374891322,
+      "dFPR_vs_structured": 0.35507246376811596
+    },
+    "loo_author": {
+      "dropped_field": "authors",
+      "n_drop_affected": 150,
+      "dDR_vs_structured": 0.09157680887638697,
+      "dFPR_vs_structured": 0.18840579710144925
+    },
+    "loo_venue": {
+      "dropped_field": "venue",
+      "n_drop_affected": 139,
+      "dDR_vs_structured": -0.09876543209876543,
+      "dFPR_vs_structured": -0.043478260869565216
+    },
+    "loo_year": {
+      "dropped_field": "year",
+      "n_drop_affected": 150,
+      "dDR_vs_structured": -0.024691358024691357,
+      "dFPR_vs_structured": 0.13043478260869565
+    },
+    "loo_doi": {
+      "dropped_field": "doi",
+      "n_drop_affected": 71,
+      "dDR_vs_structured": -0.14814814814814814,
+      "dFPR_vs_structured": 0.0
+    }
+  },
+  "format_delta_full_vs_structured": {
+    "dDR": 0.07407407407407407,
+    "dFPR": 0.043478260869565216
+  }
+}

@@ -1,0 +1,61 @@
+{
+  "ablation": "A2 decoding / self-consistency",
+  "sample": "results/ablations/pilot_sample_dev60.jsonl (n=60, 34 HALL / 26 VALID)",
+  "part_a_temperature": {
+    "model": "deepseek/deepseek-v3.2 (OpenRouter), seed=42",
+    "temp0": {
+      "DR": 1.0,
+      "FPR": 0.808,
+      "F1": 0.764
+    },
+    "temp1": {
+      "DR": 0.971,
+      "FPR": 0.885,
+      "F1": 0.733
+    },
+    "verdict_flip_rate_t0_vs_t1": 0.0833,
+    "shift_t0_to_t1": {
+      "dDR": -0.029,
+      "dFPR": 0.077,
+      "dF1": -0.031
+    }
+  },
+  "part_b_selfconsistency_gpt51": {
+    "source": "E3 reuse (GPT-5.1 temp=1, n=150 dev_public) \u2014 OpenAI key insufficient_quota, fresh run impossible",
+    "across_draw_flip_rate": 0.0067,
+    "f1_band": [
+      0.7878787878787878,
+      0.7918781725888325
+    ],
+    "fpr_band": [
+      0.5507246376811594,
+      0.5652173913043478
+    ],
+    "maj3_vs_mean_single": {
+      "f1_delta": 0.0013,
+      "fpr_delta": -0.0048
+    }
+  },
+  "part_b_crosscheck_deepseek": {
+    "model": "deepseek/deepseek-v3.2 @ temp=1, 3 draws, n=60",
+    "across_draw_flip_rate": 0.1333,
+    "f1_band": [
+      0.7312,
+      0.7416
+    ],
+    "fpr_band": [
+      0.8462,
+      0.9615
+    ],
+    "maj3": {
+      "DR": 1.0,
+      "FPR": 0.923,
+      "F1": 0.739
+    }
+  },
+  "paper_anchor_gaps": {
+    "Sonnet_vs_GPT51_F1_gap": 0.069,
+    "Sonnet_vs_Opus_F1_gap": 0.016,
+    "E3_reported_F1_std": 0.002
+  }
+}

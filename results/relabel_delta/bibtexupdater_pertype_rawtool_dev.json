@@ -1,0 +1,88 @@
+{
+  "tool": "bibtexupdater (RAW bibtex-check tool only, NO prescreening/DOI-resolution layer)",
+  "split": "dev_public (NEW post-relabel labels)",
+  "source": "data/v1.0/baseline_results/bibtexupdater_raw_dev_public.jsonl (released raw run, 1112/1119 keys; 7 missing -> conservative VALID)",
+  "status_to_label_map": "hallmark/baselines/bibtexupdater.py STATUS_TO_LABEL",
+  "aggregate_new": {
+    "TP": 589,
+    "FP": 93,
+    "FN": 17,
+    "TN": 420,
+    "detection_rate": 0.9719,
+    "fpr": 0.1813
+  },
+  "WARNING": "This RAW-tool-only recompute does NOT match the PUBLISHED bibtex-updater dev aggregate (published NEW DR .9686 / FPR .1930 = matrix 587/99/19/414; this raw recompute gives DR .9719 / FPR .1813 = 589/93/17/420). The ~6-FP gap is a network-bound layer (DOI-resolution prescreening or a non-archived run variant) not present in the raw file. Local year/author prescreen checks explain 0 of the 6. A fresh bibtex-check re-run is UNFAITHFUL (Semantic Scholar rate-limit: 8/12 probe entries timed out; 4/12 label agreement; ~90s/entry without S2 key; DB drift). Therefore these per-type DRs are offline-faithful to the RAW tool configuration ONLY and are NOT a drop-in for tab:codesign_pertype, whose cells must stay consistent with the published bibtex-updater aggregate. Provided for transparency, NOT for paper substitution. See todo_hard.json F5 documented_only.",
+  "per_type_dr_raw_tool_only_new_labels": {
+    "arxiv_version_mismatch": {
+      "detection_rate": 0.9184,
+      "count": 49,
+      "detected": 45
+    },
+    "chimeric_title": {
+      "detection_rate": 1.0,
+      "count": 47,
+      "detected": 47
+    },
+    "fabricated_doi": {
+      "detection_rate": 0.9487,
+      "count": 39,
+      "detected": 37
+    },
+    "future_date": {
+      "detection_rate": 1.0,
+      "count": 30,
+      "detected": 30
+    },
+    "hybrid_fabrication": {
+      "detection_rate": 1.0,
+      "count": 26,
+      "detected": 26
+    },
+    "merged_citation": {
+      "detection_rate": 1.0,
+      "count": 30,
+      "detected": 30
+    },
+    "near_miss_title": {
+      "detection_rate": 0.9423,
+      "count": 52,
+      "detected": 49
+    },
+    "nonexistent_venue": {
+      "detection_rate": 0.9231,
+      "count": 39,
+      "detected": 36
+    },
+    "partial_author_list": {
+      "detection_rate": 0.9688,
+      "count": 32,
+      "detected": 31
+    },
+    "placeholder_authors": {
+      "detection_rate": 1.0,
+      "count": 41,
+      "detected": 41
+    },
+    "plausible_fabrication": {
+      "detection_rate": 1.0,
+      "count": 76,
+      "detected": 76
+    },
+    "preprint_as_published": {
+      "detection_rate": 1.0,
+      "count": 31,
+      "detected": 31
+    },
+    "swapped_authors": {
+      "detection_rate": 0.9403,
+      "count": 67,
+      "detected": 63
+    },
+    "wrong_venue": {
+      "detection_rate": 1.0,
+      "count": 47,
+      "detected": 47
+    }
+  },
+  "published_per_type_dr_OLD_carried": "see data/v1.0/baseline_results/bibtexupdater_dev_public.json per_type_metrics (OLD type counts, 633 hall)"
+}

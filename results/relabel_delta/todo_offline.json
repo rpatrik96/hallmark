@@ -1,0 +1,1739 @@
+{
+  "_meta": {
+    "task": "TASK A offline TODO resolution on v1.1.1 labels",
+    "labels": "data/v1.0/dev_public.jsonl (dev 513 valid / 606 hall, n=1119)",
+    "old_rev": "7a52362 (pre-relabel)",
+    "method": "per-entry predictions re-scored vs NEW labels; missing/UNCERTAIN treated as non-HALLUCINATED (conservative, matches evaluate())"
+  },
+  "shortcut": {
+    "n": 1119,
+    "n_hallucinated": 606,
+    "n_valid": 513,
+    "prevalence_hallucinated": 0.5416,
+    "majority_class": "HALLUCINATED",
+    "majority_baseline_acc": 0.5416,
+    "cv_folds": 5,
+    "cv_accuracy_mean": 0.588,
+    "cv_accuracy_std": 0.0214,
+    "margin_over_baseline": 0.0464,
+    "fold_accuracies": [
+      0.5982,
+      0.5714,
+      0.6161,
+      0.5982,
+      0.5561
+    ],
+    "coefficients": {
+      "has_doi": 1.1876,
+      "field_count": -1.2197,
+      "author_count": -0.222,
+      "title_length_chars": -0.0199,
+      "title_word_count": -0.0843,
+      "year_numeric": 0.5761,
+      "bibtex_type": 0.8311,
+      "has_booktitle": -0.5884
+    },
+    "variant_shipped_script_unshuffled_raw": {
+      "cv_accuracy_mean": 0.5423,
+      "cv_accuracy_std": 0.075,
+      "margin_over_baseline": 0.0008,
+      "fold_accuracies": [
+        0.567,
+        0.5625,
+        0.5893,
+        0.5982,
+        0.3946
+      ],
+      "note": "Exact reproduction of scripts/analyze_shortcuts.py (cv=5 unshuffled, unscaled features). Fold 5 collapses because the dev file ends with an all-HALLUCINATED block; not a faithful estimate of metadata signal."
+    },
+    "features": [
+      "has_doi",
+      "field_count",
+      "author_count",
+      "title_length_chars",
+      "title_word_count",
+      "year_numeric",
+      "bibtex_type",
+      "has_booktitle"
+    ],
+    "method": "Variant B (headline): StandardScaler + StratifiedKFold(5, shuffle, seed=42); LogisticRegression(max_iter=1000, seed=42); accuracy scoring.",
+    "labels_source": "data/v1.0/dev_public.jsonl (v1.1.1 relabeled, dev 513 valid / 606 hall)",
+    "how_to_reproduce": "uv run --with scikit-learn --with numpy python results/relabel_delta/refit_shortcut.py"
+  },
+  "doi_pertype": {
+    "headline_new": {
+      "detection_rate": 0.268,
+      "false_positive_rate": 0.185,
+      "f1_hallucination": 0.373,
+      "mcc": 0.099,
+      "tier_weighted_f1": 0.329,
+      "ece": 0.143,
+      "source": "delta-eval reconstruction (manifest sec1/sec11.6)"
+    },
+    "per_type_status": "DOCUMENTED_LIMITATION",
+    "per_type_note": "DOI-only per-type DR is NOT faithfully regenerable offline: there is no stored per-entry DOI-resolution file, and a fresh re-run requires live doi.org HEAD requests (rate-limited; external-DB drift confirmed by the 'transient block' note in doi_only_dev_public_changed_predictions.json). The tab:pertype_full DOI column stays carried-over OLD cells under % TODO(F5), as the paper caption already documents."
+  },
+  "per_source_dr": {
+    "ground_truth_n_new": {
+      "adversarial": {
+        "hall": 60,
+        "valid": 0
+      },
+      "perturbation": {
+        "hall": 410,
+        "valid": 4
+      },
+      "real_world": {
+        "hall": 46,
+        "valid": 0
+      },
+      "llm_generated": {
+        "hall": 90,
+        "valid": 23
+      },
+      "scraped": {
+        "hall": 0,
+        "valid": 486
+      }
+    },
+    "tools_offline": {
+      "llm_openai": {
+        "display": "GPT-5.1",
+        "pred_file": "results/checkpoints/llm_openai/openai_gpt-5.1.jsonl",
+        "overall_new": {
+          "detection_rate": 0.8366,
+          "false_positive_rate": 0.4113,
+          "n_hall_scored": 606,
+          "n_valid_scored": 513,
+          "n_uncertain": 0
+        },
+        "overall_old": {
+          "detection_rate": 0.8231,
+          "false_positive_rate": 0.4053,
+          "n_hall_scored": 633,
+          "n_valid_scored": 486,
+          "n_uncertain": 0
+        },
+        "by_method_new": {
+          "adversarial": {
+            "n_hall_scored": 60,
+            "n_valid_scored": 0,
+            "n_uncertain": 0,
+            "tp": 60,
+            "fp": 0,
+            "detection_rate": 1.0,
+            "false_positive_rate": null
+          },
+          "perturbation": {
+            "n_hall_scored": 410,
+            "n_valid_scored": 4,
+            "n_uncertain": 0,
+            "tp": 347,
+            "fp": 4,
+            "detection_rate": 0.8463,
+            "false_positive_rate": 1.0
+          },
+          "real_world": {
+            "n_hall_scored": 46,
+            "n_valid_scored": 0,
+            "n_uncertain": 0,
+            "tp": 41,
+            "fp": 0,
+            "detection_rate": 0.8913,
+            "false_positive_rate": null
+          },
+          "llm_generated": {
+            "n_hall_scored": 90,
+            "n_valid_scored": 23,
+            "n_uncertain": 0,
+            "tp": 59,
+            "fp": 10,
+            "detection_rate": 0.6556,
+            "false_positive_rate": 0.4348
+          },
+          "scraped": {
+            "n_hall_scored": 0,
+            "n_valid_scored": 486,
+            "n_uncertain": 0,
+            "tp": 0,
+            "fp": 197,
+            "detection_rate": null,
+            "false_positive_rate": 0.4053
+          }
+        },
+        "by_method_old": {
+          "adversarial": {
+            "n_hall_scored": 60,
+            "n_valid_scored": 0,
+            "n_uncertain": 0,
+            "tp": 60,
+            "fp": 0,
+            "detection_rate": 1.0,
+            "false_positive_rate": null
+          },
+          "perturbation": {
+            "n_hall_scored": 414,
+            "n_valid_scored": 0,
+            "n_uncertain": 0,
+            "tp": 351,
+            "fp": 0,
+            "detection_rate": 0.8478,
+            "false_positive_rate": null
+          },
+          "real_world": {
+            "n_hall_scored": 46,
+            "n_valid_scored": 0,
+            "n_uncertain": 0,
+            "tp": 41,
+            "fp": 0,
+            "detection_rate": 0.8913,
+            "false_positive_rate": null
+          },
+          "llm_generated": {
+            "n_hall_scored": 113,
+            "n_valid_scored": 0,
+            "n_uncertain": 0,
+            "tp": 69,
+            "fp": 0,
+            "detection_rate": 0.6106,
+            "false_positive_rate": null
+          },
+          "scraped": {
+            "n_hall_scored": 0,
+            "n_valid_scored": 486,
+            "n_uncertain": 0,
+            "tp": 0,
+            "fp": 197,
+            "detection_rate": null,
+            "false_positive_rate": 0.4053
+          }
+        }
+      },
+      "llm_openai_gpt54": {
+        "display": "GPT-5.4",
+        "pred_file": "results/checkpoints/llm_openai_gpt54_dev_public_v3/openai_gpt-5.4.jsonl",
+        "overall_new": {
+          "detection_rate": 0.7673,
+          "false_positive_rate": 0.2281,
+          "n_hall_scored": 606,
+          "n_valid_scored": 513,
+          "n_uncertain": 0
+        },
+        "overall_old": {
+          "detection_rate": 0.7441,
+          "false_positive_rate": 0.2284,
+          "n_hall_scored": 633,
+          "n_valid_scored": 486,
+          "n_uncertain": 0
+        },
+        "by_method_new": {
+          "adversarial": {
+            "n_hall_scored": 60,
+            "n_valid_scored": 0,
+            "n_uncertain": 0,
+            "tp": 59,
+            "fp": 0,
+            "detection_rate": 0.9833,
+            "false_positive_rate": null
+          },
+          "perturbation": {
+            "n_hall_scored": 410,
+            "n_valid_scored": 4,
+            "n_uncertain": 0,
+            "tp": 309,
+            "fp": 3,
+            "detection_rate": 0.7537,
+            "false_positive_rate": 0.75
+          },
+          "real_world": {
+            "n_hall_scored": 46,
+            "n_valid_scored": 0,
+            "n_uncertain": 0,
+            "tp": 39,
+            "fp": 0,
+            "detection_rate": 0.8478,
+            "false_positive_rate": null
+          },
+          "llm_generated": {
+            "n_hall_scored": 90,
+            "n_valid_scored": 23,
+            "n_uncertain": 0,
+            "tp": 58,
+            "fp": 3,
+            "detection_rate": 0.6444,
+            "false_positive_rate": 0.1304
+          },
+          "scraped": {
+            "n_hall_scored": 0,
+            "n_valid_scored": 486,
+            "n_uncertain": 0,
+            "tp": 0,
+            "fp": 111,
+            "detection_rate": null,
+            "false_positive_rate": 0.2284
+          }
+        },
+        "by_method_old": {
+          "adversarial": {
+            "n_hall_scored": 60,
+            "n_valid_scored": 0,
+            "n_uncertain": 0,
+            "tp": 59,
+            "fp": 0,
+            "detection_rate": 0.9833,
+            "false_positive_rate": null
+          },
+          "perturbation": {
+            "n_hall_scored": 414,
+            "n_valid_scored": 0,
+            "n_uncertain": 0,
+            "tp": 312,
+            "fp": 0,
+            "detection_rate": 0.7536,
+            "false_positive_rate": null
+          },
+          "real_world": {
+            "n_hall_scored": 46,
+            "n_valid_scored": 0,
+            "n_uncertain": 0,
+            "tp": 39,
+            "fp": 0,
+            "detection_rate": 0.8478,
+            "false_positive_rate": null
+          },
+          "llm_generated": {
+            "n_hall_scored": 113,
+            "n_valid_scored": 0,
+            "n_uncertain": 0,
+            "tp": 61,
+            "fp": 0,
+            "detection_rate": 0.5398,
+            "false_positive_rate": null
+          },
+          "scraped": {
+            "n_hall_scored": 0,
+            "n_valid_scored": 486,
+            "n_uncertain": 0,
+            "tp": 0,
+            "fp": 111,
+            "detection_rate": null,
+            "false_positive_rate": 0.2284
+          }
+        }
+      },
+      "llm_openrouter_deepseek_r1": {
+        "display": "DeepSeek-R1",
+        "pred_file": "results/llm_openrouter_deepseek_r1_dev_public_predictions.jsonl",
+        "overall_new": {
+          "detection_rate": 0.8958,
+          "false_positive_rate": 0.6225,
+          "n_hall_scored": 595,
+          "n_valid_scored": 506,
+          "n_uncertain": 18
+        },
+        "overall_old": {
+          "detection_rate": 0.8712,
+          "false_positive_rate": 0.6396,
+          "n_hall_scored": 621,
+          "n_valid_scored": 480,
+          "n_uncertain": 18
+        },
+        "by_method_new": {
+          "adversarial": {
+            "n_hall_scored": 59,
+            "n_valid_scored": 0,
+            "n_uncertain": 1,
+            "tp": 59,
+            "fp": 0,
+            "detection_rate": 1.0,
+            "false_positive_rate": null
+          },
+          "perturbation": {
+            "n_hall_scored": 401,
+            "n_valid_scored": 4,
+            "n_uncertain": 9,
+            "tp": 363,
+            "fp": 4,
+            "detection_rate": 0.9052,
+            "false_positive_rate": 1.0
+          },
+          "real_world": {
+            "n_hall_scored": 46,
+            "n_valid_scored": 0,
+            "n_uncertain": 0,
+            "tp": 45,
+            "fp": 0,
+            "detection_rate": 0.9783,
+            "false_positive_rate": null
+          },
+          "llm_generated": {
+            "n_hall_scored": 89,
+            "n_valid_scored": 22,
+            "n_uncertain": 2,
+            "tp": 66,
+            "fp": 4,
+            "detection_rate": 0.7416,
+            "false_positive_rate": 0.1818
+          },
+          "scraped": {
+            "n_hall_scored": 0,
+            "n_valid_scored": 480,
+            "n_uncertain": 6,
+            "tp": 0,
+            "fp": 307,
+            "detection_rate": null,
+            "false_positive_rate": 0.6396
+          }
+        },
+        "by_method_old": {
+          "adversarial": {
+            "n_hall_scored": 59,
+            "n_valid_scored": 0,
+            "n_uncertain": 1,
+            "tp": 59,
+            "fp": 0,
+            "detection_rate": 1.0,
+            "false_positive_rate": null
+          },
+          "perturbation": {
+            "n_hall_scored": 405,
+            "n_valid_scored": 0,
+            "n_uncertain": 9,
+            "tp": 367,
+            "fp": 0,
+            "detection_rate": 0.9062,
+            "false_positive_rate": null
+          },
+          "real_world": {
+            "n_hall_scored": 46,
+            "n_valid_scored": 0,
+            "n_uncertain": 0,
+            "tp": 45,
+            "fp": 0,
+            "detection_rate": 0.9783,
+            "false_positive_rate": null
+          },
+          "llm_generated": {
+            "n_hall_scored": 111,
+            "n_valid_scored": 0,
+            "n_uncertain": 2,
+            "tp": 70,
+            "fp": 0,
+            "detection_rate": 0.6306,
+            "false_positive_rate": null
+          },
+          "scraped": {
+            "n_hall_scored": 0,
+            "n_valid_scored": 480,
+            "n_uncertain": 6,
+            "tp": 0,
+            "fp": 307,
+            "detection_rate": null,
+            "false_positive_rate": 0.6396
+          }
+        }
+      },
+      "llm_openrouter_deepseek_v3": {
+        "display": "DeepSeek-V3.2",
+        "pred_file": "results/llm_openrouter_deepseek_v3_dev_public_predictions.jsonl",
+        "overall_new": {
+          "detection_rate": 0.9109,
+          "false_positive_rate": 0.7018,
+          "n_hall_scored": 606,
+          "n_valid_scored": 513,
+          "n_uncertain": 0
+        },
+        "overall_old": {
+          "detection_rate": 0.8799,
+          "false_positive_rate": 0.7305,
+          "n_hall_scored": 633,
+          "n_valid_scored": 486,
+          "n_uncertain": 0
+        },
+        "by_method_new": {
+          "adversarial": {
+            "n_hall_scored": 60,
+            "n_valid_scored": 0,
+            "n_uncertain": 0,
+            "tp": 60,
+            "fp": 0,
+            "detection_rate": 1.0,
+            "false_positive_rate": null
+          },
+          "perturbation": {
+            "n_hall_scored": 410,
+            "n_valid_scored": 4,
+            "n_uncertain": 0,
+            "tp": 384,
+            "fp": 4,
+            "detection_rate": 0.9366,
+            "false_positive_rate": 1.0
+          },
+          "real_world": {
+            "n_hall_scored": 46,
+            "n_valid_scored": 0,
+            "n_uncertain": 0,
+            "tp": 43,
+            "fp": 0,
+            "detection_rate": 0.9348,
+            "false_positive_rate": null
+          },
+          "llm_generated": {
+            "n_hall_scored": 90,
+            "n_valid_scored": 23,
+            "n_uncertain": 0,
+            "tp": 65,
+            "fp": 1,
+            "detection_rate": 0.7222,
+            "false_positive_rate": 0.0435
+          },
+          "scraped": {
+            "n_hall_scored": 0,
+            "n_valid_scored": 486,
+            "n_uncertain": 0,
+            "tp": 0,
+            "fp": 355,
+            "detection_rate": null,
+            "false_positive_rate": 0.7305
+          }
+        },
+        "by_method_old": {
+          "adversarial": {
+            "n_hall_scored": 60,
+            "n_valid_scored": 0,
+            "n_uncertain": 0,
+            "tp": 60,
+            "fp": 0,
+            "detection_rate": 1.0,
+            "false_positive_rate": null
+          },
+          "perturbation": {
+            "n_hall_scored": 414,
+            "n_valid_scored": 0,
+            "n_uncertain": 0,
+            "tp": 388,
+            "fp": 0,
+            "detection_rate": 0.9372,
+            "false_positive_rate": null
+          },
+          "real_world": {
+            "n_hall_scored": 46,
+            "n_valid_scored": 0,
+            "n_uncertain": 0,
+            "tp": 43,
+            "fp": 0,
+            "detection_rate": 0.9348,
+            "false_positive_rate": null
+          },
+          "llm_generated": {
+            "n_hall_scored": 113,
+            "n_valid_scored": 0,
+            "n_uncertain": 0,
+            "tp": 66,
+            "fp": 0,
+            "detection_rate": 0.5841,
+            "false_positive_rate": null
+          },
+          "scraped": {
+            "n_hall_scored": 0,
+            "n_valid_scored": 486,
+            "n_uncertain": 0,
+            "tp": 0,
+            "fp": 355,
+            "detection_rate": null,
+            "false_positive_rate": 0.7305
+          }
+        }
+      },
+      "llm_openrouter_gemini_flash": {
+        "display": "Gemini 2.5 Flash",
+        "pred_file": "results/llm_openrouter_gemini_flash_dev_public_predictions.jsonl",
+        "overall_new": {
+          "detection_rate": 0.5,
+          "false_positive_rate": 0.1,
+          "n_hall_scored": 596,
+          "n_valid_scored": 510,
+          "n_uncertain": 13
+        },
+        "overall_old": {
+          "detection_rate": 0.4815,
+          "false_positive_rate": 0.1014,
+          "n_hall_scored": 623,
+          "n_valid_scored": 483,
+          "n_uncertain": 13
+        },
+        "by_method_new": {
+          "adversarial": {
+            "n_hall_scored": 60,
+            "n_valid_scored": 0,
+            "n_uncertain": 0,
+            "tp": 43,
+            "fp": 0,
+            "detection_rate": 0.7167,
+            "false_positive_rate": null
+          },
+          "perturbation": {
+            "n_hall_scored": 404,
+            "n_valid_scored": 4,
+            "n_uncertain": 6,
+            "tp": 196,
+            "fp": 2,
+            "detection_rate": 0.4851,
+            "false_positive_rate": 0.5
+          },
+          "real_world": {
+            "n_hall_scored": 46,
+            "n_valid_scored": 0,
+            "n_uncertain": 0,
+            "tp": 25,
+            "fp": 0,
+            "detection_rate": 0.5435,
+            "false_positive_rate": null
+          },
+          "llm_generated": {
+            "n_hall_scored": 86,
+            "n_valid_scored": 23,
+            "n_uncertain": 4,
+            "tp": 34,
+            "fp": 0,
+            "detection_rate": 0.3953,
+            "false_positive_rate": 0.0
+          },
+          "scraped": {
+            "n_hall_scored": 0,
+            "n_valid_scored": 483,
+            "n_uncertain": 3,
+            "tp": 0,
+            "fp": 49,
+            "detection_rate": null,
+            "false_positive_rate": 0.1014
+          }
+        },
+        "by_method_old": {
+          "adversarial": {
+            "n_hall_scored": 60,
+            "n_valid_scored": 0,
+            "n_uncertain": 0,
+            "tp": 43,
+            "fp": 0,
+            "detection_rate": 0.7167,
+            "false_positive_rate": null
+          },
+          "perturbation": {
+            "n_hall_scored": 408,
+            "n_valid_scored": 0,
+            "n_uncertain": 6,
+            "tp": 198,
+            "fp": 0,
+            "detection_rate": 0.4853,
+            "false_positive_rate": null
+          },
+          "real_world": {
+            "n_hall_scored": 46,
+            "n_valid_scored": 0,
+            "n_uncertain": 0,
+            "tp": 25,
+            "fp": 0,
+            "detection_rate": 0.5435,
+            "false_positive_rate": null
+          },
+          "llm_generated": {
+            "n_hall_scored": 109,
+            "n_valid_scored": 0,
+            "n_uncertain": 4,
+            "tp": 34,
+            "fp": 0,
+            "detection_rate": 0.3119,
+            "false_positive_rate": null
+          },
+          "scraped": {
+            "n_hall_scored": 0,
+            "n_valid_scored": 483,
+            "n_uncertain": 3,
+            "tp": 0,
+            "fp": 49,
+            "detection_rate": null,
+            "false_positive_rate": 0.1014
+          }
+        }
+      },
+      "llm_openrouter_mistral": {
+        "display": "Mistral Large",
+        "pred_file": "results/llm_openrouter_mistral_dev_public_predictions.jsonl",
+        "overall_new": {
+          "detection_rate": 0.7164,
+          "false_positive_rate": 0.2505,
+          "n_hall_scored": 596,
+          "n_valid_scored": 511,
+          "n_uncertain": 12
+        },
+        "overall_old": {
+          "detection_rate": 0.6913,
+          "false_positive_rate": 0.2577,
+          "n_hall_scored": 622,
+          "n_valid_scored": 485,
+          "n_uncertain": 12
+        },
+        "by_method_new": {
+          "adversarial": {
+            "n_hall_scored": 60,
+            "n_valid_scored": 0,
+            "n_uncertain": 0,
+            "tp": 58,
+            "fp": 0,
+            "detection_rate": 0.9667,
+            "false_positive_rate": null
+          },
+          "perturbation": {
+            "n_hall_scored": 403,
+            "n_valid_scored": 4,
+            "n_uncertain": 7,
+            "tp": 291,
+            "fp": 3,
+            "detection_rate": 0.7221,
+            "false_positive_rate": 0.75
+          },
+          "real_world": {
+            "n_hall_scored": 46,
+            "n_valid_scored": 0,
+            "n_uncertain": 0,
+            "tp": 35,
+            "fp": 0,
+            "detection_rate": 0.7609,
+            "false_positive_rate": null
+          },
+          "llm_generated": {
+            "n_hall_scored": 87,
+            "n_valid_scored": 22,
+            "n_uncertain": 4,
+            "tp": 43,
+            "fp": 0,
+            "detection_rate": 0.4943,
+            "false_positive_rate": 0.0
+          },
+          "scraped": {
+            "n_hall_scored": 0,
+            "n_valid_scored": 485,
+            "n_uncertain": 1,
+            "tp": 0,
+            "fp": 125,
+            "detection_rate": null,
+            "false_positive_rate": 0.2577
+          }
+        },
+        "by_method_old": {
+          "adversarial": {
+            "n_hall_scored": 60,
+            "n_valid_scored": 0,
+            "n_uncertain": 0,
+            "tp": 58,
+            "fp": 0,
+            "detection_rate": 0.9667,
+            "false_positive_rate": null
+          },
+          "perturbation": {
+            "n_hall_scored": 407,
+            "n_valid_scored": 0,
+            "n_uncertain": 7,
+            "tp": 294,
+            "fp": 0,
+            "detection_rate": 0.7224,
+            "false_positive_rate": null
+          },
+          "real_world": {
+            "n_hall_scored": 46,
+            "n_valid_scored": 0,
+            "n_uncertain": 0,
+            "tp": 35,
+            "fp": 0,
+            "detection_rate": 0.7609,
+            "false_positive_rate": null
+          },
+          "llm_generated": {
+            "n_hall_scored": 109,
+            "n_valid_scored": 0,
+            "n_uncertain": 4,
+            "tp": 43,
+            "fp": 0,
+            "detection_rate": 0.3945,
+            "false_positive_rate": null
+          },
+          "scraped": {
+            "n_hall_scored": 0,
+            "n_valid_scored": 485,
+            "n_uncertain": 1,
+            "tp": 0,
+            "fp": 125,
+            "detection_rate": null,
+            "false_positive_rate": 0.2577
+          }
+        }
+      },
+      "llm_openrouter_qwen": {
+        "display": "Qwen3-235B",
+        "pred_file": "results/llm_openrouter_qwen_dev_public_predictions.jsonl",
+        "overall_new": {
+          "detection_rate": 0.8595,
+          "false_positive_rate": 0.5332,
+          "n_hall_scored": 605,
+          "n_valid_scored": 512,
+          "n_uncertain": 2
+        },
+        "overall_old": {
+          "detection_rate": 0.832,
+          "false_positive_rate": 0.5514,
+          "n_hall_scored": 631,
+          "n_valid_scored": 486,
+          "n_uncertain": 2
+        },
+        "by_method_new": {
+          "adversarial": {
+            "n_hall_scored": 60,
+            "n_valid_scored": 0,
+            "n_uncertain": 0,
+            "tp": 55,
+            "fp": 0,
+            "detection_rate": 0.9167,
+            "false_positive_rate": null
+          },
+          "perturbation": {
+            "n_hall_scored": 410,
+            "n_valid_scored": 4,
+            "n_uncertain": 0,
+            "tp": 355,
+            "fp": 3,
+            "detection_rate": 0.8659,
+            "false_positive_rate": 0.75
+          },
+          "real_world": {
+            "n_hall_scored": 46,
+            "n_valid_scored": 0,
+            "n_uncertain": 0,
+            "tp": 45,
+            "fp": 0,
+            "detection_rate": 0.9783,
+            "false_positive_rate": null
+          },
+          "llm_generated": {
+            "n_hall_scored": 89,
+            "n_valid_scored": 22,
+            "n_uncertain": 2,
+            "tp": 65,
+            "fp": 2,
+            "detection_rate": 0.7303,
+            "false_positive_rate": 0.0909
+          },
+          "scraped": {
+            "n_hall_scored": 0,
+            "n_valid_scored": 486,
+            "n_uncertain": 0,
+            "tp": 0,
+            "fp": 268,
+            "detection_rate": null,
+            "false_positive_rate": 0.5514
+          }
+        },
+        "by_method_old": {
+          "adversarial": {
+            "n_hall_scored": 60,
+            "n_valid_scored": 0,
+            "n_uncertain": 0,
+            "tp": 55,
+            "fp": 0,
+            "detection_rate": 0.9167,
+            "false_positive_rate": null
+          },
+          "perturbation": {
+            "n_hall_scored": 414,
+            "n_valid_scored": 0,
+            "n_uncertain": 0,
+            "tp": 358,
+            "fp": 0,
+            "detection_rate": 0.8647,
+            "false_positive_rate": null
+          },
+          "real_world": {
+            "n_hall_scored": 46,
+            "n_valid_scored": 0,
+            "n_uncertain": 0,
+            "tp": 45,
+            "fp": 0,
+            "detection_rate": 0.9783,
+            "false_positive_rate": null
+          },
+          "llm_generated": {
+            "n_hall_scored": 111,
+            "n_valid_scored": 0,
+            "n_uncertain": 2,
+            "tp": 67,
+            "fp": 0,
+            "detection_rate": 0.6036,
+            "false_positive_rate": null
+          },
+          "scraped": {
+            "n_hall_scored": 0,
+            "n_valid_scored": 486,
+            "n_uncertain": 0,
+            "tp": 0,
+            "fp": 268,
+            "detection_rate": null,
+            "false_positive_rate": 0.5514
+          }
+        }
+      },
+      "llm_openrouter_gemini_pro": {
+        "display": "Gemini 2.5 Pro",
+        "pred_file": "results/new_models/gemini_pro.jsonl",
+        "overall_new": {
+          "detection_rate": 0.4759,
+          "false_positive_rate": 0.05,
+          "n_hall_scored": 582,
+          "n_valid_scored": 500,
+          "n_uncertain": 37
+        },
+        "overall_old": {
+          "detection_rate": 0.4556,
+          "false_positive_rate": 0.0527,
+          "n_hall_scored": 608,
+          "n_valid_scored": 474,
+          "n_uncertain": 37
+        },
+        "by_method_new": {
+          "adversarial": {
+            "n_hall_scored": 59,
+            "n_valid_scored": 0,
+            "n_uncertain": 1,
+            "tp": 49,
+            "fp": 0,
+            "detection_rate": 0.8305,
+            "false_positive_rate": null
+          },
+          "perturbation": {
+            "n_hall_scored": 390,
+            "n_valid_scored": 4,
+            "n_uncertain": 20,
+            "tp": 177,
+            "fp": 0,
+            "detection_rate": 0.4538,
+            "false_positive_rate": 0.0
+          },
+          "real_world": {
+            "n_hall_scored": 46,
+            "n_valid_scored": 0,
+            "n_uncertain": 0,
+            "tp": 28,
+            "fp": 0,
+            "detection_rate": 0.6087,
+            "false_positive_rate": null
+          },
+          "llm_generated": {
+            "n_hall_scored": 87,
+            "n_valid_scored": 22,
+            "n_uncertain": 4,
+            "tp": 23,
+            "fp": 0,
+            "detection_rate": 0.2644,
+            "false_positive_rate": 0.0
+          },
+          "scraped": {
+            "n_hall_scored": 0,
+            "n_valid_scored": 474,
+            "n_uncertain": 12,
+            "tp": 0,
+            "fp": 25,
+            "detection_rate": null,
+            "false_positive_rate": 0.0527
+          }
+        },
+        "by_method_old": {
+          "adversarial": {
+            "n_hall_scored": 59,
+            "n_valid_scored": 0,
+            "n_uncertain": 1,
+            "tp": 49,
+            "fp": 0,
+            "detection_rate": 0.8305,
+            "false_positive_rate": null
+          },
+          "perturbation": {
+            "n_hall_scored": 394,
+            "n_valid_scored": 0,
+            "n_uncertain": 20,
+            "tp": 177,
+            "fp": 0,
+            "detection_rate": 0.4492,
+            "false_positive_rate": null
+          },
+          "real_world": {
+            "n_hall_scored": 46,
+            "n_valid_scored": 0,
+            "n_uncertain": 0,
+            "tp": 28,
+            "fp": 0,
+            "detection_rate": 0.6087,
+            "false_positive_rate": null
+          },
+          "llm_generated": {
+            "n_hall_scored": 109,
+            "n_valid_scored": 0,
+            "n_uncertain": 4,
+            "tp": 23,
+            "fp": 0,
+            "detection_rate": 0.211,
+            "false_positive_rate": null
+          },
+          "scraped": {
+            "n_hall_scored": 0,
+            "n_valid_scored": 474,
+            "n_uncertain": 12,
+            "tp": 0,
+            "fp": 25,
+            "detection_rate": null,
+            "false_positive_rate": 0.0527
+          }
+        }
+      },
+      "llm_openrouter_qwen_max": {
+        "display": "Qwen3-VL-235B",
+        "pred_file": "results/new_models/qwen_max.jsonl",
+        "overall_new": {
+          "detection_rate": 0.8597,
+          "false_positive_rate": 0.5508,
+          "n_hall_scored": 606,
+          "n_valid_scored": 512,
+          "n_uncertain": 1
+        },
+        "overall_old": {
+          "detection_rate": 0.8341,
+          "false_positive_rate": 0.567,
+          "n_hall_scored": 633,
+          "n_valid_scored": 485,
+          "n_uncertain": 1
+        },
+        "by_method_new": {
+          "adversarial": {
+            "n_hall_scored": 60,
+            "n_valid_scored": 0,
+            "n_uncertain": 0,
+            "tp": 58,
+            "fp": 0,
+            "detection_rate": 0.9667,
+            "false_positive_rate": null
+          },
+          "perturbation": {
+            "n_hall_scored": 410,
+            "n_valid_scored": 4,
+            "n_uncertain": 0,
+            "tp": 358,
+            "fp": 3,
+            "detection_rate": 0.8732,
+            "false_positive_rate": 0.75
+          },
+          "real_world": {
+            "n_hall_scored": 46,
+            "n_valid_scored": 0,
+            "n_uncertain": 0,
+            "tp": 45,
+            "fp": 0,
+            "detection_rate": 0.9783,
+            "false_positive_rate": null
+          },
+          "llm_generated": {
+            "n_hall_scored": 90,
+            "n_valid_scored": 23,
+            "n_uncertain": 0,
+            "tp": 60,
+            "fp": 4,
+            "detection_rate": 0.6667,
+            "false_positive_rate": 0.1739
+          },
+          "scraped": {
+            "n_hall_scored": 0,
+            "n_valid_scored": 485,
+            "n_uncertain": 1,
+            "tp": 0,
+            "fp": 275,
+            "detection_rate": null,
+            "false_positive_rate": 0.567
+          }
+        },
+        "by_method_old": {
+          "adversarial": {
+            "n_hall_scored": 60,
+            "n_valid_scored": 0,
+            "n_uncertain": 0,
+            "tp": 58,
+            "fp": 0,
+            "detection_rate": 0.9667,
+            "false_positive_rate": null
+          },
+          "perturbation": {
+            "n_hall_scored": 414,
+            "n_valid_scored": 0,
+            "n_uncertain": 0,
+            "tp": 361,
+            "fp": 0,
+            "detection_rate": 0.872,
+            "false_positive_rate": null
+          },
+          "real_world": {
+            "n_hall_scored": 46,
+            "n_valid_scored": 0,
+            "n_uncertain": 0,
+            "tp": 45,
+            "fp": 0,
+            "detection_rate": 0.9783,
+            "false_positive_rate": null
+          },
+          "llm_generated": {
+            "n_hall_scored": 113,
+            "n_valid_scored": 0,
+            "n_uncertain": 0,
+            "tp": 64,
+            "fp": 0,
+            "detection_rate": 0.5664,
+            "false_positive_rate": null
+          },
+          "scraped": {
+            "n_hall_scored": 0,
+            "n_valid_scored": 485,
+            "n_uncertain": 1,
+            "tp": 0,
+            "fp": 275,
+            "detection_rate": null,
+            "false_positive_rate": 0.567
+          }
+        }
+      },
+      "llm_openrouter_llama_4_maverick": {
+        "display": "Llama 4 Maverick",
+        "pred_file": "results/new_models/llama4_maverick.jsonl",
+        "overall_new": {
+          "detection_rate": 0.6139,
+          "false_positive_rate": 0.1462,
+          "n_hall_scored": 606,
+          "n_valid_scored": 513,
+          "n_uncertain": 0
+        },
+        "overall_old": {
+          "detection_rate": 0.5908,
+          "false_positive_rate": 0.1502,
+          "n_hall_scored": 633,
+          "n_valid_scored": 486,
+          "n_uncertain": 0
+        },
+        "by_method_new": {
+          "adversarial": {
+            "n_hall_scored": 60,
+            "n_valid_scored": 0,
+            "n_uncertain": 0,
+            "tp": 50,
+            "fp": 0,
+            "detection_rate": 0.8333,
+            "false_positive_rate": null
+          },
+          "perturbation": {
+            "n_hall_scored": 410,
+            "n_valid_scored": 4,
+            "n_uncertain": 0,
+            "tp": 252,
+            "fp": 2,
+            "detection_rate": 0.6146,
+            "false_positive_rate": 0.5
+          },
+          "real_world": {
+            "n_hall_scored": 46,
+            "n_valid_scored": 0,
+            "n_uncertain": 0,
+            "tp": 37,
+            "fp": 0,
+            "detection_rate": 0.8043,
+            "false_positive_rate": null
+          },
+          "llm_generated": {
+            "n_hall_scored": 90,
+            "n_valid_scored": 23,
+            "n_uncertain": 0,
+            "tp": 33,
+            "fp": 0,
+            "detection_rate": 0.3667,
+            "false_positive_rate": 0.0
+          },
+          "scraped": {
+            "n_hall_scored": 0,
+            "n_valid_scored": 486,
+            "n_uncertain": 0,
+            "tp": 0,
+            "fp": 73,
+            "detection_rate": null,
+            "false_positive_rate": 0.1502
+          }
+        },
+        "by_method_old": {
+          "adversarial": {
+            "n_hall_scored": 60,
+            "n_valid_scored": 0,
+            "n_uncertain": 0,
+            "tp": 50,
+            "fp": 0,
+            "detection_rate": 0.8333,
+            "false_positive_rate": null
+          },
+          "perturbation": {
+            "n_hall_scored": 414,
+            "n_valid_scored": 0,
+            "n_uncertain": 0,
+            "tp": 254,
+            "fp": 0,
+            "detection_rate": 0.6135,
+            "false_positive_rate": null
+          },
+          "real_world": {
+            "n_hall_scored": 46,
+            "n_valid_scored": 0,
+            "n_uncertain": 0,
+            "tp": 37,
+            "fp": 0,
+            "detection_rate": 0.8043,
+            "false_positive_rate": null
+          },
+          "llm_generated": {
+            "n_hall_scored": 113,
+            "n_valid_scored": 0,
+            "n_uncertain": 0,
+            "tp": 33,
+            "fp": 0,
+            "detection_rate": 0.292,
+            "false_positive_rate": null
+          },
+          "scraped": {
+            "n_hall_scored": 0,
+            "n_valid_scored": 486,
+            "n_uncertain": 0,
+            "tp": 0,
+            "fp": 73,
+            "detection_rate": null,
+            "false_positive_rate": 0.1502
+          }
+        }
+      },
+      "llm_agentic_btu_sonnet_4_6": {
+        "display": "Sonnet 4.6 + bibtex-updater (agentic)",
+        "pred_file": "results/checkpoints/llm_agentic_btu_sonnet_4_6_dev_public_v2/agentic_btu_openai_anthropic_claude-sonnet-4.6.jsonl",
+        "overall_new": {
+          "detection_rate": 0.9901,
+          "false_positive_rate": 0.4308,
+          "n_hall_scored": 606,
+          "n_valid_scored": 513,
+          "n_uncertain": 0
+        },
+        "overall_old": {
+          "detection_rate": 0.97,
+          "false_positive_rate": 0.4259,
+          "n_hall_scored": 633,
+          "n_valid_scored": 486,
+          "n_uncertain": 0
+        },
+        "by_method_new": {
+          "adversarial": {
+            "n_hall_scored": 60,
+            "n_valid_scored": 0,
+            "n_uncertain": 0,
+            "tp": 60,
+            "fp": 0,
+            "detection_rate": 1.0,
+            "false_positive_rate": null
+          },
+          "perturbation": {
+            "n_hall_scored": 410,
+            "n_valid_scored": 4,
+            "n_uncertain": 0,
+            "tp": 406,
+            "fp": 3,
+            "detection_rate": 0.9902,
+            "false_positive_rate": 0.75
+          },
+          "real_world": {
+            "n_hall_scored": 46,
+            "n_valid_scored": 0,
+            "n_uncertain": 0,
+            "tp": 46,
+            "fp": 0,
+            "detection_rate": 1.0,
+            "false_positive_rate": null
+          },
+          "llm_generated": {
+            "n_hall_scored": 90,
+            "n_valid_scored": 23,
+            "n_uncertain": 0,
+            "tp": 88,
+            "fp": 11,
+            "detection_rate": 0.9778,
+            "false_positive_rate": 0.4783
+          },
+          "scraped": {
+            "n_hall_scored": 0,
+            "n_valid_scored": 486,
+            "n_uncertain": 0,
+            "tp": 0,
+            "fp": 207,
+            "detection_rate": null,
+            "false_positive_rate": 0.4259
+          }
+        },
+        "by_method_old": {
+          "adversarial": {
+            "n_hall_scored": 60,
+            "n_valid_scored": 0,
+            "n_uncertain": 0,
+            "tp": 60,
+            "fp": 0,
+            "detection_rate": 1.0,
+            "false_positive_rate": null
+          },
+          "perturbation": {
+            "n_hall_scored": 414,
+            "n_valid_scored": 0,
+            "n_uncertain": 0,
+            "tp": 409,
+            "fp": 0,
+            "detection_rate": 0.9879,
+            "false_positive_rate": null
+          },
+          "real_world": {
+            "n_hall_scored": 46,
+            "n_valid_scored": 0,
+            "n_uncertain": 0,
+            "tp": 46,
+            "fp": 0,
+            "detection_rate": 1.0,
+            "false_positive_rate": null
+          },
+          "llm_generated": {
+            "n_hall_scored": 113,
+            "n_valid_scored": 0,
+            "n_uncertain": 0,
+            "tp": 99,
+            "fp": 0,
+            "detection_rate": 0.8761,
+            "false_positive_rate": null
+          },
+          "scraped": {
+            "n_hall_scored": 0,
+            "n_valid_scored": 486,
+            "n_uncertain": 0,
+            "tp": 0,
+            "fp": 207,
+            "detection_rate": null,
+            "false_positive_rate": 0.4259
+          }
+        }
+      },
+      "llm_agentic_btu_openai": {
+        "display": "GPT-5.1 + bibtex-updater (agentic)",
+        "pred_file": "results/temporal_checkpoints/agentic_btu_openai_gpt-5.1.jsonl",
+        "overall_new": {
+          "detection_rate": 0.9802,
+          "false_positive_rate": 0.4698,
+          "n_hall_scored": 606,
+          "n_valid_scored": 513,
+          "n_uncertain": 0
+        },
+        "overall_old": {
+          "detection_rate": 0.9652,
+          "false_positive_rate": 0.4609,
+          "n_hall_scored": 633,
+          "n_valid_scored": 486,
+          "n_uncertain": 0
+        },
+        "by_method_new": {
+          "adversarial": {
+            "n_hall_scored": 60,
+            "n_valid_scored": 0,
+            "n_uncertain": 0,
+            "tp": 60,
+            "fp": 0,
+            "detection_rate": 1.0,
+            "false_positive_rate": null
+          },
+          "perturbation": {
+            "n_hall_scored": 410,
+            "n_valid_scored": 4,
+            "n_uncertain": 0,
+            "tp": 405,
+            "fp": 2,
+            "detection_rate": 0.9878,
+            "false_positive_rate": 0.5
+          },
+          "real_world": {
+            "n_hall_scored": 46,
+            "n_valid_scored": 0,
+            "n_uncertain": 0,
+            "tp": 45,
+            "fp": 0,
+            "detection_rate": 0.9783,
+            "false_positive_rate": null
+          },
+          "llm_generated": {
+            "n_hall_scored": 90,
+            "n_valid_scored": 23,
+            "n_uncertain": 0,
+            "tp": 84,
+            "fp": 15,
+            "detection_rate": 0.9333,
+            "false_positive_rate": 0.6522
+          },
+          "scraped": {
+            "n_hall_scored": 0,
+            "n_valid_scored": 486,
+            "n_uncertain": 0,
+            "tp": 0,
+            "fp": 224,
+            "detection_rate": null,
+            "false_positive_rate": 0.4609
+          }
+        },
+        "by_method_old": {
+          "adversarial": {
+            "n_hall_scored": 60,
+            "n_valid_scored": 0,
+            "n_uncertain": 0,
+            "tp": 60,
+            "fp": 0,
+            "detection_rate": 1.0,
+            "false_positive_rate": null
+          },
+          "perturbation": {
+            "n_hall_scored": 414,
+            "n_valid_scored": 0,
+            "n_uncertain": 0,
+            "tp": 407,
+            "fp": 0,
+            "detection_rate": 0.9831,
+            "false_positive_rate": null
+          },
+          "real_world": {
+            "n_hall_scored": 46,
+            "n_valid_scored": 0,
+            "n_uncertain": 0,
+            "tp": 45,
+            "fp": 0,
+            "detection_rate": 0.9783,
+            "false_positive_rate": null
+          },
+          "llm_generated": {
+            "n_hall_scored": 113,
+            "n_valid_scored": 0,
+            "n_uncertain": 0,
+            "tp": 99,
+            "fp": 0,
+            "detection_rate": 0.8761,
+            "false_positive_rate": null
+          },
+          "scraped": {
+            "n_hall_scored": 0,
+            "n_valid_scored": 486,
+            "n_uncertain": 0,
+            "tp": 0,
+            "fp": 224,
+            "detection_rate": null,
+            "false_positive_rate": 0.4609
+          }
+        }
+      },
+      "llm_agentic_openai": {
+        "display": "GPT-5.1 + CrossRef/OpenAlex/arXiv (agentic)",
+        "pred_file": "results/temporal_checkpoints/agentic_openai_gpt-5.1.jsonl",
+        "overall_new": {
+          "detection_rate": 0.967,
+          "false_positive_rate": 0.4776,
+          "n_hall_scored": 606,
+          "n_valid_scored": 513,
+          "n_uncertain": 0
+        },
+        "overall_old": {
+          "detection_rate": 0.9558,
+          "false_positive_rate": 0.465,
+          "n_hall_scored": 633,
+          "n_valid_scored": 486,
+          "n_uncertain": 0
+        },
+        "by_method_new": {
+          "adversarial": {
+            "n_hall_scored": 60,
+            "n_valid_scored": 0,
+            "n_uncertain": 0,
+            "tp": 60,
+            "fp": 0,
+            "detection_rate": 1.0,
+            "false_positive_rate": null
+          },
+          "perturbation": {
+            "n_hall_scored": 410,
+            "n_valid_scored": 4,
+            "n_uncertain": 0,
+            "tp": 390,
+            "fp": 1,
+            "detection_rate": 0.9512,
+            "false_positive_rate": 0.25
+          },
+          "real_world": {
+            "n_hall_scored": 46,
+            "n_valid_scored": 0,
+            "n_uncertain": 0,
+            "tp": 46,
+            "fp": 0,
+            "detection_rate": 1.0,
+            "false_positive_rate": null
+          },
+          "llm_generated": {
+            "n_hall_scored": 90,
+            "n_valid_scored": 23,
+            "n_uncertain": 0,
+            "tp": 90,
+            "fp": 18,
+            "detection_rate": 1.0,
+            "false_positive_rate": 0.7826
+          },
+          "scraped": {
+            "n_hall_scored": 0,
+            "n_valid_scored": 486,
+            "n_uncertain": 0,
+            "tp": 0,
+            "fp": 226,
+            "detection_rate": null,
+            "false_positive_rate": 0.465
+          }
+        },
+        "by_method_old": {
+          "adversarial": {
+            "n_hall_scored": 60,
+            "n_valid_scored": 0,
+            "n_uncertain": 0,
+            "tp": 60,
+            "fp": 0,
+            "detection_rate": 1.0,
+            "false_positive_rate": null
+          },
+          "perturbation": {
+            "n_hall_scored": 414,
+            "n_valid_scored": 0,
+            "n_uncertain": 0,
+            "tp": 391,
+            "fp": 0,
+            "detection_rate": 0.9444,
+            "false_positive_rate": null
+          },
+          "real_world": {
+            "n_hall_scored": 46,
+            "n_valid_scored": 0,
+            "n_uncertain": 0,
+            "tp": 46,
+            "fp": 0,
+            "detection_rate": 1.0,
+            "false_positive_rate": null
+          },
+          "llm_generated": {
+            "n_hall_scored": 113,
+            "n_valid_scored": 0,
+            "n_uncertain": 0,
+            "tp": 108,
+            "fp": 0,
+            "detection_rate": 0.9558,
+            "false_positive_rate": null
+          },
+          "scraped": {
+            "n_hall_scored": 0,
+            "n_valid_scored": 486,
+            "n_uncertain": 0,
+            "tp": 0,
+            "fp": 226,
+            "detection_rate": null,
+            "false_positive_rate": 0.465
+          }
+        }
+      },
+      "llm_tool_augmented": {
+        "display": "GPT-5.1 + bibtex-updater (always-call)",
+        "pred_file": "data/v1.0/baseline_results/llm_tool_augmented_dev_public.jsonl",
+        "overall_new": {
+          "detection_rate": 0.8432,
+          "false_positive_rate": 0.1443,
+          "n_hall_scored": 555,
+          "n_valid_scored": 485,
+          "n_uncertain": 79
+        },
+        "overall_old": {
+          "detection_rate": 0.8177,
+          "false_positive_rate": 0.1444,
+          "n_hall_scored": 576,
+          "n_valid_scored": 464,
+          "n_uncertain": 79
+        },
+        "by_method_new": {
+          "adversarial": {
+            "n_hall_scored": 60,
+            "n_valid_scored": 0,
+            "n_uncertain": 0,
+            "tp": 60,
+            "fp": 0,
+            "detection_rate": 1.0,
+            "false_positive_rate": null
+          },
+          "perturbation": {
+            "n_hall_scored": 377,
+            "n_valid_scored": 3,
+            "n_uncertain": 34,
+            "tp": 319,
+            "fp": 0,
+            "detection_rate": 0.8462,
+            "false_positive_rate": 0.0
+          },
+          "real_world": {
+            "n_hall_scored": 40,
+            "n_valid_scored": 0,
+            "n_uncertain": 6,
+            "tp": 35,
+            "fp": 0,
+            "detection_rate": 0.875,
+            "false_positive_rate": null
+          },
+          "llm_generated": {
+            "n_hall_scored": 78,
+            "n_valid_scored": 18,
+            "n_uncertain": 17,
+            "tp": 54,
+            "fp": 3,
+            "detection_rate": 0.6923,
+            "false_positive_rate": 0.1667
+          },
+          "scraped": {
+            "n_hall_scored": 0,
+            "n_valid_scored": 464,
+            "n_uncertain": 22,
+            "tp": 0,
+            "fp": 67,
+            "detection_rate": null,
+            "false_positive_rate": 0.1444
+          }
+        },
+        "by_method_old": {
+          "adversarial": {
+            "n_hall_scored": 60,
+            "n_valid_scored": 0,
+            "n_uncertain": 0,
+            "tp": 60,
+            "fp": 0,
+            "detection_rate": 1.0,
+            "false_positive_rate": null
+          },
+          "perturbation": {
+            "n_hall_scored": 380,
+            "n_valid_scored": 0,
+            "n_uncertain": 34,
+            "tp": 319,
+            "fp": 0,
+            "detection_rate": 0.8395,
+            "false_positive_rate": null
+          },
+          "real_world": {
+            "n_hall_scored": 40,
+            "n_valid_scored": 0,
+            "n_uncertain": 6,
+            "tp": 35,
+            "fp": 0,
+            "detection_rate": 0.875,
+            "false_positive_rate": null
+          },
+          "llm_generated": {
+            "n_hall_scored": 96,
+            "n_valid_scored": 0,
+            "n_uncertain": 17,
+            "tp": 57,
+            "fp": 0,
+            "detection_rate": 0.5938,
+            "false_positive_rate": null
+          },
+          "scraped": {
+            "n_hall_scored": 0,
+            "n_valid_scored": 464,
+            "n_uncertain": 22,
+            "tp": 0,
+            "fp": 67,
+            "detection_rate": null,
+            "false_positive_rate": 0.1444
+          }
+        }
+      }
+    },
+    "summary_only_tools_note": "DOI-only, Claude Sonnet 4.6, Claude Opus 4.7, bibtex-updater, and the cascade are SUMMARY-ONLY on dev_public (no stored per-entry predictions), so their per-generation_method DR/FPR cannot be faithfully recomputed and are not reported here (documented limitation)."
+  },
+  "stratified_dr_gpt51": {
+    "tool": "GPT-5.1",
+    "split": "dev_public",
+    "overall_DR_new": 0.8366,
+    "overall_FPR_new": 0.4113,
+    "rows": {
+      "adversarial": {
+        "n_hall_new": 60,
+        "n_valid_new": 0,
+        "DR_new": 1.0,
+        "FPR_new": null,
+        "DR_old_canonical": 1.0,
+        "n_hall_old": 60
+      },
+      "perturbation": {
+        "n_hall_new": 410,
+        "n_valid_new": 4,
+        "DR_new": 0.8463,
+        "FPR_new": 1.0,
+        "DR_old_canonical": 0.8478,
+        "n_hall_old": 414
+      },
+      "real_world": {
+        "n_hall_new": 46,
+        "n_valid_new": 0,
+        "DR_new": 0.8913,
+        "FPR_new": null,
+        "DR_old_canonical": 0.8913,
+        "n_hall_old": 46
+      },
+      "llm_generated": {
+        "n_hall_new": 90,
+        "n_valid_new": 23,
+        "DR_new": 0.6556,
+        "FPR_new": 0.4348,
+        "DR_old_canonical": 0.6106,
+        "n_hall_old": 113
+      },
+      "scraped": {
+        "n_hall_new": 0,
+        "n_valid_new": 486,
+        "DR_new": null,
+        "FPR_new": 0.4053,
+        "DR_old_canonical": null,
+        "n_hall_old": 0
+      }
+    },
+    "paper_printed_old": {
+      "adversarial_DR": 0.983,
+      "perturbation_DR": 0.829,
+      "real_world_DR": 0.891,
+      "llm_generated_DR": 0.611,
+      "scraped_FPR": 0.411
+    },
+    "reproduction_note": "real_world (.891) and llm_generated (.611) per-method DRs reproduce the printed OLD table exactly from the canonical GPT-5.1 file (which also reproduces the headline OLD dev DR .823). adversarial (canonical OLD 1.000 vs printed .983) and perturbation (canonical OLD .848 vs printed .829) differ ~2pp: the printed cells trace to a slightly different GPT-5.1 snapshot (manifest flag F1). NEW values are the canonical-file recompute.",
+    "relabel_effect_note": "The relabel moved 4 perturbation and 23 llm_generated dev entries from HALLUCINATED to VALID, so those two methods now carry a small valid pool (perturbation n_valid=4, llm_generated n_valid=23) and thus a per-method FPR; the prior table reported FPR only on the scraped (valid) pool. The scraped pool itself is unchanged at n_valid=486 (FPR .405 canonical / .411 printed). The 27 relabeled-VALID entries that left their hallucinated buckets are why per-method n_hall dropped (perturbation 414->410, llm_generated 113->90, plus retypes)."
+  },
+  "gpt51_llm_comparison_row": {
+    "split": "dev_public",
+    "detection_rate": 0.837,
+    "false_positive_rate": 0.411,
+    "f1_hallucination": 0.766,
+    "mcc": 0.442,
+    "tier_weighted_f1": 0.822,
+    "ece": 0.19,
+    "union_recall": 0.775,
+    "source": "manifest sec1 (offline, llm_openai dev_public)"
+  }
+}

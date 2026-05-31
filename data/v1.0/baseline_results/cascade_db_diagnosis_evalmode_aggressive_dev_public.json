@@ -1,24 +1,24 @@
 {
-  "tool_name": "cascade_db_diagnosis_evalmode_aggressive",
+  "tool_name": "cascade_db_diagnosis",
   "split_name": "dev_public",
   "num_entries": 1119,
   "num_hallucinated": 606,
   "num_valid": 513,
-  "detection_rate": 0.9818481848184818,
-  "false_positive_rate": 0.5847953216374269,
-  "f1_hallucination": 0.792804796802132,
-  "tier_weighted_f1": 0.8812568505663135,
-  "mcc": 0.494433399262865,
-  "macro_f1": 0.6854118963657878,
+  "detection_rate": 0.9966996699669967,
+  "false_positive_rate": 0.14814814814814814,
+  "f1_hallucination": 0.9393468118195957,
+  "tier_weighted_f1": 0.9682477459819679,
+  "mcc": 0.8659373950745785,
+  "macro_f1": 0.9287070193551761,
   "union_recall_at_k": {},
   "temporal_robustness": null,
-  "cost_efficiency": 0.09215776662088042,
-  "mean_api_calls": 2.543342269883825,
-  "ece": 0.17073946678582064,
-  "auroc": 0.7241546883024853,
-  "auprc": 0.7664304972977584,
+  "cost_efficiency": null,
+  "mean_api_calls": 0.0,
+  "ece": 0.10476318141197499,
+  "auroc": 0.9383857976440918,
+  "auprc": 0.915370421903701,
   "num_uncertain": 0,
-  "tier3_f1": 0.5692068429237948,
+  "tier3_f1": 0.8205128205128206,
   "detection_rate_ci": null,
   "f1_hallucination_ci": null,
   "tier_weighted_f1_ci": null,
@@ -28,47 +28,47 @@
   "tier3_f1_ci": null,
   "per_tier_metrics": {
     "1": {
-      "detection_rate": 0.9935064935064936,
-      "false_positive_rate": 0.5847953216374269,
-      "f1": 0.5275862068965517,
-      "precision": 0.3591549295774648,
-      "num_hallucinated": 154,
+      "detection_rate": 1.0,
+      "false_positive_rate": 0.14814814814814814,
+      "f1": 0.7967914438502675,
+      "precision": 0.6622222222222223,
+      "num_hallucinated": 149,
       "num_valid": 513
     },
     "2": {
-      "detection_rate": 0.978494623655914,
-      "false_positive_rate": 0.5847953216374269,
-      "f1": 0.6721504112808461,
-      "precision": 0.5116279069767442,
-      "num_hallucinated": 279,
+      "detection_rate": 0.9964285714285714,
+      "false_positive_rate": 0.14814814814814814,
+      "f1": 0.878740157480315,
+      "precision": 0.7859154929577464,
+      "num_hallucinated": 280,
       "num_valid": 513
     },
     "3": {
-      "detection_rate": 0.976878612716763,
-      "false_positive_rate": 0.5847953216374269,
-      "f1": 0.5692068429237948,
-      "precision": 0.40131578947368424,
-      "num_hallucinated": 173,
+      "detection_rate": 0.9943502824858758,
+      "false_positive_rate": 0.14814814814814814,
+      "f1": 0.8205128205128206,
+      "precision": 0.6984126984126984,
+      "num_hallucinated": 177,
       "num_valid": 513
     }
   },
   "per_type_metrics": {
     "arxiv_version_mismatch": {
-      "detection_rate": 0.9666666666666667,
+      "detection_rate": 1.0,
       "false_positive_rate": 0.0,
-      "f1": 0.983050847457627,
-      "count": 30
+      "f1": 1.0,
+      "count": 49
     },
     "chimeric_title": {
       "detection_rate": 1.0,
       "false_positive_rate": 0.0,
       "f1": 1.0,
-      "count": 43
+      "count": 47
     },
     "fabricated_doi": {
-      "detection_rate": 0.9743589743589743,
+      "detection_rate": 1.0,
       "false_positive_rate": 0.0,
-      "f1": 0.9870129870129869,
+      "f1": 1.0,
       "count": 39
     },
     "future_date": {
@@ -78,10 +78,10 @@
       "count": 30
     },
     "hybrid_fabrication": {
-      "detection_rate": 0.9555555555555556,
+      "detection_rate": 1.0,
       "false_positive_rate": 0.0,
-      "f1": 0.9772727272727273,
-      "count": 45
+      "f1": 1.0,
+      "count": 26
     },
     "merged_citation": {
       "detection_rate": 1.0,
@@ -90,34 +90,34 @@
       "count": 30
     },
     "near_miss_title": {
-      "detection_rate": 0.975609756097561,
+      "detection_rate": 0.9807692307692307,
       "false_positive_rate": 0.0,
-      "f1": 0.9876543209876543,
-      "count": 41
+      "f1": 0.9902912621359222,
+      "count": 52
     },
     "nonexistent_venue": {
       "detection_rate": 1.0,
       "false_positive_rate": 0.0,
       "f1": 1.0,
-      "count": 40
+      "count": 39
     },
     "partial_author_list": {
-      "detection_rate": 0.9666666666666667,
+      "detection_rate": 0.96875,
       "false_positive_rate": 0.0,
-      "f1": 0.983050847457627,
-      "count": 30
+      "f1": 0.9841269841269841,
+      "count": 32
     },
     "placeholder_authors": {
       "detection_rate": 1.0,
       "false_positive_rate": 0.0,
       "f1": 1.0,
-      "count": 45
+      "count": 41
     },
     "plausible_fabrication": {
-      "detection_rate": 0.9827586206896551,
+      "detection_rate": 1.0,
       "false_positive_rate": 0.0,
-      "f1": 0.9913043478260869,
-      "count": 116
+      "f1": 1.0,
+      "count": 76
     },
     "preprint_as_published": {
       "detection_rate": 1.0,
@@ -126,64 +126,64 @@
       "count": 31
     },
     "swapped_authors": {
-      "detection_rate": 0.9701492537313433,
+      "detection_rate": 1.0,
       "false_positive_rate": 0.0,
-      "f1": 0.9848484848484849,
+      "f1": 1.0,
       "count": 67
     },
     "valid": {
       "detection_rate": 0.0,
-      "false_positive_rate": 0.5847953216374269,
+      "false_positive_rate": 0.14814814814814814,
       "f1": 0.0,
       "count": 513
     },
     "wrong_venue": {
-      "detection_rate": 0.9782608695652174,
+      "detection_rate": 1.0,
       "false_positive_rate": 0.0,
-      "f1": 0.989010989010989,
-      "count": 46
+      "f1": 1.0,
+      "count": 47
     }
   },
   "coverage": 1.0,
-  "coverage_adjusted_f1": 0.8141361256544503,
+  "coverage_adjusted_f1": 0.9393468118195957,
   "type_accuracy": {
-    "overall": 0.3105022831050228,
-    "main_types_only": 0.3685636856368564,
+    "overall": 0.3641304347826087,
+    "main_types_only": 0.43790849673202614,
     "stress_test_only": 0.0,
-    "num_evaluated": 438.0,
-    "num_correct": 136.0,
-    "tier_1": 0.528,
-    "tier_2": 0.2764976958525346,
-    "tier_3": 0.10416666666666667
+    "num_evaluated": 368.0,
+    "num_correct": 134.0,
+    "tier_1": 0.5476190476190477,
+    "tier_2": 0.3672316384180791,
+    "tier_3": 0.0
   },
   "type_confusion": {
     "fabricated_doi": {
-      "fabricated_doi": 35,
+      "fabricated_doi": 39,
       "nonexistent_venue": 0,
       "placeholder_authors": 0,
       "future_date": 0,
-      "chimeric_title": 1,
+      "chimeric_title": 0,
       "wrong_venue": 0,
       "swapped_authors": 0,
       "preprint_as_published": 0,
-      "hybrid_fabrication": 1,
+      "hybrid_fabrication": 0,
       "near_miss_title": 0,
       "plausible_fabrication": 0,
       "merged_citation": 0,
       "partial_author_list": 0,
       "arxiv_version_mismatch": 0,
-      "VALID": 1,
+      "VALID": 0,
       "UNCERTAIN": 0,
-      "HALLUCINATED_unknown": 1
+      "HALLUCINATED_unknown": 0
     },
     "nonexistent_venue": {
-      "fabricated_doi": 9,
+      "fabricated_doi": 0,
       "nonexistent_venue": 0,
       "placeholder_authors": 0,
       "future_date": 0,
       "chimeric_title": 0,
-      "wrong_venue": 20,
-      "swapped_authors": 0,
+      "wrong_venue": 12,
+      "swapped_authors": 5,
       "preprint_as_published": 0,
       "hybrid_fabrication": 0,
       "near_miss_title": 0,
@@ -193,16 +193,16 @@
       "arxiv_version_mismatch": 0,
       "VALID": 0,
       "UNCERTAIN": 0,
-      "HALLUCINATED_unknown": 11
+      "HALLUCINATED_unknown": 22
     },
     "placeholder_authors": {
-      "fabricated_doi": 11,
+      "fabricated_doi": 0,
       "nonexistent_venue": 0,
-      "placeholder_authors": 1,
+      "placeholder_authors": 0,
       "future_date": 0,
       "chimeric_title": 0,
       "wrong_venue": 0,
-      "swapped_authors": 17,
+      "swapped_authors": 40,
       "preprint_as_published": 0,
       "hybrid_fabrication": 0,
       "near_miss_title": 0,
@@ -212,7 +212,7 @@
       "arxiv_version_mismatch": 0,
       "VALID": 0,
       "UNCERTAIN": 0,
-      "HALLUCINATED_unknown": 16
+      "HALLUCINATED_unknown": 1
     },
     "future_date": {
       "fabricated_doi": 0,
@@ -234,72 +234,15 @@
       "HALLUCINATED_unknown": 0
     },
     "chimeric_title": {
-      "fabricated_doi": 10,
-      "nonexistent_venue": 0,
-      "placeholder_authors": 0,
-      "future_date": 0,
-      "chimeric_title": 3,
-      "wrong_venue": 0,
-      "swapped_authors": 2,
-      "preprint_as_published": 0,
-      "hybrid_fabrication": 14,
-      "near_miss_title": 0,
-      "plausible_fabrication": 0,
-      "merged_citation": 0,
-      "partial_author_list": 0,
-      "arxiv_version_mismatch": 0,
-      "VALID": 0,
-      "UNCERTAIN": 0,
-      "HALLUCINATED_unknown": 14
-    },
-    "wrong_venue": {
-      "fabricated_doi": 13,
-      "nonexistent_venue": 0,
-      "placeholder_authors": 0,
-      "future_date": 0,
-      "chimeric_title": 0,
-      "wrong_venue": 23,
-      "swapped_authors": 1,
-      "preprint_as_published": 0,
-      "hybrid_fabrication": 1,
-      "near_miss_title": 0,
-      "plausible_fabrication": 0,
-      "merged_citation": 0,
-      "partial_author_list": 0,
-      "arxiv_version_mismatch": 0,
-      "VALID": 1,
-      "UNCERTAIN": 0,
-      "HALLUCINATED_unknown": 7
-    },
-    "swapped_authors": {
-      "fabricated_doi": 2,
-      "nonexistent_venue": 0,
-      "placeholder_authors": 1,
-      "future_date": 2,
-      "chimeric_title": 0,
-      "wrong_venue": 6,
-      "swapped_authors": 22,
-      "preprint_as_published": 3,
-      "hybrid_fabrication": 12,
-      "near_miss_title": 1,
-      "plausible_fabrication": 0,
-      "merged_citation": 1,
-      "partial_author_list": 0,
-      "arxiv_version_mismatch": 0,
-      "VALID": 2,
-      "UNCERTAIN": 0,
-      "HALLUCINATED_unknown": 15
-    },
-    "preprint_as_published": {
       "fabricated_doi": 0,
       "nonexistent_venue": 0,
       "placeholder_authors": 0,
       "future_date": 0,
       "chimeric_title": 0,
-      "wrong_venue": 23,
-      "swapped_authors": 0,
+      "wrong_venue": 0,
+      "swapped_authors": 2,
       "preprint_as_published": 0,
-      "hybrid_fabrication": 0,
+      "hybrid_fabrication": 24,
       "near_miss_title": 0,
       "plausible_fabrication": 0,
       "merged_citation": 0,
@@ -307,73 +250,35 @@
       "arxiv_version_mismatch": 0,
       "VALID": 0,
       "UNCERTAIN": 0,
-      "HALLUCINATED_unknown": 8
+      "HALLUCINATED_unknown": 21
     },
-    "hybrid_fabrication": {
-      "fabricated_doi": 5,
+    "wrong_venue": {
+      "fabricated_doi": 1,
       "nonexistent_venue": 0,
       "placeholder_authors": 0,
       "future_date": 0,
-      "chimeric_title": 1,
-      "wrong_venue": 3,
-      "swapped_authors": 7,
+      "chimeric_title": 0,
+      "wrong_venue": 15,
+      "swapped_authors": 1,
       "preprint_as_published": 0,
-      "hybrid_fabrication": 12,
-      "near_miss_title": 1,
+      "hybrid_fabrication": 4,
+      "near_miss_title": 0,
       "plausible_fabrication": 0,
       "merged_citation": 0,
       "partial_author_list": 0,
       "arxiv_version_mismatch": 0,
-      "VALID": 2,
+      "VALID": 0,
       "UNCERTAIN": 0,
-      "HALLUCINATED_unknown": 14
+      "HALLUCINATED_unknown": 26
     },
-    "near_miss_title": {
-      "fabricated_doi": 6,
-      "nonexistent_venue": 0,
-      "placeholder_authors": 0,
-      "future_date": 0,
-      "chimeric_title": 12,
-      "wrong_venue": 0,
-      "swapped_authors": 0,
-      "preprint_as_published": 0,
-      "hybrid_fabrication": 0,
-      "near_miss_title": 5,
-      "plausible_fabrication": 0,
-      "merged_citation": 1,
-      "partial_author_list": 0,
-      "arxiv_version_mismatch": 0,
-      "VALID": 1,
-      "UNCERTAIN": 0,
-      "HALLUCINATED_unknown": 16
-    },
-    "plausible_fabrication": {
-      "fabricated_doi": 5,
-      "nonexistent_venue": 2,
-      "placeholder_authors": 0,
-      "future_date": 6,
-      "chimeric_title": 0,
-      "wrong_venue": 2,
-      "swapped_authors": 13,
-      "preprint_as_published": 7,
-      "hybrid_fabrication": 10,
-      "near_miss_title": 0,
-      "plausible_fabrication": 5,
-      "merged_citation": 1,
-      "partial_author_list": 0,
-      "arxiv_version_mismatch": 0,
-      "VALID": 2,
-      "UNCERTAIN": 0,
-      "HALLUCINATED_unknown": 63
-    },
-    "merged_citation": {
+    "swapped_authors": {
       "fabricated_doi": 2,
       "nonexistent_venue": 0,
       "placeholder_authors": 0,
       "future_date": 0,
       "chimeric_title": 0,
       "wrong_venue": 0,
-      "swapped_authors": 4,
+      "swapped_authors": 49,
       "preprint_as_published": 0,
       "hybrid_fabrication": 13,
       "near_miss_title": 0,
@@ -383,7 +288,102 @@
       "arxiv_version_mismatch": 0,
       "VALID": 0,
       "UNCERTAIN": 0,
+      "HALLUCINATED_unknown": 3
+    },
+    "preprint_as_published": {
+      "fabricated_doi": 0,
+      "nonexistent_venue": 0,
+      "placeholder_authors": 0,
+      "future_date": 0,
+      "chimeric_title": 0,
+      "wrong_venue": 19,
+      "swapped_authors": 1,
+      "preprint_as_published": 0,
+      "hybrid_fabrication": 0,
+      "near_miss_title": 0,
+      "plausible_fabrication": 0,
+      "merged_citation": 0,
+      "partial_author_list": 0,
+      "arxiv_version_mismatch": 0,
+      "VALID": 0,
+      "UNCERTAIN": 0,
       "HALLUCINATED_unknown": 11
+    },
+    "hybrid_fabrication": {
+      "fabricated_doi": 0,
+      "nonexistent_venue": 0,
+      "placeholder_authors": 0,
+      "future_date": 0,
+      "chimeric_title": 0,
+      "wrong_venue": 0,
+      "swapped_authors": 12,
+      "preprint_as_published": 0,
+      "hybrid_fabrication": 1,
+      "near_miss_title": 0,
+      "plausible_fabrication": 0,
+      "merged_citation": 0,
+      "partial_author_list": 0,
+      "arxiv_version_mismatch": 0,
+      "VALID": 0,
+      "UNCERTAIN": 0,
+      "HALLUCINATED_unknown": 13
+    },
+    "near_miss_title": {
+      "fabricated_doi": 1,
+      "nonexistent_venue": 0,
+      "placeholder_authors": 0,
+      "future_date": 0,
+      "chimeric_title": 14,
+      "wrong_venue": 0,
+      "swapped_authors": 4,
+      "preprint_as_published": 0,
+      "hybrid_fabrication": 5,
+      "near_miss_title": 0,
+      "plausible_fabrication": 0,
+      "merged_citation": 0,
+      "partial_author_list": 0,
+      "arxiv_version_mismatch": 0,
+      "VALID": 1,
+      "UNCERTAIN": 0,
+      "HALLUCINATED_unknown": 27
+    },
+    "plausible_fabrication": {
+      "fabricated_doi": 3,
+      "nonexistent_venue": 0,
+      "placeholder_authors": 0,
+      "future_date": 3,
+      "chimeric_title": 0,
+      "wrong_venue": 0,
+      "swapped_authors": 1,
+      "preprint_as_published": 0,
+      "hybrid_fabrication": 5,
+      "near_miss_title": 0,
+      "plausible_fabrication": 0,
+      "merged_citation": 0,
+      "partial_author_list": 0,
+      "arxiv_version_mismatch": 0,
+      "VALID": 0,
+      "UNCERTAIN": 0,
+      "HALLUCINATED_unknown": 64
+    },
+    "merged_citation": {
+      "fabricated_doi": 0,
+      "nonexistent_venue": 0,
+      "placeholder_authors": 0,
+      "future_date": 0,
+      "chimeric_title": 0,
+      "wrong_venue": 0,
+      "swapped_authors": 26,
+      "preprint_as_published": 0,
+      "hybrid_fabrication": 0,
+      "near_miss_title": 0,
+      "plausible_fabrication": 0,
+      "merged_citation": 0,
+      "partial_author_list": 0,
+      "arxiv_version_mismatch": 0,
+      "VALID": 0,
+      "UNCERTAIN": 0,
+      "HALLUCINATED_unknown": 4
     },
     "partial_author_list": {
       "fabricated_doi": 0,
@@ -391,10 +391,10 @@
       "placeholder_authors": 0,
       "future_date": 0,
       "chimeric_title": 0,
-      "wrong_venue": 0,
-      "swapped_authors": 29,
+      "wrong_venue": 2,
+      "swapped_authors": 4,
       "preprint_as_published": 0,
-      "hybrid_fabrication": 0,
+      "hybrid_fabrication": 1,
       "near_miss_title": 0,
       "plausible_fabrication": 0,
       "merged_citation": 0,
@@ -402,10 +402,10 @@
       "arxiv_version_mismatch": 0,
       "VALID": 1,
       "UNCERTAIN": 0,
-      "HALLUCINATED_unknown": 0
+      "HALLUCINATED_unknown": 24
     },
     "arxiv_version_mismatch": {
-      "fabricated_doi": 5,
+      "fabricated_doi": 0,
       "nonexistent_venue": 0,
       "placeholder_authors": 0,
       "future_date": 0,
@@ -413,64 +413,75 @@
       "wrong_venue": 16,
       "swapped_authors": 0,
       "preprint_as_published": 0,
-      "hybrid_fabrication": 0,
+      "hybrid_fabrication": 13,
       "near_miss_title": 0,
       "plausible_fabrication": 0,
       "merged_citation": 0,
       "partial_author_list": 0,
       "arxiv_version_mismatch": 0,
-      "VALID": 1,
+      "VALID": 0,
       "UNCERTAIN": 0,
-      "HALLUCINATED_unknown": 8
+      "HALLUCINATED_unknown": 20
     },
     "valid": {
-      "fabricated_doi": 22,
+      "fabricated_doi": 0,
       "nonexistent_venue": 0,
       "placeholder_authors": 0,
       "future_date": 0,
       "chimeric_title": 0,
-      "wrong_venue": 6,
-      "swapped_authors": 191,
+      "wrong_venue": 2,
+      "swapped_authors": 14,
       "preprint_as_published": 0,
-      "hybrid_fabrication": 0,
+      "hybrid_fabrication": 5,
       "near_miss_title": 0,
       "plausible_fabrication": 0,
       "merged_citation": 0,
       "partial_author_list": 0,
       "arxiv_version_mismatch": 0,
-      "VALID": 213,
+      "VALID": 437,
       "UNCERTAIN": 0,
-      "HALLUCINATED_unknown": 54
+      "HALLUCINATED_unknown": 55
     }
   },
   "cascade_breakdown_stats": {
     "stage1_db": {
-      "count": 758,
-      "fraction": 0.677390527256479,
-      "HALL": 537,
-      "VALID": 221,
-      "UNCERTAIN": 0
-    },
-    "stage2_diagnosis": {
-      "count": 306,
-      "fraction": 0.2734584450402145,
-      "HALL": 304,
-      "VALID": 2,
-      "UNCERTAIN": 0
-    },
-    "prescreening": {
-      "count": 55,
-      "fraction": 0.049151027703306524,
-      "HALL": 54,
-      "VALID": 1,
-      "UNCERTAIN": 0
-    },
-    "none": {
       "count": 0,
       "fraction": 0.0,
       "HALL": 0,
       "VALID": 0,
       "UNCERTAIN": 0
+    },
+    "stage2_diagnosis": {
+      "count": 0,
+      "fraction": 0.0,
+      "HALL": 0,
+      "VALID": 0,
+      "UNCERTAIN": 0
+    },
+    "prescreening": {
+      "count": 0,
+      "fraction": 0.0,
+      "HALL": 0,
+      "VALID": 0,
+      "UNCERTAIN": 0
+    },
+    "none": {
+      "count": 1119,
+      "fraction": 1.0,
+      "HALL": 680,
+      "VALID": 439,
+      "UNCERTAIN": 0
     }
+  },
+  "_provenance": {
+    "snapshot_date": "2026-05-31",
+    "btu_version": "1.2.0",
+    "endpoint_stage2": "openrouter:anthropic/claude-sonnet-4.6",
+    "kind": "cascade",
+    "eval_mode": "aggressive",
+    "note": "v1.2.0 aggressive recompute from the cascade per-entry (residual UNCERTAIN->HALLUCINATED@0.55); Stage-2 is a dated LLM snapshot.",
+    "splits": [
+      "dev_public"
+    ]
   }
 }

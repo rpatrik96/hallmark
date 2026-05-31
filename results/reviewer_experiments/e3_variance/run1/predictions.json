@@ -1,0 +1,752 @@
+{
+  "c610e190b530": {
+    "label": "HALLUCINATED",
+    "confidence": 0.93,
+    "api_calls": 1
+  },
+  "bb8032fd12d8": {
+    "label": "HALLUCINATED",
+    "confidence": 0.97,
+    "api_calls": 1
+  },
+  "e83d06d96f8e": {
+    "label": "HALLUCINATED",
+    "confidence": 0.93,
+    "api_calls": 1
+  },
+  "87a25c18d319": {
+    "label": "HALLUCINATED",
+    "confidence": 0.97,
+    "api_calls": 1
+  },
+  "a5d63032de4c": {
+    "label": "HALLUCINATED",
+    "confidence": 0.93,
+    "api_calls": 1
+  },
+  "fde9ed228bbc": {
+    "label": "VALID",
+    "confidence": 0.97,
+    "api_calls": 1
+  },
+  "b4d93e177279": {
+    "label": "HALLUCINATED",
+    "confidence": 0.96,
+    "api_calls": 1
+  },
+  "cfbec5d31f71": {
+    "label": "HALLUCINATED",
+    "confidence": 0.93,
+    "api_calls": 1
+  },
+  "ba41340acea8": {
+    "label": "HALLUCINATED",
+    "confidence": 0.86,
+    "api_calls": 1
+  },
+  "b5e802d51ded": {
+    "label": "VALID",
+    "confidence": 0.99,
+    "api_calls": 1
+  },
+  "e73343fc5b98": {
+    "label": "HALLUCINATED",
+    "confidence": 0.86,
+    "api_calls": 1
+  },
+  "cbae5ba7826b": {
+    "label": "VALID",
+    "confidence": 0.97,
+    "api_calls": 1
+  },
+  "e9ac76658795": {
+    "label": "HALLUCINATED",
+    "confidence": 0.86,
+    "api_calls": 1
+  },
+  "b9d6afcdc61e": {
+    "label": "HALLUCINATED",
+    "confidence": 0.86,
+    "api_calls": 1
+  },
+  "bfa63f49d844": {
+    "label": "HALLUCINATED",
+    "confidence": 0.93,
+    "api_calls": 1
+  },
+  "ad4df9c829f4": {
+    "label": "HALLUCINATED",
+    "confidence": 0.93,
+    "api_calls": 1
+  },
+  "c39bb75de89c": {
+    "label": "HALLUCINATED",
+    "confidence": 0.97,
+    "api_calls": 1
+  },
+  "a5d8103a6ffa": {
+    "label": "HALLUCINATED",
+    "confidence": 0.93,
+    "api_calls": 1
+  },
+  "d168da0ecb71": {
+    "label": "HALLUCINATED",
+    "confidence": 0.86,
+    "api_calls": 1
+  },
+  "be764c4d9889": {
+    "label": "HALLUCINATED",
+    "confidence": 0.97,
+    "api_calls": 1
+  },
+  "b88ab190ab08": {
+    "label": "HALLUCINATED",
+    "confidence": 0.86,
+    "api_calls": 1
+  },
+  "d8ba52c48ab1": {
+    "label": "HALLUCINATED",
+    "confidence": 0.93,
+    "api_calls": 1
+  },
+  "a8e70624591a": {
+    "label": "HALLUCINATED",
+    "confidence": 0.86,
+    "api_calls": 1
+  },
+  "ec8979de9bfb": {
+    "label": "HALLUCINATED",
+    "confidence": 0.93,
+    "api_calls": 1
+  },
+  "fafe2f4cffda": {
+    "label": "VALID",
+    "confidence": 0.97,
+    "api_calls": 1
+  },
+  "db228049d7a9": {
+    "label": "HALLUCINATED",
+    "confidence": 0.86,
+    "api_calls": 1
+  },
+  "0184a693b2bf": {
+    "label": "HALLUCINATED",
+    "confidence": 0.93,
+    "api_calls": 1
+  },
+  "a0ec0badfca6": {
+    "label": "HALLUCINATED",
+    "confidence": 0.96,
+    "api_calls": 1
+  },
+  "e1a8169dfd6c": {
+    "label": "HALLUCINATED",
+    "confidence": 0.86,
+    "api_calls": 1
+  },
+  "8c43969b72ce": {
+    "label": "HALLUCINATED",
+    "confidence": 0.96,
+    "api_calls": 1
+  },
+  "a858a493a8e8": {
+    "label": "VALID",
+    "confidence": 0.97,
+    "api_calls": 1
+  },
+  "d69552899496": {
+    "label": "HALLUCINATED",
+    "confidence": 0.96,
+    "api_calls": 1
+  },
+  "c9b3c57def78": {
+    "label": "HALLUCINATED",
+    "confidence": 0.96,
+    "api_calls": 1
+  },
+  "26d2ae9ea0e6": {
+    "label": "HALLUCINATED",
+    "confidence": 0.97,
+    "api_calls": 1
+  },
+  "f6f340ab27ef": {
+    "label": "HALLUCINATED",
+    "confidence": 0.86,
+    "api_calls": 1
+  },
+  "9abd113363ad": {
+    "label": "HALLUCINATED",
+    "confidence": 0.93,
+    "api_calls": 1
+  },
+  "c27d9920107a": {
+    "label": "HALLUCINATED",
+    "confidence": 0.9,
+    "api_calls": 1
+  },
+  "d8c2186f1e7c": {
+    "label": "HALLUCINATED",
+    "confidence": 0.86,
+    "api_calls": 1
+  },
+  "e359ff625858": {
+    "label": "VALID",
+    "confidence": 0.97,
+    "api_calls": 1
+  },
+  "e233705e5dda": {
+    "label": "HALLUCINATED",
+    "confidence": 0.86,
+    "api_calls": 1
+  },
+  "f1c9fe34732c": {
+    "label": "HALLUCINATED",
+    "confidence": 0.97,
+    "api_calls": 1
+  },
+  "cd5941e0ef7e": {
+    "label": "HALLUCINATED",
+    "confidence": 0.96,
+    "api_calls": 1
+  },
+  "b9474b009964": {
+    "label": "HALLUCINATED",
+    "confidence": 0.93,
+    "api_calls": 1
+  },
+  "d12d482e035d": {
+    "label": "VALID",
+    "confidence": 0.98,
+    "api_calls": 1
+  },
+  "e652f727a0ab": {
+    "label": "HALLUCINATED",
+    "confidence": 0.97,
+    "api_calls": 1
+  },
+  "f8efa49a7e02": {
+    "label": "HALLUCINATED",
+    "confidence": 0.86,
+    "api_calls": 1
+  },
+  "ab7c03be5d66": {
+    "label": "VALID",
+    "confidence": 0.97,
+    "api_calls": 1
+  },
+  "e008bd9afc81": {
+    "label": "VALID",
+    "confidence": 0.96,
+    "api_calls": 1
+  },
+  "a603db063be6": {
+    "label": "HALLUCINATED",
+    "confidence": 0.96,
+    "api_calls": 1
+  },
+  "d4c1aacd87ff": {
+    "label": "HALLUCINATED",
+    "confidence": 0.86,
+    "api_calls": 1
+  },
+  "bc2516a9cfdf": {
+    "label": "HALLUCINATED",
+    "confidence": 0.96,
+    "api_calls": 1
+  },
+  "dd746729c2fb": {
+    "label": "HALLUCINATED",
+    "confidence": 0.86,
+    "api_calls": 1
+  },
+  "f7be1d7f99f9": {
+    "label": "VALID",
+    "confidence": 0.97,
+    "api_calls": 1
+  },
+  "a1d8a34bfd70": {
+    "label": "HALLUCINATED",
+    "confidence": 0.97,
+    "api_calls": 1
+  },
+  "d80306fd2111": {
+    "label": "HALLUCINATED",
+    "confidence": 0.86,
+    "api_calls": 1
+  },
+  "bb24fd1afd4c": {
+    "label": "HALLUCINATED",
+    "confidence": 0.86,
+    "api_calls": 1
+  },
+  "a8c1698a41e3": {
+    "label": "HALLUCINATED",
+    "confidence": 0.86,
+    "api_calls": 1
+  },
+  "d861e506bb2a": {
+    "label": "HALLUCINATED",
+    "confidence": 0.97,
+    "api_calls": 1
+  },
+  "c83b8b376c7d": {
+    "label": "HALLUCINATED",
+    "confidence": 0.93,
+    "api_calls": 1
+  },
+  "ceca351021d9": {
+    "label": "VALID",
+    "confidence": 0.97,
+    "api_calls": 1
+  },
+  "bfe502221da0": {
+    "label": "HALLUCINATED",
+    "confidence": 0.86,
+    "api_calls": 1
+  },
+  "f10fc5dcd2c1": {
+    "label": "HALLUCINATED",
+    "confidence": 0.86,
+    "api_calls": 1
+  },
+  "dbc82b3e244e": {
+    "label": "HALLUCINATED",
+    "confidence": 0.97,
+    "api_calls": 1
+  },
+  "0a3f7b6a9905": {
+    "label": "HALLUCINATED",
+    "confidence": 0.97,
+    "api_calls": 1
+  },
+  "aff3df193dde": {
+    "label": "HALLUCINATED",
+    "confidence": 0.9,
+    "api_calls": 1
+  },
+  "b13a0e12a1e4": {
+    "label": "HALLUCINATED",
+    "confidence": 0.86,
+    "api_calls": 1
+  },
+  "ad46dd2009a8": {
+    "label": "HALLUCINATED",
+    "confidence": 0.96,
+    "api_calls": 1
+  },
+  "c3b0ace597da": {
+    "label": "HALLUCINATED",
+    "confidence": 0.86,
+    "api_calls": 1
+  },
+  "d0777f0ff943": {
+    "label": "VALID",
+    "confidence": 0.96,
+    "api_calls": 1
+  },
+  "c8761718cfb5": {
+    "label": "HALLUCINATED",
+    "confidence": 0.86,
+    "api_calls": 1
+  },
+  "c2c03fe257a5": {
+    "label": "HALLUCINATED",
+    "confidence": 0.86,
+    "api_calls": 1
+  },
+  "cec254cc5b48": {
+    "label": "HALLUCINATED",
+    "confidence": 0.93,
+    "api_calls": 1
+  },
+  "e09b5179b19b": {
+    "label": "HALLUCINATED",
+    "confidence": 0.96,
+    "api_calls": 1
+  },
+  "c0996f00a40f": {
+    "label": "HALLUCINATED",
+    "confidence": 0.9,
+    "api_calls": 1
+  },
+  "1c484516bb04": {
+    "label": "HALLUCINATED",
+    "confidence": 0.97,
+    "api_calls": 1
+  },
+  "d22e7c3e35ed": {
+    "label": "HALLUCINATED",
+    "confidence": 0.86,
+    "api_calls": 1
+  },
+  "f3524051762b": {
+    "label": "VALID",
+    "confidence": 0.97,
+    "api_calls": 1
+  },
+  "e32ec34fae7e": {
+    "label": "HALLUCINATED",
+    "confidence": 0.86,
+    "api_calls": 1
+  },
+  "c3cfb1c8227a": {
+    "label": "HALLUCINATED",
+    "confidence": 0.86,
+    "api_calls": 1
+  },
+  "e6e53ba3158f": {
+    "label": "HALLUCINATED",
+    "confidence": 0.86,
+    "api_calls": 1
+  },
+  "aec7940da59e": {
+    "label": "HALLUCINATED",
+    "confidence": 0.86,
+    "api_calls": 1
+  },
+  "883321e7088f": {
+    "label": "HALLUCINATED",
+    "confidence": 0.96,
+    "api_calls": 1
+  },
+  "b6f0943bf5d7": {
+    "label": "HALLUCINATED",
+    "confidence": 0.86,
+    "api_calls": 1
+  },
+  "cbb18f504ec8": {
+    "label": "HALLUCINATED",
+    "confidence": 0.93,
+    "api_calls": 1
+  },
+  "e826a4e2e288": {
+    "label": "VALID",
+    "confidence": 0.97,
+    "api_calls": 1
+  },
+  "a5acaa736d25": {
+    "label": "HALLUCINATED",
+    "confidence": 0.93,
+    "api_calls": 1
+  },
+  "bfd610cb89cd": {
+    "label": "VALID",
+    "confidence": 0.97,
+    "api_calls": 1
+  },
+  "d67418c187b2": {
+    "label": "HALLUCINATED",
+    "confidence": 0.93,
+    "api_calls": 1
+  },
+  "c77e15688bec": {
+    "label": "HALLUCINATED",
+    "confidence": 0.97,
+    "api_calls": 1
+  },
+  "f5c45a3a73f6": {
+    "label": "HALLUCINATED",
+    "confidence": 0.86,
+    "api_calls": 1
+  },
+  "f2c069624cd4": {
+    "label": "VALID",
+    "confidence": 0.97,
+    "api_calls": 1
+  },
+  "ed45f4174b1d": {
+    "label": "VALID",
+    "confidence": 0.97,
+    "api_calls": 1
+  },
+  "dae1eb71d49a": {
+    "label": "HALLUCINATED",
+    "confidence": 0.97,
+    "api_calls": 1
+  },
+  "c3b2242828f1": {
+    "label": "HALLUCINATED",
+    "confidence": 0.93,
+    "api_calls": 1
+  },
+  "b198ac27e836": {
+    "label": "HALLUCINATED",
+    "confidence": 0.86,
+    "api_calls": 1
+  },
+  "be35c87a242a": {
+    "label": "HALLUCINATED",
+    "confidence": 0.93,
+    "api_calls": 1
+  },
+  "fe44dcc587ce": {
+    "label": "HALLUCINATED",
+    "confidence": 0.97,
+    "api_calls": 1
+  },
+  "a5f3fdcab699": {
+    "label": "HALLUCINATED",
+    "confidence": 0.86,
+    "api_calls": 1
+  },
+  "e0104600f48f": {
+    "label": "HALLUCINATED",
+    "confidence": 0.93,
+    "api_calls": 1
+  },
+  "cdfd89c8999f": {
+    "label": "VALID",
+    "confidence": 0.97,
+    "api_calls": 1
+  },
+  "ed58201d7edf": {
+    "label": "HALLUCINATED",
+    "confidence": 0.93,
+    "api_calls": 1
+  },
+  "e46569e58655": {
+    "label": "HALLUCINATED",
+    "confidence": 0.93,
+    "api_calls": 1
+  },
+  "b5de5b9ca12d": {
+    "label": "HALLUCINATED",
+    "confidence": 0.86,
+    "api_calls": 1
+  },
+  "a1ee92fab537": {
+    "label": "HALLUCINATED",
+    "confidence": 0.93,
+    "api_calls": 1
+  },
+  "c25800b9a9c3": {
+    "label": "HALLUCINATED",
+    "confidence": 0.86,
+    "api_calls": 1
+  },
+  "aa27de4ff20f": {
+    "label": "HALLUCINATED",
+    "confidence": 0.96,
+    "api_calls": 1
+  },
+  "b1e1546cff1b": {
+    "label": "HALLUCINATED",
+    "confidence": 0.86,
+    "api_calls": 1
+  },
+  "b5f9d999f754": {
+    "label": "HALLUCINATED",
+    "confidence": 0.86,
+    "api_calls": 1
+  },
+  "f8d361220ec8": {
+    "label": "VALID",
+    "confidence": 0.97,
+    "api_calls": 1
+  },
+  "ced7ce302ff0": {
+    "label": "HALLUCINATED",
+    "confidence": 0.86,
+    "api_calls": 1
+  },
+  "ad2869ce3435": {
+    "label": "HALLUCINATED",
+    "confidence": 0.86,
+    "api_calls": 1
+  },
+  "b8774e6745b1": {
+    "label": "VALID",
+    "confidence": 0.96,
+    "api_calls": 1
+  },
+  "ac7657669b2e": {
+    "label": "HALLUCINATED",
+    "confidence": 0.86,
+    "api_calls": 1
+  },
+  "ada7bb27c934": {
+    "label": "HALLUCINATED",
+    "confidence": 0.97,
+    "api_calls": 1
+  },
+  "cfdef82b1826": {
+    "label": "VALID",
+    "confidence": 0.96,
+    "api_calls": 1
+  },
+  "cb48d6d467c7": {
+    "label": "HALLUCINATED",
+    "confidence": 0.93,
+    "api_calls": 1
+  },
+  "f05f8aa59e5d": {
+    "label": "HALLUCINATED",
+    "confidence": 0.93,
+    "api_calls": 1
+  },
+  "bab76a6e9e66": {
+    "label": "VALID",
+    "confidence": 0.97,
+    "api_calls": 1
+  },
+  "e6b8bd69693f": {
+    "label": "VALID",
+    "confidence": 0.99,
+    "api_calls": 1
+  },
+  "ad73125cb4d0": {
+    "label": "HALLUCINATED",
+    "confidence": 0.86,
+    "api_calls": 1
+  },
+  "a5c19bd99eda": {
+    "label": "HALLUCINATED",
+    "confidence": 0.86,
+    "api_calls": 1
+  },
+  "cb164ae84890": {
+    "label": "HALLUCINATED",
+    "confidence": 0.86,
+    "api_calls": 1
+  },
+  "f8c99cf8c80e": {
+    "label": "HALLUCINATED",
+    "confidence": 0.86,
+    "api_calls": 1
+  },
+  "b53fff577a5c": {
+    "label": "HALLUCINATED",
+    "confidence": 0.86,
+    "api_calls": 1
+  },
+  "caccc8ea4b04": {
+    "label": "HALLUCINATED",
+    "confidence": 0.86,
+    "api_calls": 1
+  },
+  "abcf65e83a07": {
+    "label": "HALLUCINATED",
+    "confidence": 0.97,
+    "api_calls": 1
+  },
+  "cb56c084fa9f": {
+    "label": "VALID",
+    "confidence": 0.97,
+    "api_calls": 1
+  },
+  "b4e4bc802c52": {
+    "label": "HALLUCINATED",
+    "confidence": 0.86,
+    "api_calls": 1
+  },
+  "cd906ff8ac4f": {
+    "label": "HALLUCINATED",
+    "confidence": 0.86,
+    "api_calls": 1
+  },
+  "e1de1df73455": {
+    "label": "VALID",
+    "confidence": 0.98,
+    "api_calls": 1
+  },
+  "f21986802234": {
+    "label": "HALLUCINATED",
+    "confidence": 0.86,
+    "api_calls": 1
+  },
+  "e6e424baae41": {
+    "label": "HALLUCINATED",
+    "confidence": 0.97,
+    "api_calls": 1
+  },
+  "f56a99ba81ba": {
+    "label": "HALLUCINATED",
+    "confidence": 0.86,
+    "api_calls": 1
+  },
+  "d5979e539efa": {
+    "label": "VALID",
+    "confidence": 0.97,
+    "api_calls": 1
+  },
+  "e3cd8f94148a": {
+    "label": "HALLUCINATED",
+    "confidence": 0.86,
+    "api_calls": 1
+  },
+  "ac19f67d3d2e": {
+    "label": "VALID",
+    "confidence": 0.96,
+    "api_calls": 1
+  },
+  "a05291223406": {
+    "label": "VALID",
+    "confidence": 0.98,
+    "api_calls": 1
+  },
+  "fd2fa0f0314d": {
+    "label": "HALLUCINATED",
+    "confidence": 0.86,
+    "api_calls": 1
+  },
+  "c65faf378a95": {
+    "label": "HALLUCINATED",
+    "confidence": 0.97,
+    "api_calls": 1
+  },
+  "ed563d820f1b": {
+    "label": "VALID",
+    "confidence": 0.98,
+    "api_calls": 1
+  },
+  "d92e4029befa": {
+    "label": "VALID",
+    "confidence": 0.97,
+    "api_calls": 1
+  },
+  "bf240b463f43": {
+    "label": "HALLUCINATED",
+    "confidence": 0.93,
+    "api_calls": 1
+  },
+  "c1fa70dcf4ac": {
+    "label": "HALLUCINATED",
+    "confidence": 0.86,
+    "api_calls": 1
+  },
+  "ceca8523cdca": {
+    "label": "VALID",
+    "confidence": 0.96,
+    "api_calls": 1
+  },
+  "d99a37cb1e28": {
+    "label": "HALLUCINATED",
+    "confidence": 0.97,
+    "api_calls": 1
+  },
+  "c231523e4693": {
+    "label": "VALID",
+    "confidence": 0.97,
+    "api_calls": 1
+  },
+  "c1eb3c2e5f89": {
+    "label": "HALLUCINATED",
+    "confidence": 0.86,
+    "api_calls": 1
+  },
+  "d46c5fa004ad": {
+    "label": "HALLUCINATED",
+    "confidence": 0.97,
+    "api_calls": 1
+  },
+  "c033c566368d": {
+    "label": "VALID",
+    "confidence": 0.96,
+    "api_calls": 1
+  },
+  "a0478afc6fb9": {
+    "label": "HALLUCINATED",
+    "confidence": 0.97,
+    "api_calls": 1
+  }
+}

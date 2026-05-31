@@ -1,0 +1,4917 @@
+{
+  "sample_n": 150,
+  "models": [
+    "gpt-5.1",
+    "anthropic/claude-sonnet-4.6",
+    "anthropic/claude-opus-4.7"
+  ],
+  "entries": [
+    {
+      "bibtex_key": "00012024a",
+      "gpt-5.1": {
+        "verify_label": "HALLUCINATED",
+        "verify_confidence": 0.86,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      },
+      "anthropic_claude-sonnet-4.6": {
+        "verify_label": "VALID",
+        "verify_confidence": 0.82,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      },
+      "anthropic_claude-opus-4.7": {
+        "verify_label": "VALID",
+        "verify_confidence": 0.95,
+        "recalled": true,
+        "author_jaccard": 1.0,
+        "venue_match": true,
+        "model_says_known": true,
+        "pred_authors_norm": [
+          "ji",
+          "wang"
+        ]
+      }
+    },
+    {
+      "bibtex_key": "00012024affordancellm:",
+      "gpt-5.1": {
+        "verify_label": "HALLUCINATED",
+        "verify_confidence": 0.86,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      },
+      "anthropic_claude-sonnet-4.6": {
+        "verify_label": "VALID",
+        "verify_confidence": 0.72,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      },
+      "anthropic_claude-opus-4.7": {
+        "verify_label": "HALLUCINATED",
+        "verify_confidence": 0.85,
+        "recalled": true,
+        "author_jaccard": 1.0,
+        "venue_match": true,
+        "model_says_known": true,
+        "pred_authors_norm": [
+          "bai",
+          "chen",
+          "li",
+          "qian",
+          "tu",
+          "zhou"
+        ]
+      }
+    },
+    {
+      "bibtex_key": "00012024ambiguity-aware",
+      "gpt-5.1": {
+        "verify_label": "HALLUCINATED",
+        "verify_confidence": 0.86,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      },
+      "anthropic_claude-sonnet-4.6": {
+        "verify_label": "UNCERTAIN",
+        "verify_confidence": 0.5,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      },
+      "anthropic_claude-opus-4.7": {
+        "verify_label": "VALID",
+        "verify_confidence": 0.95,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      }
+    },
+    {
+      "bibtex_key": "00012024auc",
+      "gpt-5.1": {
+        "verify_label": "VALID",
+        "verify_confidence": 0.96,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      },
+      "anthropic_claude-sonnet-4.6": {
+        "verify_label": "VALID",
+        "verify_confidence": 0.78,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      },
+      "anthropic_claude-opus-4.7": {
+        "verify_label": "VALID",
+        "verify_confidence": 0.9,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      }
+    },
+    {
+      "bibtex_key": "00012024badsam:",
+      "gpt-5.1": {
+        "verify_label": "VALID",
+        "verify_confidence": 0.96,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      },
+      "anthropic_claude-sonnet-4.6": {
+        "verify_label": "VALID",
+        "verify_confidence": 0.88,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      },
+      "anthropic_claude-opus-4.7": {
+        "verify_label": "VALID",
+        "verify_confidence": 0.9,
+        "recalled": false,
+        "author_jaccard": 0.4286,
+        "venue_match": true,
+        "model_says_known": true,
+        "pred_authors_norm": [
+          "guan",
+          "hu",
+          "li",
+          "vullikanti"
+        ]
+      }
+    },
+    {
+      "bibtex_key": "00012024candle:",
+      "gpt-5.1": {
+        "verify_label": "VALID",
+        "verify_confidence": 0.93,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      },
+      "anthropic_claude-sonnet-4.6": {
+        "verify_label": "VALID",
+        "verify_confidence": 0.88,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      },
+      "anthropic_claude-opus-4.7": {
+        "verify_label": "VALID",
+        "verify_confidence": 0.95,
+        "recalled": true,
+        "author_jaccard": 0.8333,
+        "venue_match": true,
+        "model_says_known": true,
+        "pred_authors_norm": [
+          "bai",
+          "chan",
+          "cheng",
+          "ding",
+          "fang",
+          "li",
+          "liu",
+          "shi",
+          "song",
+          "wang",
+          "xu"
+        ]
+      }
+    },
+    {
+      "bibtex_key": "00012024causalpc:",
+      "gpt-5.1": {
+        "verify_label": "HALLUCINATED",
+        "verify_confidence": 0.86,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      },
+      "anthropic_claude-sonnet-4.6": {
+        "verify_label": "VALID",
+        "verify_confidence": 0.72,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      },
+      "anthropic_claude-opus-4.7": {
+        "verify_label": "VALID",
+        "verify_confidence": 0.9,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      }
+    },
+    {
+      "bibtex_key": "00012024consistency",
+      "gpt-5.1": {
+        "verify_label": "HALLUCINATED",
+        "verify_confidence": 0.86,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      },
+      "anthropic_claude-sonnet-4.6": {
+        "verify_label": "VALID",
+        "verify_confidence": 0.82,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      },
+      "anthropic_claude-opus-4.7": {
+        "verify_label": "VALID",
+        "verify_confidence": 0.95,
+        "recalled": true,
+        "author_jaccard": 1.0,
+        "venue_match": true,
+        "model_says_known": true,
+        "pred_authors_norm": [
+          "fu",
+          "khan"
+        ]
+      }
+    },
+    {
+      "bibtex_key": "00012024contextual",
+      "gpt-5.1": {
+        "verify_label": "HALLUCINATED",
+        "verify_confidence": 0.86,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      },
+      "anthropic_claude-sonnet-4.6": {
+        "verify_label": "VALID",
+        "verify_confidence": 0.65,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      },
+      "anthropic_claude-opus-4.7": {
+        "verify_label": "VALID",
+        "verify_confidence": 0.9,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      }
+    },
+    {
+      "bibtex_key": "00012024diagnostic",
+      "gpt-5.1": {
+        "verify_label": "VALID",
+        "verify_confidence": 0.93,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      },
+      "anthropic_claude-sonnet-4.6": {
+        "verify_label": "VALID",
+        "verify_confidence": 0.82,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      },
+      "anthropic_claude-opus-4.7": {
+        "verify_label": "VALID",
+        "verify_confidence": 0.9,
+        "recalled": true,
+        "author_jaccard": 1.0,
+        "venue_match": true,
+        "model_says_known": true,
+        "pred_authors_norm": [
+          "bansal",
+          "cho",
+          "gan",
+          "li",
+          "wang",
+          "yang"
+        ]
+      }
+    },
+    {
+      "bibtex_key": "00012024diff-plugin:",
+      "gpt-5.1": {
+        "verify_label": "VALID",
+        "verify_confidence": 0.93,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      },
+      "anthropic_claude-sonnet-4.6": {
+        "verify_label": "VALID",
+        "verify_confidence": 0.82,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      },
+      "anthropic_claude-opus-4.7": {
+        "verify_label": "VALID",
+        "verify_confidence": 0.95,
+        "recalled": true,
+        "author_jaccard": 1.0,
+        "venue_match": true,
+        "model_says_known": true,
+        "pred_authors_norm": [
+          "ke",
+          "lau",
+          "liu",
+          "zhao"
+        ]
+      }
+    },
+    {
+      "bibtex_key": "00012024differentially",
+      "gpt-5.1": {
+        "verify_label": "HALLUCINATED",
+        "verify_confidence": 0.86,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      },
+      "anthropic_claude-sonnet-4.6": {
+        "verify_label": "VALID",
+        "verify_confidence": 0.85,
+        "recalled": true,
+        "author_jaccard": 1.0,
+        "venue_match": true,
+        "model_says_known": true,
+        "pred_authors_norm": [
+          "gopi",
+          "kulkarni",
+          "lin",
+          "nori",
+          "yekhanin"
+        ]
+      },
+      "anthropic_claude-opus-4.7": {
+        "verify_label": "VALID",
+        "verify_confidence": 0.95,
+        "recalled": true,
+        "author_jaccard": 1.0,
+        "venue_match": true,
+        "model_says_known": true,
+        "pred_authors_norm": [
+          "gopi",
+          "kulkarni",
+          "lin",
+          "nori",
+          "yekhanin"
+        ]
+      }
+    },
+    {
+      "bibtex_key": "00012024doppler:",
+      "gpt-5.1": {
+        "verify_label": "HALLUCINATED",
+        "verify_confidence": 0.86,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      },
+      "anthropic_claude-sonnet-4.6": {
+        "verify_label": "VALID",
+        "verify_confidence": 0.78,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      },
+      "anthropic_claude-opus-4.7": {
+        "verify_label": "VALID",
+        "verify_confidence": 0.9,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      }
+    },
+    {
+      "bibtex_key": "00012024driving",
+      "gpt-5.1": {
+        "verify_label": "HALLUCINATED",
+        "verify_confidence": 0.86,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      },
+      "anthropic_claude-sonnet-4.6": {
+        "verify_label": "VALID",
+        "verify_confidence": 0.88,
+        "recalled": true,
+        "author_jaccard": 1.0,
+        "venue_match": true,
+        "model_says_known": true,
+        "pred_authors_norm": [
+          "chen",
+          "fan",
+          "he",
+          "li",
+          "wang",
+          "zhang"
+        ]
+      },
+      "anthropic_claude-opus-4.7": {
+        "verify_label": "VALID",
+        "verify_confidence": 0.95,
+        "recalled": true,
+        "author_jaccard": 1.0,
+        "venue_match": true,
+        "model_says_known": true,
+        "pred_authors_norm": [
+          "chen",
+          "fan",
+          "he",
+          "li",
+          "wang",
+          "zhang"
+        ]
+      }
+    },
+    {
+      "bibtex_key": "00012024e(3)-equivariant",
+      "gpt-5.1": {
+        "verify_label": "HALLUCINATED",
+        "verify_confidence": 0.86,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      },
+      "anthropic_claude-sonnet-4.6": {
+        "verify_label": "VALID",
+        "verify_confidence": 0.72,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      },
+      "anthropic_claude-opus-4.7": {
+        "verify_label": "VALID",
+        "verify_confidence": 0.95,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      }
+    },
+    {
+      "bibtex_key": "00012024effective",
+      "gpt-5.1": {
+        "verify_label": "HALLUCINATED",
+        "verify_confidence": 0.86,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      },
+      "anthropic_claude-sonnet-4.6": {
+        "verify_label": "HALLUCINATED",
+        "verify_confidence": 0.62,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      },
+      "anthropic_claude-opus-4.7": {
+        "verify_label": "VALID",
+        "verify_confidence": 0.9,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      }
+    },
+    {
+      "bibtex_key": "00012024empathyear:",
+      "gpt-5.1": {
+        "verify_label": "HALLUCINATED",
+        "verify_confidence": 0.86,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      },
+      "anthropic_claude-sonnet-4.6": {
+        "verify_label": "VALID",
+        "verify_confidence": 0.85,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      },
+      "anthropic_claude-opus-4.7": {
+        "verify_label": "VALID",
+        "verify_confidence": 0.95,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      }
+    },
+    {
+      "bibtex_key": "00012024empowering",
+      "gpt-5.1": {
+        "verify_label": "HALLUCINATED",
+        "verify_confidence": 0.86,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      },
+      "anthropic_claude-sonnet-4.6": {
+        "verify_label": "VALID",
+        "verify_confidence": 0.78,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      },
+      "anthropic_claude-opus-4.7": {
+        "verify_label": "VALID",
+        "verify_confidence": 0.95,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      }
+    },
+    {
+      "bibtex_key": "00012024feature",
+      "gpt-5.1": {
+        "verify_label": "HALLUCINATED",
+        "verify_confidence": 0.86,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      },
+      "anthropic_claude-sonnet-4.6": {
+        "verify_label": "VALID",
+        "verify_confidence": 0.82,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      },
+      "anthropic_claude-opus-4.7": {
+        "verify_label": "VALID",
+        "verify_confidence": 0.9,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      }
+    },
+    {
+      "bibtex_key": "00012024filternet:",
+      "gpt-5.1": {
+        "verify_label": "HALLUCINATED",
+        "verify_confidence": 0.86,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      },
+      "anthropic_claude-sonnet-4.6": {
+        "verify_label": "VALID",
+        "verify_confidence": 0.82,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      },
+      "anthropic_claude-opus-4.7": {
+        "verify_label": "VALID",
+        "verify_confidence": 0.95,
+        "recalled": false,
+        "author_jaccard": 0.4545,
+        "venue_match": true,
+        "model_says_known": true,
+        "pred_authors_norm": [
+          "an",
+          "cao",
+          "fan",
+          "he",
+          "lian",
+          "niu",
+          "wang",
+          "yi",
+          "zhang"
+        ]
+      }
+    },
+    {
+      "bibtex_key": "00012024improving",
+      "gpt-5.1": {
+        "verify_label": "HALLUCINATED",
+        "verify_confidence": 0.93,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      },
+      "anthropic_claude-sonnet-4.6": {
+        "verify_label": "VALID",
+        "verify_confidence": 0.78,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      },
+      "anthropic_claude-opus-4.7": {
+        "verify_label": "VALID",
+        "verify_confidence": 0.95,
+        "recalled": true,
+        "author_jaccard": 1.0,
+        "venue_match": true,
+        "model_says_known": true,
+        "pred_authors_norm": [
+          "cao",
+          "chen",
+          "li",
+          "ma",
+          "song",
+          "zhang"
+        ]
+      }
+    },
+    {
+      "bibtex_key": "00012024knowledgefmath:",
+      "gpt-5.1": {
+        "verify_label": "HALLUCINATED",
+        "verify_confidence": 0.93,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      },
+      "anthropic_claude-sonnet-4.6": {
+        "verify_label": "VALID",
+        "verify_confidence": 0.88,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      },
+      "anthropic_claude-opus-4.7": {
+        "verify_label": "HALLUCINATED",
+        "verify_confidence": 0.8,
+        "recalled": true,
+        "author_jaccard": 1.0,
+        "venue_match": true,
+        "model_says_known": true,
+        "pred_authors_norm": [
+          "cohan",
+          "liu",
+          "long",
+          "zhang",
+          "zhao"
+        ]
+      }
+    },
+    {
+      "bibtex_key": "00012024language",
+      "gpt-5.1": {
+        "verify_label": "HALLUCINATED",
+        "verify_confidence": 0.86,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      },
+      "anthropic_claude-sonnet-4.6": {
+        "verify_label": "VALID",
+        "verify_confidence": 0.85,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      },
+      "anthropic_claude-opus-4.7": {
+        "verify_label": "VALID",
+        "verify_confidence": 0.95,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      }
+    },
+    {
+      "bibtex_key": "00012024lidar-net:",
+      "gpt-5.1": {
+        "verify_label": "HALLUCINATED",
+        "verify_confidence": 0.86,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      },
+      "anthropic_claude-sonnet-4.6": {
+        "verify_label": "HALLUCINATED",
+        "verify_confidence": 0.72,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      },
+      "anthropic_claude-opus-4.7": {
+        "verify_label": "VALID",
+        "verify_confidence": 0.85,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      }
+    },
+    {
+      "bibtex_key": "00012024m3leo:",
+      "gpt-5.1": {
+        "verify_label": "HALLUCINATED",
+        "verify_confidence": 0.86,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      },
+      "anthropic_claude-sonnet-4.6": {
+        "verify_label": "VALID",
+        "verify_confidence": 0.72,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      },
+      "anthropic_claude-opus-4.7": {
+        "verify_label": "VALID",
+        "verify_confidence": 0.95,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      }
+    },
+    {
+      "bibtex_key": "00012024magicdrive:",
+      "gpt-5.1": {
+        "verify_label": "HALLUCINATED",
+        "verify_confidence": 0.86,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      },
+      "anthropic_claude-sonnet-4.6": {
+        "verify_label": "VALID",
+        "verify_confidence": 0.88,
+        "recalled": true,
+        "author_jaccard": 0.75,
+        "venue_match": true,
+        "model_says_known": true,
+        "pred_authors_norm": [
+          "chen",
+          "gao",
+          "guo",
+          "hong",
+          "li",
+          "xu",
+          "yeung"
+        ]
+      },
+      "anthropic_claude-opus-4.7": {
+        "verify_label": "VALID",
+        "verify_confidence": 0.95,
+        "recalled": true,
+        "author_jaccard": 1.0,
+        "venue_match": true,
+        "model_says_known": true,
+        "pred_authors_norm": [
+          "chen",
+          "gao",
+          "hong",
+          "li",
+          "xie",
+          "xu",
+          "yeung"
+        ]
+      }
+    },
+    {
+      "bibtex_key": "00012024mega-tts",
+      "gpt-5.1": {
+        "verify_label": "HALLUCINATED",
+        "verify_confidence": 0.86,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      },
+      "anthropic_claude-sonnet-4.6": {
+        "verify_label": "HALLUCINATED",
+        "verify_confidence": 0.72,
+        "recalled": true,
+        "author_jaccard": 1.0,
+        "venue_match": true,
+        "model_says_known": true,
+        "pred_authors_norm": [
+          "he",
+          "ji",
+          "jiang",
+          "liu",
+          "ma",
+          "ren",
+          "wang",
+          "wei",
+          "yang",
+          "ye",
+          "yin",
+          "zhang",
+          "zhao"
+        ]
+      },
+      "anthropic_claude-opus-4.7": {
+        "verify_label": "VALID",
+        "verify_confidence": 0.95,
+        "recalled": true,
+        "author_jaccard": 1.0,
+        "venue_match": true,
+        "model_says_known": true,
+        "pred_authors_norm": [
+          "he",
+          "ji",
+          "jiang",
+          "liu",
+          "ma",
+          "ren",
+          "wang",
+          "wei",
+          "yang",
+          "ye",
+          "yin",
+          "zhang",
+          "zhao"
+        ]
+      }
+    },
+    {
+      "bibtex_key": "00012024mocap",
+      "gpt-5.1": {
+        "verify_label": "HALLUCINATED",
+        "verify_confidence": 0.86,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      },
+      "anthropic_claude-sonnet-4.6": {
+        "verify_label": "VALID",
+        "verify_confidence": 0.82,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      },
+      "anthropic_claude-opus-4.7": {
+        "verify_label": "VALID",
+        "verify_confidence": 0.95,
+        "recalled": true,
+        "author_jaccard": 1.0,
+        "venue_match": true,
+        "model_says_known": true,
+        "pred_authors_norm": [
+          "joo",
+          "lee"
+        ]
+      }
+    },
+    {
+      "bibtex_key": "00012024multilinear",
+      "gpt-5.1": {
+        "verify_label": "HALLUCINATED",
+        "verify_confidence": 0.86,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      },
+      "anthropic_claude-sonnet-4.6": {
+        "verify_label": "VALID",
+        "verify_confidence": 0.85,
+        "recalled": true,
+        "author_jaccard": 0.625,
+        "venue_match": true,
+        "model_says_known": true,
+        "pred_authors_norm": [
+          "georgopoulos",
+          "nicolaou",
+          "oldfield",
+          "panagakis",
+          "patras"
+        ]
+      },
+      "anthropic_claude-opus-4.7": {
+        "verify_label": "VALID",
+        "verify_confidence": 0.95,
+        "recalled": true,
+        "author_jaccard": 1.0,
+        "venue_match": true,
+        "model_says_known": true,
+        "pred_authors_norm": [
+          "chrysos",
+          "deng",
+          "georgopoulos",
+          "nicolaou",
+          "oldfield",
+          "panagakis",
+          "patras",
+          "tzelepis"
+        ]
+      }
+    },
+    {
+      "bibtex_key": "00012024nettrack:",
+      "gpt-5.1": {
+        "verify_label": "HALLUCINATED",
+        "verify_confidence": 0.86,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      },
+      "anthropic_claude-sonnet-4.6": {
+        "verify_label": "VALID",
+        "verify_confidence": 0.85,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      },
+      "anthropic_claude-opus-4.7": {
+        "verify_label": "VALID",
+        "verify_confidence": 0.95,
+        "recalled": true,
+        "author_jaccard": 1.0,
+        "venue_match": true,
+        "model_says_known": true,
+        "pred_authors_norm": [
+          "fu",
+          "lin",
+          "pan",
+          "zheng",
+          "zuo"
+        ]
+      }
+    },
+    {
+      "bibtex_key": "00012024neuron-enhanced",
+      "gpt-5.1": {
+        "verify_label": "HALLUCINATED",
+        "verify_confidence": 0.86,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      },
+      "anthropic_claude-sonnet-4.6": {
+        "verify_label": "HALLUCINATED",
+        "verify_confidence": 0.6,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      },
+      "anthropic_claude-opus-4.7": {
+        "verify_label": "VALID",
+        "verify_confidence": 0.9,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      }
+    },
+    {
+      "bibtex_key": "00012024not",
+      "gpt-5.1": {
+        "verify_label": "HALLUCINATED",
+        "verify_confidence": 0.9,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      },
+      "anthropic_claude-sonnet-4.6": {
+        "verify_label": "VALID",
+        "verify_confidence": 0.85,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      },
+      "anthropic_claude-opus-4.7": {
+        "verify_label": "VALID",
+        "verify_confidence": 0.9,
+        "recalled": true,
+        "author_jaccard": 1.0,
+        "venue_match": false,
+        "model_says_known": true,
+        "pred_authors_norm": [
+          "dai",
+          "huang",
+          "jiao",
+          "lyu",
+          "tu",
+          "wang"
+        ]
+      }
+    },
+    {
+      "bibtex_key": "00012024oakink2",
+      "gpt-5.1": {
+        "verify_label": "VALID",
+        "verify_confidence": 0.86,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      },
+      "anthropic_claude-sonnet-4.6": {
+        "verify_label": "VALID",
+        "verify_confidence": 0.85,
+        "recalled": true,
+        "author_jaccard": 1.0,
+        "venue_match": true,
+        "model_says_known": true,
+        "pred_authors_norm": [
+          "li",
+          "lin",
+          "lu",
+          "mao",
+          "xu",
+          "yang",
+          "zhan",
+          "zhao"
+        ]
+      },
+      "anthropic_claude-opus-4.7": {
+        "verify_label": "VALID",
+        "verify_confidence": 0.92,
+        "recalled": true,
+        "author_jaccard": 1.0,
+        "venue_match": true,
+        "model_says_known": true,
+        "pred_authors_norm": [
+          "li",
+          "lin",
+          "lu",
+          "mao",
+          "xu",
+          "yang",
+          "zhan",
+          "zhao"
+        ]
+      }
+    },
+    {
+      "bibtex_key": "00012024on",
+      "gpt-5.1": {
+        "verify_label": "HALLUCINATED",
+        "verify_confidence": 0.86,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      },
+      "anthropic_claude-sonnet-4.6": {
+        "verify_label": "VALID",
+        "verify_confidence": 0.82,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      },
+      "anthropic_claude-opus-4.7": {
+        "verify_label": "VALID",
+        "verify_confidence": 0.95,
+        "recalled": true,
+        "author_jaccard": 1.0,
+        "venue_match": true,
+        "model_says_known": true,
+        "pred_authors_norm": [
+          "cai",
+          "daskalakis",
+          "luo",
+          "wei",
+          "zheng"
+        ]
+      }
+    },
+    {
+      "bibtex_key": "00012024ottawa:",
+      "gpt-5.1": {
+        "verify_label": "HALLUCINATED",
+        "verify_confidence": 0.93,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      },
+      "anthropic_claude-sonnet-4.6": {
+        "verify_label": "VALID",
+        "verify_confidence": 0.88,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      },
+      "anthropic_claude-opus-4.7": {
+        "verify_label": "VALID",
+        "verify_confidence": 0.95,
+        "recalled": true,
+        "author_jaccard": 1.0,
+        "venue_match": true,
+        "model_says_known": true,
+        "pred_authors_norm": [
+          "chen",
+          "ghaddar",
+          "huang",
+          "kobyzev",
+          "rezagholizadeh",
+          "zaiane"
+        ]
+      }
+    },
+    {
+      "bibtex_key": "00012024pai-diffusion:",
+      "gpt-5.1": {
+        "verify_label": "HALLUCINATED",
+        "verify_confidence": 0.86,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      },
+      "anthropic_claude-sonnet-4.6": {
+        "verify_label": "VALID",
+        "verify_confidence": 0.82,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      },
+      "anthropic_claude-opus-4.7": {
+        "verify_label": "VALID",
+        "verify_confidence": 0.9,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      }
+    },
+    {
+      "bibtex_key": "00012024peeking",
+      "gpt-5.1": {
+        "verify_label": "HALLUCINATED",
+        "verify_confidence": 0.86,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      },
+      "anthropic_claude-sonnet-4.6": {
+        "verify_label": "VALID",
+        "verify_confidence": 0.72,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      },
+      "anthropic_claude-opus-4.7": {
+        "verify_label": "VALID",
+        "verify_confidence": 0.95,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      }
+    },
+    {
+      "bibtex_key": "00012024preference",
+      "gpt-5.1": {
+        "verify_label": "VALID",
+        "verify_confidence": 0.96,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      },
+      "anthropic_claude-sonnet-4.6": {
+        "verify_label": "VALID",
+        "verify_confidence": 0.88,
+        "recalled": true,
+        "author_jaccard": 1.0,
+        "venue_match": true,
+        "model_says_known": true,
+        "pred_authors_norm": [
+          "huang",
+          "li",
+          "song",
+          "wang",
+          "yu"
+        ]
+      },
+      "anthropic_claude-opus-4.7": {
+        "verify_label": "VALID",
+        "verify_confidence": 0.95,
+        "recalled": true,
+        "author_jaccard": 1.0,
+        "venue_match": true,
+        "model_says_known": true,
+        "pred_authors_norm": [
+          "huang",
+          "li",
+          "song",
+          "wang",
+          "yu"
+        ]
+      }
+    },
+    {
+      "bibtex_key": "00012024prompt",
+      "gpt-5.1": {
+        "verify_label": "HALLUCINATED",
+        "verify_confidence": 0.86,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      },
+      "anthropic_claude-sonnet-4.6": {
+        "verify_label": "HALLUCINATED",
+        "verify_confidence": 0.62,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      },
+      "anthropic_claude-opus-4.7": {
+        "verify_label": "VALID",
+        "verify_confidence": 0.9,
+        "recalled": true,
+        "author_jaccard": 1.0,
+        "venue_match": true,
+        "model_says_known": true,
+        "pred_authors_norm": [
+          "chaudhuri",
+          "jain",
+          "jermaine",
+          "reps"
+        ]
+      }
+    },
+    {
+      "bibtex_key": "00012024reinforcement",
+      "gpt-5.1": {
+        "verify_label": "HALLUCINATED",
+        "verify_confidence": 0.86,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      },
+      "anthropic_claude-sonnet-4.6": {
+        "verify_label": "VALID",
+        "verify_confidence": 0.78,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      },
+      "anthropic_claude-opus-4.7": {
+        "verify_label": "VALID",
+        "verify_confidence": 0.95,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      }
+    },
+    {
+      "bibtex_key": "00012024revealing",
+      "gpt-5.1": {
+        "verify_label": "HALLUCINATED",
+        "verify_confidence": 0.86,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      },
+      "anthropic_claude-sonnet-4.6": {
+        "verify_label": "UNCERTAIN",
+        "verify_confidence": 0.45,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      },
+      "anthropic_claude-opus-4.7": {
+        "verify_label": "VALID",
+        "verify_confidence": 0.9,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      }
+    },
+    {
+      "bibtex_key": "00012024savsr:",
+      "gpt-5.1": {
+        "verify_label": "VALID",
+        "verify_confidence": 0.93,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      },
+      "anthropic_claude-sonnet-4.6": {
+        "verify_label": "VALID",
+        "verify_confidence": 0.82,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      },
+      "anthropic_claude-opus-4.7": {
+        "verify_label": "VALID",
+        "verify_confidence": 0.95,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      }
+    },
+    {
+      "bibtex_key": "00012024speech",
+      "gpt-5.1": {
+        "verify_label": "HALLUCINATED",
+        "verify_confidence": 0.86,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      },
+      "anthropic_claude-sonnet-4.6": {
+        "verify_label": "VALID",
+        "verify_confidence": 0.82,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      },
+      "anthropic_claude-opus-4.7": {
+        "verify_label": "VALID",
+        "verify_confidence": 0.9,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      }
+    },
+    {
+      "bibtex_key": "00012024stable",
+      "gpt-5.1": {
+        "verify_label": "VALID",
+        "verify_confidence": 0.96,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      },
+      "anthropic_claude-sonnet-4.6": {
+        "verify_label": "VALID",
+        "verify_confidence": 0.85,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      },
+      "anthropic_claude-opus-4.7": {
+        "verify_label": "VALID",
+        "verify_confidence": 0.95,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      }
+    },
+    {
+      "bibtex_key": "00012024text2nkg:",
+      "gpt-5.1": {
+        "verify_label": "HALLUCINATED",
+        "verify_confidence": 0.86,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      },
+      "anthropic_claude-sonnet-4.6": {
+        "verify_label": "HALLUCINATED",
+        "verify_confidence": 0.65,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      },
+      "anthropic_claude-opus-4.7": {
+        "verify_label": "VALID",
+        "verify_confidence": 0.9,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      }
+    },
+    {
+      "bibtex_key": "00012024total",
+      "gpt-5.1": {
+        "verify_label": "HALLUCINATED",
+        "verify_confidence": 0.86,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      },
+      "anthropic_claude-sonnet-4.6": {
+        "verify_label": "VALID",
+        "verify_confidence": 0.82,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      },
+      "anthropic_claude-opus-4.7": {
+        "verify_label": "VALID",
+        "verify_confidence": 0.95,
+        "recalled": true,
+        "author_jaccard": 1.0,
+        "venue_match": true,
+        "model_says_known": true,
+        "pred_authors_norm": [
+          "bhattacharyya",
+          "gayen",
+          "meel",
+          "myrisiotis",
+          "pavan",
+          "vinodchandran"
+        ]
+      }
+    },
+    {
+      "bibtex_key": "00012024towards",
+      "gpt-5.1": {
+        "verify_label": "HALLUCINATED",
+        "verify_confidence": 0.86,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      },
+      "anthropic_claude-sonnet-4.6": {
+        "verify_label": "UNCERTAIN",
+        "verify_confidence": 0.45,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      },
+      "anthropic_claude-opus-4.7": {
+        "verify_label": "HALLUCINATED",
+        "verify_confidence": 0.85,
+        "recalled": true,
+        "author_jaccard": 1.0,
+        "venue_match": true,
+        "model_says_known": true,
+        "pred_authors_norm": [
+          "chae",
+          "he",
+          "lv",
+          "nie",
+          "xie",
+          "zhou"
+        ]
+      }
+    },
+    {
+      "bibtex_key": "00012024tuning-free",
+      "gpt-5.1": {
+        "verify_label": "HALLUCINATED",
+        "verify_confidence": 0.78,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      },
+      "anthropic_claude-sonnet-4.6": {
+        "verify_label": "VALID",
+        "verify_confidence": 0.82,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      },
+      "anthropic_claude-opus-4.7": {
+        "verify_label": "VALID",
+        "verify_confidence": 0.95,
+        "recalled": true,
+        "author_jaccard": 1.0,
+        "venue_match": true,
+        "model_says_known": true,
+        "pred_authors_norm": [
+          "jin",
+          "khaled"
+        ]
+      }
+    },
+    {
+      "bibtex_key": "00012024what",
+      "gpt-5.1": {
+        "verify_label": "HALLUCINATED",
+        "verify_confidence": 0.86,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      },
+      "anthropic_claude-sonnet-4.6": {
+        "verify_label": "VALID",
+        "verify_confidence": 0.72,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      },
+      "anthropic_claude-opus-4.7": {
+        "verify_label": "VALID",
+        "verify_confidence": 0.9,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      }
+    },
+    {
+      "bibtex_key": "00012024xnlp:",
+      "gpt-5.1": {
+        "verify_label": "HALLUCINATED",
+        "verify_confidence": 0.86,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      },
+      "anthropic_claude-sonnet-4.6": {
+        "verify_label": "VALID",
+        "verify_confidence": 0.85,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      },
+      "anthropic_claude-opus-4.7": {
+        "verify_label": "VALID",
+        "verify_confidence": 0.95,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      }
+    },
+    {
+      "bibtex_key": "00012025a",
+      "gpt-5.1": {
+        "verify_label": "HALLUCINATED",
+        "verify_confidence": 0.86,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      },
+      "anthropic_claude-sonnet-4.6": {
+        "verify_label": "VALID",
+        "verify_confidence": 0.78,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      },
+      "anthropic_claude-opus-4.7": {
+        "verify_label": "VALID",
+        "verify_confidence": 0.9,
+        "recalled": true,
+        "author_jaccard": 0.8571,
+        "venue_match": true,
+        "model_says_known": true,
+        "pred_authors_norm": [
+          "feng",
+          "giunchiglia",
+          "guan",
+          "huang",
+          "li",
+          "liu",
+          "pang"
+        ]
+      }
+    },
+    {
+      "bibtex_key": "00012025abgen:",
+      "gpt-5.1": {
+        "verify_label": "HALLUCINATED",
+        "verify_confidence": 0.86,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      },
+      "anthropic_claude-sonnet-4.6": {
+        "verify_label": "UNCERTAIN",
+        "verify_confidence": 0.5,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      },
+      "anthropic_claude-opus-4.7": {
+        "verify_label": "VALID",
+        "verify_confidence": 0.9,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      }
+    },
+    {
+      "bibtex_key": "00012025abkd:",
+      "gpt-5.1": {
+        "verify_label": "HALLUCINATED",
+        "verify_confidence": 0.86,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      },
+      "anthropic_claude-sonnet-4.6": {
+        "verify_label": "UNCERTAIN",
+        "verify_confidence": 0.45,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      },
+      "anthropic_claude-opus-4.7": {
+        "verify_label": "VALID",
+        "verify_confidence": 0.9,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      }
+    },
+    {
+      "bibtex_key": "00012025adapting",
+      "gpt-5.1": {
+        "verify_label": "HALLUCINATED",
+        "verify_confidence": 0.86,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      },
+      "anthropic_claude-sonnet-4.6": {
+        "verify_label": "HALLUCINATED",
+        "verify_confidence": 0.65,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      },
+      "anthropic_claude-opus-4.7": {
+        "verify_label": "VALID",
+        "verify_confidence": 0.9,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      }
+    },
+    {
+      "bibtex_key": "00012025addressing",
+      "gpt-5.1": {
+        "verify_label": "HALLUCINATED",
+        "verify_confidence": 0.86,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      },
+      "anthropic_claude-sonnet-4.6": {
+        "verify_label": "UNCERTAIN",
+        "verify_confidence": 0.55,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      },
+      "anthropic_claude-opus-4.7": {
+        "verify_label": "VALID",
+        "verify_confidence": 0.85,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      }
+    },
+    {
+      "bibtex_key": "00012025beyond",
+      "gpt-5.1": {
+        "verify_label": "HALLUCINATED",
+        "verify_confidence": 0.86,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      },
+      "anthropic_claude-sonnet-4.6": {
+        "verify_label": "VALID",
+        "verify_confidence": 0.72,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      },
+      "anthropic_claude-opus-4.7": {
+        "verify_label": "VALID",
+        "verify_confidence": 0.9,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      }
+    },
+    {
+      "bibtex_key": "00012025bolt:",
+      "gpt-5.1": {
+        "verify_label": "HALLUCINATED",
+        "verify_confidence": 0.86,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      },
+      "anthropic_claude-sonnet-4.6": {
+        "verify_label": "VALID",
+        "verify_confidence": 0.72,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      },
+      "anthropic_claude-opus-4.7": {
+        "verify_label": "VALID",
+        "verify_confidence": 0.9,
+        "recalled": true,
+        "author_jaccard": 1.0,
+        "venue_match": true,
+        "model_says_known": true,
+        "pred_authors_norm": [
+          "ghanem",
+          "liu",
+          "xu",
+          "zhao"
+        ]
+      }
+    },
+    {
+      "bibtex_key": "00012025chain-of-jailbreak",
+      "gpt-5.1": {
+        "verify_label": "HALLUCINATED",
+        "verify_confidence": 0.86,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      },
+      "anthropic_claude-sonnet-4.6": {
+        "verify_label": "HALLUCINATED",
+        "verify_confidence": 0.72,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      },
+      "anthropic_claude-opus-4.7": {
+        "verify_label": "VALID",
+        "verify_confidence": 0.9,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      }
+    },
+    {
+      "bibtex_key": "00012025dataflow-guided",
+      "gpt-5.1": {
+        "verify_label": "HALLUCINATED",
+        "verify_confidence": 0.86,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      },
+      "anthropic_claude-sonnet-4.6": {
+        "verify_label": "UNCERTAIN",
+        "verify_confidence": 0.45,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      },
+      "anthropic_claude-opus-4.7": {
+        "verify_label": "HALLUCINATED",
+        "verify_confidence": 0.85,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      }
+    },
+    {
+      "bibtex_key": "00012025dispider:",
+      "gpt-5.1": {
+        "verify_label": "HALLUCINATED",
+        "verify_confidence": 0.86,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      },
+      "anthropic_claude-sonnet-4.6": {
+        "verify_label": "VALID",
+        "verify_confidence": 0.72,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      },
+      "anthropic_claude-opus-4.7": {
+        "verify_label": "VALID",
+        "verify_confidence": 0.9,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      }
+    },
+    {
+      "bibtex_key": "00012025document",
+      "gpt-5.1": {
+        "verify_label": "HALLUCINATED",
+        "verify_confidence": 0.86,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      },
+      "anthropic_claude-sonnet-4.6": {
+        "verify_label": "HALLUCINATED",
+        "verify_confidence": 0.75,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      },
+      "anthropic_claude-opus-4.7": {
+        "verify_label": "HALLUCINATED",
+        "verify_confidence": 0.6,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      }
+    },
+    {
+      "bibtex_key": "00012025dual",
+      "gpt-5.1": {
+        "verify_label": "HALLUCINATED",
+        "verify_confidence": 0.86,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      },
+      "anthropic_claude-sonnet-4.6": {
+        "verify_label": "VALID",
+        "verify_confidence": 0.72,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      },
+      "anthropic_claude-opus-4.7": {
+        "verify_label": "VALID",
+        "verify_confidence": 0.85,
+        "recalled": true,
+        "author_jaccard": 1.0,
+        "venue_match": true,
+        "model_says_known": true,
+        "pred_authors_norm": [
+          "cai",
+          "ye",
+          "zhan",
+          "zhang",
+          "zhou"
+        ]
+      }
+    },
+    {
+      "bibtex_key": "00012025emma:",
+      "gpt-5.1": {
+        "verify_label": "HALLUCINATED",
+        "verify_confidence": 0.86,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      },
+      "anthropic_claude-sonnet-4.6": {
+        "verify_label": "UNCERTAIN",
+        "verify_confidence": 0.5,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      },
+      "anthropic_claude-opus-4.7": {
+        "verify_label": "VALID",
+        "verify_confidence": 0.9,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      }
+    },
+    {
+      "bibtex_key": "00012025fact-audit:",
+      "gpt-5.1": {
+        "verify_label": "HALLUCINATED",
+        "verify_confidence": 0.86,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      },
+      "anthropic_claude-sonnet-4.6": {
+        "verify_label": "UNCERTAIN",
+        "verify_confidence": 0.55,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      },
+      "anthropic_claude-opus-4.7": {
+        "verify_label": "VALID",
+        "verify_confidence": 0.9,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      }
+    },
+    {
+      "bibtex_key": "00012025full-dof",
+      "gpt-5.1": {
+        "verify_label": "HALLUCINATED",
+        "verify_confidence": 0.86,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      },
+      "anthropic_claude-sonnet-4.6": {
+        "verify_label": "UNCERTAIN",
+        "verify_confidence": 0.5,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      },
+      "anthropic_claude-opus-4.7": {
+        "verify_label": "VALID",
+        "verify_confidence": 0.9,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      }
+    },
+    {
+      "bibtex_key": "00012025gs-cpr:",
+      "gpt-5.1": {
+        "verify_label": "HALLUCINATED",
+        "verify_confidence": 0.86,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      },
+      "anthropic_claude-sonnet-4.6": {
+        "verify_label": "VALID",
+        "verify_confidence": 0.78,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      },
+      "anthropic_claude-opus-4.7": {
+        "verify_label": "VALID",
+        "verify_confidence": 0.9,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      }
+    },
+    {
+      "bibtex_key": "00012025hierarchical",
+      "gpt-5.1": {
+        "verify_label": "HALLUCINATED",
+        "verify_confidence": 0.86,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      },
+      "anthropic_claude-sonnet-4.6": {
+        "verify_label": "UNCERTAIN",
+        "verify_confidence": 0.55,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      },
+      "anthropic_claude-opus-4.7": {
+        "verify_label": "VALID",
+        "verify_confidence": 0.85,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      }
+    },
+    {
+      "bibtex_key": "00012025investigating",
+      "gpt-5.1": {
+        "verify_label": "HALLUCINATED",
+        "verify_confidence": 0.86,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      },
+      "anthropic_claude-sonnet-4.6": {
+        "verify_label": "UNCERTAIN",
+        "verify_confidence": 0.5,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      },
+      "anthropic_claude-opus-4.7": {
+        "verify_label": "VALID",
+        "verify_confidence": 0.85,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      }
+    },
+    {
+      "bibtex_key": "00012025language",
+      "gpt-5.1": {
+        "verify_label": "HALLUCINATED",
+        "verify_confidence": 0.86,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      },
+      "anthropic_claude-sonnet-4.6": {
+        "verify_label": "VALID",
+        "verify_confidence": 0.82,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      },
+      "anthropic_claude-opus-4.7": {
+        "verify_label": "VALID",
+        "verify_confidence": 0.9,
+        "recalled": true,
+        "author_jaccard": 0.8462,
+        "venue_match": true,
+        "model_says_known": true,
+        "pred_authors_norm": [
+          "choi",
+          "gonzalez",
+          "jin",
+          "kleimanweiner",
+          "levine",
+          "liu",
+          "mihalcea",
+          "ortu",
+          "piatti",
+          "sachan",
+          "scholkopf",
+          "strausz"
+        ]
+      }
+    },
+    {
+      "bibtex_key": "00012025last-iterate",
+      "gpt-5.1": {
+        "verify_label": "HALLUCINATED",
+        "verify_confidence": 0.86,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      },
+      "anthropic_claude-sonnet-4.6": {
+        "verify_label": "VALID",
+        "verify_confidence": 0.75,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      },
+      "anthropic_claude-opus-4.7": {
+        "verify_label": "VALID",
+        "verify_confidence": 0.9,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      }
+    },
+    {
+      "bibtex_key": "00012025learnability",
+      "gpt-5.1": {
+        "verify_label": "HALLUCINATED",
+        "verify_confidence": 0.86,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      },
+      "anthropic_claude-sonnet-4.6": {
+        "verify_label": "VALID",
+        "verify_confidence": 0.78,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      },
+      "anthropic_claude-opus-4.7": {
+        "verify_label": "VALID",
+        "verify_confidence": 0.9,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      }
+    },
+    {
+      "bibtex_key": "00012025learning",
+      "gpt-5.1": {
+        "verify_label": "HALLUCINATED",
+        "verify_confidence": 0.86,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      },
+      "anthropic_claude-sonnet-4.6": {
+        "verify_label": "UNCERTAIN",
+        "verify_confidence": 0.55,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      },
+      "anthropic_claude-opus-4.7": {
+        "verify_label": "VALID",
+        "verify_confidence": 0.85,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      }
+    },
+    {
+      "bibtex_key": "00012025multi-session",
+      "gpt-5.1": {
+        "verify_label": "HALLUCINATED",
+        "verify_confidence": 0.86,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      },
+      "anthropic_claude-sonnet-4.6": {
+        "verify_label": "UNCERTAIN",
+        "verify_confidence": 0.55,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      },
+      "anthropic_claude-opus-4.7": {
+        "verify_label": "VALID",
+        "verify_confidence": 0.85,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      }
+    },
+    {
+      "bibtex_key": "00012025open-set",
+      "gpt-5.1": {
+        "verify_label": "HALLUCINATED",
+        "verify_confidence": 0.93,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      },
+      "anthropic_claude-sonnet-4.6": {
+        "verify_label": "VALID",
+        "verify_confidence": 0.72,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      },
+      "anthropic_claude-opus-4.7": {
+        "verify_label": "VALID",
+        "verify_confidence": 0.9,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      }
+    },
+    {
+      "bibtex_key": "00012025outlier-aware",
+      "gpt-5.1": {
+        "verify_label": "HALLUCINATED",
+        "verify_confidence": 0.86,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      },
+      "anthropic_claude-sonnet-4.6": {
+        "verify_label": "HALLUCINATED",
+        "verify_confidence": 0.75,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      },
+      "anthropic_claude-opus-4.7": {
+        "verify_label": "VALID",
+        "verify_confidence": 0.85,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      }
+    },
+    {
+      "bibtex_key": "00012025patient-level",
+      "gpt-5.1": {
+        "verify_label": "HALLUCINATED",
+        "verify_confidence": 0.86,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      },
+      "anthropic_claude-sonnet-4.6": {
+        "verify_label": "UNCERTAIN",
+        "verify_confidence": 0.5,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      },
+      "anthropic_claude-opus-4.7": {
+        "verify_label": "VALID",
+        "verify_confidence": 0.85,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      }
+    },
+    {
+      "bibtex_key": "00012025pdbs",
+      "gpt-5.1": {
+        "verify_label": "HALLUCINATED",
+        "verify_confidence": 0.86,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      },
+      "anthropic_claude-sonnet-4.6": {
+        "verify_label": "VALID",
+        "verify_confidence": 0.82,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      },
+      "anthropic_claude-opus-4.7": {
+        "verify_label": "VALID",
+        "verify_confidence": 0.9,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      }
+    },
+    {
+      "bibtex_key": "00012025phgc:",
+      "gpt-5.1": {
+        "verify_label": "HALLUCINATED",
+        "verify_confidence": 0.86,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      },
+      "anthropic_claude-sonnet-4.6": {
+        "verify_label": "UNCERTAIN",
+        "verify_confidence": 0.55,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      },
+      "anthropic_claude-opus-4.7": {
+        "verify_label": "VALID",
+        "verify_confidence": 0.8,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      }
+    },
+    {
+      "bibtex_key": "00012025red",
+      "gpt-5.1": {
+        "verify_label": "HALLUCINATED",
+        "verify_confidence": 0.86,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      },
+      "anthropic_claude-sonnet-4.6": {
+        "verify_label": "UNCERTAIN",
+        "verify_confidence": 0.5,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      },
+      "anthropic_claude-opus-4.7": {
+        "verify_label": "HALLUCINATED",
+        "verify_confidence": 0.85,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      }
+    },
+    {
+      "bibtex_key": "00012025registering",
+      "gpt-5.1": {
+        "verify_label": "HALLUCINATED",
+        "verify_confidence": 0.86,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      },
+      "anthropic_claude-sonnet-4.6": {
+        "verify_label": "UNCERTAIN",
+        "verify_confidence": 0.55,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      },
+      "anthropic_claude-opus-4.7": {
+        "verify_label": "VALID",
+        "verify_confidence": 0.9,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      }
+    },
+    {
+      "bibtex_key": "00012025retrieval",
+      "gpt-5.1": {
+        "verify_label": "HALLUCINATED",
+        "verify_confidence": 0.86,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      },
+      "anthropic_claude-sonnet-4.6": {
+        "verify_label": "UNCERTAIN",
+        "verify_confidence": 0.55,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      },
+      "anthropic_claude-opus-4.7": {
+        "verify_label": "VALID",
+        "verify_confidence": 0.9,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      }
+    },
+    {
+      "bibtex_key": "00012025skip",
+      "gpt-5.1": {
+        "verify_label": "HALLUCINATED",
+        "verify_confidence": 0.86,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      },
+      "anthropic_claude-sonnet-4.6": {
+        "verify_label": "HALLUCINATED",
+        "verify_confidence": 0.65,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      },
+      "anthropic_claude-opus-4.7": {
+        "verify_label": "VALID",
+        "verify_confidence": 0.9,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      }
+    },
+    {
+      "bibtex_key": "00012025smoothcache:",
+      "gpt-5.1": {
+        "verify_label": "HALLUCINATED",
+        "verify_confidence": 0.86,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      },
+      "anthropic_claude-sonnet-4.6": {
+        "verify_label": "UNCERTAIN",
+        "verify_confidence": 0.55,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      },
+      "anthropic_claude-opus-4.7": {
+        "verify_label": "HALLUCINATED",
+        "verify_confidence": 0.75,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      }
+    },
+    {
+      "bibtex_key": "00012025softcot:",
+      "gpt-5.1": {
+        "verify_label": "HALLUCINATED",
+        "verify_confidence": 0.86,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      },
+      "anthropic_claude-sonnet-4.6": {
+        "verify_label": "HALLUCINATED",
+        "verify_confidence": 0.6,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      },
+      "anthropic_claude-opus-4.7": {
+        "verify_label": "VALID",
+        "verify_confidence": 0.9,
+        "recalled": true,
+        "author_jaccard": 1.0,
+        "venue_match": true,
+        "model_says_known": true,
+        "pred_authors_norm": [
+          "guo",
+          "miao",
+          "xu",
+          "zeng"
+        ]
+      }
+    },
+    {
+      "bibtex_key": "00012025surrogate",
+      "gpt-5.1": {
+        "verify_label": "HALLUCINATED",
+        "verify_confidence": 0.86,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      },
+      "anthropic_claude-sonnet-4.6": {
+        "verify_label": "UNCERTAIN",
+        "verify_confidence": 0.5,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      },
+      "anthropic_claude-opus-4.7": {
+        "verify_label": "HALLUCINATED",
+        "verify_confidence": 0.7,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      }
+    },
+    {
+      "bibtex_key": "00012025tablecoder:",
+      "gpt-5.1": {
+        "verify_label": "HALLUCINATED",
+        "verify_confidence": 0.86,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      },
+      "anthropic_claude-sonnet-4.6": {
+        "verify_label": "HALLUCINATED",
+        "verify_confidence": 0.75,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      },
+      "anthropic_claude-opus-4.7": {
+        "verify_label": "VALID",
+        "verify_confidence": 0.8,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      }
+    },
+    {
+      "bibtex_key": "00012025tau-106k:",
+      "gpt-5.1": {
+        "verify_label": "HALLUCINATED",
+        "verify_confidence": 0.86,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      },
+      "anthropic_claude-sonnet-4.6": {
+        "verify_label": "HALLUCINATED",
+        "verify_confidence": 0.75,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      },
+      "anthropic_claude-opus-4.7": {
+        "verify_label": "HALLUCINATED",
+        "verify_confidence": 0.7,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      }
+    },
+    {
+      "bibtex_key": "00012025the",
+      "gpt-5.1": {
+        "verify_label": "HALLUCINATED",
+        "verify_confidence": 0.86,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      },
+      "anthropic_claude-sonnet-4.6": {
+        "verify_label": "VALID",
+        "verify_confidence": 0.82,
+        "recalled": true,
+        "author_jaccard": 0.75,
+        "venue_match": true,
+        "model_says_known": true,
+        "pred_authors_norm": [
+          "choe",
+          "park",
+          "veitch"
+        ]
+      },
+      "anthropic_claude-opus-4.7": {
+        "verify_label": "VALID",
+        "verify_confidence": 0.95,
+        "recalled": true,
+        "author_jaccard": 1.0,
+        "venue_match": true,
+        "model_says_known": true,
+        "pred_authors_norm": [
+          "choe",
+          "jiang",
+          "park",
+          "veitch"
+        ]
+      }
+    },
+    {
+      "bibtex_key": "00012025understanding",
+      "gpt-5.1": {
+        "verify_label": "HALLUCINATED",
+        "verify_confidence": 0.86,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      },
+      "anthropic_claude-sonnet-4.6": {
+        "verify_label": "UNCERTAIN",
+        "verify_confidence": 0.5,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      },
+      "anthropic_claude-opus-4.7": {
+        "verify_label": "VALID",
+        "verify_confidence": 0.85,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      }
+    },
+    {
+      "bibtex_key": "00012025unlearning",
+      "gpt-5.1": {
+        "verify_label": "HALLUCINATED",
+        "verify_confidence": 0.86,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      },
+      "anthropic_claude-sonnet-4.6": {
+        "verify_label": "VALID",
+        "verify_confidence": 0.82,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      },
+      "anthropic_claude-opus-4.7": {
+        "verify_label": "VALID",
+        "verify_confidence": 0.95,
+        "recalled": true,
+        "author_jaccard": 1.0,
+        "venue_match": true,
+        "model_says_known": true,
+        "pred_authors_norm": [
+          "fu",
+          "hu",
+          "smith",
+          "wu"
+        ]
+      }
+    },
+    {
+      "bibtex_key": "00012025vqa4cir:",
+      "gpt-5.1": {
+        "verify_label": "HALLUCINATED",
+        "verify_confidence": 0.86,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      },
+      "anthropic_claude-sonnet-4.6": {
+        "verify_label": "VALID",
+        "verify_confidence": 0.72,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      },
+      "anthropic_claude-opus-4.7": {
+        "verify_label": "VALID",
+        "verify_confidence": 0.85,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      }
+    },
+    {
+      "bibtex_key": "00012025wildavatar:",
+      "gpt-5.1": {
+        "verify_label": "HALLUCINATED",
+        "verify_confidence": 0.86,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      },
+      "anthropic_claude-sonnet-4.6": {
+        "verify_label": "HALLUCINATED",
+        "verify_confidence": 0.65,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      },
+      "anthropic_claude-opus-4.7": {
+        "verify_label": "VALID",
+        "verify_confidence": 0.85,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      }
+    },
+    {
+      "bibtex_key": "00022024conundrums",
+      "gpt-5.1": {
+        "verify_label": "VALID",
+        "verify_confidence": 0.93,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      },
+      "anthropic_claude-sonnet-4.6": {
+        "verify_label": "VALID",
+        "verify_confidence": 0.88,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      },
+      "anthropic_claude-opus-4.7": {
+        "verify_label": "VALID",
+        "verify_confidence": 0.95,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      }
+    },
+    {
+      "bibtex_key": "00032025lorasculpt:",
+      "gpt-5.1": {
+        "verify_label": "HALLUCINATED",
+        "verify_confidence": 0.86,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      },
+      "anthropic_claude-sonnet-4.6": {
+        "verify_label": "VALID",
+        "verify_confidence": 0.72,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      },
+      "anthropic_claude-opus-4.7": {
+        "verify_label": "VALID",
+        "verify_confidence": 0.85,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      }
+    },
+    {
+      "bibtex_key": "00042024towards",
+      "gpt-5.1": {
+        "verify_label": "HALLUCINATED",
+        "verify_confidence": 0.86,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      },
+      "anthropic_claude-sonnet-4.6": {
+        "verify_label": "UNCERTAIN",
+        "verify_confidence": 0.5,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      },
+      "anthropic_claude-opus-4.7": {
+        "verify_label": "VALID",
+        "verify_confidence": 0.9,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      }
+    },
+    {
+      "bibtex_key": "Abdaljalil2025safe:_c1fc5e",
+      "gpt-5.1": {
+        "verify_label": "HALLUCINATED",
+        "verify_confidence": 0.86,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      },
+      "anthropic_claude-sonnet-4.6": {
+        "verify_label": "HALLUCINATED",
+        "verify_confidence": 0.75,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      },
+      "anthropic_claude-opus-4.7": {
+        "verify_label": "VALID",
+        "verify_confidence": 0.85,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      }
+    },
+    {
+      "bibtex_key": "Abdallah2025how_e668b6",
+      "gpt-5.1": {
+        "verify_label": "HALLUCINATED",
+        "verify_confidence": 0.86,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      },
+      "anthropic_claude-sonnet-4.6": {
+        "verify_label": "HALLUCINATED",
+        "verify_confidence": 0.65,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      },
+      "anthropic_claude-opus-4.7": {
+        "verify_label": "UNCERTAIN",
+        "verify_confidence": 0.6,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      }
+    },
+    {
+      "bibtex_key": "Acuna2025socratic-mcts:_930110",
+      "gpt-5.1": {
+        "verify_label": "HALLUCINATED",
+        "verify_confidence": 0.93,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      },
+      "anthropic_claude-sonnet-4.6": {
+        "verify_label": "HALLUCINATED",
+        "verify_confidence": 0.8,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      },
+      "anthropic_claude-opus-4.7": {
+        "verify_label": "HALLUCINATED",
+        "verify_confidence": 0.8,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      }
+    },
+    {
+      "bibtex_key": "Afzal2025da-pred:_cb0642",
+      "gpt-5.1": {
+        "verify_label": "HALLUCINATED",
+        "verify_confidence": 0.86,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      },
+      "anthropic_claude-sonnet-4.6": {
+        "verify_label": "HALLUCINATED",
+        "verify_confidence": 0.85,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      },
+      "anthropic_claude-opus-4.7": {
+        "verify_label": "UNCERTAIN",
+        "verify_confidence": 0.6,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      }
+    },
+    {
+      "bibtex_key": "Chen2024rethinking_53c9fc",
+      "gpt-5.1": {
+        "verify_label": "HALLUCINATED",
+        "verify_confidence": 0.86,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      },
+      "anthropic_claude-sonnet-4.6": {
+        "verify_label": "HALLUCINATED",
+        "verify_confidence": 0.6,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      },
+      "anthropic_claude-opus-4.7": {
+        "verify_label": "VALID",
+        "verify_confidence": 0.9,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      }
+    },
+    {
+      "bibtex_key": "Chen2024what,_c35024",
+      "gpt-5.1": {
+        "verify_label": "VALID",
+        "verify_confidence": 0.93,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      },
+      "anthropic_claude-sonnet-4.6": {
+        "verify_label": "VALID",
+        "verify_confidence": 0.82,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      },
+      "anthropic_claude-opus-4.7": {
+        "verify_label": "VALID",
+        "verify_confidence": 0.9,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      }
+    },
+    {
+      "bibtex_key": "Chen2025deco:_2a43f7",
+      "gpt-5.1": {
+        "verify_label": "HALLUCINATED",
+        "verify_confidence": 0.86,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      },
+      "anthropic_claude-sonnet-4.6": {
+        "verify_label": "HALLUCINATED",
+        "verify_confidence": 0.65,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      },
+      "anthropic_claude-opus-4.7": {
+        "verify_label": "HALLUCINATED",
+        "verify_confidence": 0.75,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      }
+    },
+    {
+      "bibtex_key": "Chen2025pearl:_e6806b",
+      "gpt-5.1": {
+        "verify_label": "HALLUCINATED",
+        "verify_confidence": 0.86,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      },
+      "anthropic_claude-sonnet-4.6": {
+        "verify_label": "UNCERTAIN",
+        "verify_confidence": 0.45,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      },
+      "anthropic_claude-opus-4.7": {
+        "verify_label": "VALID",
+        "verify_confidence": 0.9,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      }
+    },
+    {
+      "bibtex_key": "Cho2024peeking_44dac2",
+      "gpt-5.1": {
+        "verify_label": "HALLUCINATED",
+        "verify_confidence": 0.86,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      },
+      "anthropic_claude-sonnet-4.6": {
+        "verify_label": "VALID",
+        "verify_confidence": 0.72,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      },
+      "anthropic_claude-opus-4.7": {
+        "verify_label": "VALID",
+        "verify_confidence": 0.95,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      }
+    },
+    {
+      "bibtex_key": "Choi2024towards_960d08",
+      "gpt-5.1": {
+        "verify_label": "HALLUCINATED",
+        "verify_confidence": 0.86,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      },
+      "anthropic_claude-sonnet-4.6": {
+        "verify_label": "HALLUCINATED",
+        "verify_confidence": 0.75,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      },
+      "anthropic_claude-opus-4.7": {
+        "verify_label": "VALID",
+        "verify_confidence": 0.9,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      }
+    },
+    {
+      "bibtex_key": "Du2024knowledge_2fef13",
+      "gpt-5.1": {
+        "verify_label": "HALLUCINATED",
+        "verify_confidence": 0.93,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      },
+      "anthropic_claude-sonnet-4.6": {
+        "verify_label": "VALID",
+        "verify_confidence": 0.78,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      },
+      "anthropic_claude-opus-4.7": {
+        "verify_label": "VALID",
+        "verify_confidence": 0.95,
+        "recalled": true,
+        "author_jaccard": 0.7273,
+        "venue_match": true,
+        "model_says_known": true,
+        "pred_authors_norm": [
+          "du",
+          "goh",
+          "guo",
+          "he",
+          "jiang",
+          "lee",
+          "li",
+          "liu",
+          "tang",
+          "yu",
+          "zhang"
+        ]
+      }
+    },
+    {
+      "bibtex_key": "Du2025mmke-bench:_c5e7ec",
+      "gpt-5.1": {
+        "verify_label": "HALLUCINATED",
+        "verify_confidence": 0.86,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      },
+      "anthropic_claude-sonnet-4.6": {
+        "verify_label": "HALLUCINATED",
+        "verify_confidence": 0.62,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      },
+      "anthropic_claude-opus-4.7": {
+        "verify_label": "VALID",
+        "verify_confidence": 0.95,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": true,
+        "model_says_known": true,
+        "pred_authors_norm": []
+      }
+    },
+    {
+      "bibtex_key": "Fallah2024fair_652c8c",
+      "gpt-5.1": {
+        "verify_label": "HALLUCINATED",
+        "verify_confidence": 0.86,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      },
+      "anthropic_claude-sonnet-4.6": {
+        "verify_label": "HALLUCINATED",
+        "verify_confidence": 0.65,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      },
+      "anthropic_claude-opus-4.7": {
+        "verify_label": "HALLUCINATED",
+        "verify_confidence": 0.7,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      }
+    },
+    {
+      "bibtex_key": "Fan2024neuron-enhanced_965f30",
+      "gpt-5.1": {
+        "verify_label": "HALLUCINATED",
+        "verify_confidence": 0.86,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      },
+      "anthropic_claude-sonnet-4.6": {
+        "verify_label": "HALLUCINATED",
+        "verify_confidence": 0.62,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      },
+      "anthropic_claude-opus-4.7": {
+        "verify_label": "VALID",
+        "verify_confidence": 0.9,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      }
+    },
+    {
+      "bibtex_key": "Gong2024listen,_09e947",
+      "gpt-5.1": {
+        "verify_label": "HALLUCINATED",
+        "verify_confidence": 0.86,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      },
+      "anthropic_claude-sonnet-4.6": {
+        "verify_label": "VALID",
+        "verify_confidence": 0.9,
+        "recalled": true,
+        "author_jaccard": 1.0,
+        "venue_match": true,
+        "model_says_known": true,
+        "pred_authors_norm": [
+          "glass",
+          "gong",
+          "karlinsky",
+          "liu",
+          "luo"
+        ]
+      },
+      "anthropic_claude-opus-4.7": {
+        "verify_label": "VALID",
+        "verify_confidence": 0.95,
+        "recalled": true,
+        "author_jaccard": 1.0,
+        "venue_match": true,
+        "model_says_known": true,
+        "pred_authors_norm": [
+          "glass",
+          "gong",
+          "karlinsky",
+          "liu",
+          "luo"
+        ]
+      }
+    },
+    {
+      "bibtex_key": "Gupta2024evaluating_1cfc1a",
+      "gpt-5.1": {
+        "verify_label": "HALLUCINATED",
+        "verify_confidence": 0.86,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      },
+      "anthropic_claude-sonnet-4.6": {
+        "verify_label": "VALID",
+        "verify_confidence": 0.78,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      },
+      "anthropic_claude-opus-4.7": {
+        "verify_label": "HALLUCINATED",
+        "verify_confidence": 0.85,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      }
+    },
+    {
+      "bibtex_key": "Hassani2024faster_7bcb22",
+      "gpt-5.1": {
+        "verify_label": "HALLUCINATED",
+        "verify_confidence": 0.86,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      },
+      "anthropic_claude-sonnet-4.6": {
+        "verify_label": "UNCERTAIN",
+        "verify_confidence": 0.5,
+        "recalled": true,
+        "author_jaccard": 0.6667,
+        "venue_match": false,
+        "model_says_known": true,
+        "pred_authors_norm": [
+          "hassani",
+          "shi"
+        ]
+      },
+      "anthropic_claude-opus-4.7": {
+        "verify_label": "HALLUCINATED",
+        "verify_confidence": 0.75,
+        "recalled": true,
+        "author_jaccard": 1.0,
+        "venue_match": true,
+        "model_says_known": true,
+        "pred_authors_norm": [
+          "hassani",
+          "hwu",
+          "shi"
+        ]
+      }
+    },
+    {
+      "bibtex_key": "He2024ambiguity-aware_1581ab",
+      "gpt-5.1": {
+        "verify_label": "HALLUCINATED",
+        "verify_confidence": 0.86,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      },
+      "anthropic_claude-sonnet-4.6": {
+        "verify_label": "HALLUCINATED",
+        "verify_confidence": 0.6,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      },
+      "anthropic_claude-opus-4.7": {
+        "verify_label": "VALID",
+        "verify_confidence": 0.95,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      }
+    },
+    {
+      "bibtex_key": "Huang2024a_0c5e8b",
+      "gpt-5.1": {
+        "verify_label": "HALLUCINATED",
+        "verify_confidence": 0.86,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      },
+      "anthropic_claude-sonnet-4.6": {
+        "verify_label": "VALID",
+        "verify_confidence": 0.78,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      },
+      "anthropic_claude-opus-4.7": {
+        "verify_label": "VALID",
+        "verify_confidence": 0.9,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      }
+    },
+    {
+      "bibtex_key": "Jain2024maximizing_2bc5ae",
+      "gpt-5.1": {
+        "verify_label": "VALID",
+        "verify_confidence": 0.97,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      },
+      "anthropic_claude-sonnet-4.6": {
+        "verify_label": "VALID",
+        "verify_confidence": 0.82,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      },
+      "anthropic_claude-opus-4.7": {
+        "verify_label": "VALID",
+        "verify_confidence": 0.95,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      }
+    },
+    {
+      "bibtex_key": "Kang2024should_4debb6",
+      "gpt-5.1": {
+        "verify_label": "HALLUCINATED",
+        "verify_confidence": 0.86,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      },
+      "anthropic_claude-sonnet-4.6": {
+        "verify_label": "VALID",
+        "verify_confidence": 0.72,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      },
+      "anthropic_claude-opus-4.7": {
+        "verify_label": "VALID",
+        "verify_confidence": 0.9,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      }
+    },
+    {
+      "bibtex_key": "Kaur2025instruct-skillmix:_5b6265",
+      "gpt-5.1": {
+        "verify_label": "HALLUCINATED",
+        "verify_confidence": 0.86,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      },
+      "anthropic_claude-sonnet-4.6": {
+        "verify_label": "VALID",
+        "verify_confidence": 0.82,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      },
+      "anthropic_claude-opus-4.7": {
+        "verify_label": "VALID",
+        "verify_confidence": 0.9,
+        "recalled": true,
+        "author_jaccard": 1.0,
+        "venue_match": false,
+        "model_says_known": true,
+        "pred_authors_norm": [
+          "arora",
+          "goyal",
+          "kaur",
+          "park"
+        ]
+      }
+    },
+    {
+      "bibtex_key": "Lee2025gram:_879dc2",
+      "gpt-5.1": {
+        "verify_label": "HALLUCINATED",
+        "verify_confidence": 0.86,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      },
+      "anthropic_claude-sonnet-4.6": {
+        "verify_label": "UNCERTAIN",
+        "verify_confidence": 0.5,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      },
+      "anthropic_claude-opus-4.7": {
+        "verify_label": "VALID",
+        "verify_confidence": 0.9,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      }
+    },
+    {
+      "bibtex_key": "Li2025anchored_016311",
+      "gpt-5.1": {
+        "verify_label": "HALLUCINATED",
+        "verify_confidence": 0.86,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      },
+      "anthropic_claude-sonnet-4.6": {
+        "verify_label": "HALLUCINATED",
+        "verify_confidence": 0.72,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      },
+      "anthropic_claude-opus-4.7": {
+        "verify_label": "HALLUCINATED",
+        "verify_confidence": 0.85,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      }
+    },
+    {
+      "bibtex_key": "Liu2024chain_64edf7",
+      "gpt-5.1": {
+        "verify_label": "HALLUCINATED",
+        "verify_confidence": 0.86,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      },
+      "anthropic_claude-sonnet-4.6": {
+        "verify_label": "VALID",
+        "verify_confidence": 0.82,
+        "recalled": true,
+        "author_jaccard": 0.75,
+        "venue_match": true,
+        "model_says_known": true,
+        "pred_authors_norm": [
+          "li",
+          "liu",
+          "ma",
+          "zhou"
+        ]
+      },
+      "anthropic_claude-opus-4.7": {
+        "verify_label": "VALID",
+        "verify_confidence": 0.95,
+        "recalled": true,
+        "author_jaccard": 0.75,
+        "venue_match": true,
+        "model_says_known": true,
+        "pred_authors_norm": [
+          "li",
+          "liu",
+          "ma",
+          "zhou"
+        ]
+      }
+    },
+    {
+      "bibtex_key": "Liu2025smoothcache:_4ce6c4",
+      "gpt-5.1": {
+        "verify_label": "HALLUCINATED",
+        "verify_confidence": 0.86,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      },
+      "anthropic_claude-sonnet-4.6": {
+        "verify_label": "UNCERTAIN",
+        "verify_confidence": 0.55,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      },
+      "anthropic_claude-opus-4.7": {
+        "verify_label": "HALLUCINATED",
+        "verify_confidence": 0.8,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      }
+    },
+    {
+      "bibtex_key": "Lu2024discovering_caa028",
+      "gpt-5.1": {
+        "verify_label": "HALLUCINATED",
+        "verify_confidence": 0.78,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      },
+      "anthropic_claude-sonnet-4.6": {
+        "verify_label": "VALID",
+        "verify_confidence": 0.82,
+        "recalled": true,
+        "author_jaccard": 1.0,
+        "venue_match": true,
+        "model_says_known": true,
+        "pred_authors_norm": [
+          "chan",
+          "fanconi",
+          "foerster",
+          "holt",
+          "lange",
+          "lu",
+          "schaar"
+        ]
+      },
+      "anthropic_claude-opus-4.7": {
+        "verify_label": "VALID",
+        "verify_confidence": 0.95,
+        "recalled": true,
+        "author_jaccard": 1.0,
+        "venue_match": true,
+        "model_says_known": true,
+        "pred_authors_norm": [
+          "chan",
+          "fanconi",
+          "foerster",
+          "holt",
+          "lange",
+          "lu",
+          "schaar"
+        ]
+      }
+    },
+    {
+      "bibtex_key": "Luo2024pgode:_8db812",
+      "gpt-5.1": {
+        "verify_label": "HALLUCINATED",
+        "verify_confidence": 0.86,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      },
+      "anthropic_claude-sonnet-4.6": {
+        "verify_label": "VALID",
+        "verify_confidence": 0.82,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      },
+      "anthropic_claude-opus-4.7": {
+        "verify_label": "VALID",
+        "verify_confidence": 0.95,
+        "recalled": true,
+        "author_jaccard": 0.7778,
+        "venue_match": true,
+        "model_says_known": true,
+        "pred_authors_norm": [
+          "gu",
+          "huang",
+          "jiang",
+          "ju",
+          "luo",
+          "sun",
+          "zhang"
+        ]
+      }
+    },
+    {
+      "bibtex_key": "Luo2024text2nkg:_b94e7a",
+      "gpt-5.1": {
+        "verify_label": "HALLUCINATED",
+        "verify_confidence": 0.86,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      },
+      "anthropic_claude-sonnet-4.6": {
+        "verify_label": "HALLUCINATED",
+        "verify_confidence": 0.65,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      },
+      "anthropic_claude-opus-4.7": {
+        "verify_label": "HALLUCINATED",
+        "verify_confidence": 0.8,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      }
+    },
+    {
+      "bibtex_key": "Mao2024neural_677d40",
+      "gpt-5.1": {
+        "verify_label": "HALLUCINATED",
+        "verify_confidence": 0.86,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      },
+      "anthropic_claude-sonnet-4.6": {
+        "verify_label": "HALLUCINATED",
+        "verify_confidence": 0.6,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      },
+      "anthropic_claude-opus-4.7": {
+        "verify_label": "VALID",
+        "verify_confidence": 0.9,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      }
+    },
+    {
+      "bibtex_key": "Pandey2024brain:_769298",
+      "gpt-5.1": {
+        "verify_label": "HALLUCINATED",
+        "verify_confidence": 0.86,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      },
+      "anthropic_claude-sonnet-4.6": {
+        "verify_label": "HALLUCINATED",
+        "verify_confidence": 0.62,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      },
+      "anthropic_claude-opus-4.7": {
+        "verify_label": "VALID",
+        "verify_confidence": 0.95,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      }
+    },
+    {
+      "bibtex_key": "Parekh2024investigating_de5f59",
+      "gpt-5.1": {
+        "verify_label": "HALLUCINATED",
+        "verify_confidence": 0.86,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      },
+      "anthropic_claude-sonnet-4.6": {
+        "verify_label": "VALID",
+        "verify_confidence": 0.82,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      },
+      "anthropic_claude-opus-4.7": {
+        "verify_label": "VALID",
+        "verify_confidence": 0.9,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      }
+    },
+    {
+      "bibtex_key": "Thompson2024a_556ea1",
+      "gpt-5.1": {
+        "verify_label": "HALLUCINATED",
+        "verify_confidence": 0.86,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      },
+      "anthropic_claude-sonnet-4.6": {
+        "verify_label": "VALID",
+        "verify_confidence": 0.92,
+        "recalled": true,
+        "author_jaccard": 1.0,
+        "venue_match": true,
+        "model_says_known": true,
+        "pred_authors_norm": [
+          "dhaliwal",
+          "domhan",
+          "federico",
+          "frisch",
+          "thompson"
+        ]
+      },
+      "anthropic_claude-opus-4.7": {
+        "verify_label": "VALID",
+        "verify_confidence": 0.95,
+        "recalled": true,
+        "author_jaccard": 1.0,
+        "venue_match": true,
+        "model_says_known": true,
+        "pred_authors_norm": [
+          "dhaliwal",
+          "domhan",
+          "federico",
+          "frisch",
+          "thompson"
+        ]
+      }
+    },
+    {
+      "bibtex_key": "Walton2025efficient_af67ca",
+      "gpt-5.1": {
+        "verify_label": "HALLUCINATED",
+        "verify_confidence": 0.86,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      },
+      "anthropic_claude-sonnet-4.6": {
+        "verify_label": "HALLUCINATED",
+        "verify_confidence": 0.65,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      },
+      "anthropic_claude-opus-4.7": {
+        "verify_label": "VALID",
+        "verify_confidence": 0.85,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      }
+    },
+    {
+      "bibtex_key": "Wang2024unlocking_503620",
+      "gpt-5.1": {
+        "verify_label": "HALLUCINATED",
+        "verify_confidence": 0.86,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      },
+      "anthropic_claude-sonnet-4.6": {
+        "verify_label": "VALID",
+        "verify_confidence": 0.78,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      },
+      "anthropic_claude-opus-4.7": {
+        "verify_label": "VALID",
+        "verify_confidence": 0.95,
+        "recalled": true,
+        "author_jaccard": 1.0,
+        "venue_match": true,
+        "model_says_known": true,
+        "pred_authors_norm": [
+          "bao",
+          "gao",
+          "jiang",
+          "taylor",
+          "wang",
+          "wu",
+          "xiao",
+          "zhang",
+          "zheng"
+        ]
+      }
+    },
+    {
+      "bibtex_key": "Wang2025data_ad0134",
+      "gpt-5.1": {
+        "verify_label": "HALLUCINATED",
+        "verify_confidence": 0.86,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      },
+      "anthropic_claude-sonnet-4.6": {
+        "verify_label": "UNCERTAIN",
+        "verify_confidence": 0.45,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      },
+      "anthropic_claude-opus-4.7": {
+        "verify_label": "VALID",
+        "verify_confidence": 0.9,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      }
+    },
+    {
+      "bibtex_key": "Wang2025demo:_f11753",
+      "gpt-5.1": {
+        "verify_label": "HALLUCINATED",
+        "verify_confidence": 0.86,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      },
+      "anthropic_claude-sonnet-4.6": {
+        "verify_label": "UNCERTAIN",
+        "verify_confidence": 0.5,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      },
+      "anthropic_claude-opus-4.7": {
+        "verify_label": "VALID",
+        "verify_confidence": 0.9,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      }
+    },
+    {
+      "bibtex_key": "Wang2025easydistill:_a3fc29",
+      "gpt-5.1": {
+        "verify_label": "HALLUCINATED",
+        "verify_confidence": 0.86,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      },
+      "anthropic_claude-sonnet-4.6": {
+        "verify_label": "HALLUCINATED",
+        "verify_confidence": 0.65,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      },
+      "anthropic_claude-opus-4.7": {
+        "verify_label": "VALID",
+        "verify_confidence": 0.9,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      }
+    },
+    {
+      "bibtex_key": "Wang2025reasoning-enhanced_c3ca80",
+      "gpt-5.1": {
+        "verify_label": "HALLUCINATED",
+        "verify_confidence": 0.93,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      },
+      "anthropic_claude-sonnet-4.6": {
+        "verify_label": "UNCERTAIN",
+        "verify_confidence": 0.5,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      },
+      "anthropic_claude-opus-4.7": {
+        "verify_label": "VALID",
+        "verify_confidence": 0.8,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      }
+    },
+    {
+      "bibtex_key": "Wang2025timemixer++:_d6396d",
+      "gpt-5.1": {
+        "verify_label": "HALLUCINATED",
+        "verify_confidence": 0.86,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      },
+      "anthropic_claude-sonnet-4.6": {
+        "verify_label": "VALID",
+        "verify_confidence": 0.72,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      },
+      "anthropic_claude-opus-4.7": {
+        "verify_label": "VALID",
+        "verify_confidence": 0.9,
+        "recalled": true,
+        "author_jaccard": 1.0,
+        "venue_match": true,
+        "model_says_known": true,
+        "pred_authors_norm": [
+          "chu",
+          "jin",
+          "ju",
+          "li",
+          "lin",
+          "mo",
+          "shi",
+          "wang",
+          "ye"
+        ]
+      }
+    },
+    {
+      "bibtex_key": "Wei2024learning_483439",
+      "gpt-5.1": {
+        "verify_label": "HALLUCINATED",
+        "verify_confidence": 0.86,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      },
+      "anthropic_claude-sonnet-4.6": {
+        "verify_label": "VALID",
+        "verify_confidence": 0.82,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      },
+      "anthropic_claude-opus-4.7": {
+        "verify_label": "VALID",
+        "verify_confidence": 0.9,
+        "recalled": true,
+        "author_jaccard": 1.0,
+        "venue_match": true,
+        "model_says_known": true,
+        "pred_authors_norm": [
+          "mao",
+          "wan",
+          "wei",
+          "zhang",
+          "zhou"
+        ]
+      }
+    },
+    {
+      "bibtex_key": "Wright2024bmrs:_b0cf93",
+      "gpt-5.1": {
+        "verify_label": "HALLUCINATED",
+        "verify_confidence": 0.86,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      },
+      "anthropic_claude-sonnet-4.6": {
+        "verify_label": "VALID",
+        "verify_confidence": 0.72,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      },
+      "anthropic_claude-opus-4.7": {
+        "verify_label": "VALID",
+        "verify_confidence": 0.95,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      }
+    },
+    {
+      "bibtex_key": "Wu2024vdebugger:_65d00b",
+      "gpt-5.1": {
+        "verify_label": "HALLUCINATED",
+        "verify_confidence": 0.86,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      },
+      "anthropic_claude-sonnet-4.6": {
+        "verify_label": "VALID",
+        "verify_confidence": 0.9,
+        "recalled": true,
+        "author_jaccard": 1.0,
+        "venue_match": true,
+        "model_says_known": true,
+        "pred_authors_norm": [
+          "chang",
+          "lin",
+          "lu",
+          "peng",
+          "wu",
+          "zhao"
+        ]
+      },
+      "anthropic_claude-opus-4.7": {
+        "verify_label": "VALID",
+        "verify_confidence": 0.95,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      }
+    },
+    {
+      "bibtex_key": "Wu2025moviebench:_38ef57",
+      "gpt-5.1": {
+        "verify_label": "HALLUCINATED",
+        "verify_confidence": 0.86,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      },
+      "anthropic_claude-sonnet-4.6": {
+        "verify_label": "HALLUCINATED",
+        "verify_confidence": 0.8,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      },
+      "anthropic_claude-opus-4.7": {
+        "verify_label": "HALLUCINATED",
+        "verify_confidence": 0.85,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      }
+    },
+    {
+      "bibtex_key": "Xu2024parameter-dependent_298992",
+      "gpt-5.1": {
+        "verify_label": "HALLUCINATED",
+        "verify_confidence": 0.86,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      },
+      "anthropic_claude-sonnet-4.6": {
+        "verify_label": "HALLUCINATED",
+        "verify_confidence": 0.72,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      },
+      "anthropic_claude-opus-4.7": {
+        "verify_label": "VALID",
+        "verify_confidence": 0.9,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      }
+    },
+    {
+      "bibtex_key": "Xu2025strong_da982c",
+      "gpt-5.1": {
+        "verify_label": "HALLUCINATED",
+        "verify_confidence": 0.86,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      },
+      "anthropic_claude-sonnet-4.6": {
+        "verify_label": "VALID",
+        "verify_confidence": 0.72,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      },
+      "anthropic_claude-opus-4.7": {
+        "verify_label": "VALID",
+        "verify_confidence": 0.9,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      }
+    },
+    {
+      "bibtex_key": "Yan2024neural_e04a96",
+      "gpt-5.1": {
+        "verify_label": "HALLUCINATED",
+        "verify_confidence": 0.86,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      },
+      "anthropic_claude-sonnet-4.6": {
+        "verify_label": "UNCERTAIN",
+        "verify_confidence": 0.5,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      },
+      "anthropic_claude-opus-4.7": {
+        "verify_label": "VALID",
+        "verify_confidence": 0.9,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      }
+    },
+    {
+      "bibtex_key": "Zhang2024dag-based_e58e68",
+      "gpt-5.1": {
+        "verify_label": "HALLUCINATED",
+        "verify_confidence": 0.86,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      },
+      "anthropic_claude-sonnet-4.6": {
+        "verify_label": "UNCERTAIN",
+        "verify_confidence": 0.45,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      },
+      "anthropic_claude-opus-4.7": {
+        "verify_label": "HALLUCINATED",
+        "verify_confidence": 0.75,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      }
+    },
+    {
+      "bibtex_key": "Zhang2025belle:_1344b8",
+      "gpt-5.1": {
+        "verify_label": "HALLUCINATED",
+        "verify_confidence": 0.86,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      },
+      "anthropic_claude-sonnet-4.6": {
+        "verify_label": "HALLUCINATED",
+        "verify_confidence": 0.75,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      },
+      "anthropic_claude-opus-4.7": {
+        "verify_label": "VALID",
+        "verify_confidence": 0.85,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      }
+    },
+    {
+      "bibtex_key": "Zhao2025abgen:_edd3b2",
+      "gpt-5.1": {
+        "verify_label": "HALLUCINATED",
+        "verify_confidence": 0.86,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      },
+      "anthropic_claude-sonnet-4.6": {
+        "verify_label": "UNCERTAIN",
+        "verify_confidence": 0.55,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      },
+      "anthropic_claude-opus-4.7": {
+        "verify_label": "VALID",
+        "verify_confidence": 0.9,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      }
+    },
+    {
+      "bibtex_key": "Zhao2025redone:_9ed49f_12f04f1f",
+      "gpt-5.1": {
+        "verify_label": "HALLUCINATED",
+        "verify_confidence": 0.9,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      },
+      "anthropic_claude-sonnet-4.6": {
+        "verify_label": "HALLUCINATED",
+        "verify_confidence": 0.85,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      },
+      "anthropic_claude-opus-4.7": {
+        "verify_label": "VALID",
+        "verify_confidence": 0.85,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      }
+    },
+    {
+      "bibtex_key": "Zhou2024expandable_1eea5d",
+      "gpt-5.1": {
+        "verify_label": "HALLUCINATED",
+        "verify_confidence": 0.86,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      },
+      "anthropic_claude-sonnet-4.6": {
+        "verify_label": "VALID",
+        "verify_confidence": 0.88,
+        "recalled": true,
+        "author_jaccard": 1.0,
+        "venue_match": true,
+        "model_says_known": true,
+        "pred_authors_norm": [
+          "sun",
+          "ye",
+          "zhan",
+          "zhou"
+        ]
+      },
+      "anthropic_claude-opus-4.7": {
+        "verify_label": "VALID",
+        "verify_confidence": 0.95,
+        "recalled": true,
+        "author_jaccard": 1.0,
+        "venue_match": true,
+        "model_says_known": true,
+        "pred_authors_norm": [
+          "sun",
+          "ye",
+          "zhan",
+          "zhou"
+        ]
+      }
+    },
+    {
+      "bibtex_key": "Zhou2025a_731099",
+      "gpt-5.1": {
+        "verify_label": "HALLUCINATED",
+        "verify_confidence": 0.86,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      },
+      "anthropic_claude-sonnet-4.6": {
+        "verify_label": "UNCERTAIN",
+        "verify_confidence": 0.45,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      },
+      "anthropic_claude-opus-4.7": {
+        "verify_label": "VALID",
+        "verify_confidence": 0.9,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      }
+    },
+    {
+      "bibtex_key": "Zhu2024decomposing_b9c278",
+      "gpt-5.1": {
+        "verify_label": "HALLUCINATED",
+        "verify_confidence": 0.93,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      },
+      "anthropic_claude-sonnet-4.6": {
+        "verify_label": "VALID",
+        "verify_confidence": 0.78,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      },
+      "anthropic_claude-opus-4.7": {
+        "verify_label": "VALID",
+        "verify_confidence": 0.95,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      }
+    },
+    {
+      "bibtex_key": "Zhu2024learning_0b3af0",
+      "gpt-5.1": {
+        "verify_label": "HALLUCINATED",
+        "verify_confidence": 0.86,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      },
+      "anthropic_claude-sonnet-4.6": {
+        "verify_label": "VALID",
+        "verify_confidence": 0.88,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      },
+      "anthropic_claude-opus-4.7": {
+        "verify_label": "VALID",
+        "verify_confidence": 0.95,
+        "recalled": false,
+        "author_jaccard": 0.0,
+        "venue_match": false,
+        "model_says_known": false,
+        "pred_authors_norm": []
+      }
+    }
+  ]
+}

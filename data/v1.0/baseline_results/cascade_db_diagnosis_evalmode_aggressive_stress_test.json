@@ -1,24 +1,24 @@
 {
-  "tool_name": "cascade_db_diagnosis_evalmode_aggressive",
+  "tool_name": "cascade_db_diagnosis",
   "split_name": "stress_test",
   "num_entries": 121,
   "num_hallucinated": 121,
   "num_valid": 0,
-  "detection_rate": 0.9752066115702479,
+  "detection_rate": 0.9586776859504132,
   "false_positive_rate": null,
-  "f1_hallucination": 0.9874476987447699,
-  "tier_weighted_f1": 0.9872495446265938,
+  "f1_hallucination": 0.9789029535864979,
+  "tier_weighted_f1": 0.9760589318600369,
   "mcc": 0.0,
-  "macro_f1": 0.49372384937238495,
+  "macro_f1": 0.48945147679324896,
   "union_recall_at_k": {},
   "temporal_robustness": null,
-  "cost_efficiency": 0.04065108593339857,
-  "mean_api_calls": 3.6611570247933884,
-  "ece": 0.1465289256198347,
+  "cost_efficiency": null,
+  "mean_api_calls": 0.0,
+  "ece": 0.06549586776859505,
   "auroc": null,
   "auprc": 1.0,
   "num_uncertain": 0,
-  "tier3_f1": 0.9859154929577464,
+  "tier3_f1": 0.9565217391304348,
   "detection_rate_ci": null,
   "f1_hallucination_ci": null,
   "tier_weighted_f1_ci": null,
@@ -36,9 +36,9 @@
       "num_valid": 0
     },
     "3": {
-      "detection_rate": 0.9722222222222222,
+      "detection_rate": 0.9166666666666666,
       "false_positive_rate": 0.0,
-      "f1": 0.9859154929577464,
+      "f1": 0.9565217391304348,
       "precision": 1.0,
       "num_hallucinated": 36,
       "num_valid": 0
@@ -46,9 +46,9 @@
   },
   "per_type_metrics": {
     "arxiv_version_mismatch": {
-      "detection_rate": 0.9722222222222222,
+      "detection_rate": 0.9166666666666666,
       "false_positive_rate": 0.0,
-      "f1": 0.9859154929577464,
+      "f1": 0.9565217391304348,
       "count": 36
     },
     "merged_citation": {
@@ -65,15 +65,15 @@
     }
   },
   "coverage": 1.0,
-  "coverage_adjusted_f1": 0.9874476987447699,
+  "coverage_adjusted_f1": 0.9789029535864979,
   "type_accuracy": {
-    "overall": 0.031914893617021274,
+    "overall": 0.2604166666666667,
     "main_types_only": NaN,
-    "stress_test_only": 0.031914893617021274,
-    "num_evaluated": 94.0,
-    "num_correct": 3.0,
+    "stress_test_only": 0.2604166666666667,
+    "num_evaluated": 96.0,
+    "num_correct": 25.0,
     "tier_1": NaN,
-    "tier_2": 0.045454545454545456,
+    "tier_2": 0.390625,
     "tier_3": 0.0
   },
   "type_confusion": {
@@ -292,18 +292,18 @@
       "placeholder_authors": 0,
       "future_date": 0,
       "chimeric_title": 1,
-      "wrong_venue": 0,
-      "swapped_authors": 5,
+      "wrong_venue": 1,
+      "swapped_authors": 32,
       "preprint_as_published": 0,
-      "hybrid_fabrication": 21,
+      "hybrid_fabrication": 1,
       "near_miss_title": 0,
       "plausible_fabrication": 0,
-      "merged_citation": 2,
+      "merged_citation": 1,
       "partial_author_list": 0,
       "arxiv_version_mismatch": 0,
       "VALID": 0,
       "UNCERTAIN": 0,
-      "HALLUCINATED_unknown": 17
+      "HALLUCINATED_unknown": 10
     },
     "partial_author_list": {
       "fabricated_doi": 0,
@@ -312,36 +312,36 @@
       "future_date": 0,
       "chimeric_title": 0,
       "wrong_venue": 0,
-      "swapped_authors": 36,
+      "swapped_authors": 3,
       "preprint_as_published": 0,
       "hybrid_fabrication": 0,
       "near_miss_title": 0,
       "plausible_fabrication": 0,
-      "merged_citation": 0,
-      "partial_author_list": 1,
+      "merged_citation": 1,
+      "partial_author_list": 24,
       "arxiv_version_mismatch": 0,
       "VALID": 2,
       "UNCERTAIN": 0,
-      "HALLUCINATED_unknown": 0
+      "HALLUCINATED_unknown": 9
     },
     "arxiv_version_mismatch": {
       "fabricated_doi": 0,
-      "nonexistent_venue": 1,
+      "nonexistent_venue": 0,
       "placeholder_authors": 0,
       "future_date": 0,
       "chimeric_title": 0,
-      "wrong_venue": 22,
-      "swapped_authors": 1,
+      "wrong_venue": 8,
+      "swapped_authors": 0,
       "preprint_as_published": 0,
-      "hybrid_fabrication": 4,
+      "hybrid_fabrication": 24,
       "near_miss_title": 0,
       "plausible_fabrication": 0,
       "merged_citation": 0,
       "partial_author_list": 0,
       "arxiv_version_mismatch": 0,
-      "VALID": 1,
+      "VALID": 3,
       "UNCERTAIN": 0,
-      "HALLUCINATED_unknown": 7
+      "HALLUCINATED_unknown": 1
     },
     "valid": {
       "fabricated_doi": 0,
@@ -365,32 +365,43 @@
   },
   "cascade_breakdown_stats": {
     "stage1_db": {
-      "count": 62,
-      "fraction": 0.512396694214876,
-      "HALL": 59,
-      "VALID": 3,
-      "UNCERTAIN": 0
-    },
-    "stage2_diagnosis": {
-      "count": 58,
-      "fraction": 0.4793388429752066,
-      "HALL": 58,
-      "VALID": 0,
-      "UNCERTAIN": 0
-    },
-    "prescreening": {
-      "count": 1,
-      "fraction": 0.008264462809917356,
-      "HALL": 1,
-      "VALID": 0,
-      "UNCERTAIN": 0
-    },
-    "none": {
       "count": 0,
       "fraction": 0.0,
       "HALL": 0,
       "VALID": 0,
       "UNCERTAIN": 0
+    },
+    "stage2_diagnosis": {
+      "count": 0,
+      "fraction": 0.0,
+      "HALL": 0,
+      "VALID": 0,
+      "UNCERTAIN": 0
+    },
+    "prescreening": {
+      "count": 0,
+      "fraction": 0.0,
+      "HALL": 0,
+      "VALID": 0,
+      "UNCERTAIN": 0
+    },
+    "none": {
+      "count": 121,
+      "fraction": 1.0,
+      "HALL": 116,
+      "VALID": 5,
+      "UNCERTAIN": 0
     }
+  },
+  "_provenance": {
+    "snapshot_date": "2026-05-31",
+    "btu_version": "1.2.0",
+    "endpoint_stage2": "openrouter:anthropic/claude-sonnet-4.6",
+    "kind": "cascade",
+    "eval_mode": "aggressive",
+    "note": "v1.2.0 aggressive recompute from the cascade per-entry (residual UNCERTAIN->HALLUCINATED@0.55); Stage-2 is a dated LLM snapshot.",
+    "splits": [
+      "stress_test"
+    ]
   }
 }

@@ -1,0 +1,15 @@
+instantiation,rule,DR,FPR,F1,MCC,fp,fn
+field-level (real DB resolver),any_field_miss (k>=1 of 4),0.7591,0.1392,0.8088,0.6186,71,145
+field-level (real DB resolver),two_fields (k>=2 of 4),0.3654,0.0314,0.5251,0.4071,16,382
+field-level (real DB resolver),majority_fields (k>=3 of 4),0.2492,0.0157,0.3947,0.3332,8,452
+field-level (real DB resolver),unanimous_fields (k>=4 of 4),0.1279,0.0118,0.2248,0.2202,6,525
+structured subtests,any_miss (k>=1 of 4),0.9505,0.0,0.9746,0.9476,0,30
+structured subtests,two_of_four (k>=2),0.269,0.0,0.4239,0.3799,0,443
+structured subtests,majority (k>=3 of 4),0.0479,0.0,0.0913,0.1501,0,577
+structured subtests,unanimous (k>=4),0.0017,0.0,0.0033,0.0275,0,605
+structured subtests,cross_db_agreement_only,1.0,0.0351,0.9854,0.968,18,0
+noisy-voter ensemble,any_miss (>=1 of 8),0.9917,0.8713,0.7267,0.2461,447,5
+noisy-voter ensemble,two_votes (>=2 of 8),0.9835,0.6959,0.7646,0.4032,357,10
+noisy-voter ensemble,majority (>=5 of 8),0.8185,0.1774,0.8315,0.6396,91,110
+noisy-voter ensemble,supermajority (>=7 of 8),0.6337,0.0565,0.7537,0.5959,29,222
+noisy-voter ensemble,unanimous (>=8 of 8),0.4472,0.0409,0.6036,0.461,21,335

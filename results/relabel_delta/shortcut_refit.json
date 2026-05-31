@@ -1,0 +1,54 @@
+{
+  "n": 1119,
+  "n_hallucinated": 606,
+  "n_valid": 513,
+  "prevalence_hallucinated": 0.5416,
+  "majority_class": "HALLUCINATED",
+  "majority_baseline_acc": 0.5416,
+  "cv_folds": 5,
+  "cv_accuracy_mean": 0.588,
+  "cv_accuracy_std": 0.0214,
+  "margin_over_baseline": 0.0464,
+  "fold_accuracies": [
+    0.5982,
+    0.5714,
+    0.6161,
+    0.5982,
+    0.5561
+  ],
+  "coefficients": {
+    "has_doi": 1.1876,
+    "field_count": -1.2197,
+    "author_count": -0.222,
+    "title_length_chars": -0.0199,
+    "title_word_count": -0.0843,
+    "year_numeric": 0.5761,
+    "bibtex_type": 0.8311,
+    "has_booktitle": -0.5884
+  },
+  "variant_shipped_script_unshuffled_raw": {
+    "cv_accuracy_mean": 0.5423,
+    "cv_accuracy_std": 0.075,
+    "margin_over_baseline": 0.0008,
+    "fold_accuracies": [
+      0.567,
+      0.5625,
+      0.5893,
+      0.5982,
+      0.3946
+    ],
+    "note": "Exact reproduction of scripts/analyze_shortcuts.py (cv=5 unshuffled, unscaled features). Fold 5 collapses because the dev file ends with an all-HALLUCINATED block; not a faithful estimate of metadata signal."
+  },
+  "features": [
+    "has_doi",
+    "field_count",
+    "author_count",
+    "title_length_chars",
+    "title_word_count",
+    "year_numeric",
+    "bibtex_type",
+    "has_booktitle"
+  ],
+  "method": "Variant B (headline): StandardScaler + StratifiedKFold(5, shuffle, seed=42); LogisticRegression(max_iter=1000, seed=42); accuracy scoring.",
+  "labels_source": "data/v1.0/dev_public.jsonl (v1.1.1 relabeled, dev 513 valid / 606 hall)"
+}

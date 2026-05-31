@@ -1,0 +1,39 @@
+{
+  "model": "deepseek/deepseek-v3.2",
+  "k": 3,
+  "per_draw": [
+    {
+      "detection_rate": 1.0,
+      "false_positive_rate": 0.9615384615384616,
+      "f1_hallucination": 0.7311827956989247,
+      "num_uncertain": 0,
+      "coverage": 1.0
+    },
+    {
+      "detection_rate": 0.9705882352941176,
+      "false_positive_rate": 0.8461538461538461,
+      "f1_hallucination": 0.7415730337078651,
+      "num_uncertain": 0,
+      "coverage": 1.0
+    },
+    {
+      "detection_rate": 0.9705882352941176,
+      "false_positive_rate": 0.8846153846153846,
+      "f1_hallucination": 0.7333333333333333,
+      "num_uncertain": 0,
+      "coverage": 1.0
+    }
+  ],
+  "majority_vote": {
+    "detection_rate": 1.0,
+    "false_positive_rate": 0.9230769230769231,
+    "f1_hallucination": 0.7391304347826086,
+    "num_uncertain": 0,
+    "coverage": 1.0
+  },
+  "across_draw_flip": {
+    "unstable_entries": 8,
+    "n_compared": 60,
+    "rate": 0.13333333333333333
+  }
+}

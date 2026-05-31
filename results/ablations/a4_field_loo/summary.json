@@ -1,0 +1,261 @@
+{
+  "experiment": "A4_input_format_field_leave_one_out",
+  "description": "Full-BibTeX vs structured-field input, plus leave-one-field-out (title/authors/venue/year/doi). DR/FPR deltas. Dynamic complement to the static W6 format-tell audit.",
+  "snapshot_date": "2026-05-31",
+  "endpoint": "openrouter.ai/api/v1",
+  "endpoint_drift_note": "FRESH dated snapshot; NOT a reproduction of the 2026-05-04 published delta-eval aggregates. Within-run format/field deltas are the deliverable and are robust to absolute-level endpoint drift.",
+  "sample": {
+    "source": "data/v1.0/dev_public.jsonl",
+    "n": 150,
+    "n_hall": 81,
+    "n_valid": 69,
+    "seed": 42
+  },
+  "conditions": [
+    "full",
+    "structured",
+    "loo_title",
+    "loo_author",
+    "loo_venue",
+    "loo_year",
+    "loo_doi"
+  ],
+  "temperature": 0.0,
+  "anchor_model": "deepseek-v3.2",
+  "models": {
+    "deepseek-v3.2": "deepseek/deepseek-v3.2",
+    "gemini-2.5-flash": "google/gemini-2.5-flash"
+  },
+  "per_model": {
+    "deepseek-v3.2": {
+      "model_key": "deepseek-v3.2",
+      "model_id": "deepseek/deepseek-v3.2",
+      "endpoint": "openrouter.ai/api/v1",
+      "n": 150,
+      "n_hall": 81,
+      "seed": 42,
+      "temperature": 0.0,
+      "summary": {
+        "full": {
+          "detection_rate": 1.0,
+          "false_positive_rate": 0.9565217391304348,
+          "f1_hallucination": 0.7105263157894737,
+          "num_uncertain": 0,
+          "num_pred_hallucinated": 147,
+          "n": 150,
+          "n_hall": 81
+        },
+        "structured": {
+          "detection_rate": 0.9753086419753086,
+          "false_positive_rate": 0.8115942028985508,
+          "f1_hallucination": 0.7314814814814815,
+          "num_uncertain": 0,
+          "num_pred_hallucinated": 135,
+          "n": 150,
+          "n_hall": 81
+        },
+        "loo_title": {
+          "detection_rate": 0.9875,
+          "false_positive_rate": 0.9402985074626866,
+          "f1_hallucination": 0.7117117117117117,
+          "num_uncertain": 3,
+          "num_pred_hallucinated": 142,
+          "n": 150,
+          "n_hall": 81,
+          "n_drop_affected": 150
+        },
+        "loo_author": {
+          "detection_rate": 0.9873417721518988,
+          "false_positive_rate": 0.8955223880597015,
+          "f1_hallucination": 0.7188940092165899,
+          "num_uncertain": 4,
+          "num_pred_hallucinated": 138,
+          "n": 150,
+          "n_hall": 81,
+          "n_drop_affected": 150
+        },
+        "loo_venue": {
+          "detection_rate": 0.9259259259259259,
+          "false_positive_rate": 0.8260869565217391,
+          "f1_hallucination": 0.7042253521126761,
+          "num_uncertain": 0,
+          "num_pred_hallucinated": 132,
+          "n": 150,
+          "n_hall": 81,
+          "n_drop_affected": 139
+        },
+        "loo_year": {
+          "detection_rate": 0.9259259259259259,
+          "false_positive_rate": 0.7536231884057971,
+          "f1_hallucination": 0.721153846153846,
+          "num_uncertain": 0,
+          "num_pred_hallucinated": 127,
+          "n": 150,
+          "n_hall": 81,
+          "n_drop_affected": 150
+        },
+        "loo_doi": {
+          "detection_rate": 0.9629629629629629,
+          "false_positive_rate": 0.8405797101449275,
+          "f1_hallucination": 0.7188940092165897,
+          "num_uncertain": 0,
+          "num_pred_hallucinated": 136,
+          "n": 150,
+          "n_hall": 81,
+          "n_drop_affected": 71
+        }
+      },
+      "loo_deltas_vs_structured": {
+        "loo_title": {
+          "dropped_field": "title",
+          "n_drop_affected": 150,
+          "dDR_vs_structured": 0.012191358024691401,
+          "dFPR_vs_structured": 0.12870430456413584
+        },
+        "loo_author": {
+          "dropped_field": "authors",
+          "n_drop_affected": 150,
+          "dDR_vs_structured": 0.012033130176590134,
+          "dFPR_vs_structured": 0.08392818516115075
+        },
+        "loo_venue": {
+          "dropped_field": "venue",
+          "n_drop_affected": 139,
+          "dDR_vs_structured": -0.04938271604938271,
+          "dFPR_vs_structured": 0.01449275362318836
+        },
+        "loo_year": {
+          "dropped_field": "year",
+          "n_drop_affected": 150,
+          "dDR_vs_structured": -0.04938271604938271,
+          "dFPR_vs_structured": -0.05797101449275366
+        },
+        "loo_doi": {
+          "dropped_field": "doi",
+          "n_drop_affected": 71,
+          "dDR_vs_structured": -0.012345679012345734,
+          "dFPR_vs_structured": 0.02898550724637672
+        }
+      },
+      "format_delta_full_vs_structured": {
+        "dDR": -0.024691358024691357,
+        "dFPR": -0.14492753623188404
+      }
+    },
+    "gemini-2.5-flash": {
+      "model_key": "gemini-2.5-flash",
+      "model_id": "google/gemini-2.5-flash",
+      "endpoint": "openrouter.ai/api/v1",
+      "n": 150,
+      "n_hall": 81,
+      "seed": 42,
+      "temperature": 0.0,
+      "summary": {
+        "full": {
+          "detection_rate": 0.5432098765432098,
+          "false_positive_rate": 0.10144927536231885,
+          "f1_hallucination": 0.6666666666666666,
+          "num_uncertain": 0,
+          "num_pred_hallucinated": 51,
+          "n": 150,
+          "n_hall": 81
+        },
+        "structured": {
+          "detection_rate": 0.6172839506172839,
+          "false_positive_rate": 0.14492753623188406,
+          "f1_hallucination": 0.7092198581560284,
+          "num_uncertain": 0,
+          "num_pred_hallucinated": 60,
+          "n": 150,
+          "n_hall": 81
+        },
+        "loo_title": {
+          "detection_rate": 0.7887323943661971,
+          "false_positive_rate": 0.5,
+          "f1_hallucination": 0.7088607594936709,
+          "num_uncertain": 17,
+          "num_pred_hallucinated": 87,
+          "n": 150,
+          "n_hall": 81,
+          "n_drop_affected": 150
+        },
+        "loo_author": {
+          "detection_rate": 0.7088607594936709,
+          "false_positive_rate": 0.3333333333333333,
+          "f1_hallucination": 0.7088607594936709,
+          "num_uncertain": 2,
+          "num_pred_hallucinated": 79,
+          "n": 150,
+          "n_hall": 81,
+          "n_drop_affected": 150
+        },
+        "loo_venue": {
+          "detection_rate": 0.5185185185185185,
+          "false_positive_rate": 0.10144927536231885,
+          "f1_hallucination": 0.6461538461538462,
+          "num_uncertain": 0,
+          "num_pred_hallucinated": 49,
+          "n": 150,
+          "n_hall": 81,
+          "n_drop_affected": 139
+        },
+        "loo_year": {
+          "detection_rate": 0.5925925925925926,
+          "false_positive_rate": 0.2753623188405797,
+          "f1_hallucination": 0.6486486486486487,
+          "num_uncertain": 0,
+          "num_pred_hallucinated": 67,
+          "n": 150,
+          "n_hall": 81,
+          "n_drop_affected": 150
+        },
+        "loo_doi": {
+          "detection_rate": 0.4691358024691358,
+          "false_positive_rate": 0.14492753623188406,
+          "f1_hallucination": 0.5891472868217054,
+          "num_uncertain": 0,
+          "num_pred_hallucinated": 48,
+          "n": 150,
+          "n_hall": 81,
+          "n_drop_affected": 71
+        }
+      },
+      "loo_deltas_vs_structured": {
+        "loo_title": {
+          "dropped_field": "title",
+          "n_drop_affected": 150,
+          "dDR_vs_structured": 0.17144844374891322,
+          "dFPR_vs_structured": 0.35507246376811596
+        },
+        "loo_author": {
+          "dropped_field": "authors",
+          "n_drop_affected": 150,
+          "dDR_vs_structured": 0.09157680887638697,
+          "dFPR_vs_structured": 0.18840579710144925
+        },
+        "loo_venue": {
+          "dropped_field": "venue",
+          "n_drop_affected": 139,
+          "dDR_vs_structured": -0.09876543209876543,
+          "dFPR_vs_structured": -0.043478260869565216
+        },
+        "loo_year": {
+          "dropped_field": "year",
+          "n_drop_affected": 150,
+          "dDR_vs_structured": -0.024691358024691357,
+          "dFPR_vs_structured": 0.13043478260869565
+        },
+        "loo_doi": {
+          "dropped_field": "doi",
+          "n_drop_affected": 71,
+          "dDR_vs_structured": -0.14814814814814814,
+          "dFPR_vs_structured": 0.0
+        }
+      },
+      "format_delta_full_vs_structured": {
+        "dDR": 0.07407407407407407,
+        "dFPR": 0.043478260869565216
+      }
+    }
+  }
+}

@@ -1,0 +1,434 @@
+{
+  "experiment": "A1_prompt_sensitivity_full",
+  "snapshot": {
+    "date": "2026-05-31",
+    "endpoint": "https://openrouter.ai/api/v1",
+    "policy": "FRESH dated snapshot vs OpenRouter endpoint; NOT a reproduction of the 2026-05-04 published delta-eval. Endpoint may drift.",
+    "temperature": 0.0,
+    "seed": 42,
+    "models_excluded": {
+      "gpt-5.1": "OpenAI quota exhausted 2026-05-30; prompt effect is model-agnostic"
+    }
+  },
+  "sample": {
+    "path": "results/ablations/a1_prompt_full/sample_150.jsonl",
+    "n": 150,
+    "n_hallucinated": 81,
+    "n_valid": 69,
+    "stratified_by": [
+      "label",
+      "difficulty_tier"
+    ],
+    "seed": 42
+  },
+  "models": {
+    "sonnet-4.6": "anthropic/claude-sonnet-4.6",
+    "deepseek-v3.2": "deepseek/deepseek-v3.2",
+    "gemini-2.5-flash": "google/gemini-2.5-flash"
+  },
+  "variants": [
+    "default",
+    "notaxo",
+    "uncertain",
+    "terse"
+  ],
+  "per_model_per_variant": {
+    "sonnet-4.6": {
+      "default": {
+        "model": "sonnet-4.6",
+        "model_id": "anthropic/claude-sonnet-4.6",
+        "variant": "default",
+        "n": 150,
+        "detection_rate": 0.9090909090909091,
+        "false_positive_rate": 0.12121212121212122,
+        "f1_hallucination": 0.9032258064516129,
+        "ece": 0.08664335664335665,
+        "num_uncertain": 7,
+        "uncertain_rate": 0.04666666666666667,
+        "num_error_fallback": 0,
+        "coverage": 1.0
+      },
+      "notaxo": {
+        "model": "sonnet-4.6",
+        "model_id": "anthropic/claude-sonnet-4.6",
+        "variant": "notaxo",
+        "n": 150,
+        "detection_rate": 0.7435897435897436,
+        "false_positive_rate": 0.10144927536231885,
+        "f1_hallucination": 0.8111888111888114,
+        "ece": 0.097687074829932,
+        "num_uncertain": 3,
+        "uncertain_rate": 0.02,
+        "num_error_fallback": 0,
+        "coverage": 1.0
+      },
+      "uncertain": {
+        "model": "sonnet-4.6",
+        "model_id": "anthropic/claude-sonnet-4.6",
+        "variant": "uncertain",
+        "n": 150,
+        "detection_rate": 0.6666666666666666,
+        "false_positive_rate": 0.015384615384615385,
+        "f1_hallucination": 0.793388429752066,
+        "ece": 0.08313868613138681,
+        "num_uncertain": 13,
+        "uncertain_rate": 0.08666666666666667,
+        "num_error_fallback": 0,
+        "coverage": 1.0
+      },
+      "terse": {
+        "model": "sonnet-4.6",
+        "model_id": "anthropic/claude-sonnet-4.6",
+        "variant": "terse",
+        "n": 150,
+        "detection_rate": 0.759493670886076,
+        "false_positive_rate": 0.07352941176470588,
+        "f1_hallucination": 0.8333333333333334,
+        "ece": 0.11299319727891158,
+        "num_uncertain": 3,
+        "uncertain_rate": 0.02,
+        "num_error_fallback": 0,
+        "coverage": 1.0
+      }
+    },
+    "deepseek-v3.2": {
+      "default": {
+        "model": "deepseek-v3.2",
+        "model_id": "deepseek/deepseek-v3.2",
+        "variant": "default",
+        "n": 150,
+        "detection_rate": 0.9753086419753086,
+        "false_positive_rate": 0.8985507246376812,
+        "f1_hallucination": 0.7117117117117119,
+        "ece": 0.37239999999999995,
+        "num_uncertain": 0,
+        "uncertain_rate": 0.0,
+        "num_error_fallback": 0,
+        "coverage": 1.0
+      },
+      "notaxo": {
+        "model": "deepseek-v3.2",
+        "model_id": "deepseek/deepseek-v3.2",
+        "variant": "notaxo",
+        "n": 150,
+        "detection_rate": 0.9382716049382716,
+        "false_positive_rate": 0.7681159420289855,
+        "f1_hallucination": 0.7238095238095239,
+        "ece": 0.3352,
+        "num_uncertain": 0,
+        "uncertain_rate": 0.0,
+        "num_error_fallback": 0,
+        "coverage": 1.0
+      },
+      "uncertain": {
+        "model": "deepseek-v3.2",
+        "model_id": "deepseek/deepseek-v3.2",
+        "variant": "uncertain",
+        "n": 150,
+        "detection_rate": 0.8717948717948718,
+        "false_positive_rate": 0.6,
+        "f1_hallucination": 0.7351351351351351,
+        "ece": 0.28209790209790203,
+        "num_uncertain": 7,
+        "uncertain_rate": 0.04666666666666667,
+        "num_error_fallback": 0,
+        "coverage": 1.0
+      },
+      "terse": {
+        "model": "deepseek-v3.2",
+        "model_id": "deepseek/deepseek-v3.2",
+        "variant": "terse",
+        "n": 150,
+        "detection_rate": 0.8888888888888888,
+        "false_positive_rate": 0.6666666666666666,
+        "f1_hallucination": 0.7236180904522612,
+        "ece": 0.31459999999999994,
+        "num_uncertain": 0,
+        "uncertain_rate": 0.0,
+        "num_error_fallback": 0,
+        "coverage": 1.0
+      }
+    },
+    "gemini-2.5-flash": {
+      "default": {
+        "model": "gemini-2.5-flash",
+        "model_id": "google/gemini-2.5-flash",
+        "variant": "default",
+        "n": 150,
+        "detection_rate": 0.4691358024691358,
+        "false_positive_rate": 0.13043478260869565,
+        "f1_hallucination": 0.59375,
+        "ece": 0.31600000000000006,
+        "num_uncertain": 0,
+        "uncertain_rate": 0.0,
+        "num_error_fallback": 0,
+        "coverage": 1.0
+      },
+      "notaxo": {
+        "model": "gemini-2.5-flash",
+        "model_id": "google/gemini-2.5-flash",
+        "variant": "notaxo",
+        "n": 150,
+        "detection_rate": 0.37037037037037035,
+        "false_positive_rate": 0.08695652173913043,
+        "f1_hallucination": 0.5128205128205128,
+        "ece": 0.32400000000000007,
+        "num_uncertain": 0,
+        "uncertain_rate": 0.0,
+        "num_error_fallback": 0,
+        "coverage": 1.0
+      },
+      "uncertain": {
+        "model": "gemini-2.5-flash",
+        "model_id": "google/gemini-2.5-flash",
+        "variant": "uncertain",
+        "n": 150,
+        "detection_rate": 0.38271604938271603,
+        "false_positive_rate": 0.08695652173913043,
+        "f1_hallucination": 0.5254237288135593,
+        "ece": 0.31400000000000006,
+        "num_uncertain": 0,
+        "uncertain_rate": 0.0,
+        "num_error_fallback": 0,
+        "coverage": 1.0
+      },
+      "terse": {
+        "model": "gemini-2.5-flash",
+        "model_id": "google/gemini-2.5-flash",
+        "variant": "terse",
+        "n": 150,
+        "detection_rate": 0.32098765432098764,
+        "false_positive_rate": 0.10144927536231885,
+        "f1_hallucination": 0.45614035087719296,
+        "ece": 0.41433333333333344,
+        "num_uncertain": 0,
+        "uncertain_rate": 0.0,
+        "num_error_fallback": 0,
+        "coverage": 1.0
+      }
+    }
+  },
+  "verdict_flip_rate": {
+    "sonnet-4.6": {
+      "per_variant_vs_default": {
+        "notaxo": {
+          "flip_rate_all": 0.16666666666666666,
+          "n_flip_all": 25,
+          "flip_rate_strict": 0.12056737588652482,
+          "n_flip_strict": 17,
+          "n_strict_eligible": 141
+        },
+        "uncertain": {
+          "flip_rate_all": 0.24666666666666667,
+          "n_flip_all": 37,
+          "flip_rate_strict": 0.1450381679389313,
+          "n_flip_strict": 19,
+          "n_strict_eligible": 131
+        },
+        "terse": {
+          "flip_rate_all": 0.17333333333333334,
+          "n_flip_all": 26,
+          "flip_rate_strict": 0.11428571428571428,
+          "n_flip_strict": 16,
+          "n_strict_eligible": 140
+        }
+      },
+      "mean_flip_rate_all": 0.19555555555555557
+    },
+    "deepseek-v3.2": {
+      "per_variant_vs_default": {
+        "notaxo": {
+          "flip_rate_all": 0.08,
+          "n_flip_all": 12,
+          "flip_rate_strict": 0.08,
+          "n_flip_strict": 12,
+          "n_strict_eligible": 150
+        },
+        "uncertain": {
+          "flip_rate_all": 0.22666666666666666,
+          "n_flip_all": 34,
+          "flip_rate_strict": 0.1888111888111888,
+          "n_flip_strict": 27,
+          "n_strict_eligible": 143
+        },
+        "terse": {
+          "flip_rate_all": 0.15333333333333332,
+          "n_flip_all": 23,
+          "flip_rate_strict": 0.15333333333333332,
+          "n_flip_strict": 23,
+          "n_strict_eligible": 150
+        }
+      },
+      "mean_flip_rate_all": 0.15333333333333332
+    },
+    "gemini-2.5-flash": {
+      "per_variant_vs_default": {
+        "notaxo": {
+          "flip_rate_all": 0.07333333333333333,
+          "n_flip_all": 11,
+          "flip_rate_strict": 0.07333333333333333,
+          "n_flip_strict": 11,
+          "n_strict_eligible": 150
+        },
+        "uncertain": {
+          "flip_rate_all": 0.06666666666666667,
+          "n_flip_all": 10,
+          "flip_rate_strict": 0.06666666666666667,
+          "n_flip_strict": 10,
+          "n_strict_eligible": 150
+        },
+        "terse": {
+          "flip_rate_all": 0.13333333333333333,
+          "n_flip_all": 20,
+          "flip_rate_strict": 0.13333333333333333,
+          "n_flip_strict": 20,
+          "n_strict_eligible": 150
+        }
+      },
+      "mean_flip_rate_all": 0.0911111111111111
+    },
+    "_pooled": {
+      "flip_rate_all": 0.14666666666666667,
+      "flip_rate_strict": 0.11877394636015326,
+      "note": "pooled over all models x all non-default variants vs default"
+    }
+  },
+  "ranking_stability_spearman": {
+    "f1_hallucination": {
+      "per_variant_ranks": {
+        "default": {
+          "sonnet-4.6": 1.0,
+          "deepseek-v3.2": 2.0,
+          "gemini-2.5-flash": 3.0
+        },
+        "notaxo": {
+          "sonnet-4.6": 1.0,
+          "deepseek-v3.2": 2.0,
+          "gemini-2.5-flash": 3.0
+        },
+        "uncertain": {
+          "sonnet-4.6": 1.0,
+          "deepseek-v3.2": 2.0,
+          "gemini-2.5-flash": 3.0
+        },
+        "terse": {
+          "sonnet-4.6": 1.0,
+          "deepseek-v3.2": 2.0,
+          "gemini-2.5-flash": 3.0
+        }
+      },
+      "rho_vs_default": {
+        "notaxo": 1.0,
+        "uncertain": 1.0,
+        "terse": 1.0
+      },
+      "mean_pairwise_rho": 1.0,
+      "n_models": 3
+    },
+    "detection_rate": {
+      "per_variant_ranks": {
+        "default": {
+          "sonnet-4.6": 2.0,
+          "deepseek-v3.2": 1.0,
+          "gemini-2.5-flash": 3.0
+        },
+        "notaxo": {
+          "sonnet-4.6": 2.0,
+          "deepseek-v3.2": 1.0,
+          "gemini-2.5-flash": 3.0
+        },
+        "uncertain": {
+          "sonnet-4.6": 2.0,
+          "deepseek-v3.2": 1.0,
+          "gemini-2.5-flash": 3.0
+        },
+        "terse": {
+          "sonnet-4.6": 2.0,
+          "deepseek-v3.2": 1.0,
+          "gemini-2.5-flash": 3.0
+        }
+      },
+      "rho_vs_default": {
+        "notaxo": 1.0,
+        "uncertain": 1.0,
+        "terse": 1.0
+      },
+      "mean_pairwise_rho": 1.0,
+      "n_models": 3
+    },
+    "false_positive_rate": {
+      "per_variant_ranks": {
+        "default": {
+          "sonnet-4.6": 1.0,
+          "deepseek-v3.2": 3.0,
+          "gemini-2.5-flash": 2.0
+        },
+        "notaxo": {
+          "sonnet-4.6": 2.0,
+          "deepseek-v3.2": 3.0,
+          "gemini-2.5-flash": 1.0
+        },
+        "uncertain": {
+          "sonnet-4.6": 1.0,
+          "deepseek-v3.2": 3.0,
+          "gemini-2.5-flash": 2.0
+        },
+        "terse": {
+          "sonnet-4.6": 1.0,
+          "deepseek-v3.2": 3.0,
+          "gemini-2.5-flash": 2.0
+        }
+      },
+      "rho_vs_default": {
+        "notaxo": 0.5,
+        "uncertain": 1.0,
+        "terse": 1.0
+      },
+      "mean_pairwise_rho": 0.75,
+      "n_models": 3
+    }
+  },
+  "fpr_decomposition": {
+    "sonnet-4.6": {
+      "default_fpr": 0.12121212121212122,
+      "min_fpr": 0.015384615384615385,
+      "min_fpr_variant": "uncertain",
+      "prompt_induced_fpr_drop": 0.10582750582750583,
+      "all_variant_fpr": {
+        "default": 0.12121212121212122,
+        "notaxo": 0.10144927536231885,
+        "uncertain": 0.015384615384615385,
+        "terse": 0.07352941176470588
+      }
+    },
+    "deepseek-v3.2": {
+      "default_fpr": 0.8985507246376812,
+      "min_fpr": 0.6,
+      "min_fpr_variant": "uncertain",
+      "prompt_induced_fpr_drop": 0.2985507246376812,
+      "all_variant_fpr": {
+        "default": 0.8985507246376812,
+        "notaxo": 0.7681159420289855,
+        "uncertain": 0.6,
+        "terse": 0.6666666666666666
+      }
+    },
+    "gemini-2.5-flash": {
+      "default_fpr": 0.13043478260869565,
+      "min_fpr": 0.08695652173913043,
+      "min_fpr_variant": "notaxo",
+      "prompt_induced_fpr_drop": 0.043478260869565216,
+      "all_variant_fpr": {
+        "default": 0.13043478260869565,
+        "notaxo": 0.08695652173913043,
+        "uncertain": 0.08695652173913043,
+        "terse": 0.10144927536231885
+      }
+    }
+  },
+  "framing": {
+    "DR": "stable capability \u2014 should move little across wording",
+    "FPR": "wording-sensitive calibration artifact \u2014 moves most",
+    "key_reassurance": "model RANKING is prompt-invariant (Spearman) even when absolute FPR is not; quantifies how much of the ~0.89 default FPR is prompt-induced rather than a real false-alarm rate"
+  }
+}

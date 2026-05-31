@@ -1,0 +1,50 @@
+{
+  "default": {
+    "variant": "default",
+    "n": 60,
+    "detection_rate": 1.0,
+    "false_positive_rate": 0.8846153846153846,
+    "f1_hallucination": 0.7472527472527472,
+    "ece": null,
+    "num_uncertain": 0,
+    "uncertain_rate": 0.0,
+    "num_error_fallback": 0,
+    "coverage": 1.0
+  },
+  "notaxo": {
+    "variant": "notaxo",
+    "n": 60,
+    "detection_rate": 0.9411764705882353,
+    "false_positive_rate": 0.6923076923076923,
+    "f1_hallucination": 0.7619047619047621,
+    "ece": 0.26816666666666655,
+    "num_uncertain": 0,
+    "uncertain_rate": 0.0,
+    "num_error_fallback": 0,
+    "coverage": 1.0
+  },
+  "uncertain": {
+    "variant": "uncertain",
+    "n": 60,
+    "detection_rate": 0.90625,
+    "false_positive_rate": 0.5833333333333334,
+    "f1_hallucination": 0.7733333333333334,
+    "ece": null,
+    "num_uncertain": 4,
+    "uncertain_rate": 0.06666666666666667,
+    "num_error_fallback": 0,
+    "coverage": 1.0
+  },
+  "terse": {
+    "variant": "terse",
+    "n": 60,
+    "detection_rate": 0.8823529411764706,
+    "false_positive_rate": 0.6538461538461539,
+    "f1_hallucination": 0.7407407407407407,
+    "ece": null,
+    "num_uncertain": 0,
+    "uncertain_rate": 0.0,
+    "num_error_fallback": 0,
+    "coverage": 1.0
+  }
+}

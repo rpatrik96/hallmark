@@ -1,0 +1,66 @@
+{
+  "task": "TASK C — resolve camera-ready hard TODOs F10 / F5(codesign_pertype) / F7(cascade AUROC) with faithful numbers or precise documented limitations. NEVER ship unfaithful numbers.",
+  "date": "2026-05-30",
+  "branch_benchmark": "chore/paper-todo-resolution",
+  "branch_paper": "arxiv-prep",
+
+  "F10_gpt54_temporal_448": {
+    "status": "RESOLVED (faithful — per-entry file already existed; no API re-run needed)",
+    "paper_locations": ["analysis.tex L48 (FPR 41.3%)", "appendix.tex app:gpt54-probe / tab:gpt54-probe L856 (All N=448, FPR 41.3, DR 89.9, -32.9)"],
+    "finding": "The GPT-5.4 zero-shot 448-entry temporal predictions ARE shipped per-entry at results/gpt54_probe/llm_openai_gpt54_default_temporal_predictions.jsonl (448 lines, one prediction per canonical key). The paper's 0.413 was previously traced only to the aggregate figures/gpt54_probe_results.json; it is in fact reproducible from the per-entry file.",
+    "verification": {
+      "join": "448 predictions joined to ground-truth labels in results/temporal_supplement/temporal_supplement_2024_2025.jsonl (the 448 keys that have a GPT-5.4 prediction)",
+      "canonical_labels": "300 VALID / 148 HALLUCINATED, coverage 1.0",
+      "confusion": {"TP": 133, "FP": 124, "FN": 15, "TN": 176},
+      "fpr_reproduced": 0.41333,
+      "dr_reproduced": 0.89865,
+      "fpr_paper": 0.41333,
+      "dr_paper": 0.89865,
+      "stratified_table_reproduces": "All-row FPR 41.3 / DR 89.9 exact; 2025 stratum FPR 56.8 / DR 92.3 exact (publication-year strata; the 2024-and-earlier vs Future boundary differs by ~3 entries under a date-parse heuristic but the aggregate is exact)"
+    },
+    "artifacts_shipped": [
+      "results/temporal_supplement/gpt54_448/gpt54_temporal_448_per_entry.jsonl (self-contained: model pred + ground-truth label + type + pub-date, 448 rows)",
+      "results/temporal_supplement/gpt54_448/gpt54_temporal_448_summary.json",
+      "results/temporal_supplement/gpt54_448/rescore_gpt54_448.py (asserts FPR 0.413 / DR 0.899 offline)"
+    ],
+    "paper_action": "F10 TODO removable: cite the per-entry file results/gpt54_probe/llm_openai_gpt54_default_temporal_predictions.jsonl (or the self-contained results/temporal_supplement/gpt54_448/ export) as the reproducibility source for FPR 0.413. No number changes; 0.413/89.9/-32.9 all stand and are now offline-reproducible."
+  },
+
+  "F5_bibtexupdater_codesign_pertype": {
+    "status": "DOCUMENTED LIMITATION (faithful per-paper-config re-run infeasible; raw-tool recompute is a DIFFERENT configuration, not a drop-in)",
+    "paper_location": "appendix.tex tab:codesign_pertype (L959-979) — carries % TODO(F5) at L982",
+    "attempted": "Faithful re-run of bibtex-updater (bibtex-check) on dev_public to compute per-type DR on the NEW labels.",
+    "reason_not_shipped": [
+      "(1) A fresh bibtex-check re-run is UNFAITHFUL. Time-boxed probe (12 dev entries, rate_limit=30, no S2_API_KEY): 8/12 entries TIMED OUT to 'missing' (backfilled VALID) at the documented ~90s/entry Semantic-Scholar-fallback latency; only 4/12 entries kept the released label; exact-status agreement 1/12; one entry that did return drifted status hallucinated->partial_match (DB drift). Extrapolated to 1119 entries this is many hours and still times out per 30-min batch (the documented CI failure mode). S2_API_KEY is not set in this environment.",
+      "(2) The released RAW bibtex-check per-entry file (data/v1.0/baseline_results/bibtexupdater_raw_dev_public.jsonl, 1112/1119 keys) IS offline-rescorable, but it does NOT reproduce the PUBLISHED bibtex-updater dev configuration: raw-tool-only NEW matrix = TP589/FP93/FN17/TN420 (DR .9719 / FPR .1813); PUBLISHED NEW = TP587/FP99/FN19/TN414 (DR .9686 / FPR .1930, manifest 11.6). OLD-label check: raw gives FPR 84/486=.1728 vs published 87/486=.179. The ~6-FP gap is a network-bound layer (DOI-resolution prescreening or a non-archived run variant) absent from the raw file; local year/author prescreen checks explain 0 of the 6 (verified offline). Substituting raw-tool-only per-type DRs would be INCONSISTENT with the published bibtex-updater aggregate cells the paper reports elsewhere (tab:results / tab:test_public_full DR .969 / FPR .193).",
+      "(3) No full per-entry file for the PUBLISHED config (with the DOI/prescreening layer applied) exists; only the aggregate JSON + 27 moved-key changed_predictions. The published per_type_metrics block in bibtexupdater_dev_public.json carries OLD type counts (633 hall total; e.g. plausible_fabrication count=116 OLD vs 76 NEW), confirming it was carried over, not regenerated cell-by-cell."
+    ],
+    "manifest_consistency": "Matches manifest section 11.2 / flag F5: bibtex-updater is summary-only on dev for per-type purposes; keep printed OLD per-type DRs and leave % TODO(F5). The published per-type DRs carried forward (OLD): fabricated_doi .949, nonexistent_venue .925, placeholder_authors 1.0, future_date 1.0, chimeric_title .977, wrong_venue .978, author_mismatch .940, preprint_as_published 1.0, hybrid_fabrication .911, near_miss_title .927, plausible_fabrication .897.",
+    "transparency_artifact": "results/relabel_delta/bibtexupdater_pertype_rawtool_dev.json — the raw-tool-only per-type DR on NEW labels (faithful to the RAW tool config only; e.g. plausible_fabrication .897->1.000, near_miss .927->.942, wrong_venue/chimeric/hybrid ->1.000). Explicitly NOT for paper substitution; provided so the direction of movement is documented.",
+    "limitation_note_for_paper": "bibtex-updater is summary-only on dev_public for per-type detection: the published dev aggregate stores no per-entry verdicts for the deployed (DOI-resolution-inclusive) configuration, the released raw bibtex-check file reflects a tool-only configuration ~6 false positives short of the published numbers, and a fresh re-run is not faithful because Semantic Scholar rate-limiting (no shared-IP key) times out most entries and the database state has drifted since the original run. We therefore carry the pre-relabel per-type detection rates forward; the relabel removed and retyped hallucinated entries but cannot be safely decremented from per-type buckets summary-only."
+  },
+
+  "F7_cascade_auroc": {
+    "status": "DOCUMENTED LIMITATION (AUROC not faithfully recomputable; T3-F1 already faithful & unchanged)",
+    "paper_location": "experiments.tex tab:cascade L118-122 (AUROC cells: test .867/.805, dev .833/.740) + takeaway L128 (AUROC deltas -6.2/-9.3pp)",
+    "auroc_cells_published": {"test_public_cons": 0.867, "test_public_agg": 0.805, "dev_public_cons": 0.833, "dev_public_agg": 0.740},
+    "reason_not_shipped": [
+      "(1) AUROC requires the FULL per-entry confidence/score distribution over all 1119 dev (831 test) entries. NO full per-entry cascade prediction file exists anywhere in the repo (exhaustive search for 1119/831-line cascade jsonl: none). Only the aggregate JSON + 27 moved-key changed_predictions are stored, and those confidences are quantized stage constants (0.85 x17, 0.90 x2, 0.6685 x2, 0.93 x2, ...) with no ROC-usable gradient across the full set.",
+      "(2) Re-running the cascade is UNFAITHFUL: Stage-1 is bibtex-check / Semantic Scholar, whose DB state drifted (regenerate_cascade.py documents a fresh run reports 16/27 dev moved keys as VALID vs the released FN=11), confirmed by the same time-boxed bibtex-check probe (rate-limit timeouts + status drift). Stage-2 (Sonnet 4.6 diagnosis) sits on top of that drifted Stage-1, so a fresh score distribution would not be the released one."
+    ],
+    "t3_f1_status": "FAITHFUL and UNCHANGED to 3dp (manifest 11.4): recomputed from reconstructed per_tier_metrics['3']['f1'] — dev cons .417, dev agg .570, test cons .596, test agg .707. All moved tier-3 keys were cascade TP->FP so precision/recall combine back to the OLD T3-F1. The L128 T3-F1 deltas (+15.3pp dev = .570-.417, +11.1pp test = .707-.596) are therefore UNCHANGED.",
+    "takeaway_L128_auroc_deltas": "The -6.2pp (test .867-.805) / -9.3pp (dev .833-.740) AUROC deltas are arithmetic on the published AUROC cells. Since those cells cannot be faithfully regenerated, keep them as printed; the deltas stay self-consistent with the printed cells.",
+    "limitation_note_for_paper": "Cascade AUROC is reported at its pre-relabel value: AUROC needs the full per-entry probability distribution, which was not persisted for the cascade (summary-only), and the cascade's Stage-1 database state has drifted, so a fresh run is not faithful to the released per-key verdicts. The relabel-affected keys were all cascade true-positives that become false positives under the corrected VALID label, which leaves Tier-3 F1 (recomputed exactly from the reconstructed per-tier counts) unchanged to three decimals; only the rank-discrimination AUROC, which we cannot re-derive offline, is carried over."
+  },
+
+  "cost": {
+    "openai_api": "$0 — F10 reused an existing shipped per-entry file; no GPT-5.4 re-run was needed.",
+    "openrouter_api": "$0 — no cascade Stage-2 re-run (would have been unfaithful).",
+    "semantic_scholar_crossref": "free tier; only a 12-entry bibtex-check faithfulness probe (no S2 key), which mostly timed out by design.",
+    "total_api_cost": "~$0 (one ~12-entry bibtex-check probe; no paid LLM calls)"
+  },
+  "time_boxed": [
+    "bibtex-check faithfulness probe capped at 150s/batch; aborted full dev re-run (provably unfaithful + infeasible).",
+    "prescreening-reconstruction (DOI HTTP) job killed after 5min without completing — itself evidence the published bibtex-updater config has a network-bound layer not offline-reproducible."
+  ]
+}
