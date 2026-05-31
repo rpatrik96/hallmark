@@ -2,7 +2,7 @@
   "version": "1.0",
   "files": {
     "bibtexupdater_dev_public.json": {
-      "sha256": "e613e62b69b43ae3c9db0c633a1d034d85f844bf119ff6ad8004136a9e360be6",
+      "sha256": "ffc80199709b72e5afb6e4b8d45476b3746ccde8f9825c43b59b7ab5191aed8b",
       "baseline": "bibtexupdater",
       "split": "dev_public",
       "num_entries": 1119,
@@ -15,7 +15,7 @@
       "num_entries": 521,
       "f1_hallucination": 0.26829268292682923
     },
-    "v1.0/baseline_results/llm_agentic_btu_openai_dev_public.json": {
+    "llm_agentic_btu_openai_dev_public.json": {
       "sha256": "c3545fea4b9bb6001146fa135e15989781e4fe757b08689a8eb11a2dc82ad407",
       "baseline": "llm_agentic_btu_openai",
       "split": "dev_public",
@@ -26,7 +26,7 @@
         "hallmark_version": "0.1.0.post1.dev126+g6f6fdf0ce.d20260222"
       }
     },
-    "v1.0/baseline_results/llm_agentic_openai_dev_public.json": {
+    "llm_agentic_openai_dev_public.json": {
       "sha256": "704377dd833fb67370cb0a713883bc4bdd1856d2d8fd703248a4ebbdb5f1eba1",
       "baseline": "llm_agentic_openai",
       "split": "dev_public",
@@ -38,7 +38,7 @@
       }
     },
     "bibtexupdater_test_public.json": {
-      "sha256": "e6ea57cae2cd07704f08d6bc5d0db8fccb0a8a2144d1cfd0d3caffb29882d03e",
+      "sha256": "6cd2f9acc540179a88f8b94875433ff313a9f33b3ecf97247b5e7209ff55b82f",
       "baseline": "bibtexupdater",
       "split": "test_public",
       "num_entries": 831,
