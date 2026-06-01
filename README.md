@@ -74,8 +74,8 @@ The `[baselines]` extra installs only the LLM SDKs (`openai`, `anthropic`). Exte
 # HaRC
 pipx install harcx
 
-# bibtex-updater
-pipx install bibtex-updater
+# bibtex-updater (released HALLMARK numbers use tag v1.2.0)
+pipx install "bibtex-updater==1.2.0"
 
 # verify-citations
 pipx install verify-citations
@@ -247,9 +247,9 @@ The data is also shipped in `data/v1.0/` for direct repo-relative access without
 
 | Split | Valid | Hallucinated | Total | Purpose |
 |-------|-------|-------------|-------|---------|
-| `dev_public` | 486 | 633 | 1,119 | Development and tuning |
-| `test_public` | 287 | 544 | 831 | Public leaderboard |
-| `test_hidden` | — | — | 453 | Anti-gaming evaluation |
+| `dev_public` | 513 | 606 | 1,119 | Development and tuning |
+| `test_public` | 312 | 519 | 831 | Public leaderboard |
+| `test_hidden` | — | — | 454 | Anti-gaming evaluation |
 | `stress_test` | 1 | 121 | 122 | Stress-test types depth |
 
 > **stress_test design note**: The `stress_test` split is all-hallucinated by design. It contains

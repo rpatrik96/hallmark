@@ -52,8 +52,13 @@ results/*.csv
 results/reviewer_experiments/relabel_resolution_cache.json
 results/reviewer_experiments/relabel_proposal.json
 
-# btu v1.2.0 regen working dir (~92MB SQLite caches / raw / per-entry; regenerable — metrics are in results/relabel_delta/btu_hallmark_full.json + bibtexupdater benchmarks/)
-results/relabel_delta/btu_v1_2_0/
+# btu v1.2.0 regen working dir (~92MB SQLite caches / raw; regenerable). Contents are
+# ignored EXCEPT the two released per-entry verdict dumps below, which back the paper's
+# bibtex-updater numbers (dev DR 0.865 / FPR 0.092, test 0.877 / 0.115) and let readers
+# recompute them offline without re-installing the tool or re-querying external databases.
+results/relabel_delta/btu_v1_2_0/*
+!results/relabel_delta/btu_v1_2_0/bibtexupdater_dev_public_per_entry.jsonl
+!results/relabel_delta/btu_v1_2_0/bibtexupdater_test_public_per_entry.jsonl
 # Abandoned / large regenerable intermediates
 results/temporal_supplement/regen858/
 results/temporal_supplement/regen858_ckpt/

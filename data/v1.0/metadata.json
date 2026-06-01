@@ -1,6 +1,15 @@
 {
-    "version": "1.0",
-    "build_date": "2026-02-20",
+    "version": "1.1.1",
+    "build_date": "2026-05-30",
+    "relabel": {
+        "description": "Released corpus is post-relabel: a systematic ground-truth audit corrected entries where real papers were wrongly flagged HALLUCINATED (arXiv-DataCite-DOI root cause and faithful truncated author lists). Split counts below reflect the corrected labels.",
+        "script": "scripts/relabel_ground_truth.py",
+        "commits": [
+            "32fe9d6 (#9): corrected 32 mislabeled entries across dev+test",
+            "1475a2f (#10): systematic ground-truth relabel + benchmark hardening"
+        ],
+        "flip_log": "results/reviewer_experiments/relabel_flips.json"
+    },
     "seed": 8042,
     "total_entries": 2526,
     "splits": {
