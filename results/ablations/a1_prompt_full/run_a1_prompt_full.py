@@ -47,13 +47,22 @@ OUTDIR = ROOT / "results/ablations/a1_prompt_full"
 SAMPLE = OUTDIR / "sample_150.jsonl"
 ENDPOINT = "https://openrouter.ai/api/v1"
 
-# Three OpenRouter models. GPT-5.1 excluded (OpenAI quota). IDs from
-# OPENROUTER_MODELS in hallmark/baselines/llm_verifier.py.
+# Three OpenRouter models + GPT-5.1 via OpenAI direct. IDs from
+# OPENROUTER_MODELS / OPENAI_MODELS in hallmark/baselines/llm_verifier.py.
+# gpt-5.1 was originally excluded (OpenAI quota exhausted 2026-05-30); it is now
+# included via the OpenAI-direct endpoint to match the rest of the paper's
+# gpt-5.1 numbers. The three OpenRouter models are fully checkpointed, so a
+# re-run resumes them from cache and only gpt-5.1 actually re-calls the API.
 MODELS: dict[str, str] = {
     "sonnet-4.6": "anthropic/claude-sonnet-4.6",
     "deepseek-v3.2": "deepseek/deepseek-v3.2",
     "gemini-2.5-flash": "google/gemini-2.5-flash",
+    "gpt-5.1": "gpt-5.1",
 }
+
+# Models routed through the OpenAI-direct endpoint (OPENAI_API_KEY) instead of
+# OpenRouter. Everything else goes through OpenRouter.
+OPENAI_DIRECT_MODELS: set[str] = {"gpt-5.1"}
 
 # --- Prompt variants (verbatim from the validated e_prompt_pilot design) ----
 
@@ -151,6 +160,9 @@ def main() -> None:
     api_key = os.environ.get("OPENROUTER_API_KEY")
     if not api_key:
         raise SystemExit("OPENROUTER_API_KEY not set; source /tmp/.or_env first")
+    openai_key = os.environ.get("OPENAI_API_KEY")
+    if OPENAI_DIRECT_MODELS & set(MODELS) and not openai_key:
+        raise SystemExit("OPENAI_API_KEY not set; source /tmp/.openai_env first")
 
     # results[model][variant] = metric record; preds_by[model][variant] = {key: label}
     results: dict[str, dict[str, dict]] = {}
@@ -162,12 +174,13 @@ def main() -> None:
         for vname, template in VARIANTS.items():
             print(f"\n=== model={mname} variant={vname} ===", flush=True)
             ckpt = OUTDIR / "checkpoints" / mname / vname
+            is_openai = mname in OPENAI_DIRECT_MODELS
             preds = _verify_with_openai_compatible(
                 blind,
                 model=mid,
-                api_key=api_key,
-                base_url=ENDPOINT,
-                source_prefix="openrouter",
+                api_key=openai_key if is_openai else api_key,
+                base_url=None if is_openai else ENDPOINT,
+                source_prefix="openai" if is_openai else "openrouter",
                 checkpoint_dir=ckpt,
                 prompt_fn=make_prompt_fn(template),
                 temperature=0.0,
@@ -331,8 +344,11 @@ def main() -> None:
             ),
             "temperature": 0.0,
             "seed": 42,
-            "models_excluded": {
-                "gpt-5.1": "OpenAI quota exhausted 2026-05-30; prompt effect is model-agnostic"
+            "models_excluded": {},
+            "endpoints": {
+                "openrouter": "sonnet-4.6, deepseek-v3.2, gemini-2.5-flash",
+                "openai_direct": "gpt-5.1 (OPENAI_API_KEY; matches the paper's "
+                "other gpt-5.1 numbers, which use the OpenAI endpoint, not OpenRouter)",
             },
         },
         "sample": {

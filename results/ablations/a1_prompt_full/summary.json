@@ -1,13 +1,15 @@
 {
   "experiment": "A1_prompt_sensitivity_full",
   "snapshot": {
-    "date": "2026-05-31",
+    "date": "2026-06-02",
     "endpoint": "https://openrouter.ai/api/v1",
     "policy": "FRESH dated snapshot vs OpenRouter endpoint; NOT a reproduction of the 2026-05-04 published delta-eval. Endpoint may drift.",
     "temperature": 0.0,
     "seed": 42,
-    "models_excluded": {
-      "gpt-5.1": "OpenAI quota exhausted 2026-05-30; prompt effect is model-agnostic"
+    "models_excluded": {},
+    "endpoints": {
+      "openrouter": "sonnet-4.6, deepseek-v3.2, gemini-2.5-flash",
+      "openai_direct": "gpt-5.1 (OPENAI_API_KEY; matches the paper's other gpt-5.1 numbers, which use the OpenAI endpoint, not OpenRouter)"
     }
   },
   "sample": {
@@ -24,7 +26,8 @@
   "models": {
     "sonnet-4.6": "anthropic/claude-sonnet-4.6",
     "deepseek-v3.2": "deepseek/deepseek-v3.2",
-    "gemini-2.5-flash": "google/gemini-2.5-flash"
+    "gemini-2.5-flash": "google/gemini-2.5-flash",
+    "gpt-5.1": "gpt-5.1"
   },
   "variants": [
     "default",
@@ -206,6 +209,64 @@
         "num_error_fallback": 0,
         "coverage": 1.0
       }
+    },
+    "gpt-5.1": {
+      "default": {
+        "model": "gpt-5.1",
+        "model_id": "gpt-5.1",
+        "variant": "default",
+        "n": 150,
+        "detection_rate": 0.9135802469135802,
+        "false_positive_rate": 0.5797101449275363,
+        "f1_hallucination": 0.7589743589743589,
+        "ece": 0.23313333333333336,
+        "num_uncertain": 0,
+        "uncertain_rate": 0.0,
+        "num_error_fallback": 0,
+        "coverage": 1.0
+      },
+      "notaxo": {
+        "model": "gpt-5.1",
+        "model_id": "gpt-5.1",
+        "variant": "notaxo",
+        "n": 150,
+        "detection_rate": 0.8024691358024691,
+        "false_positive_rate": 0.42028985507246375,
+        "f1_hallucination": 0.7428571428571429,
+        "ece": 0.22526666666666667,
+        "num_uncertain": 0,
+        "uncertain_rate": 0.0,
+        "num_error_fallback": 0,
+        "coverage": 1.0
+      },
+      "uncertain": {
+        "model": "gpt-5.1",
+        "model_id": "gpt-5.1",
+        "variant": "uncertain",
+        "n": 150,
+        "detection_rate": 0.8,
+        "false_positive_rate": 0.25,
+        "f1_hallucination": 0.7938931297709925,
+        "ece": 0.1449586776859504,
+        "num_uncertain": 29,
+        "uncertain_rate": 0.19333333333333333,
+        "num_error_fallback": 0,
+        "coverage": 1.0
+      },
+      "terse": {
+        "model": "gpt-5.1",
+        "model_id": "gpt-5.1",
+        "variant": "terse",
+        "n": 150,
+        "detection_rate": 0.72,
+        "false_positive_rate": 0.21212121212121213,
+        "f1_hallucination": 0.7552447552447551,
+        "ece": 0.17035460992907803,
+        "num_uncertain": 9,
+        "uncertain_rate": 0.06,
+        "num_error_fallback": 0,
+        "coverage": 1.0
+      }
     }
   },
   "verdict_flip_rate": {
@@ -287,9 +348,35 @@
       },
       "mean_flip_rate_all": 0.0911111111111111
     },
+    "gpt-5.1": {
+      "per_variant_vs_default": {
+        "notaxo": {
+          "flip_rate_all": 0.13333333333333333,
+          "n_flip_all": 20,
+          "flip_rate_strict": 0.13333333333333333,
+          "n_flip_strict": 20,
+          "n_strict_eligible": 150
+        },
+        "uncertain": {
+          "flip_rate_all": 0.32,
+          "n_flip_all": 48,
+          "flip_rate_strict": 0.15702479338842976,
+          "n_flip_strict": 19,
+          "n_strict_eligible": 121
+        },
+        "terse": {
+          "flip_rate_all": 0.32,
+          "n_flip_all": 48,
+          "flip_rate_strict": 0.2765957446808511,
+          "n_flip_strict": 39,
+          "n_strict_eligible": 141
+        }
+      },
+      "mean_flip_rate_all": 0.2577777777777778
+    },
     "_pooled": {
-      "flip_rate_all": 0.14666666666666667,
-      "flip_rate_strict": 0.11877394636015326,
+      "flip_rate_all": 0.17444444444444446,
+      "flip_rate_strict": 0.13570180547466512,
       "note": "pooled over all models x all non-default variants vs default"
     }
   },
@@ -298,94 +385,106 @@
       "per_variant_ranks": {
         "default": {
           "sonnet-4.6": 1.0,
-          "deepseek-v3.2": 2.0,
-          "gemini-2.5-flash": 3.0
+          "deepseek-v3.2": 3.0,
+          "gemini-2.5-flash": 4.0,
+          "gpt-5.1": 2.0
         },
         "notaxo": {
           "sonnet-4.6": 1.0,
-          "deepseek-v3.2": 2.0,
-          "gemini-2.5-flash": 3.0
+          "deepseek-v3.2": 3.0,
+          "gemini-2.5-flash": 4.0,
+          "gpt-5.1": 2.0
         },
         "uncertain": {
-          "sonnet-4.6": 1.0,
-          "deepseek-v3.2": 2.0,
-          "gemini-2.5-flash": 3.0
+          "sonnet-4.6": 2.0,
+          "deepseek-v3.2": 3.0,
+          "gemini-2.5-flash": 4.0,
+          "gpt-5.1": 1.0
         },
         "terse": {
           "sonnet-4.6": 1.0,
-          "deepseek-v3.2": 2.0,
-          "gemini-2.5-flash": 3.0
+          "deepseek-v3.2": 3.0,
+          "gemini-2.5-flash": 4.0,
+          "gpt-5.1": 2.0
         }
       },
       "rho_vs_default": {
         "notaxo": 1.0,
-        "uncertain": 1.0,
+        "uncertain": 0.7999999999999999,
         "terse": 1.0
       },
-      "mean_pairwise_rho": 1.0,
-      "n_models": 3
+      "mean_pairwise_rho": 0.8999999999999999,
+      "n_models": 4
     },
     "detection_rate": {
       "per_variant_ranks": {
         "default": {
-          "sonnet-4.6": 2.0,
+          "sonnet-4.6": 3.0,
           "deepseek-v3.2": 1.0,
-          "gemini-2.5-flash": 3.0
+          "gemini-2.5-flash": 4.0,
+          "gpt-5.1": 2.0
         },
         "notaxo": {
-          "sonnet-4.6": 2.0,
+          "sonnet-4.6": 3.0,
           "deepseek-v3.2": 1.0,
-          "gemini-2.5-flash": 3.0
+          "gemini-2.5-flash": 4.0,
+          "gpt-5.1": 2.0
         },
         "uncertain": {
-          "sonnet-4.6": 2.0,
+          "sonnet-4.6": 3.0,
           "deepseek-v3.2": 1.0,
-          "gemini-2.5-flash": 3.0
+          "gemini-2.5-flash": 4.0,
+          "gpt-5.1": 2.0
         },
         "terse": {
           "sonnet-4.6": 2.0,
           "deepseek-v3.2": 1.0,
-          "gemini-2.5-flash": 3.0
+          "gemini-2.5-flash": 4.0,
+          "gpt-5.1": 3.0
         }
       },
       "rho_vs_default": {
         "notaxo": 1.0,
         "uncertain": 1.0,
-        "terse": 1.0
+        "terse": 0.7999999999999999
       },
-      "mean_pairwise_rho": 1.0,
-      "n_models": 3
+      "mean_pairwise_rho": 0.8999999999999999,
+      "n_models": 4
     },
     "false_positive_rate": {
       "per_variant_ranks": {
         "default": {
           "sonnet-4.6": 1.0,
-          "deepseek-v3.2": 3.0,
-          "gemini-2.5-flash": 2.0
+          "deepseek-v3.2": 4.0,
+          "gemini-2.5-flash": 2.0,
+          "gpt-5.1": 3.0
         },
         "notaxo": {
           "sonnet-4.6": 2.0,
-          "deepseek-v3.2": 3.0,
-          "gemini-2.5-flash": 1.0
+          "deepseek-v3.2": 4.0,
+          "gemini-2.5-flash": 1.0,
+          "gpt-5.1": 3.0
         },
         "uncertain": {
           "sonnet-4.6": 1.0,
-          "deepseek-v3.2": 3.0,
-          "gemini-2.5-flash": 2.0
+          "deepseek-v3.2": 4.0,
+          "gemini-2.5-flash": 2.0,
+          "gpt-5.1": 3.0
         },
         "terse": {
           "sonnet-4.6": 1.0,
-          "deepseek-v3.2": 3.0,
-          "gemini-2.5-flash": 2.0
+          "deepseek-v3.2": 4.0,
+          "gemini-2.5-flash": 2.0,
+          "gpt-5.1": 3.0
         }
       },
       "rho_vs_default": {
-        "notaxo": 0.5,
+        "notaxo": 0.7999999999999999,
         "uncertain": 1.0,
         "terse": 1.0
       },
-      "mean_pairwise_rho": 0.75,
-      "n_models": 3
+      "mean_pairwise_rho": 0.8999999999999999,
+      "n_models": 4
     }
   },
   "fpr_decomposition": {
@@ -423,6 +522,18 @@
         "notaxo": 0.08695652173913043,
         "uncertain": 0.08695652173913043,
         "terse": 0.10144927536231885
+      }
+    },
+    "gpt-5.1": {
+      "default_fpr": 0.5797101449275363,
+      "min_fpr": 0.21212121212121213,
+      "min_fpr_variant": "terse",
+      "prompt_induced_fpr_drop": 0.3675889328063241,
+      "all_variant_fpr": {
+        "default": 0.5797101449275363,
+        "notaxo": 0.42028985507246375,
+        "uncertain": 0.25,
+        "terse": 0.21212121212121213
       }
     }
   },

@@ -21,19 +21,38 @@
     }
   },
   "part_b_selfconsistency_gpt51": {
-    "source": "E3 reuse (GPT-5.1 temp=1, n=150 dev_public) \u2014 OpenAI key insufficient_quota, fresh run impossible",
-    "across_draw_flip_rate": 0.0067,
+    "source": "fresh GPT-5.1 self-consistency, OpenAI direct (OPENAI_API_KEY), n=60 pilot_sample_dev60, k=3 draws. Mirrors the E3 protocol: temp=0 default + seed=42 with a distinct checkpoint_dir per draw (real re-calls); residual draw-to-draw variance is OpenAI backend nondeterminism.",
+    "n": 60,
+    "k": 3,
+    "per_draw": {
+      "DR": [0.9411764705882353, 0.9411764705882353, 0.9117647058823529],
+      "FPR": [0.38461538461538464, 0.4230769230769231, 0.34615384615384615],
+      "F1": [0.8421052631578947, 0.8311688311688312, 0.8378378378378379]
+    },
+    "majority_vote": {
+      "DR": 0.9411764705882353,
+      "FPR": 0.34615384615384615,
+      "F1": 0.8533333333333334
+    },
+    "across_draw_flip_rate": 0.06666666666666667,
+    "unstable_entries": 4,
     "f1_band": [
-      0.7878787878787878,
-      0.7918781725888325
+      0.8311688311688312,
+      0.8421052631578947
     ],
     "fpr_band": [
-      0.5507246376811594,
-      0.5652173913043478
+      0.34615384615384615,
+      0.4230769230769231
     ],
     "maj3_vs_mean_single": {
-      "f1_delta": 0.0013,
-      "fpr_delta": -0.0048
+      "f1_delta": 0.0163,
+      "fpr_delta": -0.0385
+    },
+    "e3_n150_crosscheck": {
+      "note": "E3 variance run, n=150 dev_public, same temp=0 default protocol (larger, easier sample \u2014 not directly comparable in magnitude to the n=60 pilot).",
+      "across_draw_flip_rate": 0.0067,
+      "f1_band": [0.7878787878787878, 0.7918781725888325],
+      "fpr_band": [0.5507246376811594, 0.5652173913043478]
     }
   },
   "part_b_crosscheck_deepseek": {

@@ -1,0 +1,39 @@
+{
+  "model": "gpt-5.1",
+  "k": 3,
+  "per_draw": [
+    {
+      "detection_rate": 0.9411764705882353,
+      "false_positive_rate": 0.38461538461538464,
+      "f1_hallucination": 0.8421052631578947,
+      "num_uncertain": 0,
+      "coverage": 1.0
+    },
+    {
+      "detection_rate": 0.9411764705882353,
+      "false_positive_rate": 0.4230769230769231,
+      "f1_hallucination": 0.8311688311688312,
+      "num_uncertain": 0,
+      "coverage": 1.0
+    },
+    {
+      "detection_rate": 0.9117647058823529,
+      "false_positive_rate": 0.34615384615384615,
+      "f1_hallucination": 0.8378378378378379,
+      "num_uncertain": 0,
+      "coverage": 1.0
+    }
+  ],
+  "majority_vote": {
+    "detection_rate": 0.9411764705882353,
+    "false_positive_rate": 0.34615384615384615,
+    "f1_hallucination": 0.8533333333333334,
+    "num_uncertain": 0,
+    "coverage": 1.0
+  },
+  "across_draw_flip": {
+    "unstable_entries": 4,
+    "n_compared": 60,
+    "rate": 0.06666666666666667
+  }
+}

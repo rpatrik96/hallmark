@@ -115,6 +115,13 @@ def run_self_consistency(
     for run in range(1, k + 1):
         ckpt = OUTDIR / "sc" / provider / f"run{run}"
         if provider == "openai":
+            # Mirror the E3 variance protocol exactly: verify_with_openai uses
+            # the gpt-5.1 default (temp=0.0, seed=42), and each draw gets a
+            # DISTINCT checkpoint_dir (run1/run2/run3) so caching cannot replay
+            # draw 1 — every draw re-calls the API. Residual draw-to-draw
+            # variance is the backend nondeterminism E3 measured (flip ~0.0067
+            # on n=150); keeping temp at the default makes this n=60 fresh run
+            # directly comparable to the E3-reuse band it replaces.
             preds = verify_with_openai(
                 blind, model=model, api_key=os.environ["OPENAI_API_KEY"], checkpoint_dir=ckpt
             )
