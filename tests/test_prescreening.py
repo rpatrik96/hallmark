@@ -16,6 +16,7 @@ from hallmark.baselines.prescreening import (
     compute_prescreening_breakdown,
     format_prescreening_breakdown,
     merge_with_predictions,
+    normalize_doi_for_resolution,
     prescreen_entry,
 )
 from hallmark.dataset.schema import BenchmarkEntry, Prediction
@@ -238,9 +239,10 @@ class TestCheckDoiResolves:
 
     @patch("hallmark.baselines.prescreening.httpx.head")
     def test_doi_not_found(self, mock_head):
-        """DOI that returns 404 should be flagged as HALLUCINATED."""
+        """DOI that returns 404 from doi.org should be flagged as HALLUCINATED."""
         mock_response = Mock()
         mock_response.status_code = 404
+        mock_response.history = []  # 404 served by doi.org itself, no redirect
         mock_head.return_value = mock_response
 
         entry = BenchmarkEntry(
@@ -271,6 +273,217 @@ class TestCheckDoiResolves:
         assert result.confidence == 0.0
         assert "network error" in result.reason.lower()
         assert result.check_name == "check_doi_resolves"
+
+    @patch("hallmark.baselines.prescreening.httpx.head")
+    def test_versioned_arxiv_doi_not_flagged(self, mock_head):
+        """A versioned arXiv DataCite DOI must be checked in unversioned form.
+
+        Regression test for the measured false-positive bug: the versioned form
+        (``...v1``) 404s at doi.org while the unversioned form resolves, so
+        pre-screening must strip the suffix instead of flagging HALLUCINATED.
+        """
+
+        def head_side_effect(url, **kwargs):
+            resp = Mock()
+            resp.history = []
+            # doi.org resolves the unversioned DOI; the versioned form 404s.
+            if url.lower() == "https://doi.org/10.48550/arxiv.2602.12172":
+                resp.status_code = 200
+            else:
+                resp.status_code = 404
+            return resp
+
+        mock_head.side_effect = head_side_effect
+
+        entry = BenchmarkEntry(
+            bibtex_key="test_key",
+            bibtex_type="article",
+            fields={"title": "Test", "doi": "10.48550/arXiv.2602.12172v1"},
+            label="VALID",
+        )
+        result = check_doi_resolves(entry)
+        assert result.label == "VALID"
+        assert result.confidence == 0.85
+        # Raw DOI stays in the reason; the normalization is mentioned.
+        assert "10.48550/arXiv.2602.12172v1" in result.reason
+        assert "normalized" in result.reason.lower()
+        mock_head.assert_called_once_with(
+            "https://doi.org/10.48550/arXiv.2602.12172", timeout=10.0, follow_redirects=True
+        )
+
+    @patch("hallmark.baselines.prescreening.httpx.head")
+    def test_doi_url_prefix_and_version_stripped(self, mock_head):
+        """A doi.org URL prefix and arXiv version suffix are both stripped."""
+        mock_response = Mock()
+        mock_response.status_code = 200
+        mock_response.history = []
+        mock_head.return_value = mock_response
+
+        entry = BenchmarkEntry(
+            bibtex_key="test_key",
+            bibtex_type="article",
+            fields={"title": "Test", "doi": "https://doi.org/10.48550/arXiv.2602.12172v2"},
+            label="VALID",
+        )
+        result = check_doi_resolves(entry)
+        assert result.label == "VALID"
+        assert "10.48550/arXiv.2602.12172v2" in result.reason
+        mock_head.assert_called_once_with(
+            "https://doi.org/10.48550/arXiv.2602.12172", timeout=10.0, follow_redirects=True
+        )
+
+    @patch("hallmark.baselines.prescreening.httpx.head")
+    def test_fabricated_non_arxiv_vn_doi_404_still_flagged(self, mock_head):
+        """Version stripping is scoped to arXiv DOIs.
+
+        A fabricated non-arXiv DOI that happens to end in ``vN`` is checked
+        verbatim and still flagged when doi.org returns 404.
+        """
+        mock_response = Mock()
+        mock_response.status_code = 404
+        mock_response.history = []
+        mock_head.return_value = mock_response
+
+        entry = BenchmarkEntry(
+            bibtex_key="test_key",
+            bibtex_type="article",
+            fields={"title": "Test", "doi": "10.9999/fake.journal.v2"},
+            label="VALID",
+        )
+        result = check_doi_resolves(entry)
+        assert result.label == "HALLUCINATED"
+        assert result.confidence == 0.85
+        assert "404" in result.reason
+        mock_head.assert_called_once_with(
+            "https://doi.org/10.9999/fake.journal.v2", timeout=10.0, follow_redirects=True
+        )
+
+    @patch("hallmark.baselines.prescreening.httpx.head")
+    def test_doi_gone_410_flagged(self, mock_head):
+        """410 Gone from doi.org is definitive and flagged like 404."""
+        mock_response = Mock()
+        mock_response.status_code = 410
+        mock_response.history = []
+        mock_head.return_value = mock_response
+
+        entry = BenchmarkEntry(
+            bibtex_key="test_key",
+            bibtex_type="article",
+            fields={"title": "Test", "doi": "10.1234/gone"},
+            label="VALID",
+        )
+        result = check_doi_resolves(entry)
+        assert result.label == "HALLUCINATED"
+        assert result.confidence == 0.85
+        assert "410" in result.reason
+
+    @pytest.mark.parametrize("status_code", [403, 429, 500, 503])
+    @patch("hallmark.baselines.prescreening.httpx.head")
+    def test_transient_http_status_not_flagged(self, mock_head, status_code):
+        """Bot blocks (403), rate limits (429), and 5xx must NOT flag HALLUCINATED."""
+        mock_response = Mock()
+        mock_response.status_code = status_code
+        mock_response.history = []
+        mock_head.return_value = mock_response
+
+        entry = BenchmarkEntry(
+            bibtex_key="test_key",
+            bibtex_type="article",
+            fields={"title": "Test", "doi": "10.1234/test"},
+            label="VALID",
+        )
+        result = check_doi_resolves(entry)
+        assert result.label == "UNKNOWN"
+        assert result.confidence == 0.0
+        assert str(status_code) in result.reason
+
+    @patch("hallmark.baselines.prescreening.httpx.head")
+    def test_redirect_target_404_not_flagged(self, mock_head):
+        """A 404 from the redirect target is not a doi.org 404 and must not flag.
+
+        doi.org redirected (so the DOI is registered); the landing page merely
+        404s the HEAD request (broken page or bot block).
+        """
+        mock_response = Mock()
+        mock_response.status_code = 404
+        mock_response.history = [Mock()]  # doi.org issued a redirect before the 404
+        mock_head.return_value = mock_response
+
+        entry = BenchmarkEntry(
+            bibtex_key="test_key",
+            bibtex_type="article",
+            fields={"title": "Test", "doi": "10.1234/registered"},
+            label="VALID",
+        )
+        result = check_doi_resolves(entry)
+        assert result.label == "UNKNOWN"
+        assert result.confidence == 0.0
+        assert "redirect target" in result.reason.lower()
+
+    @patch("hallmark.baselines._cache.time.sleep")
+    @patch("hallmark.baselines.prescreening.httpx.head")
+    def test_timeout_not_flagged(self, mock_head, mock_sleep):
+        """Timeouts are transient — they must return UNKNOWN, never HALLUCINATED."""
+        mock_head.side_effect = httpx.ConnectTimeout("connection timed out")
+
+        entry = BenchmarkEntry(
+            bibtex_key="test_key",
+            bibtex_type="article",
+            fields={"title": "Test", "doi": "10.1234/test"},
+            label="VALID",
+        )
+        result = check_doi_resolves(entry)
+        assert result.label == "UNKNOWN"
+        assert result.confidence == 0.0
+        assert "network error" in result.reason.lower()
+
+
+class TestNormalizeDoiForResolution:
+    """Tests for the normalize_doi_for_resolution helper.
+
+    Mirrors bibtex-updater's ``normalize_doi_for_resolution`` semantics.
+    """
+
+    def test_plain_doi_unchanged(self):
+        assert normalize_doi_for_resolution("10.1234/test") == "10.1234/test"
+
+    def test_url_prefix_stripped(self):
+        assert normalize_doi_for_resolution("https://doi.org/10.1234/test") == "10.1234/test"
+
+    def test_dx_url_prefix_stripped(self):
+        assert normalize_doi_for_resolution("http://dx.doi.org/10.1234/test") == "10.1234/test"
+
+    def test_whitespace_stripped(self):
+        assert normalize_doi_for_resolution("  10.1234/test  ") == "10.1234/test"
+
+    def test_arxiv_version_suffix_stripped(self):
+        assert (
+            normalize_doi_for_resolution("10.48550/arXiv.2602.12172v1")
+            == "10.48550/arXiv.2602.12172"
+        )
+
+    def test_arxiv_prefix_match_case_insensitive(self):
+        assert (
+            normalize_doi_for_resolution("10.48550/ARXIV.2602.12172v12")
+            == "10.48550/ARXIV.2602.12172"
+        )
+
+    def test_arxiv_unversioned_unchanged(self):
+        assert (
+            normalize_doi_for_resolution("10.48550/arXiv.2602.12172") == "10.48550/arXiv.2602.12172"
+        )
+
+    def test_non_arxiv_version_suffix_untouched(self):
+        assert normalize_doi_for_resolution("10.9999/fake.journal.v2") == "10.9999/fake.journal.v2"
+
+    def test_url_prefix_and_version_combined(self):
+        assert (
+            normalize_doi_for_resolution("https://doi.org/10.48550/arXiv.2602.12172v1")
+            == "10.48550/arXiv.2602.12172"
+        )
+
+    def test_malformed_returns_none(self):
+        assert normalize_doi_for_resolution("not-a-doi") is None
 
 
 class TestPrescreenEntry:
