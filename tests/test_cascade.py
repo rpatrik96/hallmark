@@ -89,6 +89,34 @@ def test_stage1_prescreening_override_is_honored() -> None:
     assert out.source == "prescreening"
 
 
+def test_stage1_new_positive_evidence_statuses_do_not_defer() -> None:
+    """Post-1.2.0 decided-problem statuses must short-circuit at Stage 1 —
+    never re-routed to the Stage 2 LLM as uncertain."""
+    expected_types = {
+        "nonexistent_venue": "nonexistent_venue",
+        "unpublished_at_claimed_venue": "preprint_as_published",
+        "author_truncated": "partial_author_list",
+        "preprint_only": "preprint_as_published",
+    }
+    entry = _entry("k5")
+    raw = _raw("k5", label="HALLUCINATED", confidence=0.5)
+    for status, expected_type in expected_types.items():
+        assert status in STATUS_TO_TYPE
+        assert status not in ROUTE_TO_STAGE2
+        out = _stage1_predict(entry, raw, status)
+        assert out is not None, f"{status} must not defer to Stage 2"
+        assert out.label == "HALLUCINATED"
+        assert out.predicted_hallucination_type == expected_type
+        assert out.cascade_stage == "stage1_db"
+
+
+def test_not_found_still_routes_to_stage2() -> None:
+    """``not_found`` (including coverage-incomplete lookups, which carry the
+    same raw status string) stays uncertain and defers to Stage 2."""
+    assert "not_found" in ROUTE_TO_STAGE2
+    assert _stage1_predict(_entry("k6"), _raw("k6"), "not_found") is None
+
+
 # ---------------------------------------------------------------------------
 # Aggressive fallback
 # ---------------------------------------------------------------------------

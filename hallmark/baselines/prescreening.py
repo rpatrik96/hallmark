@@ -39,16 +39,70 @@ class PreScreenResult:
     check_name: str
 
 
+# --- DOI normalization (mirrors bibtex-updater's normalize_doi_for_resolution) ---
+
+# Leading resolver-URL prefix: https://doi.org/..., http://dx.doi.org/...
+_DOI_URL_PREFIX_RE = re.compile(r"^https?://(dx\.)?doi\.org/", re.IGNORECASE)
+
+# Core DOI shape: "10.<registrant>/<suffix>".
+_DOI_CORE_RE = re.compile(r"10\.\d+/[^\s]+")
+
+#: arXiv DataCite DOI prefix. arXiv mints *versioned* DOIs
+#: (``10.48550/arXiv.2010.11929v1``), but only the unversioned DOI
+#: (``10.48550/arXiv.2010.11929``) resolves via doi.org — the versioned form
+#: 404s. Stripping the version suffix is therefore safe ONLY for this prefix;
+#: other DOIs may legitimately end in a letter+digit token.
+_ARXIV_DOI_PREFIX = "10.48550/arxiv."
+_ARXIV_VERSION_SUFFIX_RE = re.compile(r"v\d+$", re.IGNORECASE)
+
+
+def normalize_doi_for_resolution(doi: str) -> str | None:
+    """Normalize a raw DOI field value for resolution against doi.org.
+
+    Replicates the normalization bibtex-updater applies before resolving a DOI
+    (``normalize_doi_for_resolution`` in ``bibtex_updater.utils``):
+
+    - strip surrounding whitespace and a leading ``https://doi.org/`` /
+      ``http://dx.doi.org/`` URL prefix, then extract the ``10.<reg>/<suffix>``
+      core;
+    - for arXiv DataCite DOIs (prefix ``10.48550/arXiv.``, case-insensitive),
+      strip a trailing version suffix (``v1``, ``v2``, ...) — the versioned
+      form 404s at doi.org while the unversioned form resolves.
+
+    Returns:
+        The normalized DOI, or None when no DOI core can be extracted.
+    """
+    stripped = _DOI_URL_PREFIX_RE.sub("", doi.strip())
+    core = _DOI_CORE_RE.search(stripped)
+    if core is None:
+        return None
+    normalized = core.group(0)
+    if normalized.lower().startswith(_ARXIV_DOI_PREFIX):
+        normalized = _ARXIV_VERSION_SUFFIX_RE.sub("", normalized)
+    return normalized
+
+
 def check_doi_resolves(entry: BlindEntry) -> PreScreenResult:
     """Check if DOI resolves via HTTP HEAD request.
 
+    The DOI is normalized first (see :func:`normalize_doi_for_resolution`):
+    URL prefixes are stripped and arXiv DataCite version suffixes (``vN``)
+    removed, because versioned arXiv DOIs 404 at doi.org even though the
+    unversioned preprint DOI resolves.
+
+    Only a definitive 404/410 served by doi.org itself flags HALLUCINATED.
+    Anything ambiguous — network errors, timeouts, rate limits (429), bot
+    blocks (403), server errors (5xx), or a 404/410 served by a redirect
+    *target* after doi.org resolved the DOI — returns UNKNOWN so that
+    pre-screening never overrides the tool on transient failures.
+
     Returns:
         VALID (0.85) if DOI resolves
-        HALLUCINATED (0.85) if DOI returns 404
-        UNKNOWN if no DOI, network error, or other HTTP status
+        HALLUCINATED (0.85) if doi.org itself returns 404 or 410
+        UNKNOWN if no DOI, malformed DOI, network error, or any other HTTP status
     """
-    doi = entry.fields.get("doi")
-    if not doi:
+    raw_doi = entry.fields.get("doi")
+    if not raw_doi:
         return PreScreenResult(
             label="UNKNOWN",
             confidence=0.0,
@@ -56,17 +110,20 @@ def check_doi_resolves(entry: BlindEntry) -> PreScreenResult:
             check_name="check_doi_resolves",
         )
 
-    # Normalize DOI (strip URLs like https://doi.org/...)
-    doi_match = re.search(r"10\.\d+/[^\s]+", doi)
-    if doi_match:
-        normalized_doi = doi_match.group(0)
-    else:
+    normalized_doi = normalize_doi_for_resolution(raw_doi)
+    if normalized_doi is None:
         return PreScreenResult(
             label="UNKNOWN",
             confidence=0.0,
-            reason=f"Malformed DOI: {doi}",
+            reason=f"Malformed DOI: {raw_doi}",
             check_name="check_doi_resolves",
         )
+
+    # Reason strings keep the raw DOI; mention the normalization when it changed it.
+    display_doi = raw_doi.strip()
+    norm_note = (
+        f" (normalized to {normalized_doi} for resolution)" if normalized_doi != display_doi else ""
+    )
 
     url = f"https://doi.org/{normalized_doi}"
 
@@ -83,21 +140,36 @@ def check_doi_resolves(entry: BlindEntry) -> PreScreenResult:
             return PreScreenResult(
                 label="VALID",
                 confidence=0.85,
-                reason=f"DOI {normalized_doi} resolves successfully",
+                reason=f"DOI {display_doi} resolves successfully{norm_note}",
                 check_name="check_doi_resolves",
             )
-        elif response.status_code == 404:
+        elif response.status_code in (404, 410):
+            if response.history:
+                # The 404/410 came from a redirect target, not from doi.org: the
+                # DOI is registered (doi.org redirected) but the landing page is
+                # broken or blocks HEAD requests. Not evidence of fabrication.
+                return PreScreenResult(
+                    label="UNKNOWN",
+                    confidence=0.0,
+                    reason=(
+                        f"DOI {display_doi} resolved at doi.org but redirect target "
+                        f"returned HTTP {response.status_code}{norm_note}"
+                    ),
+                    check_name="check_doi_resolves",
+                )
             return PreScreenResult(
                 label="HALLUCINATED",
                 confidence=0.85,
-                reason=f"DOI {normalized_doi} returns 404",
+                reason=f"DOI {display_doi} returns {response.status_code} at doi.org{norm_note}",
                 check_name="check_doi_resolves",
             )
         else:
+            # 403/429/5xx etc.: bot blocks, rate limits, or server errors are
+            # transient — never treated as evidence of fabrication.
             return PreScreenResult(
                 label="UNKNOWN",
                 confidence=0.0,
-                reason=f"DOI {normalized_doi} returned HTTP {response.status_code}",
+                reason=f"DOI {display_doi} returned HTTP {response.status_code}{norm_note}",
                 check_name="check_doi_resolves",
             )
     except (httpx.RequestError, httpx.TimeoutException) as e:
