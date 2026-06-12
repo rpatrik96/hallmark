@@ -47,7 +47,10 @@ STATUS_TO_TYPE: dict[str, str] = {
     "doi_mismatch": "hybrid_fabrication",  # cited DOI → different paper
     "given_name_substitution": "swapped_authors",  # co-author given name swapped
     "title_near_miss": "near_miss_title",  # --strict near-miss title
-    "author_truncated": "partial_author_list",  # --strict silent truncation
+    "author_truncated": "partial_author_list",  # silent truncation (default mode post-1.2.0)
+    # Post-1.2.0 positive-evidence statuses — decided problems, never Stage 2
+    "nonexistent_venue": "nonexistent_venue",  # venue unknown to DBLP/OpenAlex registries
+    "unpublished_at_claimed_venue": "preprint_as_published",  # real paper, not at cited venue
     # not_found / unconfirmed / partial_match / api_error / skipped / missing → Stage 2
 }
 
@@ -63,6 +66,9 @@ STAGE1_VERIFIED: set[str] = {
 
 # Statuses routed to Stage 2 for diagnosis.
 ROUTE_TO_STAGE2: set[str] = {
+    # ``not_found`` covers both clean exhaustive misses and coverage-incomplete
+    # lookups (post-1.2.0 ``coverage_incomplete`` — sources errored / were
+    # throttled); both shapes are uncertain and defer to Stage 2.
     "not_found",
     "partial_match",
     "api_error",

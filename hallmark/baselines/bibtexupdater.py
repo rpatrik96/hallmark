@@ -8,6 +8,23 @@ Install: pipx install bibtex-updater  (or uv tool install bibtex-updater)
 NOTE: bibtex-updater requires bibtexparser 1.x which conflicts with
 hallmark's bibtexparser>=2.0.  It must be installed in an isolated
 environment (pipx / uv tool) and invoked as a CLI subprocess.
+
+Newer bibtex-check releases (post-1.2.0) extend the JSONL output contract;
+all extensions are presence-detected so older-format records parse exactly
+as before (the precomputed reference results are unaffected):
+
+- New problem statuses: ``nonexistent_venue`` (claimed venue unknown to the
+  DBLP/OpenAlex venue registries while >=2 sources return the paper with
+  other venues) and ``unpublished_at_claimed_venue`` (OpenReview: real paper,
+  not accepted at the cited venue; env-gated upstream, off by default).
+  ``author_truncated`` is now reachable in default mode (was --strict-only).
+- ``coverage_incomplete`` (bool): the verdict is an abstention/API_ERROR
+  reached while sources errored or were throttled.  A ``not_found`` carrying
+  this flag is NOT a clean exhaustive miss — the wrapper treats it as an
+  abstention (conservative VALID), not as evidence of fabrication.
+- ``p_valid`` (float in [0, 1]): explicit P(entry as cited is genuine) — the
+  value to threshold on.  When present it replaces the older realness
+  inversion heuristic for deriving ``Prediction.confidence``.
 """
 
 from __future__ import annotations
@@ -34,6 +51,7 @@ STATUS_TO_LABEL: dict[str, str] = {
     "author_mismatch": "HALLUCINATED",
     "year_mismatch": "HALLUCINATED",  # Year differs from database record
     "venue_mismatch": "HALLUCINATED",  # Venue differs from database record
+    "nonexistent_venue": "HALLUCINATED",  # Claimed venue unknown to DBLP/OpenAlex venue registries
     "partial_match": "HALLUCINATED",
     "hallucinated": "HALLUCINATED",
     "api_error": "VALID",  # Conservative: don't flag on errors
@@ -52,6 +70,7 @@ STATUS_TO_LABEL: dict[str, str] = {
     "doi_not_found": "HALLUCINATED",  # DOI returns HTTP 404
     # Preprint detection
     "preprint_only": "HALLUCINATED",  # Paper only exists as preprint, not at claimed venue
+    "unpublished_at_claimed_venue": "HALLUCINATED",  # OpenReview: real but not accepted at venue
     "published_version_exists": "VALID",  # Informational: published version found
     # Web reference verification
     "url_verified": "VALID",
@@ -76,6 +95,7 @@ STATUS_TO_CONFIDENCE: dict[str, float] = {
     "author_mismatch": 0.75,
     "year_mismatch": 0.75,
     "venue_mismatch": 0.80,
+    "nonexistent_venue": 0.85,
     "partial_match": 0.70,
     "hallucinated": 0.90,
     "api_error": 0.30,
@@ -91,6 +111,7 @@ STATUS_TO_CONFIDENCE: dict[str, float] = {
     "invalid_year": 0.70,
     "doi_not_found": 0.85,
     "preprint_only": 0.80,
+    "unpublished_at_claimed_venue": 0.75,
     "published_version_exists": 0.60,
     "url_verified": 0.90,
     "url_accessible": 0.70,
@@ -161,14 +182,22 @@ def run_bibtex_check_with_status(
     Values are the raw ``status`` field from the bibtex-check JSONL output, e.g.:
 
     - ``"verified"`` — found in at least one academic database and metadata matches
-    - ``"not_found"`` — no database returned a matching record
+    - ``"not_found"`` — no database returned a matching record.  The same status
+      string also covers coverage-incomplete lookups (post-1.2.0
+      ``coverage_incomplete`` records, where sources errored / were throttled);
+      the prediction for those is an abstention-style VALID, and downstream
+      cascades should keep routing ``"not_found"`` as uncertain.
     - ``"title_mismatch"`` / ``"author_mismatch"`` / ``"year_mismatch"`` /
       ``"venue_mismatch"`` — found but a field differs from the claimed value
+    - ``"nonexistent_venue"`` — claimed venue unknown to the DBLP/OpenAlex venue
+      registries while the paper itself is real (positive problem evidence)
     - ``"partial_match"`` — some fields match, others do not
     - ``"api_error"`` — transient API failure; treated conservatively as VALID
     - ``"future_date"`` / ``"invalid_year"`` — pre-API year validation failed
     - ``"doi_not_found"`` — DOI returned HTTP 404
     - ``"preprint_only"`` — paper exists only as a preprint, not at the claimed venue
+    - ``"unpublished_at_claimed_venue"`` — OpenReview: real paper, not accepted at
+      the cited venue (env-gated upstream, off by default)
     - ``"published_version_exists"`` — informational; published version was found
     - ``"url_verified"`` / ``"url_accessible"`` / ``"url_not_found"`` /
       ``"url_content_mismatch"`` — web-reference results (academic_only=False only)
@@ -406,20 +435,49 @@ def _parse_jsonl_output(
 
             label = STATUS_TO_LABEL.get(status, "VALID")
 
-            # bibtex-updater >=1.2.0 emits ``confidence`` as P(entry is real/valid)
-            # (verified ~0.67, mismatch ~0.0, unconfirmed ~0.22) plus a new
-            # ``confidence_score`` field. HALLMARK's Prediction.confidence is
-            # confidence-in-the-assigned-label, so convert: VALID keeps P(real);
-            # HALLUCINATED gets 1 - P(real). We detect the 1.2.0 realness
-            # semantics by the presence of the new fields so 0.10.0 output
-            # (which already encoded label-confidence) is left unchanged.
-            is_v12_realness = "confidence_score" in record or "abstained" in record
-            if is_v12_realness and label == "HALLUCINATED":
-                confidence = 1.0 - raw_confidence
+            # Post-1.2.0 records carry ``coverage_incomplete``: the abstention
+            # was reached while sources errored / were throttled, so a
+            # ``not_found`` with this flag is NOT a clean exhaustive miss.
+            # Treat it as an abstention (conservative VALID), not as evidence
+            # of fabrication. For all other statuses the flag is informational
+            # and the label mapping is unchanged.
+            incomplete_not_found = (
+                status == "not_found" and record.get("coverage_incomplete") is True
+            )
+            if incomplete_not_found:
+                label = "VALID"
+
+            p_valid = record.get("p_valid")
+            if incomplete_not_found:
+                confidence = 0.45
+            elif p_valid is not None:
+                # Post-1.2.0 records emit an explicit ``p_valid`` = P(entry as
+                # cited is genuine) — the documented value to threshold on.
+                # HALLMARK's Prediction.confidence is confidence in the
+                # assigned label, so VALID keeps p_valid and HALLUCINATED gets
+                # 1 - p_valid. Its presence implies the new format, so this
+                # replaces the 1.2.0 realness inversion heuristic below.
+                confidence = float(p_valid) if label == "VALID" else 1.0 - float(p_valid)
             else:
-                confidence = raw_confidence
+                # bibtex-updater >=1.2.0 emits ``confidence`` as P(entry is real/valid)
+                # (verified ~0.67, mismatch ~0.0, unconfirmed ~0.22) plus a new
+                # ``confidence_score`` field. HALLMARK's Prediction.confidence is
+                # confidence-in-the-assigned-label, so convert: VALID keeps P(real);
+                # HALLUCINATED gets 1 - P(real). We detect the 1.2.0 realness
+                # semantics by the presence of the new fields so 0.10.0 output
+                # (which already encoded label-confidence) is left unchanged.
+                is_v12_realness = "confidence_score" in record or "abstained" in record
+                if is_v12_realness and label == "HALLUCINATED":
+                    confidence = 1.0 - raw_confidence
+                else:
+                    confidence = raw_confidence
 
             reason_parts = [f"Status: {status}"]
+            if incomplete_not_found:
+                reason_parts.append(
+                    "Lookup incomplete due to source errors/throttling — "
+                    "abstention, not evidence of fabrication"
+                )
             if mismatched:
                 reason_parts.append(f"Mismatched: {mismatched}")
             if errors:
