@@ -1,25 +1,25 @@
 # bibtexupdater on the Walters & Wilder ChatGPT-citation supplement
 
-- Entries: **341** (supported type = journal articles); coverage 99.7%
-- Detection rate: **0.964**  
+- Entries: **341** (supported type = journal articles); coverage 100.0%
+- Detection rate: **0.970**  
 - False-positive rate: **0.145**  
-- F1 (hallucination): **0.913**  
-- Tier-weighted F1: **0.960**  
-- ECE: 0.20562056470588233
+- F1 (hallucination): **0.916**  
+- Tier-weighted F1: **0.963**  
+- ECE: 0.20582050439882693
 
 ## Per tier
 
 | Tier | n_hall | n_valid | detection_rate | FPR | F1 |
 |---|---|---|---|---|---|
 | 2 | 17 | 172 | 0.824 | 0.145 | 0.500 |
-| 3 | 152 | 172 | 0.980 | 0.145 | 0.914 |
+| 3 | 152 | 172 | 0.987 | 0.145 | 0.917 |
 
 ## Per hallucination type
 
 | Type | count | detection_rate |
 |---|---|---|
 | valid | 172 | 0.000 |
-| plausible_fabrication | 139 | 0.993 |
+| plausible_fabrication | 139 | 1.000 |
 | near_miss_title | 13 | 0.846 |
 | swapped_authors | 12 | 0.750 |
 | wrong_venue | 5 | 1.000 |
@@ -29,21 +29,21 @@
 | Version | n | detection_rate | FPR |
 |---|---|---|---|
 | GPT-3.5 | 119 | 0.990 | 0.053 |
-| GPT-4 | 222 | 0.928 | 0.157 |
+| GPT-4 | 222 | 0.942 | 0.157 |
 
 ## By subject field
 
 | Field | n | detection_rate | FPR |
 |---|---|---|---|
 | Humanities | 24 | 1.000 | 0.000 |
-| Natural sciences | 103 | 0.935 | 0.211 |
+| Natural sciences | 103 | 0.957 | 0.211 |
 | Social sciences | 214 | 0.972 | 0.120 |
 
 ## Tool status distribution
 
 | Status | count |
 |---|---|
-| partial_match | 107 |
+| partial_match | 108 |
 | verified | 104 |
 | unconfirmed | 48 |
 | not_found | 34 |
@@ -53,7 +53,6 @@
 | venue_mismatch | 4 |
 | year_mismatch | 3 |
 | hallucinated | 1 |
-| MISSING | 1 |
 
 ## False positives on real articles (25)
 
@@ -83,11 +82,10 @@
 - `ww_4_t40_c4007` [author_mismatch] Comparative environmental life cycle assessment of conventional and electric veh
 - `ww_4_t41_c4107` [author_truncated] Adaptation to flood risk: Results of international paired flood event studies
 
-## Missed hallucinations (6)
+## Missed hallucinations (5)
 
 - `ww_35_t28_c2802` [swapped_authors, tool=verified] Low-level environmental lead exposure and children's intellectual function: an i
 - `ww_4_t9_c910` [swapped_authors, tool=unconfirmed] Going home” or “leaving home”? The impact of person and place ties on anticipate
 - `ww_4_t22_c2201` [near_miss_title, tool=unconfirmed] The characteristics of gap year students and their tertiary academic outcomes
 - `ww_4_t35_c3508` [swapped_authors, tool=unconfirmed] A randomized trial of e-cigarettes versus nicotine-replacement therapy
 - `ww_4_t38_c3808` [near_miss_title, tool=unconfirmed] The population and distribution of orangutans (Pongo spp.) in and around the Dan
-- `ww_4_t42_c4204` [plausible_fabrication, tool=MISSING] The Development of Thorium Molten Salt Reactor (TMSR) Technology in China

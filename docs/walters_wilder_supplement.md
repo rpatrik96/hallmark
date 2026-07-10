@@ -79,28 +79,28 @@ All 341 pass `hallmark.contribution.validate_entry.validate_batch`. Built by
 
 `bibtex-check` (bibtex-updater 1.4.0), `--academic-only`, via the HALLMARK
 wrapper (`hallmark/baselines/bibtexupdater.py`) and `hallmark.evaluation.evaluate`.
-Coverage 340/341 (one entry left unresolved by sustained Semantic Scholar /
-OpenAlex rate-limiting — the documented shared-IP throttling). Reference output:
-`data/v1.0/baseline_results/bibtexupdater_supplement_chatgpt_citations.jsonl`;
+Full coverage 341/341 (the run took ~4 h of wall-clock under sustained Semantic
+Scholar / OpenAlex rate-limiting — the documented shared-IP throttling). Reference
+output: `data/v1.0/baseline_results/bibtexupdater_raw_supplement_chatgpt_citations.jsonl`;
 metrics: `results/walters_wilder/bibtexupdater_metrics.json`.
 
 ### Headline
 
 | Metric | Value | 95% CI |
 |---|---|---|
-| Detection rate | **0.964** | [0.935, 0.988] |
+| Detection rate | **0.970** | [0.947, 0.994] |
 | False-positive rate | **0.145** | [0.093, 0.198] |
-| F1 (hallucination) | **0.913** | — |
-| Tier-weighted F1 | **0.960** | — |
+| F1 (hallucination) | **0.916** | — |
+| Tier-weighted F1 | **0.963** | — |
 | ECE | 0.206 | — |
 
-Confusion: TP=163, FN=6, FP=25, TN=147.
+Confusion: TP=164, FN=5, FP=25, TN=147.
 
 ### Per hallucination type
 
 | Type | count | detection_rate |
 |---|---|---|
-| `plausible_fabrication` | 139 | **0.993** |
+| `plausible_fabrication` | 139 | **1.000** |
 | `wrong_venue` | 5 | 1.000 |
 | `near_miss_title` | 13 | 0.846 |
 | `swapped_authors` | 12 | **0.750** |
@@ -109,7 +109,7 @@ The tool is near-perfect on outright fabrications (its home turf) and weakest on
 subtle corruptions of *real* papers: when the title still resolves, it "verifies"
 the paper and misses a swapped author or a slightly-off title. This is exactly
 the Tier-2/Tier-3 gap HALLMARK is designed to expose — `plausible_fabrication`
-(T3, DR 0.99) is easy here because a fabricated title simply isn't found, whereas
+(T3, DR 1.00) is easy here because a fabricated title simply isn't found, whereas
 `swapped_authors` (T2, DR 0.75) is hard because the work is real.
 
 ### By GPT version
@@ -139,11 +139,10 @@ offers more opportunities for false positives and its hallucinations are subtler
 
 ## 5. Error analysis
 
-**Misses (6).** Five are subtle corruptions of real papers that the tool
+**Misses (5).** All five are subtle corruptions of real papers that the tool
 resolved and cleared (`swapped_authors` / `near_miss_title` returned as
-`verified`/`unconfirmed`); one is the single throttle-dropped entry (counted as a
-conservative VALID miss). Author swaps on a real, findable paper are the tool's
-blind spot.
+`verified`/`unconfirmed`). Author swaps on a real, findable paper are the tool's
+blind spot; every outright fabrication was caught.
 
 **False positives (25) — the FPR is inflated by one over-aggressive heuristic.**
 Breakdown: `author_truncated` 12, `title_mismatch` 6, `author_mismatch` 2,
@@ -160,7 +159,7 @@ slightly from the database record.
 ## 6. Takeaways
 
 - On authentic ChatGPT **journal-article** citations, bibtexupdater is strong:
-  **96% detection at 15% FPR** (≈8% discounting the APA-truncation artifact).
+  **97% detection at 15% FPR** (≈8% discounting the APA-truncation artifact).
 - It is essentially a fabrication detector: near-perfect on invented works,
   markedly weaker on real works with a swapped author or near-miss title.
 - This distribution exposes two things HALLMARK's CS-conference splits hide: the
@@ -174,8 +173,6 @@ slightly from the database record.
   structurally blind — are excluded, so this is not a whole-corpus verdict.
 - **APA parsing** is best-effort; a handful of long multi-author lists are
   shortened, which is the source of the `author_truncated` false positives.
-- **Coverage 340/341** due to API throttling; the one missing entry is scored
-  conservatively as VALID.
 - **Small per-type cells** (`wrong_venue` n=5, `swapped_authors` n=12) give wide
   CIs; read those detection rates as indicative.
 
