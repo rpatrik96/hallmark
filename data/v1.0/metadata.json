@@ -183,6 +183,30 @@
                 },
                 "rationale": "Real-world withdrawn preprints from bioRxiv and medRxiv (2023-2025). Each entry has a real DOI that resolves, a real title, and real authors — but the paper has been formally withdrawn and citing it is a real-world failure mode that no perturbation generator produces. Used as a reusable data source (analogous to real_world_incidents.jsonl); downstream split builders may sample from it.",
                 "method": "BioRxivClient.find_withdrawn_papers_parallel scans the date range and filters records whose abstract begins with \"Withdrawal Statement\", \"[Withdrawn]\", or contains \"has been withdrawn\". 8-worker parallel pagination; ~10 min for the full 2023-2025 scan."
+            },
+            "walters_wilder_chatgpt_citations": {
+                "file": "supplement_chatgpt_citations.jsonl",
+                "date_added": "2026-07-10",
+                "total": 341,
+                "valid": 172,
+                "hallucinated": 169,
+                "type_distribution": {
+                    "plausible_fabrication": 139,
+                    "near_miss_title": 13,
+                    "swapped_authors": 12,
+                    "wrong_venue": 5
+                },
+                "tier_distribution": {
+                    "2": 17,
+                    "3": 152
+                },
+                "generation_methods": {
+                    "llm_generated": 341
+                },
+                "supported_type": "article",
+                "source": "Walters & Wilder (2023), Scientific Reports 13:14045, doi:10.1038/s41598-023-41032-5 (CC BY 4.0), Supplementary Appendix 3",
+                "rationale": "Eval-only supplement of authentic ChatGPT-3.5/GPT-4 journal-article citations, hand-coded by the original authors for fabrication and substantive metadata errors. Complements the ML-conference-centric v1.0 splits along two axes: (1) authentic LLM-generated hallucinations rather than perturbations, and (2) multidisciplinary subject matter (humanities/social/natural sciences). Only the supported publication type (journal articles) is kept; books/chapters/websites in the source are out of scope for DOI/CrossRef/DBLP/OpenAlex-based verifiers. Field mismatches on real works are mapped to the matching HALLMARK type (near_miss_title/author_mismatch/wrong_venue) rather than left VALID; real articles whose only error is a non-future year or a wrong volume/page are excluded (no matching taxonomy type). Builder: scripts/ingest_walters_wilder.py.",
+                "eval_only": true
             }
         },
         "upstream_updates": {
