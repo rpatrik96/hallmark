@@ -135,19 +135,32 @@ def parse_apa_article(cite: str) -> dict[str, str]:
 
 
 def _clean_authors(a: str) -> str:
-    # Drop APA ellipsis / et-al. truncation so a faithful (if shortened) author
-    # list is passed downstream instead of a literal "..." token that verifiers
-    # misread as silent author-list truncation.
+    # An APA ellipsis / "et al." means the author list is intentionally
+    # abbreviated; record that so it can be re-expressed as BibTeX "and others"
+    # (i.e. et al.) rather than dropped, which would make a legitimately long
+    # author list look silently truncated to a verifier.
+    truncated = bool(re.search(r"…|\.\.\.|\bet\s+al\.?", a, flags=re.I))
     a = a.replace("…", " ").replace("...", " ")
     a = re.sub(r"\bet\s+al\.?", " ", a, flags=re.I)
     a = re.sub(r"\s{2,}", " ", a).strip().strip(",").strip().rstrip(".")
     # Standard APA: repeated "Lastname, I. I." units separated by commas/&.
+    # The final initial may have lost its trailing period to the year-split, so
+    # allow the last initial to be period-less (otherwise the final author of an
+    # "A, B, & C" citation is dropped, faking an author-truncation).
     units = re.findall(
-        r"([A-Z\u00c0-\u00dd][A-Za-z\u00c0-\u00ff'\u2019\-]+(?:\s+[A-Za-z\u00c0-\u00ff'\u2019\-]+)?),\s*((?:[A-Z]\.\s*){1,4})",
+        r"([A-Z\u00c0-\u00dd][A-Za-z\u00c0-\u00ff'\u2019\-]+(?:\s+[A-Za-z\u00c0-\u00ff'\u2019\-]+)?),"
+        r"\s*((?:[A-Z]\.\s*){0,3}[A-Z]\.?)",
         a,
     )
     if units:
-        return " and ".join(f"{inits.strip()} {last.strip()}".strip() for last, inits in units)
+        parts = []
+        for last, inits in units:
+            inits = re.sub(r"([A-Z])(?![.\w])", r"\1.", inits.strip())  # restore lost periods
+            parts.append(f"{inits} {last.strip()}".strip())
+        names = " and ".join(parts)
+        if truncated:
+            names += " and others"
+        return names
     return a
 
 

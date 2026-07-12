@@ -86,15 +86,18 @@ metrics: `results/walters_wilder/bibtexupdater_metrics.json`.
 
 ### Headline
 
+Metrics below are **post-audit** — after the author-parsing fix described in §5.
+Before/after comparison is in that section.
+
 | Metric | Value | 95% CI |
 |---|---|---|
-| Detection rate | **0.970** | [0.947, 0.994] |
-| False-positive rate | **0.145** | [0.093, 0.198] |
-| F1 (hallucination) | **0.916** | — |
-| Tier-weighted F1 | **0.963** | — |
-| ECE | 0.206 | — |
+| Detection rate | **0.929** | [0.905, 0.953] |
+| False-positive rate | **0.076** | [0.041, 0.116] |
+| F1 (hallucination) | **0.926** | — |
+| Tier-weighted F1 | **0.959** | — |
+| ECE | 0.169 | — |
 
-Confusion: TP=164, FN=5, FP=25, TN=147.
+Confusion: TP=157, FN=12, FP=13, TN=159.
 
 ### Per hallucination type
 
@@ -102,77 +105,128 @@ Confusion: TP=164, FN=5, FP=25, TN=147.
 |---|---|---|
 | `plausible_fabrication` | 139 | **1.000** |
 | `wrong_venue` | 5 | 1.000 |
-| `near_miss_title` | 13 | 0.846 |
-| `swapped_authors` | 12 | **0.750** |
+| `near_miss_title` | 13 | 0.769 |
+| `swapped_authors` | 12 | **0.250** |
 
 The tool is near-perfect on outright fabrications (its home turf) and weakest on
 subtle corruptions of *real* papers: when the title still resolves, it "verifies"
 the paper and misses a swapped author or a slightly-off title. This is exactly
 the Tier-2/Tier-3 gap HALLMARK is designed to expose — `plausible_fabrication`
 (T3, DR 1.00) is easy here because a fabricated title simply isn't found, whereas
-`swapped_authors` (T2, DR 0.75) is hard because the work is real.
+`swapped_authors` (T2, DR **0.25**) is hard because the work is real and the tool
+clears it on a title match without re-checking authorship.
 
 ### By GPT version
 
 | Version | n | detection_rate | FPR |
 |---|---|---|---|
 | GPT-3.5 | 119 | 0.990 | 0.053 |
-| GPT-4 | 222 | 0.928 | 0.157 |
+| GPT-4 | 222 | 0.841 | 0.078 |
 
-GPT-3.5 is easier on both axes: it fabricates far more (so more easy positives)
-and contributes few real citations. GPT-4 produces mostly real citations, so it
-offers more opportunities for false positives and its hallucinations are subtler.
+GPT-3.5 is easier: it fabricates far more (so more easy positives) and contributes
+few real citations. GPT-4 produces mostly real citations and its hallucinations
+are subtler (more author swaps), so its detection rate is markedly lower.
 
 ### By subject field
 
 | Field | n | detection_rate | FPR |
 |---|---|---|---|
-| Humanities | 24 | 1.000 | 0.000 |
-| Social sciences | 214 | 0.972 | 0.120 |
-| Natural sciences | 103 | 0.935 | 0.211 |
+| Humanities | 24 | 0.941 | 0.000 |
+| Social sciences | 214 | 0.962 | 0.056 |
+| Natural sciences | 103 | 0.848 | 0.123 |
 
 ### Tool status distribution
 
-`partial_match` 107, `verified` 104, `unconfirmed` 48, `not_found` 34,
-`author_truncated` 18, `title_mismatch` 13, `author_mismatch` 8,
-`venue_mismatch` 4, `year_mismatch` 3, `hallucinated` 1, missing 1.
+`verified` 148, `partial_match` 99, `not_found` 36, `unconfirmed` 23,
+`title_mismatch` 15, `author_mismatch` 8, `year_mismatch` 6, `venue_mismatch` 4,
+`hallucinated` 2.
 
-## 5. Error analysis
+## 5. Error audit and correction
 
-**Misses (5).** All five are subtle corruptions of real papers that the tool
-resolved and cleared (`swapped_authors` / `near_miss_title` returned as
-`verified`/`unconfirmed`). Author swaps on a real, findable paper are the tool's
-blind spot; every outright fabrication was caught.
+The first run reported DR 0.970 / FPR 0.145. A per-case audit of every false
+positive and every miss found that a **single author-parsing bug in the converter
+was distorting both**, so the numbers above are the corrected, post-fix figures.
 
-**False positives (25) — the FPR is inflated by one over-aggressive heuristic.**
-Breakdown: `author_truncated` 12, `title_mismatch` 6, `author_mismatch` 2,
-`partial_match` 2, `venue_mismatch` 1, `year_mismatch` 1, `not_found` 1.
+### The bug
 
-Nearly half (12/25) are `author_truncated` firing on real articles whose author
-lists are **legitimately APA-truncated** (8+ authors → "first authors … last
-author"). The cited work is real and correctly identified; flagging the APA
-truncation convention as a defect is over-aggressive. Excluding that artifact,
-the effective FPR is ≈ **13/172 = 0.076**. The remaining false positives are
-`title_mismatch` on real papers whose parsed subtitle/punctuation differs
-slightly from the database record.
+`scripts/ingest_walters_wilder.py` split APA reference strings into fields. The
+year-split stripped the trailing period off the last author's initial, and the
+author regex required each initial to end in a period — so the **final author of
+every "A, B, & C" citation was silently dropped** (e.g. "Li, H., Yi, J., &
+Zhang, J." parsed to only "H. Li and J. Yi"). Separately, APA ellipsis truncation
+("first authors … last author", used for 8+ authors) was deleted outright, leaving
+a short list with no indication it was abbreviated.
+
+Both produced author lists that bibtexupdater read as **silently truncated**, so
+it returned `author_truncated`.
+
+### Why it distorted the metrics *both ways*
+
+`author_truncated` maps to HALLUCINATED, so the bug had two opposite effects:
+
+- On **VALID** entries → a false positive. 12 of the original 25 FPs were
+  `author_truncated`, 8 of them from the dropped-final-author bug.
+- On **HALLUCINATED** entries (`swapped_authors`) → a *spurious* true positive:
+  the tool "detected" the entry for the wrong reason (parser-induced truncation),
+  not because it caught the author swap. This inflated the apparent
+  `swapped_authors` detection rate to 0.75.
+
+### The fix
+
+1. Allow the last initial to be period-less so the final author is kept.
+2. Re-express APA ellipsis / *et al.* truncation as BibTeX `and others` (i.e.
+   an explicit, recognised "et al.") instead of deleting it.
+
+Verified on the affected cases: the four sampled `author_truncated` FPs flip to
+`verified` (recovered author) or `unconfirmed` (explicit `and others`) — both
+non-hallucination verdicts.
+
+### Before → after (full 341/341 re-run)
+
+| Metric | Before | After |
+|---|---|---|
+| Detection rate | 0.970 | **0.929** |
+| False-positive rate | 0.145 | **0.076** |
+| F1 | 0.916 | **0.926** |
+| `swapped_authors` DR | 0.75 | **0.25** |
+| False positives | 25 | **13** |
+| Misses | 5 | **12** |
+
+FPR halved (the artifact FPs are gone) and F1 rose. Detection rate *fell* — this
+is a **correction, not a regression**: removing the parser-induced truncation
+stripped out 7 spurious detections and revealed the tool's true, much weaker
+performance on author swaps (`swapped_authors` DR 0.75 → 0.25).
+
+### Residual errors are genuine tool behaviour (no further fix)
+
+- **False positives (13):** `title_mismatch` 6 (strict on real-paper
+  subtitle/punctuation), `year_mismatch` 4 (online-first vs print year on real
+  papers), plus one each `author_mismatch` / `partial_match` / `venue_mismatch`.
+  These are the tool's metadata-sensitivity on real works, not parser artifacts.
+- **Misses (12):** all `swapped_authors` (9) or `near_miss_title` (3) where the
+  tool resolved the real paper by title and abstained (`verified`/`unconfirmed`)
+  on the author/title corruption. No wrapper change catches these without hurting
+  detection on the main splits (author truncation is a legitimate signal for the
+  `partial_author_list` type there), so they are reported, not patched.
 
 ## 6. Takeaways
 
-- On authentic ChatGPT **journal-article** citations, bibtexupdater is strong:
-  **97% detection at 15% FPR** (≈8% discounting the APA-truncation artifact).
-- It is essentially a fabrication detector: near-perfect on invented works,
-  markedly weaker on real works with a swapped author or near-miss title.
-- This distribution exposes two things HALLMARK's CS-conference splits hide: the
-  Tier-2 real-paper-corruption gap, and an over-aggressive author-truncation
-  heuristic that should be reported separately from genuine detections.
-- ECE 0.21 indicates the confidence scores are poorly calibrated (overconfident).
+- On authentic ChatGPT **journal-article** citations, bibtexupdater lands at
+  **DR 0.93 / FPR 0.076 / F1 0.93** after correcting the converter bug.
+- It is essentially a fabrication detector: perfect on invented works
+  (`plausible_fabrication` 1.00) but very weak on real works with a swapped author
+  (`swapped_authors` **0.25**) — it clears them on a title match.
+- The audit itself is the headline methodological lesson: a converter bug can
+  inflate detection *and* false-positive rates simultaneously, so per-case error
+  auditing is necessary before trusting an aggregate score.
+- ECE 0.17 indicates the confidence scores remain poorly calibrated.
 
 ## 7. Limitations
 
 - **Type-restricted:** articles only. Books/chapters/websites — where the tool is
   structurally blind — are excluded, so this is not a whole-corpus verdict.
-- **APA parsing** is best-effort; a handful of long multi-author lists are
-  shortened, which is the source of the `author_truncated` false positives.
+- **APA parsing** is best-effort; long multi-author lists are re-expressed with
+  `and others` rather than fully reconstructed.
 - **Small per-type cells** (`wrong_venue` n=5, `swapped_authors` n=12) give wide
   CIs; read those detection rates as indicative.
 
