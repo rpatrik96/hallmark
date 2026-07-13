@@ -1,0 +1,299 @@
+{
+  "tool": "bibtexupdater",
+  "split": "walters_wilder_chatgpt_citations",
+  "n_entries": 341,
+  "coverage": 1.0,
+  "overall": {
+    "detection_rate": 0.9289940828402367,
+    "false_positive_rate": 0.0755813953488372,
+    "f1_hallucination": 0.9262536873156343,
+    "tier_weighted_f1": 0.9585921325051758,
+    "ece": 0.16926731964809394,
+    "num_uncertain": 0,
+    "detection_rate_ci": [
+      0.9053254437869822,
+      0.9526627218934911
+    ],
+    "fpr_ci": [
+      0.040697674418604654,
+      0.11627906976744186
+    ]
+  },
+  "per_tier": {
+    "2": {
+      "detection_rate": 0.47058823529411764,
+      "false_positive_rate": 0.0755813953488372,
+      "f1": 0.42105263157894735,
+      "precision": 0.38095238095238093,
+      "num_hallucinated": 17,
+      "num_valid": 172
+    },
+    "3": {
+      "detection_rate": 0.9802631578947368,
+      "false_positive_rate": 0.0755813953488372,
+      "f1": 0.9490445859872612,
+      "precision": 0.9197530864197531,
+      "num_hallucinated": 152,
+      "num_valid": 172
+    }
+  },
+  "per_type": {
+    "near_miss_title": {
+      "detection_rate": 0.7692307692307693,
+      "false_positive_rate": 0.0,
+      "f1": 0.8695652173913044,
+      "count": 13,
+      "dr_ci_lower": 0.49743126004873084,
+      "dr_ci_upper": 0.918206209075343
+    },
+    "plausible_fabrication": {
+      "detection_rate": 1.0,
+      "false_positive_rate": 0.0,
+      "f1": 1.0,
+      "count": 139,
+      "dr_ci_lower": 0.9731058739190823,
+      "dr_ci_upper": 1.0
+    },
+    "swapped_authors": {
+      "detection_rate": 0.25,
+      "false_positive_rate": 0.0,
+      "f1": 0.4,
+      "count": 12,
+      "dr_ci_lower": 0.08894003962896138,
+      "dr_ci_upper": 0.53231033912066
+    },
+    "valid": {
+      "detection_rate": 0.0,
+      "false_positive_rate": 0.0755813953488372,
+      "f1": 0.0,
+      "count": 172,
+      "dr_ci_lower": 0.0,
+      "dr_ci_upper": 0.0
+    },
+    "wrong_venue": {
+      "detection_rate": 1.0,
+      "false_positive_rate": 0.0,
+      "f1": 1.0,
+      "count": 5,
+      "dr_ci_lower": 0.5655085052479191,
+      "dr_ci_upper": 1.0
+    }
+  },
+  "by_gpt_version": {
+    "3.5": {
+      "n": 119,
+      "detection_rate": 0.99,
+      "fpr": 0.05263157894736842,
+      "cm": [
+        99,
+        1,
+        1,
+        18
+      ]
+    },
+    "4": {
+      "n": 222,
+      "detection_rate": 0.8405797101449275,
+      "fpr": 0.0784313725490196,
+      "cm": [
+        58,
+        11,
+        12,
+        141
+      ]
+    }
+  },
+  "by_subject_field": {
+    "Humanities": {
+      "n": 24,
+      "detection_rate": 0.9411764705882353,
+      "fpr": 0.0,
+      "cm": [
+        16,
+        1,
+        0,
+        7
+      ]
+    },
+    "Natural sciences": {
+      "n": 103,
+      "detection_rate": 0.8478260869565217,
+      "fpr": 0.12280701754385964,
+      "cm": [
+        39,
+        7,
+        7,
+        50
+      ]
+    },
+    "Social sciences": {
+      "n": 214,
+      "detection_rate": 0.9622641509433962,
+      "fpr": 0.05555555555555555,
+      "cm": [
+        102,
+        4,
+        6,
+        102
+      ]
+    }
+  },
+  "status_distribution": {
+    "verified": 148,
+    "partial_match": 99,
+    "not_found": 36,
+    "unconfirmed": 23,
+    "title_mismatch": 15,
+    "author_mismatch": 8,
+    "year_mismatch": 6,
+    "venue_mismatch": 4,
+    "hallucinated": 2
+  },
+  "confusion_all": [
+    157,
+    12,
+    13,
+    159
+  ],
+  "false_positives": [
+    [
+      "ww_35_t23_c2301",
+      "venue_mismatch",
+      "Managing cultural diversity: Implications for organizational competitiveness"
+    ],
+    [
+      "ww_4_t9_c909",
+      "title_mismatch",
+      "Retirement migration counties in the southeastern United States: Geographic, demographic, and economic correlates"
+    ],
+    [
+      "ww_4_t17_c1706",
+      "partial_match",
+      "Will shift to remote teaching be boon or bane for online learning?"
+    ],
+    [
+      "ww_4_t18_c1802",
+      "year_mismatch",
+      "Explaining charter school effectiveness"
+    ],
+    [
+      "ww_4_t23_c2309",
+      "title_mismatch",
+      "Leadership skills for a changing world: Solving complex social problems"
+    ],
+    [
+      "ww_4_t29_c2908",
+      "title_mismatch",
+      "Does the home advantage depend on the crowd support? Evidence from same-stadium derbies"
+    ],
+    [
+      "ww_4_t34_c3402",
+      "title_mismatch",
+      "The potential role of dentists in identifying patients' risk of experiencing coronary heart disease events"
+    ],
+    [
+      "ww_4_t34_c3403",
+      "year_mismatch",
+      "Periodontal disease and atherosclerotic vascular disease: Does the evidence support an independent association? A scientific statement from the American Heart Association"
+    ],
+    [
+      "ww_4_t36_c3603",
+      "title_mismatch",
+      "Insomnia in primary care: Misreported, mishandled, and just plain missed"
+    ],
+    [
+      "ww_4_t36_c3605",
+      "year_mismatch",
+      "Medical and socio-professional impact of insomnia"
+    ],
+    [
+      "ww_4_t37_c3711",
+      "title_mismatch",
+      "Mammoth 2.0: will genome editing resurrect extinct species?"
+    ],
+    [
+      "ww_4_t39_c3901",
+      "year_mismatch",
+      "Human alteration of the global nitrogen and phosphorus soil balances for the period 1970-2050"
+    ],
+    [
+      "ww_4_t40_c4007",
+      "author_mismatch",
+      "Comparative environmental life cycle assessment of conventional and electric vehicles"
+    ]
+  ],
+  "missed": [
+    [
+      "ww_35_t28_c2802",
+      "swapped_authors",
+      "verified",
+      "Low-level environmental lead exposure and children's intellectual function: an international pooled analysis"
+    ],
+    [
+      "ww_4_t1_c106",
+      "swapped_authors",
+      "verified",
+      "Who was buried at Stonehenge?"
+    ],
+    [
+      "ww_4_t9_c910",
+      "swapped_authors",
+      "unconfirmed",
+      "Going home\u201d or \u201cleaving home\u201d? The impact of person and place ties on anticipated counterstream migration"
+    ],
+    [
+      "ww_4_t13_c1301",
+      "swapped_authors",
+      "verified",
+      "Mineral supply for sustainable development requires resource governance"
+    ],
+    [
+      "ww_4_t22_c2201",
+      "near_miss_title",
+      "unconfirmed",
+      "The characteristics of gap year students and their tertiary academic outcomes"
+    ],
+    [
+      "ww_4_t35_c3508",
+      "swapped_authors",
+      "unconfirmed",
+      "A randomized trial of e-cigarettes versus nicotine-replacement therapy"
+    ],
+    [
+      "ww_4_t37_c3701",
+      "swapped_authors",
+      "unconfirmed",
+      "Has the Earth's sixth mass extinction already arrived?"
+    ],
+    [
+      "ww_4_t38_c3808",
+      "near_miss_title",
+      "unconfirmed",
+      "The population and distribution of orangutans (Pongo spp.) in and around the Danau Sentarum Wildlife Reserve, West Kalimantan, Indonesia"
+    ],
+    [
+      "ww_4_t38_c3812",
+      "near_miss_title",
+      "unconfirmed",
+      "Distribution and conservation status of the orangutan (Pongo spp.) on Borneo and Sumatra: how many remain?"
+    ],
+    [
+      "ww_4_t38_c3813",
+      "swapped_authors",
+      "unconfirmed",
+      "Land-cover changes predict steep declines for the Sumatran orangutan (Pongo abelii)"
+    ],
+    [
+      "ww_4_t39_c3908",
+      "swapped_authors",
+      "unconfirmed",
+      "Special topics\u2014Mitigation of methane and nitrous oxide emissions from animal operations: I. A review of enteric methane mitigation options"
+    ],
+    [
+      "ww_4_t40_c4002",
+      "swapped_authors",
+      "unconfirmed",
+      "Life cycle analysis of lithium-ion batteries for automotive applications"
+    ]
+  ]
+}
