@@ -28,6 +28,8 @@ from __future__ import annotations
 import argparse
 import logging
 import os
+import random
+import re
 import sys
 import time
 from datetime import date, timedelta
@@ -92,9 +94,20 @@ def biorxiv_record_to_entry(rec: dict, server: str = "biorxiv") -> BenchmarkEntr
         else:
             cleaned.append(p)
     author_str = " and ".join(cleaned) if cleaned else ""
-    pub_date = (rec.get("date") or "").strip()
-    year = pub_date[:4] if pub_date else ""
     doi = (rec.get("doi") or "").strip()
+    # The bioRxiv API ``date`` is the LATEST version's posting date, but the DOI
+    # (10.1101/YYYY.MM.DD.nnnnnn) is the immutable v1 DOI whose canonical record
+    # carries the v1 year. Taking ``year`` from the API date leaves the entry
+    # internally inconsistent (year != DOI), which a DOI-resolving verifier
+    # correctly reads as a metadata mismatch. Derive the year from the DOI when it
+    # embeds a date so the citation matches what a resolver returns.
+    doi_date = re.match(r"10\.1101/(\d{4})\.(\d{2})\.(\d{2})\.", doi)
+    if doi_date:
+        year = doi_date.group(1)
+        pub_date = f"{doi_date.group(1)}-{doi_date.group(2)}-{doi_date.group(3)}"
+    else:
+        pub_date = (rec.get("date") or "").strip()
+        year = pub_date[:4] if pub_date else ""
 
     if not (author_str and year and doi):
         return None
@@ -124,17 +137,55 @@ def biorxiv_record_to_entry(rec: dict, server: str = "biorxiv") -> BenchmarkEntr
 
 
 def scrape_biorxiv(
-    target: int, days_back: int = 60, server: str = "biorxiv"
+    target: int,
+    days_back: int = 60,
+    server: str = "biorxiv",
+    years: list[int] | None = None,
 ) -> list[BenchmarkEntry]:
-    """Pull recent bioRxiv preprints and convert to BenchmarkEntry."""
+    """Pull bioRxiv preprints and convert to BenchmarkEntry.
+
+    When ``years`` is given, fetch a slice from each listed year (spreading the
+    sample across the window so it is not clustered in one month) instead of the
+    trailing ``days_back`` window. Used to build the recency-matched
+    cross-domain split, where the valid pool must sit in a pre-cutoff year range.
+    """
+    client = BioRxivClient(server=server, rate_limit=0.3, timeout=30.0)
+
+    if years:
+        # Over-fetch per year, then random-sample to a per-year quota so the
+        # pool spans the whole year rather than only early January.
+        rng = random.Random(8042)
+        per_year = max(1, target // len(years))
+        out: list[BenchmarkEntry] = []
+        seen: set[str] = set()
+        for yr in years:
+            from_date, to_date = f"{yr}-01-01", f"{yr}-12-31"
+            logger.info(
+                "[%s] fetching ~%d papers from %s..%s", server, per_year, from_date, to_date
+            )
+            raw = client.list_papers(from_date, to_date, max_results=per_year * 8)
+            cand = []
+            for rec in raw:
+                e = biorxiv_record_to_entry(rec, server=server)
+                if e is None:
+                    continue
+                key = e.fields.get("doi", "") or e.bibtex_key
+                if key in seen:
+                    continue
+                seen.add(key)
+                cand.append(e)
+            rng.shuffle(cand)
+            out.extend(cand[:per_year])
+        logger.info("[%s] kept %d entries across years %s", server, len(out), years)
+        return out
+
     today = date.today()
     from_date = (today - timedelta(days=days_back)).isoformat()
     to_date = today.isoformat()
-    client = BioRxivClient(server=server, rate_limit=0.3, timeout=30.0)
     logger.info("[%s] fetching ~%d papers from %s..%s", server, target, from_date, to_date)
     raw = client.list_papers(from_date, to_date, max_results=target * 2)  # over-fetch then filter
-    out: list[BenchmarkEntry] = []
-    seen: set[str] = set()
+    out = []
+    seen = set()
     for rec in raw:
         e = biorxiv_record_to_entry(rec, server=server)
         if e is None:
@@ -222,13 +273,22 @@ def pubmed_summary_to_entry(rec: dict) -> BenchmarkEntry | None:
     )
 
 
-def scrape_pubmed(target: int) -> list[BenchmarkEntry]:
-    """Pull recent PubMed papers across mixed clinical/biomed terms."""
+def scrape_pubmed(target: int, years: list[int] | None = None) -> list[BenchmarkEntry]:
+    """Pull PubMed papers across mixed clinical/biomed terms.
+
+    When ``years`` is given, restrict the search window to that (inclusive) year
+    range instead of the trailing 180 days -- used for the recency-matched
+    cross-domain split.
+    """
     api_key = os.environ.get("NCBI_API_KEY")
     client = PubMedClient(api_key=api_key, rate_limit=0.4 if api_key else 0.5)
-    today = date.today()
-    mindate = (today - timedelta(days=180)).strftime("%Y/%m/%d")
-    maxdate = today.strftime("%Y/%m/%d")
+    if years:
+        mindate = f"{min(years)}/01/01"
+        maxdate = f"{max(years)}/12/31"
+    else:
+        today = date.today()
+        mindate = (today - timedelta(days=180)).strftime("%Y/%m/%d")
+        maxdate = today.strftime("%Y/%m/%d")
 
     # Diverse query terms across med/clinical/biomed sub-domains.
     queries = [
@@ -381,6 +441,15 @@ def main() -> int:
         help="Years to scrape for DBLP CS-non-ML venues.",
     )
     p.add_argument(
+        "--biomed-years",
+        nargs="+",
+        type=int,
+        default=None,
+        help="If set, restrict bioRxiv/medRxiv/PubMed to this (inclusive) year "
+        "range instead of the trailing window. Use for the recency-matched "
+        "cross-domain split (e.g. --biomed-years 2021 2022 2023).",
+    )
+    p.add_argument(
         "--include-medrxiv",
         action="store_true",
         help="Also scrape medRxiv (in addition to bioRxiv).",
@@ -411,16 +480,21 @@ def main() -> int:
     bio_target = args.target_bio
     if args.include_medrxiv:
         bio_target = max(bio_target // 2, 1)
-    bio_entries = scrape_biorxiv(bio_target, days_back=args.bio_days_back, server="biorxiv")
+    bio_entries = scrape_biorxiv(
+        bio_target, days_back=args.bio_days_back, server="biorxiv", years=args.biomed_years
+    )
     all_entries.extend(bio_entries)
     if args.include_medrxiv:
         med_pre = scrape_biorxiv(
-            args.target_bio - len(bio_entries), days_back=args.bio_days_back, server="medrxiv"
+            args.target_bio - len(bio_entries),
+            days_back=args.bio_days_back,
+            server="medrxiv",
+            years=args.biomed_years,
         )
         all_entries.extend(med_pre)
 
     # PubMed
-    pm_entries = scrape_pubmed(args.target_med)
+    pm_entries = scrape_pubmed(args.target_med, years=args.biomed_years)
     all_entries.extend(pm_entries)
 
     # CS-non-ML
@@ -430,6 +504,28 @@ def main() -> int:
     if not all_entries:
         logger.error("No entries scraped — aborting.")
         return 1
+
+    # Hard year filter: API date filters (esp. PubMed pdat vs the pubdate we
+    # extract the year from) are imperfect and leak out-of-window entries. For
+    # the recency-matched split the year window is load-bearing (any post-cutoff
+    # leak reintroduces the very confound the split removes), so enforce it here.
+    if args.biomed_years or args.years:
+        allowed = set(args.years or []) | set(args.biomed_years or [])
+        before = len(all_entries)
+        kept = []
+        for e in all_entries:
+            y = str(e.fields.get("year", ""))[:4]
+            if y.isdigit() and int(y) in allowed:
+                kept.append(e)
+            else:
+                logger.debug("dropping out-of-window entry: %s year=%s", e.bibtex_key, y)
+        all_entries = kept
+        logger.info(
+            "year filter (allowed=%s): kept %d/%d entries",
+            sorted(allowed),
+            len(all_entries),
+            before,
+        )
 
     # Optional CrossRef verification
     if args.verify_dois:
