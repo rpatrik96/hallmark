@@ -203,7 +203,13 @@ def _load_checkpoint(checkpoint_path: Path, *, skip_failed: bool = False) -> dic
     for line in checkpoint_path.read_text().splitlines():
         if not line.strip():
             continue
-        data = json.loads(line)
+        try:
+            data = json.loads(line)
+        except json.JSONDecodeError:
+            # A process killed mid-write (e.g. laptop sleep/disconnect) can leave
+            # a truncated final line. Skip it; the entry is simply re-attempted.
+            logger.warning("Skipping malformed checkpoint line in %s", checkpoint_path)
+            continue
         reason = data.get("reason", "")
         if skip_failed and reason.startswith("[Error fallback]"):
             # Intentionally drop from the "completed" set so it gets retried.
