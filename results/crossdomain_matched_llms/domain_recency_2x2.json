@@ -1,0 +1,595 @@
+{
+  "rows": {
+    "llm_openai": {
+      "display": "GPT-5.1",
+      "dev_fpr_in_pre": 0.411,
+      "temporal_fpr_in_post": 0.759,
+      "matched_out_pre_all": {
+        "fpr": 0.1053,
+        "fp": 16,
+        "n": 152,
+        "ci95": [
+          0.0658,
+          0.1642
+        ],
+        "date_driven_share_of_fp": 0.0
+      },
+      "matched_out_pre_biomed": {
+        "fpr": 0.1053,
+        "fp": 16,
+        "n": 152,
+        "ci95": [
+          0.0658,
+          0.1642
+        ],
+        "date_driven_share_of_fp": 0.0
+      },
+      "matched_out_pre_cs": {
+        "fpr": null,
+        "fp": 0,
+        "n": 0,
+        "ci95": [
+          NaN,
+          NaN
+        ],
+        "date_driven_share_of_fp": null
+      },
+      "v2026_out_post_biomed": {
+        "fpr": 1.0,
+        "fp": 116,
+        "n": 116,
+        "ci95": [
+          0.9679,
+          1.0
+        ],
+        "date_driven_share_of_fp": 0.991
+      },
+      "domain_effect": {
+        "matched_fpr": 0.1053,
+        "dev_fpr": 0.411,
+        "diff": -0.3057,
+        "dev_inside_matched_ci": false
+      }
+    },
+    "llm_openai_gpt54": {
+      "display": "GPT-5.4",
+      "dev_fpr_in_pre": 0.228,
+      "temporal_fpr_in_post": null,
+      "matched_out_pre_all": {
+        "fpr": 0.1118,
+        "fp": 17,
+        "n": 152,
+        "ci95": [
+          0.071,
+          0.1718
+        ],
+        "date_driven_share_of_fp": 0.0
+      },
+      "matched_out_pre_biomed": {
+        "fpr": 0.1118,
+        "fp": 17,
+        "n": 152,
+        "ci95": [
+          0.071,
+          0.1718
+        ],
+        "date_driven_share_of_fp": 0.0
+      },
+      "matched_out_pre_cs": {
+        "fpr": null,
+        "fp": 0,
+        "n": 0,
+        "ci95": [
+          NaN,
+          NaN
+        ],
+        "date_driven_share_of_fp": null
+      },
+      "v2026_out_post_biomed": {
+        "fpr": 1.0,
+        "fp": 116,
+        "n": 116,
+        "ci95": [
+          0.9679,
+          1.0
+        ],
+        "date_driven_share_of_fp": 1.0
+      },
+      "domain_effect": {
+        "matched_fpr": 0.1118,
+        "dev_fpr": 0.228,
+        "diff": -0.1162,
+        "dev_inside_matched_ci": false
+      }
+    },
+    "llm_openrouter_qwen": {
+      "display": "Qwen3-235B",
+      "dev_fpr_in_pre": 0.533,
+      "temporal_fpr_in_post": 0.809,
+      "matched_out_pre_all": {
+        "fpr": 0.9737,
+        "fp": 148,
+        "n": 152,
+        "ci95": [
+          0.9343,
+          0.9897
+        ],
+        "date_driven_share_of_fp": 0.034
+      },
+      "matched_out_pre_biomed": {
+        "fpr": 0.9737,
+        "fp": 148,
+        "n": 152,
+        "ci95": [
+          0.9343,
+          0.9897
+        ],
+        "date_driven_share_of_fp": 0.034
+      },
+      "matched_out_pre_cs": {
+        "fpr": null,
+        "fp": 0,
+        "n": 0,
+        "ci95": [
+          NaN,
+          NaN
+        ],
+        "date_driven_share_of_fp": null
+      },
+      "v2026_out_post_biomed": {
+        "fpr": 1.0,
+        "fp": 116,
+        "n": 116,
+        "ci95": [
+          0.9679,
+          1.0
+        ],
+        "date_driven_share_of_fp": 0.983
+      },
+      "domain_effect": {
+        "matched_fpr": 0.9737,
+        "dev_fpr": 0.533,
+        "diff": 0.4407,
+        "dev_inside_matched_ci": false
+      }
+    },
+    "llm_openrouter_deepseek_v3": {
+      "display": "DeepSeek-V3.2",
+      "dev_fpr_in_pre": 0.702,
+      "temporal_fpr_in_post": 0.759,
+      "matched_out_pre_all": {
+        "fpr": 0.4079,
+        "fp": 62,
+        "n": 152,
+        "ci95": [
+          0.333,
+          0.4874
+        ],
+        "date_driven_share_of_fp": 0.0
+      },
+      "matched_out_pre_biomed": {
+        "fpr": 0.4079,
+        "fp": 62,
+        "n": 152,
+        "ci95": [
+          0.333,
+          0.4874
+        ],
+        "date_driven_share_of_fp": 0.0
+      },
+      "matched_out_pre_cs": {
+        "fpr": null,
+        "fp": 0,
+        "n": 0,
+        "ci95": [
+          NaN,
+          NaN
+        ],
+        "date_driven_share_of_fp": null
+      },
+      "v2026_out_post_biomed": {
+        "fpr": 1.0,
+        "fp": 116,
+        "n": 116,
+        "ci95": [
+          0.9679,
+          1.0
+        ],
+        "date_driven_share_of_fp": 0.991
+      },
+      "domain_effect": {
+        "matched_fpr": 0.4079,
+        "dev_fpr": 0.702,
+        "diff": -0.2941,
+        "dev_inside_matched_ci": false
+      }
+    },
+    "llm_openrouter_deepseek_r1": {
+      "display": "DeepSeek-R1",
+      "dev_fpr_in_pre": 0.623,
+      "temporal_fpr_in_post": 0.856,
+      "matched_out_pre_all": null,
+      "matched_out_pre_biomed": null,
+      "matched_out_pre_cs": null,
+      "v2026_out_post_biomed": {
+        "fpr": 0.1552,
+        "fp": 18,
+        "n": 116,
+        "ci95": [
+          0.1005,
+          0.232
+        ],
+        "date_driven_share_of_fp": 0.889
+      }
+    },
+    "llm_openrouter_mistral": {
+      "display": "Mistral Large",
+      "dev_fpr_in_pre": 0.25,
+      "temporal_fpr_in_post": 0.793,
+      "matched_out_pre_all": {
+        "fpr": 0.1776,
+        "fp": 27,
+        "n": 152,
+        "ci95": [
+          0.125,
+          0.2461
+        ],
+        "date_driven_share_of_fp": 0.037
+      },
+      "matched_out_pre_biomed": {
+        "fpr": 0.1776,
+        "fp": 27,
+        "n": 152,
+        "ci95": [
+          0.125,
+          0.2461
+        ],
+        "date_driven_share_of_fp": 0.037
+      },
+      "matched_out_pre_cs": {
+        "fpr": null,
+        "fp": 0,
+        "n": 0,
+        "ci95": [
+          NaN,
+          NaN
+        ],
+        "date_driven_share_of_fp": null
+      },
+      "v2026_out_post_biomed": {
+        "fpr": 1.0,
+        "fp": 116,
+        "n": 116,
+        "ci95": [
+          0.9679,
+          1.0
+        ],
+        "date_driven_share_of_fp": 1.0
+      },
+      "domain_effect": {
+        "matched_fpr": 0.1776,
+        "dev_fpr": 0.25,
+        "diff": -0.0724,
+        "dev_inside_matched_ci": false
+      }
+    },
+    "llm_openrouter_gemini_flash": {
+      "display": "Gemini 2.5 Flash",
+      "dev_fpr_in_pre": 0.1,
+      "temporal_fpr_in_post": 0.595,
+      "matched_out_pre_all": {
+        "fpr": 0.0132,
+        "fp": 2,
+        "n": 152,
+        "ci95": [
+          0.0036,
+          0.0467
+        ],
+        "date_driven_share_of_fp": 0.5
+      },
+      "matched_out_pre_biomed": {
+        "fpr": 0.0132,
+        "fp": 2,
+        "n": 152,
+        "ci95": [
+          0.0036,
+          0.0467
+        ],
+        "date_driven_share_of_fp": 0.5
+      },
+      "matched_out_pre_cs": {
+        "fpr": null,
+        "fp": 0,
+        "n": 0,
+        "ci95": [
+          NaN,
+          NaN
+        ],
+        "date_driven_share_of_fp": null
+      },
+      "v2026_out_post_biomed": {
+        "fpr": 0.9914,
+        "fp": 115,
+        "n": 116,
+        "ci95": [
+          0.9528,
+          0.9985
+        ],
+        "date_driven_share_of_fp": 0.983
+      },
+      "domain_effect": {
+        "matched_fpr": 0.0132,
+        "dev_fpr": 0.1,
+        "diff": -0.0868,
+        "dev_inside_matched_ci": false
+      }
+    },
+    "llm_openrouter_gemini_pro": {
+      "display": "Gemini 2.5 Pro",
+      "dev_fpr_in_pre": 0.05,
+      "temporal_fpr_in_post": 0.25,
+      "matched_out_pre_all": {
+        "fpr": 0.0197,
+        "fp": 3,
+        "n": 152,
+        "ci95": [
+          0.0067,
+          0.0564
+        ],
+        "date_driven_share_of_fp": 0.0
+      },
+      "matched_out_pre_biomed": {
+        "fpr": 0.0197,
+        "fp": 3,
+        "n": 152,
+        "ci95": [
+          0.0067,
+          0.0564
+        ],
+        "date_driven_share_of_fp": 0.0
+      },
+      "matched_out_pre_cs": {
+        "fpr": null,
+        "fp": 0,
+        "n": 0,
+        "ci95": [
+          NaN,
+          NaN
+        ],
+        "date_driven_share_of_fp": null
+      },
+      "v2026_out_post_biomed": {
+        "fpr": 1.0,
+        "fp": 116,
+        "n": 116,
+        "ci95": [
+          0.9679,
+          1.0
+        ],
+        "date_driven_share_of_fp": 0.0
+      },
+      "domain_effect": {
+        "matched_fpr": 0.0197,
+        "dev_fpr": 0.05,
+        "diff": -0.0303,
+        "dev_inside_matched_ci": true
+      }
+    },
+    "llm_openrouter_llama_4_maverick": {
+      "display": "Llama 4 Maverick",
+      "dev_fpr_in_pre": 0.146,
+      "temporal_fpr_in_post": 0.763,
+      "matched_out_pre_all": {
+        "fpr": 0.0592,
+        "fp": 9,
+        "n": 152,
+        "ci95": [
+          0.0315,
+          0.1087
+        ],
+        "date_driven_share_of_fp": 0.111
+      },
+      "matched_out_pre_biomed": {
+        "fpr": 0.0592,
+        "fp": 9,
+        "n": 152,
+        "ci95": [
+          0.0315,
+          0.1087
+        ],
+        "date_driven_share_of_fp": 0.111
+      },
+      "matched_out_pre_cs": {
+        "fpr": null,
+        "fp": 0,
+        "n": 0,
+        "ci95": [
+          NaN,
+          NaN
+        ],
+        "date_driven_share_of_fp": null
+      },
+      "v2026_out_post_biomed": {
+        "fpr": 1.0,
+        "fp": 116,
+        "n": 116,
+        "ci95": [
+          0.9679,
+          1.0
+        ],
+        "date_driven_share_of_fp": 0.931
+      },
+      "domain_effect": {
+        "matched_fpr": 0.0592,
+        "dev_fpr": 0.146,
+        "diff": -0.0868,
+        "dev_inside_matched_ci": false
+      }
+    },
+    "llm_openrouter_claude_sonnet_4_6": {
+      "display": "Claude Sonnet 4.6",
+      "dev_fpr_in_pre": 0.127,
+      "temporal_fpr_in_post": 0.12,
+      "matched_out_pre_all": {
+        "fpr": 0.0987,
+        "fp": 15,
+        "n": 152,
+        "ci95": [
+          0.0607,
+          0.1564
+        ],
+        "date_driven_share_of_fp": 0.0
+      },
+      "matched_out_pre_biomed": {
+        "fpr": 0.0987,
+        "fp": 15,
+        "n": 152,
+        "ci95": [
+          0.0607,
+          0.1564
+        ],
+        "date_driven_share_of_fp": 0.0
+      },
+      "matched_out_pre_cs": {
+        "fpr": null,
+        "fp": 0,
+        "n": 0,
+        "ci95": [
+          NaN,
+          NaN
+        ],
+        "date_driven_share_of_fp": null
+      },
+      "v2026_out_post_biomed": {
+        "fpr": 0.9569,
+        "fp": 111,
+        "n": 116,
+        "ci95": [
+          0.9031,
+          0.9815
+        ],
+        "date_driven_share_of_fp": 1.0
+      },
+      "domain_effect": {
+        "matched_fpr": 0.0987,
+        "dev_fpr": 0.127,
+        "diff": -0.0283,
+        "dev_inside_matched_ci": true
+      }
+    },
+    "llm_openrouter_claude_opus_4_7": {
+      "display": "Claude Opus 4.7",
+      "dev_fpr_in_pre": 0.072,
+      "temporal_fpr_in_post": 0.073,
+      "matched_out_pre_all": {
+        "fpr": 0.125,
+        "fp": 19,
+        "n": 152,
+        "ci95": [
+          0.0815,
+          0.187
+        ],
+        "date_driven_share_of_fp": 0.0
+      },
+      "matched_out_pre_biomed": {
+        "fpr": 0.125,
+        "fp": 19,
+        "n": 152,
+        "ci95": [
+          0.0815,
+          0.187
+        ],
+        "date_driven_share_of_fp": 0.0
+      },
+      "matched_out_pre_cs": {
+        "fpr": null,
+        "fp": 0,
+        "n": 0,
+        "ci95": [
+          NaN,
+          NaN
+        ],
+        "date_driven_share_of_fp": null
+      },
+      "v2026_out_post_biomed": {
+        "fpr": 0.9483,
+        "fp": 110,
+        "n": 116,
+        "ci95": [
+          0.8917,
+          0.9761
+        ],
+        "date_driven_share_of_fp": 0.964
+      },
+      "domain_effect": {
+        "matched_fpr": 0.125,
+        "dev_fpr": 0.072,
+        "diff": 0.053,
+        "dev_inside_matched_ci": false
+      }
+    },
+    "llm_openrouter_qwen_max": {
+      "display": "Qwen3-VL-235B",
+      "dev_fpr_in_pre": 0.551,
+      "temporal_fpr_in_post": 0.887,
+      "matched_out_pre_all": {
+        "fpr": 0.5526,
+        "fp": 84,
+        "n": 152,
+        "ci95": [
+          0.4733,
+          0.6294
+        ],
+        "date_driven_share_of_fp": 0.012
+      },
+      "matched_out_pre_biomed": {
+        "fpr": 0.5526,
+        "fp": 84,
+        "n": 152,
+        "ci95": [
+          0.4733,
+          0.6294
+        ],
+        "date_driven_share_of_fp": 0.012
+      },
+      "matched_out_pre_cs": {
+        "fpr": null,
+        "fp": 0,
+        "n": 0,
+        "ci95": [
+          NaN,
+          NaN
+        ],
+        "date_driven_share_of_fp": null
+      },
+      "v2026_out_post_biomed": {
+        "fpr": 1.0,
+        "fp": 116,
+        "n": 116,
+        "ci95": [
+          0.9679,
+          1.0
+        ],
+        "date_driven_share_of_fp": 1.0
+      },
+      "domain_effect": {
+        "matched_fpr": 0.5526,
+        "dev_fpr": 0.551,
+        "diff": 0.0016,
+        "dev_inside_matched_ci": true
+      }
+    }
+  },
+  "summary": {
+    "matched_biomed_date_share": {
+      "total_fp": 402,
+      "date_driven_fp": 9,
+      "share": 0.022
+    },
+    "v2026_biomed_date_share": {
+      "total_fp": 1282,
+      "date_driven_fp": 1146,
+      "share": 0.894
+    }
+  }
+}

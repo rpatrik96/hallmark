@@ -1,0 +1,153 @@
+{
+  "tool": "Gemini 2.5 Flash",
+  "model_id": "google/gemini-2.5-flash",
+  "provider": "openrouter",
+  "split": "walters_wilder_chatgpt_citations",
+  "n_entries": 341,
+  "coverage": 1.0,
+  "num_uncertain": 0,
+  "overall": {
+    "detection_rate": 0.28994082840236685,
+    "false_positive_rate": 0.029069767441860465,
+    "f1_hallucination": 0.43946188340807174,
+    "tier_weighted_f1": 0.45794392523364486,
+    "ece": 0.32390029325513187,
+    "detection_rate_ci": [
+      0.22485207100591717,
+      0.35502958579881655
+    ],
+    "fpr_ci": [
+      0.005813953488372093,
+      0.05813953488372093
+    ]
+  },
+  "per_tier": {
+    "2": {
+      "detection_rate": 0.0,
+      "false_positive_rate": 0.029069767441860465,
+      "f1": 0.0,
+      "precision": 0.0,
+      "num_hallucinated": 17,
+      "num_valid": 172
+    },
+    "3": {
+      "detection_rate": 0.3223684210526316,
+      "false_positive_rate": 0.029069767441860465,
+      "f1": 0.4757281553398058,
+      "precision": 0.9074074074074074,
+      "num_hallucinated": 152,
+      "num_valid": 172
+    }
+  },
+  "per_type": {
+    "near_miss_title": {
+      "detection_rate": 0.07692307692307693,
+      "false_positive_rate": 0.0,
+      "f1": 0.14285714285714288,
+      "count": 13,
+      "dr_ci_lower": 0.013710066379696323,
+      "dr_ci_upper": 0.3331453392824736
+    },
+    "plausible_fabrication": {
+      "detection_rate": 0.34532374100719426,
+      "false_positive_rate": 0.0,
+      "f1": 0.5133689839572193,
+      "count": 139,
+      "dr_ci_lower": 0.2713977670056232,
+      "dr_ci_upper": 0.42756948063091965
+    },
+    "swapped_authors": {
+      "detection_rate": 0.0,
+      "false_positive_rate": 0.0,
+      "f1": 0.0,
+      "count": 12,
+      "dr_ci_lower": 0.0,
+      "dr_ci_upper": 0.2425007574992425
+    },
+    "valid": {
+      "detection_rate": 0.0,
+      "false_positive_rate": 0.029069767441860465,
+      "f1": 0.0,
+      "count": 172,
+      "dr_ci_lower": 0.0,
+      "dr_ci_upper": 0.0
+    },
+    "wrong_venue": {
+      "detection_rate": 0.0,
+      "false_positive_rate": 0.0,
+      "f1": 0.0,
+      "count": 5,
+      "dr_ci_lower": 0.0,
+      "dr_ci_upper": 0.43449149475208104
+    }
+  },
+  "by_gpt_version": {
+    "3.5": {
+      "n": 119,
+      "detection_rate": 0.4,
+      "fpr": 0.0,
+      "cm": [
+        40,
+        60,
+        0,
+        19
+      ]
+    },
+    "4": {
+      "n": 222,
+      "detection_rate": 0.13043478260869565,
+      "fpr": 0.032679738562091505,
+      "cm": [
+        9,
+        60,
+        5,
+        148
+      ]
+    }
+  },
+  "by_subject_field": {
+    "Humanities": {
+      "n": 24,
+      "detection_rate": 0.23529411764705882,
+      "fpr": 0.0,
+      "cm": [
+        4,
+        13,
+        0,
+        7
+      ]
+    },
+    "Natural sciences": {
+      "n": 103,
+      "detection_rate": 0.2391304347826087,
+      "fpr": 0.0,
+      "cm": [
+        11,
+        35,
+        0,
+        57
+      ]
+    },
+    "Social sciences": {
+      "n": 214,
+      "detection_rate": 0.32075471698113206,
+      "fpr": 0.046296296296296294,
+      "cm": [
+        34,
+        72,
+        5,
+        103
+      ]
+    }
+  },
+  "forced_binary_overall": {
+    "detection_rate": 0.28994082840236685,
+    "fpr": 0.029069767441860465,
+    "cm": [
+      49,
+      120,
+      5,
+      167
+    ]
+  }
+}

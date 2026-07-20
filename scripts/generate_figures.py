@@ -294,7 +294,7 @@ def fig_per_type_heatmap(results: list[dict], output_dir: Path) -> None:
 def fig_cost_accuracy(results: list[dict], output_dir: Path) -> None:
     """Scatter plot: F1 vs throughput (entries/second)."""
     results = [r for r in results if r["tool_name"] in _MAIN_TABLE_TOOLS]
-    fig, ax = plt.subplots(figsize=(6, 4))
+    fig, ax = plt.subplots(figsize=(7.2, 4.4))
 
     # Collect points for label adjustment
     points = []
@@ -316,26 +316,93 @@ def fig_cost_accuracy(results: list[dict], output_dir: Path) -> None:
         )
         points.append((cost, f1, name, i))
 
-    # Place labels with manual offset logic to avoid overlaps
-    # Sort by x to detect horizontal crowding
-    points.sort(key=lambda p: (p[0], p[1]))
-    placed: list[tuple[float, float]] = []
-    for cost, f1, name, _idx in points:
-        # Default offset
-        dx, dy = 10, 6
-        # Check for nearby labels and adjust
-        for px, py in placed:
-            if abs(cost - px) < 0.15 and abs(f1 - py) < 0.08:
-                dy = -14  # shift below
-                break
-        placed.append((cost, f1))
+    # Greedy collision-free label placement: try candidate offsets in order,
+    # accept the first whose approximate label box overlaps no placed box and no marker.
+    renderer_pts = []  # placed label boxes in display points: (x0, y0, x1, y1)
+    marker_r = 9.0 * (plt.gcf().dpi / 72.0) if False else 12.0  # marker radius in display px
+
+    def to_disp(x, y):
+        return ax.transData.transform((x, y))
+
+    fig.canvas.draw()  # realize transforms
+    candidates = [
+        (12, 7, "left"),
+        (12, -15, "left"),
+        (-12, 7, "right"),
+        (-12, -15, "right"),
+        (14, 22, "left"),
+        (14, -30, "left"),
+        (-14, 22, "right"),
+        (-14, -30, "right"),
+        (16, 37, "left"),
+        (16, -45, "left"),
+        (-16, 37, "right"),
+        (-16, -45, "right"),
+        (18, 52, "left"),
+        (-18, 52, "right"),
+    ]
+
+    # place the most crowded (cluster-inner) points first: sort by number of neighbors
+    def n_neighbors(p):
+        px, py = to_disp(p[0], p[1])
+        c = 0
+        for q in points:
+            if q is p:
+                continue
+            qx, qy = to_disp(q[0], q[1])
+            if abs(px - qx) < 70 and abs(py - qy) < 40:
+                c += 1
+        return c
+
+    marker_boxes = []
+    for cost, f1, _name, _idx in points:
+        mx, my = to_disp(cost, f1)
+        marker_boxes.append((mx - marker_r, my - marker_r, mx + marker_r, my + marker_r))
+
+    def overlaps(a, b):
+        return not (a[2] < b[0] or b[2] < a[0] or a[3] < b[1] or b[3] < a[1])
+
+    ppt = fig.dpi / 72.0  # display pixels per point (offsets/boxes are in points)
+    for cost, f1, name, _idx in sorted(points, key=n_neighbors, reverse=True):
+        px, py = to_disp(cost, f1)
+        w = (4.6 * len(name) + 4) * ppt  # approx label width in display px
+        h = 10.0 * ppt
+        chosen = candidates[-1]
+        for dx, dy, ha in candidates:
+            dxp, dyp = dx * ppt, dy * ppt
+            if ha == "left":
+                box = (px + dxp, py + dyp - h / 2, px + dxp + w, py + dyp + h / 2)
+            else:
+                box = (px + dxp - w, py + dyp - h / 2, px + dxp, py + dyp + h / 2)
+            if any(overlaps(box, b) for b in renderer_pts):
+                continue
+            if any(overlaps(box, m) for m in marker_boxes):
+                continue
+            ax_box = ax.get_window_extent()
+            if (
+                box[0] < ax_box.x0 + 2
+                or box[2] > ax_box.x1 - 2
+                or box[1] < ax_box.y0 + 2
+                or box[3] > ax_box.y1 - 2
+            ):
+                continue
+            chosen = (dx, dy, ha)
+            renderer_pts.append(box)
+            break
+        else:
+            renderer_pts.append(box)
+        dx, dy, ha = chosen
+        far = abs(dx) > 13 or abs(dy) > 16
         ax.annotate(
             name,
             (cost, f1),
             textcoords="offset points",
             xytext=(dx, dy),
             fontsize=8,
-            arrowprops=dict(arrowstyle="-", color="gray", lw=0.5) if len(points) > 6 else None,
+            ha=ha,
+            va="center",
+            zorder=4,
+            arrowprops=dict(arrowstyle="-", color="gray", lw=0.5, shrinkB=4) if far else None,
         )
 
     ax.set_xlabel("Throughput (entries/sec)")

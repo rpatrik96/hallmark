@@ -1,0 +1,19 @@
+{
+  "n": 500,
+  "n_hallucinated": 300,
+  "n_valid": 200,
+  "tp": 267,
+  "fp": 75,
+  "tn": 125,
+  "fn": 33,
+  "detection_rate": 0.89,
+  "fpr": 0.375,
+  "precision": 0.7807,
+  "f1": 0.8318,
+  "mcc": 0.5427,
+  "abstained": 132,
+  "coverage": 0.736,
+  "split": "test_crossdomain.jsonl",
+  "prescreen": true,
+  "reference_year": 2026
+}

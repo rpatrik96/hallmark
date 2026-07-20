@@ -77,6 +77,12 @@ SUBSET: dict[str, dict[str, str]] = {
         "api_key_env": "OPENROUTER_API_KEY",
         "display": "Qwen3-235B",
     },
+    "llm_openrouter_claude_sonnet_4_6": {
+        "provider": "openrouter",
+        "model_id": "anthropic/claude-sonnet-4.6",
+        "api_key_env": "OPENROUTER_API_KEY",
+        "display": "Claude Sonnet 4.6",
+    },
 }
 
 
