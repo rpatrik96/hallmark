@@ -1,0 +1,153 @@
+{
+  "tool": "Claude Sonnet 4.6",
+  "model_id": "anthropic/claude-sonnet-4.6",
+  "provider": "openrouter",
+  "split": "walters_wilder_chatgpt_citations",
+  "n_entries": 341,
+  "coverage": 1.0,
+  "num_uncertain": 15,
+  "overall": {
+    "detection_rate": 0.864516129032258,
+    "false_positive_rate": 0.05847953216374269,
+    "f1_hallucination": 0.8963210702341137,
+    "tier_weighted_f1": 0.9277389277389277,
+    "ece": 0.08656441717791413,
+    "detection_rate_ci": [
+      0.821656050955414,
+      0.9050632911392406
+    ],
+    "fpr_ci": [
+      0.023668639053254437,
+      0.09883720930232558
+    ]
+  },
+  "per_tier": {
+    "2": {
+      "detection_rate": 0.26666666666666666,
+      "false_positive_rate": 0.05847953216374269,
+      "f1": 0.2758620689655172,
+      "precision": 0.2857142857142857,
+      "num_hallucinated": 17,
+      "num_valid": 172
+    },
+    "3": {
+      "detection_rate": 0.9285714285714286,
+      "false_positive_rate": 0.05847953216374269,
+      "f1": 0.9285714285714286,
+      "precision": 0.9285714285714286,
+      "num_hallucinated": 152,
+      "num_valid": 172
+    }
+  },
+  "per_type": {
+    "near_miss_title": {
+      "detection_rate": 0.5454545454545454,
+      "false_positive_rate": 0.0,
+      "f1": 0.7058823529411764,
+      "count": 13,
+      "dr_ci_lower": 0.28008775568998817,
+      "dr_ci_upper": 0.7872904245601196
+    },
+    "plausible_fabrication": {
+      "detection_rate": 0.9612403100775194,
+      "false_positive_rate": 0.0,
+      "f1": 0.9802371541501977,
+      "count": 139,
+      "dr_ci_lower": 0.9124709815212309,
+      "dr_ci_upper": 0.9833327426133778
+    },
+    "swapped_authors": {
+      "detection_rate": 0.18181818181818182,
+      "false_positive_rate": 0.0,
+      "f1": 0.3076923076923077,
+      "count": 12,
+      "dr_ci_lower": 0.05136660067100063,
+      "dr_ci_upper": 0.4769861375782448
+    },
+    "valid": {
+      "detection_rate": 0.0,
+      "false_positive_rate": 0.05847953216374269,
+      "f1": 0.0,
+      "count": 172,
+      "dr_ci_lower": 0.0,
+      "dr_ci_upper": 0.0
+    },
+    "wrong_venue": {
+      "detection_rate": 0.5,
+      "false_positive_rate": 0.0,
+      "f1": 0.6666666666666666,
+      "count": 5,
+      "dr_ci_lower": 0.15003570882017148,
+      "dr_ci_upper": 0.8499642911798285
+    }
+  },
+  "by_gpt_version": {
+    "3.5": {
+      "n": 119,
+      "detection_rate": 0.94,
+      "fpr": 0.05263157894736842,
+      "cm": [
+        94,
+        6,
+        1,
+        18
+      ]
+    },
+    "4": {
+      "n": 222,
+      "detection_rate": 0.5797101449275363,
+      "fpr": 0.058823529411764705,
+      "cm": [
+        40,
+        29,
+        9,
+        144
+      ]
+    }
+  },
+  "by_subject_field": {
+    "Humanities": {
+      "n": 24,
+      "detection_rate": 0.8235294117647058,
+      "fpr": 0.0,
+      "cm": [
+        14,
+        3,
+        0,
+        7
+      ]
+    },
+    "Natural sciences": {
+      "n": 103,
+      "detection_rate": 0.7391304347826086,
+      "fpr": 0.08771929824561403,
+      "cm": [
+        34,
+        12,
+        5,
+        52
+      ]
+    },
+    "Social sciences": {
+      "n": 214,
+      "detection_rate": 0.8113207547169812,
+      "fpr": 0.046296296296296294,
+      "cm": [
+        86,
+        20,
+        5,
+        103
+      ]
+    }
+  },
+  "forced_binary_overall": {
+    "detection_rate": 0.7928994082840237,
+    "fpr": 0.05813953488372093,
+    "cm": [
+      134,
+      35,
+      10,
+      162
+    ]
+  }
+}

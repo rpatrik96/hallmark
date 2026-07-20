@@ -1,0 +1,153 @@
+{
+  "tool": "GPT-5.1",
+  "model_id": "gpt-5.1",
+  "provider": "openai",
+  "split": "walters_wilder_chatgpt_citations",
+  "n_entries": 341,
+  "coverage": 1.0,
+  "num_uncertain": 0,
+  "overall": {
+    "detection_rate": 0.8461538461538461,
+    "false_positive_rate": 0.28488372093023256,
+    "f1_hallucination": 0.7922437673130193,
+    "tier_weighted_f1": 0.8817427385892116,
+    "ece": 0.19243401759530787,
+    "detection_rate_ci": [
+      0.8047337278106509,
+      0.8816568047337278
+    ],
+    "fpr_ci": [
+      0.22093023255813954,
+      0.3546511627906977
+    ]
+  },
+  "per_tier": {
+    "2": {
+      "detection_rate": 0.23529411764705882,
+      "false_positive_rate": 0.28488372093023256,
+      "f1": 0.1142857142857143,
+      "precision": 0.07547169811320754,
+      "num_hallucinated": 17,
+      "num_valid": 172
+    },
+    "3": {
+      "detection_rate": 0.9144736842105263,
+      "false_positive_rate": 0.28488372093023256,
+      "f1": 0.8176470588235294,
+      "precision": 0.7393617021276596,
+      "num_hallucinated": 152,
+      "num_valid": 172
+    }
+  },
+  "per_type": {
+    "near_miss_title": {
+      "detection_rate": 0.38461538461538464,
+      "false_positive_rate": 0.0,
+      "f1": 0.5555555555555556,
+      "count": 13,
+      "dr_ci_lower": 0.17709446581236818,
+      "dr_ci_upper": 0.6447751902773146
+    },
+    "plausible_fabrication": {
+      "detection_rate": 0.9640287769784173,
+      "false_positive_rate": 0.0,
+      "f1": 0.9816849816849816,
+      "count": 139,
+      "dr_ci_lower": 0.9185588702004348,
+      "dr_ci_upper": 0.9845393868899366
+    },
+    "swapped_authors": {
+      "detection_rate": 0.25,
+      "false_positive_rate": 0.0,
+      "f1": 0.4,
+      "count": 12,
+      "dr_ci_lower": 0.08894003962896138,
+      "dr_ci_upper": 0.53231033912066
+    },
+    "valid": {
+      "detection_rate": 0.0,
+      "false_positive_rate": 0.28488372093023256,
+      "f1": 0.0,
+      "count": 172,
+      "dr_ci_lower": 0.0,
+      "dr_ci_upper": 0.0
+    },
+    "wrong_venue": {
+      "detection_rate": 0.2,
+      "false_positive_rate": 0.0,
+      "f1": 0.33333333333333337,
+      "count": 5,
+      "dr_ci_lower": 0.03622316096978745,
+      "dr_ci_upper": 0.6244717358814613
+    }
+  },
+  "by_gpt_version": {
+    "3.5": {
+      "n": 119,
+      "detection_rate": 0.93,
+      "fpr": 0.10526315789473684,
+      "cm": [
+        93,
+        7,
+        2,
+        17
+      ]
+    },
+    "4": {
+      "n": 222,
+      "detection_rate": 0.7246376811594203,
+      "fpr": 0.30718954248366015,
+      "cm": [
+        50,
+        19,
+        47,
+        106
+      ]
+    }
+  },
+  "by_subject_field": {
+    "Humanities": {
+      "n": 24,
+      "detection_rate": 0.8235294117647058,
+      "fpr": 0.42857142857142855,
+      "cm": [
+        14,
+        3,
+        3,
+        4
+      ]
+    },
+    "Natural sciences": {
+      "n": 103,
+      "detection_rate": 0.782608695652174,
+      "fpr": 0.24561403508771928,
+      "cm": [
+        36,
+        10,
+        14,
+        43
+      ]
+    },
+    "Social sciences": {
+      "n": 214,
+      "detection_rate": 0.8773584905660378,
+      "fpr": 0.2962962962962963,
+      "cm": [
+        93,
+        13,
+        32,
+        76
+      ]
+    }
+  },
+  "forced_binary_overall": {
+    "detection_rate": 0.8461538461538461,
+    "fpr": 0.28488372093023256,
+    "cm": [
+      143,
+      26,
+      49,
+      123
+    ]
+  }
+}
