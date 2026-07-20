@@ -63,6 +63,22 @@ results/relabel_delta/btu_v1_2_0/*
 results/temporal_supplement/regen858/
 results/temporal_supplement/regen858_ckpt/
 results/reviewer_experiments/e2_latecutoff_control/api_logs/
+
+# Regenerable API logs, checkpoints, and smoke-test artifacts (crossdomain,
+# walters-wilder, temporal/precutoff reruns) — not needed to reproduce the
+# committed metrics/predictions files
+results/crossdomain_llms/api_logs/
+results/crossdomain_llms/checkpoints/
+results/crossdomain_matched_llms/api_logs/
+results/crossdomain_matched_llms/checkpoints/
+results/crossdomain_matched_llms/cascade_stage2_checkpoints/
+results/crossdomain_matched_llms/_dirty_split_backup/
+results/walters_wilder_llm/checkpoints/
+results/precutoff_checkpoints/
+results/precutoff_checkpoints_default_sonnet/
+results/temporal_checkpoints_cutoff_aware/
+results/temporal_checkpoints_default_sonnet/
+results/**/*_limit3*
 **/*.cache.fact_checker.db
 **/btu_cache.db*
 
