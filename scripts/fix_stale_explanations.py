@@ -18,8 +18,11 @@ HALLUCINATED entry fails at least one sub-test) confirm they are correct.
 The rewrite is byte-minimal: only the explanation value of affected lines
 changes; every other line round-trips byte-identically (asserted).
 
-Usage: python scripts/fix_stale_explanations.py [--check]
+Usage: python scripts/fix_stale_explanations.py [--check] [--pool]
   --check  verify the fix log against the corpus without writing
+  --pool   target the raw llm_generated pool with the v1.2.2 fix log
+           (196 stale entries, all HALLUCINATED; 6 bibtex_keys appear on two
+           lines each, disambiguated by a 0-indexed per-key occurrence field)
 """
 
 from __future__ import annotations
@@ -33,25 +36,43 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 SPLITS = ["dev_public", "test_public"]
 FIX_LOG = ROOT / "results" / "reviewer_experiments" / "explanation_fixes_v121.json"
+# --pool (v1.2.2): the raw generation pool, all-HALLUCINATED, separate fix log
+POOL_SPLITS = ["llm_generated"]
+POOL_FIX_LOG = ROOT / "results" / "reviewer_experiments" / "explanation_fixes_v122_pool.json"
 MARKER = "[Re-classified]"
 
 
-def load_fixes() -> dict[str, dict]:
-    with open(FIX_LOG, encoding="utf-8") as f:
+def load_fixes(fix_log: Path) -> dict[tuple[str, int], dict]:
+    """Key fixes by (bibtex_key, occurrence); occurrence defaults to 0.
+
+    The public-split log (v1.2.1) has unique keys, so occurrence is always 0;
+    the pool log (v1.2.2) uses it to distinguish duplicate-key lines.
+    """
+    with open(fix_log, encoding="utf-8") as f:
         log = json.load(f)
-    return {r["key"]: r for r in log["fixes"]}
+    fixes = {(r["key"], r.get("occurrence", 0)): r for r in log["fixes"]}
+    if len(fixes) != len(log["fixes"]):
+        sys.exit("fix log contains duplicate (key, occurrence) pairs")
+    return fixes
 
 
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--check", action="store_true")
+    parser.add_argument(
+        "--pool",
+        action="store_true",
+        help="target the raw llm_generated pool with the v1.2.2 fix log",
+    )
     args = parser.parse_args()
 
-    fixes = load_fixes()
-    seen: set[str] = set()
+    splits = POOL_SPLITS if args.pool else SPLITS
+    fixes = load_fixes(POOL_FIX_LOG if args.pool else FIX_LOG)
+    seen: set[tuple[str, int]] = set()
+    occurrences: dict[str, int] = {}
     n_h = n_v = 0
 
-    for split in SPLITS:
+    for split in splits:
         path = ROOT / "data" / "v1.0" / f"{split}.jsonl"
         out_lines: list[str] = []
         changed = 0
@@ -68,11 +89,13 @@ def main() -> None:
             explanation = entry.get("explanation") or ""
             if MARKER in explanation:
                 key = entry["bibtex_key"]
+                occ = occurrences.get(key, 0)
+                occurrences[key] = occ + 1
                 if entry["label"] == "HALLUCINATED":
-                    if key not in fixes:
-                        sys.exit(f"no fix for HALLUCINATED entry {key} ({split})")
-                    entry["explanation"] = fixes[key]["explanation"]
-                    seen.add(key)
+                    if (key, occ) not in fixes:
+                        sys.exit(f"no fix for HALLUCINATED entry {key}#{occ} ({split})")
+                    entry["explanation"] = fixes[(key, occ)]["explanation"]
+                    seen.add((key, occ))
                     n_h += 1
                 else:
                     reason = entry.get("relabel_reason")

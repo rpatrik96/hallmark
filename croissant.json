@@ -81,7 +81,7 @@
       "description": "Development split with ground-truth labels for model development and hyperparameter tuning.",
       "contentUrl": "https://huggingface.co/datasets/hallmark-neurips2026/HALLMARK/resolve/main/data/dev_public.parquet",
       "encodingFormat": "application/x-parquet",
-      "sha256": "978c676301c343675063caa96a358f014b270d959c3195a5fcb36cb5ebc4ce80"
+      "sha256": "16cf8f28b28606515fadb7ddef489a1bd88ddf9414345b2b46da8e96f52bab4b"
     },
     {
       "@type": "cr:FileObject",
@@ -90,7 +90,7 @@
       "description": "Public test split with ground-truth labels for evaluation and ablation studies.",
       "contentUrl": "https://huggingface.co/datasets/hallmark-neurips2026/HALLMARK/resolve/main/data/test_public.parquet",
       "encodingFormat": "application/x-parquet",
-      "sha256": "a7126002a6f69e26fa169b77c9a983ae4d7b693c2d506ddfa96f7e117864d068"
+      "sha256": "2f8c6d6c009c1ea6c37f53c4e0abb97c484e0c9a1fe098f06d0c457c7e6e1201"
     },
     {
       "@type": "cr:FileObject",
@@ -99,7 +99,7 @@
       "description": "Stress-test split focusing on theoretically-motivated hallucination types (merged_citation, partial_author_list, arxiv_version_mismatch) evaluated separately from the main benchmark.",
       "contentUrl": "https://huggingface.co/datasets/hallmark-neurips2026/HALLMARK/resolve/main/data/stress_test.parquet",
       "encodingFormat": "application/x-parquet",
-      "sha256": "82652be35d922fca423b071598848918d726959ccdcfa06d0904978e64d3bd71"
+      "sha256": "cb273ad0a04d19320ceed78fee259728179e4886caf2accec660b93f33eab2db"
     },
     {
       "@type": "cr:FileObject",
@@ -108,7 +108,7 @@
       "description": "Blinded version of the development split (no ground-truth labels) for baseline runners.",
       "contentUrl": "https://huggingface.co/datasets/hallmark-neurips2026/HALLMARK/resolve/main/blind/dev_public_blind.parquet",
       "encodingFormat": "application/x-parquet",
-      "sha256": "9aa5b854c33c28a8ed1a44965681669bfe2f6bc170fa253454634ff5cbe27956"
+      "sha256": "b1b4f41ce89a2d43fb67ae961f22070b2e33b88a961c0d68994fe1b363ad9026"
     },
     {
       "@type": "cr:FileObject",
@@ -117,7 +117,7 @@
       "description": "Blinded version of the public test split (no ground-truth labels) for baseline runners.",
       "contentUrl": "https://huggingface.co/datasets/hallmark-neurips2026/HALLMARK/resolve/main/blind/test_public_blind.parquet",
       "encodingFormat": "application/x-parquet",
-      "sha256": "66e9ae0775747a58fd0315758b34d9d5a079d29f6a61c5f74879d81e2399ff1c"
+      "sha256": "8c5c5104afbef57daa5d018c61fa979ee9eb9d740d9ea119f6bed15c21c47d5d"
     },
     {
       "@type": "cr:FileObject",
@@ -126,7 +126,7 @@
       "description": "Blinded version of the stress-test split (no ground-truth labels) for baseline runners.",
       "contentUrl": "https://huggingface.co/datasets/hallmark-neurips2026/HALLMARK/resolve/main/blind/stress_test_blind.parquet",
       "encodingFormat": "application/x-parquet",
-      "sha256": "d84178e41a6c27729a171d31332caf6fd57bd2765162fc72eb45817743006ab0"
+      "sha256": "3a1e0fdc263fe4c55ca1cc2526b0024eb270bcd6d02d4cc9cd9f8e908c0f9a3e"
     },
     {
       "@type": "cr:FileObject",
@@ -135,7 +135,7 @@
       "description": "Dataset metadata including split statistics, type distributions, and generation method breakdowns.",
       "contentUrl": "https://huggingface.co/datasets/hallmark-neurips2026/HALLMARK/resolve/main/metadata.json",
       "encodingFormat": "application/json",
-      "sha256": "ba1f34270db35047678cc13a5a74056f53eea07c0d16fe52061d7849b65717e7"
+      "sha256": "caf4f5597846b4cbca404fb44e2c1550db69ae062288a78f7028f95bd7a3e065"
     }
   ],
   "recordSet": [
