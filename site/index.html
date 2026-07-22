@@ -1,0 +1,273 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>HALLMARK — Diagnosing Three Failure Modes in LLM Citation Verifiers</title>
+<meta name="description" content="Interactive companion to the HALLMARK benchmark: 2,526 BibTeX entries across 14 hallucination types and 3 difficulty tiers, with explorable results for rule-based, zero-shot, and agentic citation verifiers.">
+<meta property="og:title" content="HALLMARK — a benchmark for LLM citation verifiers">
+<meta property="og:description" content="Explore the benchmark and the results: filter verifiers, splits, and hallucination types; browse real benchmark entries.">
+<meta property="og:type" content="website">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%94%96%3C/text%3E%3C/svg%3E">
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+
+<nav class="site-nav" aria-label="Site">
+  <a class="brand" href="#top">HALLMARK</a>
+  <div class="links">
+    <a href="#failure-modes">Failure modes</a>
+    <a href="#benchmark">Benchmark</a>
+    <a href="#results">Results</a>
+    <a href="#examples">Examples</a>
+    <a href="#cite">Cite</a>
+  </div>
+  <div class="nav-spacer"></div>
+  <button class="theme-toggle" id="theme-toggle" aria-label="Toggle color theme">Theme</button>
+</nav>
+
+<main id="top">
+
+  <!-- ================= hero ================= -->
+  <header class="hero wrap">
+    <p class="kicker">Hall&#8203;ucination bench&#8203;mark &middot; corpus v1.2.0</p>
+    <h1>H<span style="font-size:0.78em">ALLMARK</span></h1>
+    <p class="expansion">2,526 BibTeX entries spanning 14 hallucination types, three difficulty
+      tiers, six diagnostic sub-tests per entry, and a contamination-resistant held-out split,
+      plus evaluation-only extension splits for temporal, cross-domain, and authentic
+      ChatGPT-citation behavior.</p>
+    <p class="tagline">Across the benchmark one result is consistent: <em>the false-positive
+      rate, not recall, decides whether a verifier is deployable.</em></p>
+    <div class="hero-links">
+      <a class="btn primary" href="https://arxiv.org/abs/2607.18360">Paper (arXiv:2607.18360)</a>
+      <a class="btn" href="https://github.com/rpatrik96/hallmark">Code &amp; data</a>
+      <a class="btn" href="https://huggingface.co/datasets/hallmark-neurips2026/HALLMARK">Dataset (HuggingFace)</a>
+      <a class="btn" href="#cite">Cite</a>
+    </div>
+    <div class="kpi-row" id="kpi-row"></div>
+  </header>
+
+  <!-- ================= failure modes ================= -->
+  <section id="failure-modes">
+    <div class="wrap">
+      <p class="kicker">The paper in one section</p>
+      <h2 class="section-title">Three failure modes</h2>
+      <p class="section-lead">HALLMARK evaluates a DOI-lookup baseline, frontier LLMs zero-shot,
+        tool-augmented agents, and the co-designed rule-based verifier
+        <code>bibtex-updater</code> (btu). Three failure modes make the headline finding
+        concrete.</p>
+      <div class="failure-grid">
+        <div class="card">
+          <div class="failure-num">Failure mode i</div>
+          <h3>Agentic lookups buy recall but inflate false positives</h3>
+          <p class="card-sub">A 5-call tool budget lifts GPT-5.1&rsquo;s recall past
+            <code>bibtex-updater</code>&rsquo;s, at roughly five times its false-positive rate.
+            The rise comes from the harness&rsquo;s any-no-match flagging, not the base model:
+            in a deterministic re-aggregation over three of the harness&rsquo;s four sources,
+            any-no-match flagging reaches FPR 0.729 where consensus flagging reaches 0.049
+            (it is the any-vs-consensus ordering that transfers, not the absolute level).</p>
+          <div class="viz" id="viz-mode1"></div>
+        </div>
+        <div class="card">
+          <div class="failure-num">Failure mode ii</div>
+          <h3>At a realistic base rate, the FPR spread governs precision</h3>
+          <p class="card-sub">False-positive rates span an order of magnitude across the cohort.
+            At a venue-realistic ~2% hallucination rate, even the best verifier reaches only
+            ~18% precision: the best catch one true hallucination per 6&ndash;9 flags, the most
+            aggressive fewer than one in 35.</p>
+          <div class="viz" id="viz-mode2"></div>
+        </div>
+        <div class="card">
+          <div class="failure-num">Failure mode iii</div>
+          <h3>Most LLMs over-flag papers published past their training cutoff</h3>
+          <p class="card-sub">On the 448-entry 2024&ndash;25 temporal supplement, 8 of 12 LLMs
+            degrade sharply (FPR 0.59&ndash;0.89); GPT-5.1 rises from 41% to 76%. Only the two
+            latest-cutoff models hold near in-distribution levels (a descriptive signal,
+            confounded with possible recall of those entries).</p>
+          <div class="viz" id="viz-mode3"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= benchmark ================= -->
+  <section id="benchmark">
+    <div class="wrap">
+      <p class="kicker">Explore the benchmark</p>
+      <h2 class="section-title">14 hallucination types, 3 tiers, 8 splits</h2>
+      <p class="section-lead">Every entry is a BibTeX record labeled VALID or HALLUCINATED, with
+        a hallucination type, a difficulty tier, and six diagnostic sub-tests. Types were
+        derived from documented real-world incidents plus three theoretically-motivated
+        stress-test types. Click a type to see its definition and a real benchmark entry.</p>
+
+      <h3 style="margin:26px 0 12px">Hallucination types</h3>
+      <div class="tax-grid" id="tax-grid"></div>
+      <div class="tax-detail" id="tax-detail"></div>
+
+      <h3 style="margin:34px 0 12px">Difficulty tiers</h3>
+      <div class="card-grid" id="tier-cards"></div>
+
+      <h3 style="margin:34px 0 12px">Splits</h3>
+      <div class="card-grid" id="split-cards"></div>
+      <p class="note" style="margin-top:14px">Counts from the released
+        <code>data/v1.0/metadata.json</code> (corpus v1.2.0, post ground-truth relabel). The
+        held-out split stays private for contamination resistance; extension splits are
+        evaluation-only.</p>
+    </div>
+  </section>
+
+  <!-- ================= results ================= -->
+  <section id="results">
+    <div class="wrap">
+      <p class="kicker">Explore the results</p>
+      <h2 class="section-title">Verifier results, filterable</h2>
+      <p class="section-lead">All numbers are recomputed from the released per-run metric files
+        in <code>data/v1.0/baseline_results/</code> and the released extension-split metrics.
+        Verifiers may abstain (UNCERTAIN): the coverage column shows the share of entries each
+        verifier commits to, and headline metrics follow the paper&rsquo;s scoring conventions.
+        <code>bibtex-updater</code> (btu) and its cascades are co-designed with the benchmark
+        and serve as a reference upper bound, excluded from ranking.</p>
+
+      <div class="filter-block card">
+        <div class="filter-row">
+          <span class="filter-label">Split</span>
+          <div class="seg" id="split-seg" role="tablist"></div>
+        </div>
+        <div class="filter-row">
+          <span class="filter-label">Categories</span>
+          <div id="cat-chips" style="display:flex;gap:8px;flex-wrap:wrap"></div>
+        </div>
+        <div class="filter-row">
+          <span class="filter-label">Verifiers</span>
+          <div id="model-chips" style="display:flex;gap:8px;flex-wrap:wrap"></div>
+        </div>
+      </div>
+
+      <div class="card chart-card">
+        <div class="chart-head">
+          <h3>Leaderboard</h3>
+          <span class="note">click a column to sort</span>
+        </div>
+        <div class="table-wrap" id="leaderboard"></div>
+        <p class="axis-note" id="leaderboard-note"></p>
+      </div>
+
+      <div class="card chart-card">
+        <div class="chart-head">
+          <h3>The deployability plane: detection rate vs. false-positive rate</h3>
+          <div class="spacer"></div>
+          <button class="table-toggle" data-table-for="scatter">View as table</button>
+        </div>
+        <div class="legend" id="scatter-legend"></div>
+        <div id="scatter"></div>
+        <div class="table-wrap hidden" id="scatter-table"></div>
+        <p class="axis-note">Up and to the left is deployable: high recall on hallucinated
+          entries at a low false-positive rate on valid ones.</p>
+      </div>
+
+      <div class="card chart-card">
+        <div class="chart-head">
+          <h3>Detection rate by hallucination type</h3>
+          <div class="spacer"></div>
+          <button class="table-toggle" data-table-for="heatmap">View as table</button>
+        </div>
+        <div class="filter-row" style="margin-bottom:8px">
+          <span class="filter-label">Types</span>
+          <div id="type-chips" style="display:flex;gap:8px;flex-wrap:wrap"></div>
+        </div>
+        <div class="heat-wrap" id="heatmap"></div>
+        <div class="table-wrap hidden" id="heatmap-table"></div>
+        <div class="scale-legend" id="heat-scale"></div>
+      </div>
+
+      <div class="card chart-card">
+        <div class="chart-head">
+          <h3>Detection rate by difficulty tier</h3>
+          <div class="spacer"></div>
+          <button class="table-toggle" data-table-for="tiers">View as table</button>
+        </div>
+        <div class="legend" id="tier-legend"></div>
+        <div id="tier-bars"></div>
+        <div class="table-wrap hidden" id="tiers-table"></div>
+        <p class="axis-note">Tier 1 = single API lookup; Tier 2 = cross-referencing metadata
+          fields; Tier 3 = deep verification or semantic reasoning.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= examples ================= -->
+  <section id="examples">
+    <div class="wrap">
+      <p class="kicker">Browse the corpus</p>
+      <h2 class="section-title">Benchmark examples</h2>
+      <p class="section-lead">A seeded sample of entries from the public development split
+        &mdash; hallucinated entries with their diagnosis, and valid entries that look
+        suspicious. Expand a card for the BibTeX record, the ground-truth explanation, and the
+        six diagnostic sub-tests.</p>
+
+      <div class="filter-block card">
+        <div class="filter-row">
+          <span class="filter-label">Label</span>
+          <div id="ex-label-chips" style="display:flex;gap:8px;flex-wrap:wrap"></div>
+        </div>
+        <div class="filter-row">
+          <span class="filter-label">Type</span>
+          <div id="ex-type-chips" style="display:flex;gap:8px;flex-wrap:wrap"></div>
+        </div>
+        <div class="filter-row">
+          <span class="filter-label">Tier</span>
+          <div id="ex-tier-chips" style="display:flex;gap:8px;flex-wrap:wrap"></div>
+        </div>
+        <div class="filter-row">
+          <span class="filter-label">Generated by</span>
+          <div id="ex-method-chips" style="display:flex;gap:8px;flex-wrap:wrap"></div>
+        </div>
+      </div>
+
+      <p class="examples-count" id="examples-count"></p>
+      <div id="examples-list"></div>
+      <div style="text-align:center;margin:18px 0">
+        <button class="btn" id="examples-more">Show more</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= cite ================= -->
+  <section id="cite">
+    <div class="wrap">
+      <p class="kicker">Reference</p>
+      <h2 class="section-title">Cite HALLMARK</h2>
+      <div class="cite-box card" style="padding:0;overflow:hidden">
+        <button class="btn copy-btn" id="copy-bibtex">Copy</button>
+<pre id="bibtex-block">@misc{reizinger2026hallmarkdiagnosingfailuremodes,
+      title={HALLMARK: Diagnosing Three Failure Modes in LLM Citation Verifiers},
+      author={Patrik Reizinger and Wieland Brendel},
+      year={2026},
+      eprint={2607.18360},
+      archivePrefix={arXiv},
+      primaryClass={cs.CR},
+      url={https://arxiv.org/abs/2607.18360},
+}</pre>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<footer>
+  <div class="wrap">
+    <p>HALLMARK &mdash; MIT License &middot; corpus v1.2.0 &middot;
+      <a href="https://arxiv.org/abs/2607.18360">paper</a> &middot;
+      <a href="https://github.com/rpatrik96/hallmark">benchmark repo</a> &middot;
+      <a href="https://github.com/rpatrik96/bibtexupdater">bibtex-updater</a> &middot;
+      <a href="https://huggingface.co/datasets/hallmark-neurips2026/HALLMARK">HuggingFace mirror</a></p>
+    <p id="footer-generated"></p>
+  </div>
+</footer>
+
+<div class="viz-tooltip" id="viz-tooltip" role="status"></div>
+
+<script src="data/site_data.js"></script>
+<script src="assets/app.js"></script>
+</body>
+</html>
