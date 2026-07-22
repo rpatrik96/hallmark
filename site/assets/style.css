@@ -465,6 +465,9 @@ table.data th {
 table.data th .arrow { font-size: 10px; color: var(--accent); }
 table.data td { font-variant-numeric: tabular-nums; color: var(--text-primary); }
 table.data td.name-cell { font-weight: 500; white-space: normal; }
+.name-flex { display: flex; align-items: center; gap: 8px; min-width: 180px; }
+.name-flex .dot { width: 9px; height: 9px; border-radius: 50%; flex: 0 0 auto; }
+.name-flex .cat-tag { margin-left: 0; flex: 0 0 auto; }
 table.data td.best { font-weight: 700; }
 table.data tr:hover td { background: var(--accent-wash); }
 .cat-tag {
@@ -635,9 +638,17 @@ footer a { color: var(--text-secondary); }
 
 .hidden { display: none !important; }
 
-.failure-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 16px; }
-.failure-grid .card { margin: 0; display: flex; flex-direction: column; }
+.failure-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 18px; }
+.failure-grid .card { margin: 0; display: flex; flex-direction: column; padding: 24px 26px; }
 .failure-grid .card .viz { margin-top: auto; }
+.failure-grid .card-sub { font-size: 15px; }
+
+.card-limit {
+  font-size: 13.5px;
+  font-weight: 650;
+  color: var(--text-primary);
+  margin: 0 0 16px;
+}
 .failure-num {
   font-size: 12px;
   font-weight: 700;
