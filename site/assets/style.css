@@ -299,7 +299,7 @@ section { padding: 56px 0 8px; }
   border-color: var(--accent);
   color: var(--text-primary);
 }
-.chip .dot { width: 9px; height: 9px; border-radius: 50%; flex: 0 0 auto; }
+
 .chip .count { color: var(--text-muted); font-size: 12px; }
 
 .seg {
@@ -466,7 +466,15 @@ table.data th .arrow { font-size: 10px; color: var(--accent); }
 table.data td { font-variant-numeric: tabular-nums; color: var(--text-primary); }
 table.data td.name-cell { font-weight: 500; white-space: normal; }
 .name-flex { display: flex; align-items: center; gap: 8px; min-width: 180px; }
-.name-flex .dot { width: 9px; height: 9px; border-radius: 50%; flex: 0 0 auto; }
+.hm-dot {
+  display: inline-block;
+  position: static;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  flex: 0 0 auto;
+  vertical-align: middle;
+}
 .name-flex .cat-tag { margin-left: 0; flex: 0 0 auto; }
 table.data td.best { font-weight: 700; }
 table.data tr:hover td { background: var(--accent-wash); }

@@ -463,7 +463,7 @@
     clear(catBox);
     D.categories.forEach(function (c) {
       var chip = el("button", { className: "chip" + (RS.cats[c.key] ? " on" : "") }, [
-        el("span", { className: "dot", style: "background:" + CAT_COLOR[c.key] }),
+        el("span", { className: "hm-dot", style: "background:" + CAT_COLOR[c.key] }),
         c.name,
       ]);
       chip.addEventListener("click", function () {
@@ -481,7 +481,7 @@
     D.models.filter(function (m) { return present[m.tool] && RS.cats[m.category]; })
       .forEach(function (m) {
         var chip = el("button", { className: "chip" + (RS.models[m.tool] ? " on" : "") }, [
-          el("span", { className: "dot", style: "background:" + CAT_COLOR[m.category] }),
+          el("span", { className: "hm-dot", style: "background:" + CAT_COLOR[m.category] }),
           m.name,
         ]);
         chip.addEventListener("click", function () {
@@ -548,7 +548,7 @@
       var tr = el("tr");
       tr.appendChild(el("td", { className: "name-cell" }, [
         el("div", { className: "name-flex" }, [
-          el("span", { className: "dot", style: "background:" + CAT_COLOR[m.category] }),
+          el("span", { className: "hm-dot", style: "background:" + CAT_COLOR[m.category] }),
           el("span", { text: m.name }),
           m.tag ? el("span", { className: "cat-tag", text: m.tag }) : null,
         ]),
