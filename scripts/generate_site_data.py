@@ -592,6 +592,30 @@ def truncate(text: str, limit: int = 480) -> str:
     return text[:limit].rsplit(" ", 1)[0] + " …"
 
 
+# Entry-facing diagnosis per type, used when the stored explanation is stale
+# re-classifier output (see below). The failing sub-tests carry the specifics.
+TYPE_DIAGNOSIS = {
+    "fabricated_doi": "The DOI is fabricated and does not resolve.",
+    "nonexistent_venue": "The venue does not exist.",
+    "placeholder_authors": "The author names are placeholders.",
+    "future_date": "The publication date lies in the future.",
+    "chimeric_title": "Real authors paired with a fabricated title.",
+    "wrong_venue": "A real paper assigned to the wrong venue.",
+    "swapped_authors": (
+        "A real title carrying an author list that does not match the publication."
+    ),
+    "preprint_as_published": ("An arXiv-only paper cited as if published at a venue."),
+    "hybrid_fabrication": ("A real DOI whose resolved record does not match the metadata."),
+    "merged_citation": "Metadata combined from multiple real papers.",
+    "partial_author_list": "Only a subset of the real authors is listed.",
+    "near_miss_title": ("The title differs from the real paper's title by one or two words."),
+    "plausible_fabrication": "Entirely fabricated but realistic metadata.",
+    "arxiv_version_mismatch": (
+        "A real paper cited with the wrong venue or year for the published version."
+    ),
+}
+
+
 def entry_to_example(e: dict) -> dict:
     label = e["label"]
     explanation = e.get("explanation") or ""
@@ -600,6 +624,12 @@ def entry_to_example(e: dict) -> dict:
     if label == "VALID" and e.get("relabeled_from"):
         reason = e.get("relabel_reason") or ""
         explanation = "Ground-truth audit (relabeled): " + reason
+    elif "[Re-classified]" in explanation:
+        # Stale generation-pipeline re-classifier output that often contradicts
+        # the released fields and sub-tests (labels themselves are verified
+        # consistent with the sub-tests corpus-wide). Show the type-level
+        # diagnosis; the sub-test chips carry the entry specifics.
+        explanation = TYPE_DIAGNOSIS.get(e.get("hallucination_type"), "")
     return {
         "key": e["bibtex_key"],
         "label": label,
