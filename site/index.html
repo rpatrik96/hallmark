@@ -92,9 +92,15 @@
           <p class="card-sub">On the 448-entry 2024&ndash;25 temporal supplement, 8 of 12 LLMs
             degrade sharply (FPR 0.59&ndash;0.89); GPT-5.1 rises from 41% to 76%. Only the two
             latest-cutoff models hold near in-distribution levels.</p>
+          <p class="card-sub">Mitigation: a cutoff-aware prompt addendum drives GPT-5.1&rsquo;s
+            post-cutoff FPR to 0% on the entries it still commits to, at the price of heavy
+            abstention (pre-cutoff UNCERTAIN rises to 52.7%). The effect is model-dependent:
+            Sonnet 4.6 instead abstains selectively (48.9% post-cutoff vs 8.7% pre) while
+            halving its committed-entry FPR.</p>
           <p class="card-limit">Limitation: reported as descriptive, following the paper: the
             post-cutoff rise is confounded with whether a model can recall the newer papers
-            at all.</p>
+            at all, and the failure is epistemic miscalibration rather than structural
+            blindness.</p>
           <div class="viz" id="viz-mode3"></div>
         </div>
       </div>
