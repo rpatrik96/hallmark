@@ -6,6 +6,8 @@
 [![Baselines](https://github.com/rpatrik96/hallmark/actions/workflows/baselines.yml/badge.svg)](https://github.com/rpatrik96/hallmark/actions)
 [![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
+[![arXiv](https://img.shields.io/badge/arXiv-2607.18360-b31b1b.svg)](https://arxiv.org/abs/2607.18360)
+[![Website](https://img.shields.io/badge/website-interactive_companion-blue.svg)](https://rpatrik96.github.io/hallmark/)
 
 ## Why HALLMARK?
 
@@ -386,7 +388,7 @@ DR = Detection Rate · FPR = False Positive Rate · TW-F1 = Tier-weighted F1 · 
 
 5. **A capability gap remains.** Even the highest-recall independent model misses 12% of hallucinations, with systematic weaknesses on subtle types (`near_miss_title`: 56%, `author_mismatch`: 58% for GPT-5.1). No tool dominates across regimes: `bibtex-updater` is cheapest and most temporally stable; Sonnet 4.6 / Opus 4.7 lead on FPR and PPV; the rule-based F1 lead collapses on `test_public`.
 
-See the [paper](https://github.com/rpatrik96/hallmark-paper) for the full per-tier, per-type, and temporal-robustness analyses.
+See the [paper](https://arxiv.org/abs/2607.18360) for the full per-tier, per-type, and temporal-robustness analyses, or explore them interactively on the [companion website](https://rpatrik96.github.io/hallmark/).
 
 ### External Tool Baselines
 
@@ -517,11 +519,14 @@ hallmark/
 If you use HALLMARK in your research, please cite:
 
 ```bibtex
-@misc{hallmark2026,
-    title={HALLMARK: A HALLucination benchMARK for Citation Verification},
-    author={Reizinger, Patrik},
-    year={2026},
-    url={https://github.com/rpatrik96/hallmark}
+@misc{reizinger2026hallmarkdiagnosingfailuremodes,
+      title={HALLMARK: Diagnosing Three Failure Modes in LLM Citation Verifiers},
+      author={Patrik Reizinger and Wieland Brendel},
+      year={2026},
+      eprint={2607.18360},
+      archivePrefix={arXiv},
+      primaryClass={cs.CR},
+      url={https://arxiv.org/abs/2607.18360},
 }
 ```
 
