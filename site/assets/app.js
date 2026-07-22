@@ -999,6 +999,9 @@
     renderResults();
   }
 
+  document.querySelectorAll(".corpus-version").forEach(function (n) {
+    n.textContent = "v" + D.corpus_version;
+  });
   document.getElementById("footer-generated").textContent =
     "Data regenerated from the released result files on " + D.generated + ".";
 
