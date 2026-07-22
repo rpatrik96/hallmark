@@ -1,6 +1,11 @@
 #!/usr/bin/env python3
 """Refresh the HALLMARK HuggingFace mirror (hallmark-neurips2026/HALLMARK).
 
+ANONYMITY: the hub dataset is linked in the NeurIPS 2026 submission and must
+stay double-blind until the decision. Every staged file is scanned for
+de-anonymizing strings (author names, GitHub handle, arXiv ID) and the run
+aborts on a hit; pass --allow-deanonymized only after the review period ends.
+
 Mirrors the LIVE hub layout (which differs from the repo layout):
 
     jsonl/<split>.jsonl            <- data/v1.0/<split>.jsonl   (6 files)
@@ -68,6 +73,10 @@ PARQUET_HUB_PATHS = {
 }
 
 
+# strings that would break double-blind review if they reached the hub
+DEANONYMIZING_MARKERS = [b"Reizinger", b"Brendel", b"rpatrik96", b"2607.18360"]
+
+
 def sha256(path: Path) -> str:
     return hashlib.sha256(path.read_bytes()).hexdigest()
 
@@ -106,6 +115,11 @@ def main() -> None:
     parser.add_argument("--repo-name", default="hallmark-neurips2026/HALLMARK")
     parser.add_argument("--token", default=None, help="HF token (default: cached login)")
     parser.add_argument("--dry-run", action="store_true", help="verify + list, upload nothing")
+    parser.add_argument(
+        "--allow-deanonymized",
+        action="store_true",
+        help="skip the double-blind marker scan (post-decision only)",
+    )
     args = parser.parse_args()
 
     tmp = Path(tempfile.mkdtemp(prefix="hallmark-hf-"))
@@ -118,6 +132,18 @@ def main() -> None:
     missing = [str(p) for p in uploads if not p.exists()]
     if missing:
         sys.exit(f"missing source files: {missing}")
+
+    if not args.allow_deanonymized:
+        for src, hub_path in uploads.items():
+            blob = src.read_bytes()
+            hits = [m.decode() for m in DEANONYMIZING_MARKERS if m in blob]
+            if hits:
+                sys.exit(
+                    f"ANONYMITY VIOLATION: {hub_path} contains {hits}; the hub dataset "
+                    "is double-blind for NeurIPS 2026 review. Fix the file or, after "
+                    "the decision, rerun with --allow-deanonymized."
+                )
+        print("anonymity scan: clean")
 
     expected = croissant_checksums()
     by_hub = {hub: src for src, hub in uploads.items()}

@@ -38,9 +38,9 @@ configs:
 
 # HALLMARK — Citation Hallucination Detection Benchmark
 
-> **Paper:** [HALLMARK: Diagnosing Three Failure Modes in LLM Citation Verifiers](https://arxiv.org/abs/2607.18360) (Reizinger & Brendel, 2026)
-> **Code & data:** <https://github.com/rpatrik96/hallmark> · **Companion website:** <https://rpatrik96.github.io/hallmark/>
-> **Corpus version:** v1.2.2 (2026-07-22) — see [releases](https://github.com/rpatrik96/hallmark/releases) for provenance of every version.
+> **Anonymized for NeurIPS 2026 Datasets & Benchmarks Track double-blind review.**
+> Source code: <https://anonymous.4open.science/r/hallmark/>
+> **Corpus version:** v1.2.2 (2026-07-22) — see the source repository's `CHANGELOG.md` and tagged releases for provenance of every version.
 
 **HALL**ucination bench**MARK** evaluates citation verification tools on detecting hallucinated references in academic papers. The benchmark was motivated by the NeurIPS 2025 incident in which 53 accepted papers were found to contain fabricated citations that passed peer review.
 
@@ -62,7 +62,7 @@ configs:
 
 ### Versioning note
 
-The paper's numbers are computed against tag `v1.2.0`. Later releases (`v1.2.1`, `v1.2.2`) replace stale generation-pipeline explanation strings with diagnoses verified against CrossRef/arXiv/DBLP records (per-entry fix logs in the source repository); labels, hallucination types, tiers, sub-tests, and split membership are byte-identical to `v1.2.0`, so every reported number is unaffected.
+The paper's numbers are computed against tag `v1.2.0`. Later releases (`v1.2.1`, `v1.2.2`) replace stale generation-pipeline explanation strings with diagnoses verified against CrossRef/arXiv/DBLP records (per-entry fix logs in the source repository); labels, hallucination types, tiers, sub-tests, and split membership are byte-identical to `v1.2.0`, so every reported number is unaffected. The released corpus is post-relabel throughout: a systematic ground-truth audit corrected entries where real papers were wrongly flagged `HALLUCINATED`.
 
 ## Loading
 
@@ -142,7 +142,7 @@ The `blind` config keeps only `bibtex_key`, `bibtex_type`, `fields`, and `raw_bi
 
 ## Evaluation
 
-Use the [accompanying code repository](https://github.com/rpatrik96/hallmark) to run baselines and the official evaluator:
+Use the [accompanying code repository](https://anonymous.4open.science/r/hallmark/) to run baselines and the official evaluator:
 
 ```bash
 hallmark evaluate --split dev_public --baseline doi_only
@@ -172,7 +172,7 @@ This section follows the *Datasheets for Datasets* template (Gebru et al., 2021)
 ### Motivation
 - **For what purpose was the dataset created?**
   To enable rigorous, reproducible evaluation of citation-hallucination detection tools — a category of tools that received intense interest after the NeurIPS 2025 retraction incident exposed widespread fabricated citations passing peer review. No prior benchmark covered this task with controlled difficulty stratification and per-entry diagnostic sub-tests.
-- **Created by.** Patrik Reizinger and Wieland Brendel; see the [paper](https://arxiv.org/abs/2607.18360) for affiliations and acknowledgments.
+- **Created by.** Anonymized for double-blind review.
 
 ### Composition
 - **What do instances represent?** Each instance is a single bibliography entry (BibTeX-style record) drawn from real papers, perturbed real entries, LLM-generated fakes, or real-world hallucinations.
@@ -212,8 +212,8 @@ This section follows the *Datasheets for Datasets* template (Gebru et al., 2021)
 - **DOI / persistent identifier.** Provided by HuggingFace upon publication.
 
 ### Maintenance
-- **Who maintains the dataset?** Patrik Reizinger. Open an issue at <https://github.com/rpatrik96/hallmark/issues>.
-- **Will the dataset be updated?** Yes. Versioning follows semver-style tags on the source repo (`v1.0`, `v1.1`, …). New hallucination instances are added quarterly; the hidden test split rotates annually to mitigate contamination. See the source repository's `CHANGELOG.md` and [releases](https://github.com/rpatrik96/hallmark/releases).
+- **Who maintains the dataset?** Anonymized for review. Post-acceptance, contact details will be added.
+- **Will the dataset be updated?** Yes. Versioning follows semver-style tags on the source repo (`v1.0`, `v1.1`, …). New hallucination instances are added quarterly; the hidden test split rotates annually to mitigate contamination. See the source repository's `CHANGELOG.md` and tagged releases.
 - **How can users contribute?** A community contribution interface (`hallmark contribute …` CLI) is documented in the source repo. Submitted entries pass through the same six-sub-test verification pipeline before inclusion.
 - **Will old versions be retained?** Yes — every tagged release is permanently retained as a HuggingFace revision.
 
@@ -242,7 +242,7 @@ Machine-readable Croissant RAI fields are shipped alongside this card inside `cr
 
 ## Reproducibility & code
 
-- **Source code:** <https://github.com/rpatrik96/hallmark> (fully executable; MIT license).
+- **Source code:** <https://anonymous.4open.science/r/hallmark/> (fully executable; MIT license).
 - **Reproduction command:** every split is regeneratable via `python scripts/generate_new_instances.py --reproduce-v1 --seed 8042` against the source pools shipped under `sources/`.
 - **Pre-computed baseline results:** `baseline_results/` includes outputs for `harc`, `bibtexupdater`, and the LLM-agentic OpenAI baseline on `dev_public`, with checksums in `manifest.json`.
 
@@ -258,16 +258,9 @@ Baseline wrappers shipped with HALLMARK include a lightweight pre-screening laye
 
 ## Citation
 
-```bibtex
-@misc{reizinger2026hallmarkdiagnosingfailuremodes,
-  title={HALLMARK: Diagnosing Three Failure Modes in LLM Citation Verifiers},
-  author={Patrik Reizinger and Wieland Brendel},
-  year={2026},
-  eprint={2607.18360},
-  archivePrefix={arXiv},
-  primaryClass={cs.CR},
-  url={https://arxiv.org/abs/2607.18360},
-}
+```
+% Anonymized for NeurIPS 2026 D&B double-blind review.
+% Citation BibTeX will be added to this card after acceptance / decision release.
 ```
 
 ## License
