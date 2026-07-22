@@ -59,7 +59,11 @@ the split is orthogonal to `test_crossdomain_matched`.
 
 ## Candidate material
 
-### Ready, with caveats: the 44-entry held-out set
+### Reference recipe only — NOT for inclusion: the 44-entry held-out set
+
+> **Decision (2026-07-22): do not ship this set.** It was the development set for
+> the `bibtex-updater` v1.6.0 fixes. Treat what follows as a description of the
+> *recipe* to rebuild from, not as candidate data. See Contamination.
 
 Built 2026-07-22 as an independent validation set for the `bibtex-updater` fixes
 (so it must NOT become the benchmark those fixes are then scored on — see
@@ -133,12 +137,14 @@ detectable.
 - **Follow the v1.1 rule: add a new split, do not modify `dev_public`,
   `test_public`, or `test_crossdomain_matched`.** All published numbers stay
   valid.
-- **The 44-entry held-out set was used to develop the `bibtex-updater` fixes.**
-  If it ships verbatim, `bibtex-updater` is being scored on its own development
-  set. Either exclude it and rebuild an independent sample by the same recipe, or
-  ship it and label it explicitly as a co-designed split — the README already
-  distinguishes co-designed from independent tools, and this must be recorded the
-  same way.
+- **DECIDED (2026-07-22): the 44-entry held-out set will NOT ship.** It was used
+  to develop the `bibtex-updater` v1.6.0 fixes, so shipping it verbatim would
+  score that tool on its own development set — precisely the co-design problem
+  the paper criticizes elsewhere. It stays a development artifact. Any split
+  built from this proposal must be an **independent sample rebuilt from scratch**
+  by the same recipe (Crossref/DBLP/OpenAlex, second-rater pass), with every DOI
+  deduplicated against the held-out set as well as against the existing splits.
+  The recipe is the contribution here; the sample is not.
 - Deduplicate any new DOI against all existing splits before inclusion.
 
 ## Suggested sequence
