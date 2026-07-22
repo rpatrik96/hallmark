@@ -1,0 +1,782 @@
+{
+ "description": "v1.2.1 explanation fix log: corrected explanation strings for the 97 HALLUCINATED public-split entries whose stored explanations were stale generation-pipeline re-classifier output. Drafted and adversarially verified against CrossRef/arXiv/DBLP records (2026-07-22). Labels, types, tiers, and sub-tests unchanged. Applied by scripts/fix_stale_explanations.py, which also sets the 36 stale VALID explanations to the ground-truth audit relabel_reason.",
+ "date": "2026-07-22",
+ "fixes": [
+  {
+   "key": "a05ffe5af18b",
+   "split": "dev_public",
+   "explanation": "Real survey published in JMLR (vol. 20) in 2019; cited here with year 2021.",
+   "old_explanation": "[Re-classified] No match in CrossRef (best title sim=65). Completely fabricated paper. (Original prompt logged in generation script)",
+   "evidence": "jmlr.org/papers/v20/18-598.html: 'Thomas Elsken, Jan Hendrik Metzen, Frank Hutter; 20(55):1-21, 2019', title 'Neural Architecture Search: A Survey'.",
+   "verifier_verdict": "accept"
+  },
+  {
+   "key": "a0ec0badfca6",
+   "split": "dev_public",
+   "explanation": "Real paper published at IJCAI 2019 (DOI 10.24963/ijcai.2019/815); cited here as NeurIPS 2022.",
+   "old_explanation": "[Re-classified] Title matches (sim=100), authors match (jacc=1.00), but venue differs: 'Advances in Neural Information Processing Systems (NeurIPS)' vs 'Proceedings of the Twenty-Eighth International Joint Conference on Artificial Intelligence' (Original prompt logged in generation script)",
+   "evidence": "CrossRef API bibliographic search: 'CounterFactual Regression with Importance Sampling Weights' by Hassanpour and Greiner, Proceedings of the 28th IJCAI (2019), DOI 10.24963/ijcai.2019/815; entry lists booktitle NeurIPS, year 2022, matching venue_correct=false, authors_match=true, title_exists=true.",
+   "verifier_verdict": "accept"
+  },
+  {
+   "key": "a16cf7d5e205",
+   "split": "dev_public",
+   "explanation": "Author list replaced: the real paper is by Yan-Bo Lin, Yi-Lin Sung, Jie Lei, Mohit Bansal, and Gedas Bertasius",
+   "old_explanation": "[Re-classified] Real DOI 10.1609/aaai.v37i9.26293 but title mismatch (sim=42): 'Vision Transformers are Parameter-Efficient Audio-Visual Lea' vs 'Lifelong Variational Autoencoder via Online Adversarial Expa' (Original prompt logged in generation script)",
+   "evidence": "CrossRef DOI 10.1109/cvpr52729.2023.00228 (CVPR 2023): real authors are Lin, Sung, Lei, Bansal, Bertasius — entirely different from the given author list",
+   "verifier_verdict": "accept"
+  },
+  {
+   "key": "a20583a897c7",
+   "split": "test_public",
+   "explanation": "Real paper (Snell, Swersky, Zemel) was published at NeurIPS 2017; the year field is changed to 2023 while keeping the same DOI.",
+   "old_explanation": "[Re-classified] DOI 10.5555/3295222.3295383 does not resolve and no title match in CrossRef (Original prompt logged in generation script)",
+   "evidence": "arXiv API search ti:\"Prototypical Networks for Few-shot Learning\" returns Jake Snell, Kevin Swersky, Richard S. Zemel, published 2017-03-15 (NeurIPS 2017); DOI 10.5555/3295222.3295383 is the ACM DL identifier for that same proceedings paper.",
+   "verifier_verdict": "accept"
+  },
+  {
+   "key": "a2a50b837083",
+   "split": "dev_public",
+   "explanation": "Title altered: the real ICCV 2021 paper reads 'for 3D Representation and Rendering'; 'Scene' is inserted here.",
+   "old_explanation": "[Re-classified] Real DOI 10.1109/ICCV48922.2021.01493 but title mismatch (sim=40): 'GRF: Learning a General Radiance Field for 3D Scene Represen' vs 'Globally Optimal and Efficient Manhattan Frame Estimation by' (Original prompt logged in generation script)",
+   "evidence": "arXiv API: arXiv:2010.04595 (ICCV 2021, Alex Trevithick and Bo Yang) real title is 'GRF: Learning a General Radiance Field for 3D Representation and Rendering'; entry adds the word 'Scene', matching title_exists=false, authors_match=true, venue_correct=true.",
+   "verifier_verdict": "accept"
+  },
+  {
+   "key": "a48a0719a01c",
+   "split": "test_public",
+   "explanation": "Fabricated paper: no publication with this title exists; the arXiv ID (2201.07632) belongs to an unrelated physics preprint.",
+   "old_explanation": "[Re-classified] Weak title match (sim=74), weak author match (jacc=0.00). Likely fabricated. (Original prompt logged in generation script)",
+   "evidence": "arXiv API: id 2201.07632 = 'The Euclidean phi^4_2 theory as a limit of an interacting Bose gas' (Frohlich/Knowles/Schlein/Sohinger); consistent with title_exists=false, authors_match=false, doi_resolves=null.",
+   "verifier_verdict": "accept"
+  },
+  {
+   "key": "a54d5b9913a7",
+   "split": "dev_public",
+   "explanation": "First author renamed 'Lisa Lee' (real: Kimin Lee); two fabricated co-authors (Aravind Rajeswaran, Aravind Srinivas) added to the real three-author list.",
+   "old_explanation": "[Re-classified] DOI 10.48550/arXiv.2106.05091 does not resolve and no title match in CrossRef (Original prompt logged in generation script)",
+   "evidence": "arXiv API (2106.05091): real authors are Kimin Lee, Laura Smith, Pieter Abbeel — only three authors.",
+   "verifier_verdict": "accept"
+  },
+  {
+   "key": "a5c70effb714",
+   "split": "test_public",
+   "explanation": "DOI resolves to an unrelated paper ('Deep Multi-Index Hashing for Person Re-Identification'); no matching arXiv or CrossRef record for this title.",
+   "old_explanation": "[Re-classified] DOI 10.48550/arXiv.1905.10980 does not resolve and no title match in CrossRef (Original prompt logged in generation script)",
+   "evidence": "arXiv API: arXiv.1905.10980 (the given DOI's target) is 'Deep Multi-Index Hashing for Person Re-Identification' by Li, Jiang, Li — unrelated; direct arXiv/CrossRef title search for the cited title returns no record.",
+   "verifier_verdict": "accept"
+  },
+  {
+   "key": "a7ebfda890cc",
+   "split": "test_public",
+   "explanation": "Entirely fabricated paper; author field is garbled ('Hinton and Geoffrey E.') and the DOI (10.1234/jdml.2023.5678) does not resolve to any real record.",
+   "old_explanation": "[Re-classified] DOI 10.1234/jdml.2023.5678 does not resolve and no title match in CrossRef (Original prompt logged in generation script)",
+   "evidence": "structural only; consistent with subtests doi_resolves=false, title_exists=false, authors_match=false",
+   "verifier_verdict": "accept"
+  },
+  {
+   "key": "a8fc7e02004e",
+   "split": "dev_public",
+   "explanation": "Author altered: the real co-author 'Ruoxuan Xiong' is replaced with 'Rui Xiong'",
+   "old_explanation": "[Re-classified] Real DOI 10.1145/3394486.3403088 but title mismatch (sim=37): 'Stable Prediction across Unknown Environments' vs 'Policy-GNN: Aggregation Optimization for Graph Neural Networ' (Original prompt logged in generation script)",
+   "evidence": "CrossRef DOI 10.1145/3219819.3220082 (KDD 2018): real author list is Kun Kuang, Peng Cui, Susan Athey, Ruoxuan Xiong, Bo Li",
+   "verifier_verdict": "accept"
+  },
+  {
+   "key": "a909f3ca2269",
+   "split": "test_public",
+   "explanation": "Real paper (UMTRA, arXiv:1811.11819) appeared at NeurIPS 2019; cited here as NeurIPS 2021.",
+   "old_explanation": "[Re-classified] Weak title match (sim=76), weak author match (jacc=0.00). Likely fabricated. (Original prompt logged in generation script)",
+   "evidence": "arXiv API confirms 2018-11-28 submission with matching authors; the entry's own url field points to papers.nips.cc/paper/2019/..., i.e. NeurIPS 2019.",
+   "verifier_verdict": "revised"
+  },
+  {
+   "key": "aa4f869fcde2",
+   "split": "test_public",
+   "explanation": "Fabricated paper: no publication with this title exists; the arXiv ID (2002.04074) belongs to an unrelated photonics paper.",
+   "old_explanation": "[Re-classified] Weak title match (sim=72), weak author match (jacc=0.00). Likely fabricated. (Original prompt logged in generation script)",
+   "evidence": "arXiv API: id 2002.04074 = 'Dynamic control of mode modulation and spatial multiplexing using hybrid metasurfaces' (unrelated authors); consistent with title_exists=false, authors_match=false, doi_resolves=null.",
+   "verifier_verdict": "accept"
+  },
+  {
+   "key": "ab67ecdd4887",
+   "split": "dev_public",
+   "explanation": "Author list swapped entirely for an unrelated 12-author set (Schick, Wei, Chung, Tay, Le, Chi, Schuurmans, Zhou); the real paper's 7 authors are all omitted.",
+   "old_explanation": "[Re-classified] DOI 10.48550/arXiv.2211.01910 does not resolve and no title match in CrossRef (Original prompt logged in generation script)",
+   "evidence": "arXiv API (2211.01910): real authors are Yongchao Zhou, Andrei Ioan Muresanu, Ziwen Han, Keiran Paster, Silviu Pitis, Harris Chan, Jimmy Ba.",
+   "verifier_verdict": "accept"
+  },
+  {
+   "key": "abe764a5f6d9",
+   "split": "test_public",
+   "explanation": "Author list does not match the real paper by Ruochen Wang, Minhao Cheng, Xiangning Chen, Xiaocheng Tang, and Cho-Jui Hsieh; the given names are scrambled substitutes.",
+   "old_explanation": "[Re-classified] No match in CrossRef (best title sim=64). Completely fabricated paper. (Original prompt logged in generation script)",
+   "evidence": "arXiv API title search for 'Rethinking Architecture Selection in Differentiable NAS' returns authors Ruochen Wang, Minhao Cheng, Xiangning Chen, Xiaocheng Tang, Cho-Jui Hsieh (2021-08-10); none match the fields' author list.",
+   "verifier_verdict": "accept"
+  },
+  {
+   "key": "ac3b1baad664",
+   "split": "dev_public",
+   "explanation": "Real paper published at ICLR 2020; cited here with year 2023.",
+   "old_explanation": "[Re-classified] No match in CrossRef (best title sim=64). Completely fabricated paper. (Original prompt logged in generation script)",
+   "evidence": "DBLP: 'Once-for-All: Train One Network and Specialize it for Efficient Deployment' listed at ICLR 2020. Field year=2023 in the entry.",
+   "verifier_verdict": "accept"
+  },
+  {
+   "key": "ad2bb10698d1",
+   "split": "test_public",
+   "explanation": "Completely fabricated paper with plausible metadata at a real venue (AAAI); no such title exists and the DOI does not resolve.",
+   "old_explanation": "[Re-classified] DOI 10.1609/aaai.v37i7.25941 does not resolve and no title match in CrossRef (Original prompt logged in generation script)",
+   "evidence": "structural only — arXiv title search returned no match; CrossRef lookup on the given DOI 10.1609/aaai.v37i7.25941 returned no record.",
+   "verifier_verdict": "accept"
+  },
+  {
+   "key": "ada7bb27c934",
+   "split": "dev_public",
+   "explanation": "Author 'Pratham Suriana' is a swapped name; the real third co-author is Patricia Suriana.",
+   "old_explanation": "[Re-classified] Weak title match (sim=71), weak author match (jacc=0.00). Likely fabricated. (Original prompt logged in generation script)",
+   "evidence": "arXiv API id_list=2009.01411: title 'Learning from Protein Structure with Geometric Vector Perceptrons', authors Bowen Jing, Stephan Eismann, Patricia Suriana, Raphael J. L. Townshend, Ron Dror.",
+   "verifier_verdict": "accept"
+  },
+  {
+   "key": "ae30af541b9e",
+   "split": "dev_public",
+   "explanation": "Real paper published at ICML 2020; cited here with year 2023.",
+   "old_explanation": "[Re-classified] DOI 10.48550/arXiv.1910.06378 does not resolve and no title match in CrossRef (Original prompt logged in generation script)",
+   "evidence": "DBLP: 'SCAFFOLD: Stochastic Controlled Averaging for Federated Learning' listed at ICML 2020. Field year=2023 in the entry.",
+   "verifier_verdict": "accept"
+  },
+  {
+   "key": "aeb36cffe99f",
+   "split": "test_public",
+   "explanation": "Real paper published at AISTATS in 2017; cited here with year 2022 and the arXiv preprint DOI in place of the proceedings record.",
+   "old_explanation": "[Re-classified] Weak title match (sim=71), weak author match (jacc=0.00). Likely fabricated. (Original prompt logged in generation script)",
+   "evidence": "PMLR proceedings page (proceedings.mlr.press/v54/mcmahan17a.html): McMahan et al., AISTATS 2017, PMLR v54:1273-1282; fields give year 2022 and DOI 10.48550/arXiv.1602.05629 (the arXiv preprint, not the proceedings DOI).",
+   "verifier_verdict": "accept"
+  },
+  {
+   "key": "b1088d04aa43",
+   "split": "test_public",
+   "explanation": "Real paper has 32 authors; the six named here omit nearly all of them and add \"Yoni Halpern,\" who is not a co-author.",
+   "old_explanation": "[Re-classified] DOI 10.48550/arXiv.2307.15217 does not resolve and no title match in CrossRef (Original prompt logged in generation script)",
+   "evidence": "arXiv API id_list=2307.15217 returns 32 authors (Stephen Casper, Xander Davies, Claudia Shi, ..., Anca Dragan, David Krueger, Dorsa Sadigh, Dylan Hadfield-Menell); \"Yoni Halpern\" does not appear in that list.",
+   "verifier_verdict": "accept"
+  },
+  {
+   "key": "b15dc9664b48",
+   "split": "dev_public",
+   "explanation": "Fabricated paper: the arXiv ID cited belongs to an unrelated math paper, and no GNN publication with this title or author list exists.",
+   "old_explanation": "[Re-classified] Weak title match (sim=80), weak author match (jacc=0.12). Likely fabricated. (Original prompt logged in generation script)",
+   "evidence": "arXiv API: arXiv:2302.04133 is 'Isometric embeddings of surfaces for scl' by Alexis Marchand (math.GT), unrelated to graph neural networks; arXiv title search for the entry's exact title returned zero results, matching title_exists=false, authors_match=false.",
+   "verifier_verdict": "accept"
+  },
+  {
+   "key": "b341f36ff6be",
+   "split": "dev_public",
+   "explanation": "DOI resolves to \"FedNLP\" by Lin, He, Zeng, Wang, Huang, Dupuy, Gupta, Soltanolkotabi, Ren, and Avestimehr; the listed authors did not write it.",
+   "old_explanation": "[Re-classified] Title matches real paper (sim=100) but authors differ (jacc=0.00): 'Zhang, Chengliang and Xie, Yaliang and Bai, Cong and Yu, Rong and Chen, Kai and Li, Zhoujun' vs 'Sergei Ternovykh and Anastasia Nikiforova' (Original prompt logged in generation script)",
+   "evidence": "arXiv API id_list=2104.08815 (the entry's DOI) returns title 'FedNLP: Benchmarking Federated Learning Methods for Natural Language Processing Tasks' with authors Bill Yuchen Lin, Chaoyang He, Zihang Zeng, Hulin Wang, Yufen Huang, Christophe Dupuy, Rahul Gupta, Mahdi Soltanolkotabi, Xiang Ren, Salman Avestimehr — none match the entry's author field.",
+   "verifier_verdict": "accept"
+  },
+  {
+   "key": "b613528be1ce",
+   "split": "test_public",
+   "explanation": "Real paper (Shalit, Johansson, Sontag) appeared at ICML 2017; here the year is changed to 2022 while citing the arXiv preprint DOI instead of the ICML version.",
+   "old_explanation": "[Re-classified] DOI 10.48550/arXiv.1606.03976 does not resolve and no title match in CrossRef (Original prompt logged in generation script)",
+   "evidence": "PMLR page proceedings.mlr.press/v70/shalit17a.html: citation_publication_date 2017/07/17, citation_conference_title \"International Conference on Machine Learning\" (ICML), same three authors; arXiv record for 1606.03976 confirms authors, no venue override.",
+   "verifier_verdict": "accept"
+  },
+  {
+   "key": "b64d4175823c",
+   "split": "dev_public",
+   "explanation": "Completely fabricated paper with plausible metadata; the cited arXiv DOI actually belongs to a different, unrelated paper.",
+   "old_explanation": "[Re-classified] DOI 10.48550/arXiv.2310.04363 does not resolve and no title match in CrossRef (Original prompt logged in generation script)",
+   "evidence": "arXiv API: no paper with this title exists; arXiv:2310.04363 resolves to 'Amortizing intractable inference in large language models', not this title.",
+   "verifier_verdict": "accept"
+  },
+  {
+   "key": "b8c375205802",
+   "split": "test_public",
+   "explanation": "Fabricated paper: no publication with this title exists; the arXiv ID (2303.08797) belongs to an unrelated paper on stochastic interpolants.",
+   "old_explanation": "[Re-classified] DOI 10.48550/arXiv.2303.08797 does not resolve and no title match in CrossRef (Original prompt logged in generation script)",
+   "evidence": "arXiv API: id 2303.08797 = 'Stochastic Interpolants: A Unifying Framework for Flows and Diffusions' (Hoogeboom/Nielsen/Welling do not appear); consistent with title_exists=false, doi_resolves=false, authors_match=false.",
+   "verifier_verdict": "accept"
+  },
+  {
+   "key": "b96b8a1f3f24",
+   "split": "dev_public",
+   "explanation": "Real paper published in Nature Computational Science (2021); cited here as ICML.",
+   "old_explanation": "[Re-classified] DOI 10.1038/s41534-021-00440-7 does not resolve and no title match in CrossRef (Original prompt logged in generation script)",
+   "evidence": "arXiv API title search: arXiv:2011.00027 'The power of quantum neural networks' (same authors: Abbas, Sutter, Zoufal, Lucchi, Figalli, Woerner) carries journal_ref 'Nat Comput Sci 1, 403-409 (2021)'; given entry lists venue ICML, year 2021.",
+   "verifier_verdict": "accept"
+  },
+  {
+   "key": "ba62566e0a48",
+   "split": "test_public",
+   "explanation": "Longformer exists only as an arXiv preprint; here it is fabricated as EMNLP 2023, and the attached DOI actually resolves to an unrelated EMNLP Findings 2020 paper.",
+   "old_explanation": "[Re-classified] Real DOI 10.18653/v1/2020.findings-emnlp.72 but title mismatch (sim=37): 'Longformer: The Long-Document Transformer' vs 'A Multi-task Learning Framework for Opinion Triplet Extracti' (Original prompt logged in generation script)",
+   "evidence": "arXiv API id_list confirms Beltagy/Peters/Cohan authorship, published 2020-04, no venue comment; CrossRef lookup of 10.18653/v1/2020.findings-emnlp.72 resolves to \"A Multi-task Learning Framework for Opinion Triplet Extraction\" by Zhang/Li/Song/Wang.",
+   "verifier_verdict": "revised"
+  },
+  {
+   "key": "bc1f64228618",
+   "split": "test_public",
+   "explanation": "Completely fabricated paper: no publication with this title exists and the DOI does not resolve to any record.",
+   "old_explanation": "[Re-classified] DOI 10.48550/arXiv.2305.08145 does not resolve and no title match in CrossRef (Original prompt logged in generation script)",
+   "evidence": "structural only -- arXiv title search for 'A Comprehensive Study of Catastrophic Forgetting in Large Language Models' returned zero results, consistent with subtests title_exists=false, doi_resolves=false, authors_match=false.",
+   "verifier_verdict": "accept"
+  },
+  {
+   "key": "bf4a031b0d4b",
+   "split": "test_public",
+   "explanation": "Real co-author Wei Jiang is replaced by 'Chao Jiang', Kwang Moo Yi is dropped, and a fabricated co-author 'Alec Jacobson' is added to the real author list.",
+   "old_explanation": "[Re-classified] Title matches (sim=100), authors match (jacc=0.71), but venue differs: 'Advances in Neural Information Processing Systems (NeurIPS)' vs '2021 IEEE/CVF Conference on Computer Vision and Pattern Recognition (CVPR)' (Original prompt logged in generation script)",
+   "evidence": "CrossRef title search for 'DeRF: Decomposed Radiance Fields' returns authors Daniel Rebain, Wei Jiang, Soroosh Yazdani, Ke Li, Kwang Moo Yi, Andrea Tagliasacchi (CVPR 2021); fields substitute Chao Jiang for Wei Jiang, drop Kwang Moo Yi, add Alec Jacobson.",
+   "verifier_verdict": "accept"
+  },
+  {
+   "key": "c080618bff76",
+   "split": "dev_public",
+   "explanation": "Correctly identified as arXiv:1606.06565, but the year is listed as 2021 rather than the actual submission year, 2016.",
+   "old_explanation": "[Re-classified] DOI 10.48550/arXiv.1606.06565 does not resolve and no title match in CrossRef (Original prompt logged in generation script)",
+   "evidence": "arXiv API id_list=1606.06565: 'Concrete Problems in AI Safety' published 2016-06-21 with matching title/authors; given entry lists year 2021 despite the venue string correctly naming the 1606 arXiv ID.",
+   "verifier_verdict": "accept"
+  },
+  {
+   "key": "c280cf485c57",
+   "split": "dev_public",
+   "explanation": "Preprint (arXiv, posted 2018) falsely cited as published at NeurIPS in 2021; never appeared in NeurIPS proceedings.",
+   "old_explanation": "[Re-classified] Weak title match (sim=84), weak author match (jacc=0.00). Likely fabricated. (Original prompt logged in generation script)",
+   "evidence": "arXiv API: arXiv:1807.03748 first published 2018-07-10; CrossRef has no NeurIPS proceedings record for this title, consistent with it being arXiv-only.",
+   "verifier_verdict": "accept"
+  },
+  {
+   "key": "c39bb75de89c",
+   "split": "dev_public",
+   "explanation": "Author list altered: real co-authors Saffron Huang, John Aslanides, Amelia Glaese, Nat McAleese, and Geoffrey Irving replaced with fabricated names.",
+   "old_explanation": "[Re-classified] Title matches real paper (sim=100) but authors differ (jacc=0.38): 'Perez, Ethan and Huang, Kimin and Song, Francis and Cai, Trevor and Ring, Roman and Ringer, Sam and Nguyen, Kamilė and Li, Minji and Jia, Robin and others' vs 'Ethan Perez and Saffron Huang and Francis Song and Trevor Cai and Roman Ring and John Aslanides and Amelia Glaese and Nat McAleese and Geoffrey Irving' (Original prompt logged in generation script)",
+   "evidence": "arXiv API (2202.03286): real author list is Ethan Perez, Saffron Huang, Francis Song, Trevor Cai, Roman Ring, John Aslanides, Amelia Glaese, Nat McAleese, Geoffrey Irving.",
+   "verifier_verdict": "accept"
+  },
+  {
+   "key": "c3a5614896bf",
+   "split": "test_public",
+   "explanation": "Author list replaced entirely: real authors Changhao Shi, Chester Holtz, and Gal Mishne swapped for unrelated names (Yuge Shi, Yinpeng Chen, Guangyu Sun Wang, Mingli Song, Wei Wang).",
+   "old_explanation": "[Re-classified] Real DOI 10.1609/aaai.v34i07.6854 but title mismatch (sim=49): 'Online Adversarial Purification based on Self-Supervision' vs 'Adversarial Cross-Domain Action Recognition with Co-Attentio' (Original prompt logged in generation script)",
+   "evidence": "arXiv API title search for 'Online Adversarial Purification based on Self-Supervision' returns authors Changhao Shi, Chester Holtz, Gal Mishne (2021-01-23); none overlap with the fields' author list.",
+   "verifier_verdict": "accept"
+  },
+  {
+   "key": "c4d52ecf9759",
+   "split": "test_public",
+   "explanation": "Real co-authors Min Lin and Shuicheng Yan are replaced with fabricated names Yinpeng Dong and Hang Su; Pang, Yang, and Zhu remain from the real author list.",
+   "old_explanation": "[Re-classified] DOI 10.48550/arXiv.2202.10103 does not resolve and no title match in CrossRef (Original prompt logged in generation script)",
+   "evidence": "arXiv API title search for 'Robustness and Accuracy Could Be Reconcilable by (Proper) Definition' returns authors Tianyu Pang, Min Lin, Xiao Yang, Jun Zhu, Shuicheng Yan (2022-02-21); fields swap out Min Lin and Shuicheng Yan.",
+   "verifier_verdict": "accept"
+  },
+  {
+   "key": "c5499dfe46ab",
+   "split": "dev_public",
+   "explanation": "Real paper has 4 authors (Mirzadeh, Farajtabar, Pascanu, Ghasemzadeh); name altered to 'Mohammad Farajtabar' and fabricated co-author 'Dilan Gorur' added.",
+   "old_explanation": "[Re-classified] DOI 10.48550/arXiv.2006.06958 does not resolve and no title match in CrossRef (Original prompt logged in generation script)",
+   "evidence": "arXiv API: arXiv:2006.06958 'Understanding the Role of Training Regimes in Continual Learning' lists authors Seyed Iman Mirzadeh, Mehrdad Farajtabar, Razvan Pascanu, Hassan Ghasemzadeh (4 total); entry alters 'Mehrdad' to 'Mohammad' and inserts a fifth author 'Dilan Gorur' not in the real list, matching authors_match=false, venue_correct=true.",
+   "verifier_verdict": "accept"
+  },
+  {
+   "key": "c59a1b406ff9",
+   "split": "dev_public",
+   "explanation": "Title altered from the real 'Learning to Summarize from Human Feedback' ('from' changed to 'with')",
+   "old_explanation": "[Re-classified] Weak title match (sim=71), weak author match (jacc=0.00). Likely fabricated. (Original prompt logged in generation script)",
+   "evidence": "arXiv API: ID 2009.01325 = 'Learning to summarize from human feedback' (Stiennon, Ouyang, Wu, Ziegler, Lowe, Voss, Radford, Amodei, Christiano)",
+   "verifier_verdict": "accept"
+  },
+  {
+   "key": "c729374ecfbc",
+   "split": "test_public",
+   "explanation": "The arXiv preprint of this paper (1901.11117) lists the authors as So, Liang, Le; this entry gives the order as So, Le, Liang, which does not match that preprint's listing.",
+   "old_explanation": "[Re-classified] No match in CrossRef (best title sim=56). Completely fabricated paper. (Original prompt logged in generation script)",
+   "evidence": "arXiv API search ti:\"The Evolved Transformer\" returns author order David R. So, Chen Liang, Quoc V. Le, published 2019-01-30; entry lists So, Le, Liang.",
+   "verifier_verdict": "revised"
+  },
+  {
+   "key": "c74be625b875",
+   "split": "dev_public",
+   "explanation": "Real paper is an arXiv preprint from March 2023; falsely cited as published at AAAI in 2021, before the paper existed.",
+   "old_explanation": "[Re-classified] DOI 10.48550/arXiv.2303.12712 does not resolve and no title match in CrossRef (Original prompt logged in generation script)",
+   "evidence": "arXiv API id_list=2303.12712: title 'Sparks of Artificial General Intelligence: Early experiments with GPT-4', published 2023-03-22, authors match (Bubeck et al.); no AAAI 2021 record.",
+   "verifier_verdict": "accept"
+  },
+  {
+   "key": "c77f41c08910",
+   "split": "dev_public",
+   "explanation": "Author list omits real co-authors Manzil Zaheer and Maziar Sanjabi",
+   "old_explanation": "[Re-classified] Weak title match (sim=81), weak author match (jacc=0.00). Likely fabricated. (Original prompt logged in generation script)",
+   "evidence": "arXiv API: ID 1812.06127 real author list is Tian Li, Anit Kumar Sahu, Manzil Zaheer, Maziar Sanjabi, Ameet Talwalkar, Virginia Smith (6); given entry lists only 4, omitting Zaheer and Sanjabi",
+   "verifier_verdict": "accept"
+  },
+  {
+   "key": "c9055b18c70f",
+   "split": "dev_public",
+   "explanation": "Author list incomplete: omits real co-authors Stefan Bauer and Joachim M. Buhmann without 'et al.', listing only three of the five real authors.",
+   "old_explanation": "[Re-classified] Title matches (sim=100), authors match (jacc=0.60), but venue differs: 'Proceedings of the 37th International Conference on Machine Learning (ICML)' vs 'Proceedings of the AAAI Conference on Artificial Intelligence' (Original prompt logged in generation script)",
+   "evidence": "arXiv API (1902.00981): real authors are Patrick Schwab, Lorenz Linhardt, Stefan Bauer, Joachim M. Buhmann, Walter Karlen — five total.",
+   "verifier_verdict": "accept"
+  },
+  {
+   "key": "cad2f2e45a53",
+   "split": "dev_public",
+   "explanation": "Real paper (LEO) published at ICLR 2019; cited here with year 2022.",
+   "old_explanation": "[Re-classified] No match in CrossRef (best title sim=61). Completely fabricated paper. (Original prompt logged in generation script)",
+   "evidence": "arXiv API: arXiv:1807.05960 (Meta-Learning with Latent Embedding Optimization) first posted 2018-07-16; widely documented as an ICLR 2019 conference paper (openreview id BJgklhAcK7 matches ICLR 2019 naming pattern).",
+   "verifier_verdict": "accept"
+  },
+  {
+   "key": "caef38397355",
+   "split": "dev_public",
+   "explanation": "Fabricated citation: the title and author list do not match any real paper, and the cited DOI does not resolve to this work.",
+   "old_explanation": "[Re-classified] DOI 10.48550/arXiv.2310.01362 does not resolve and no title match in CrossRef (Original prompt logged in generation script)",
+   "evidence": "arXiv API: DOI/ID 2310.01362 = 'Robot Fleet Learning via Policy Merging' (Wang, Zhang, Zhou, Simchowitz, Tedrake, 2023) — unrelated to the claimed LLM red-teaming title/authors",
+   "verifier_verdict": "revised"
+  },
+  {
+   "key": "cc83ec04d40e",
+   "split": "dev_public",
+   "explanation": "Real paper's authors are Jerbi, Fiderer, Poulsen Nautrup, Kübler, Briegel, and Dunjko; Garcia-Saez, Bravo-Prieto, and Cirac listed here did not co-author it.",
+   "old_explanation": "[Re-classified] Weak title match (sim=75), weak author match (jacc=0.00). Likely fabricated. (Original prompt logged in generation script)",
+   "evidence": "DBLP query 'Quantum machine learning beyond kernel methods' returns authors Sofiène Jerbi, Lukas J. Fiderer, Hendrik Poulsen Nautrup, Jonas M. Kübler, Hans J. Briegel, Vedran Dunjko (CoRR 2021); only Jerbi overlaps with the entry's author field.",
+   "verifier_verdict": "accept"
+  },
+  {
+   "key": "ccd8e095d429",
+   "split": "dev_public",
+   "explanation": "Completely fabricated paper: the cited arXiv ID actually belongs to an unrelated gravitational-wave preprint",
+   "old_explanation": "[Re-classified] Weak title match (sim=75), weak author match (jacc=0.00). Likely fabricated. (Original prompt logged in generation script)",
+   "evidence": "arXiv API: ID 2012.09876 = 'Probing multiple populations of compact binaries with third-generation gravitational-wave detectors' (Ng, Vitale, Farr, Rodriguez, 2020)",
+   "verifier_verdict": "accept"
+  },
+  {
+   "key": "cd8f74f64931",
+   "split": "test_public",
+   "explanation": "Real paper (LIME) appeared at KDD 2016, not the KDD 2022 instance implied by the given year.",
+   "old_explanation": "[Re-classified] Real DOI 10.1145/2939672.2939778 but title mismatch (sim=44): '“Why Should I Trust You?”: Explaining the Predictions of Any' vs '\"Why Should I Trust You?\"' (Original prompt logged in generation script)",
+   "evidence": "CrossRef record for DOI 10.1145/2939672.2939778 gives container-title 'Proceedings of the 22nd ACM SIGKDD...KDD 2016', published-print 2016-08-13.",
+   "verifier_verdict": "accept"
+  },
+  {
+   "key": "cda00fd304be",
+   "split": "test_public",
+   "explanation": "Real paper has only three authors (Leo Gao, John Schulman, Jacob Hilton); author list padded with unrelated names (Askell, Durmus, Leike, Irpan, Ouyang, Wu).",
+   "old_explanation": "[Re-classified] Weak title match (sim=75), weak author match (jacc=0.00). Likely fabricated. (Original prompt logged in generation script)",
+   "evidence": "arXiv API id 2210.10760 confirms exactly three authors (Leo Gao, John Schulman, Jacob Hilton); consistent with title_exists=true, doi_resolves=true, authors_match=false.",
+   "verifier_verdict": "accept"
+  },
+  {
+   "key": "cdf7c1798d3d",
+   "split": "dev_public",
+   "explanation": "Real title, but authors are entirely different from the actual paper's (Dombrowski, Alber, Anders, Ackermann, Müller, Kessel).",
+   "old_explanation": "[Re-classified] DOI 10.48550/arXiv.2202.03466 does not resolve and no title match in CrossRef (Original prompt logged in generation script)",
+   "evidence": "arXiv API: arXiv:1906.07983 'Explanations can be manipulated and geometry is to blame' lists authors Ann-Kathrin Dombrowski, Maximilian Alber, Christopher J. Anders, Marcel Ackermann, Klaus-Robert Müller, Pan Kessel; entry lists Bilodeau/Janzing/Schölkopf/Sutherland instead, matching title_exists=true, authors_match=false.",
+   "verifier_verdict": "accept"
+  },
+  {
+   "key": "cecc65e3b792",
+   "split": "test_public",
+   "explanation": "Real paper on causal intervention for WSSS; author list replaced with unrelated names, not the actual authors (Dong Zhang, Hanwang Zhang, Jinhui Tang, Xiansheng Hua, Qianru Sun).",
+   "old_explanation": "[Re-classified] Real DOI 10.1109/CVPR42600.2020.00335 but title mismatch (sim=54): 'Causal Intervention for Weakly-Supervised Semantic Segmentat' vs 'Spatial-Temporal Graph Convolutional Network for Video-Based' (Original prompt logged in generation script)",
+   "evidence": "arXiv API id 2009.12547 confirms title and real authors (accepted as NeurIPS 2020 oral); CrossRef DOI 10.1109/CVPR42600.2020.00335 given in fields resolves to an unrelated CVPR paper. Consistent with title_exists=true, authors_match=false.",
+   "verifier_verdict": "accept"
+  },
+  {
+   "key": "cf1cbfac669f",
+   "split": "test_public",
+   "explanation": "Author list belongs to a different paper: Hoffmann et al.'s Chinchilla, which shares this DOI. The real authors are Muennighoff, Rush, Barak, Le Scao, and others.",
+   "old_explanation": "[Re-classified] DOI 10.48550/arXiv.2203.15556 does not resolve and no title match in CrossRef (Original prompt logged in generation script)",
+   "evidence": "arXiv API id_list=2203.15556 returns \"Training Compute-Optimal Large Language Models\" by Hoffmann, Borgeaud, Mensch, Buchatskaya, Cai, Rutherford (Chinchilla), matching the entry's author field; a separate title search for \"Scaling Data-Constrained Language Models\" returns the real authors Niklas Muennighoff, Alexander M. Rush, Boaz Barak, Teven Le Scao, Aleksandra Piktus, Nouamane Tazi, Sampo Pyysalo, Thomas Wolf, Colin Raffel.",
+   "verifier_verdict": "accept"
+  },
+  {
+   "key": "cfc473425d94",
+   "split": "test_public",
+   "explanation": "Real Co²L paper is by Hyuntak Cha, Jaeho Lee, and Jinwoo Shin; the six-author byline listed here does not match any of them.",
+   "old_explanation": "[Re-classified] Real DOI 10.1109/CVPR52688.2022.00929 but title mismatch (sim=35): '{Co$^2$L}: Contrastive Continual Learning' vs 'MPC: Multi-view Probabilistic Clustering' (Original prompt logged in generation script)",
+   "evidence": "arXiv API (search ti:\"Contrastive Continual Learning\") returns Co$^2$L by Hyuntak Cha, Jaeho Lee, Jinwoo Shin (2021-06); CrossRef lookup of the entry's DOI 10.1109/CVPR52688.2022.00929 resolves to an unrelated paper (\"MPC: Multi-view Probabilistic Clustering\").",
+   "verifier_verdict": "accept"
+  },
+  {
+   "key": "cfdc06df2031",
+   "split": "dev_public",
+   "explanation": "Cited DOI resolves to an unrelated CVPR paper on RGB-multispectral matching, not this title",
+   "old_explanation": "[Re-classified] Real DOI 10.1109/CVPR52688.2022.01549 but title mismatch (sim=49): 'Online Continual Learning Through Mutual Information Maximiz' vs 'RGB-Multispectral Matching: Dataset, Learning Methodology, E' (Original prompt logged in generation script)",
+   "evidence": "CrossRef DOI 10.1109/CVPR52688.2022.01549 = 'RGB-Multispectral Matching: Dataset, Learning Methodology, Evaluation' (Tosi, Zama Ramirez, Poggi, Salti, Mattoccia, Di Stefano, CVPR 2022)",
+   "verifier_verdict": "accept"
+  },
+  {
+   "key": "d0e8f6c5bb51",
+   "split": "test_public",
+   "explanation": "Co-author name altered: listed as 'Kumar Avinava Dubey' where the real byline reads 'Avinava Dubey'.",
+   "old_explanation": "[Re-classified] DOI 10.48550/arXiv.2007.14062 does not resolve and no title match in CrossRef (Original prompt logged in generation script)",
+   "evidence": "arXiv API record for arXiv:2007.14062 (Big Bird) lists author as 'Avinava Dubey', not 'Kumar Avinava Dubey'.",
+   "verifier_verdict": "accept"
+  },
+  {
+   "key": "d291ca8fd3de",
+   "split": "dev_public",
+   "explanation": "Author list (Shoufa Chen, Haoqi Fan, Bo Xu, ...) does not match the real authors: Zhe Chen, Yuchen Duan, Wenhai Wang, Junjun He, Tong Lu, Jifeng Dai, Yu Qiao.",
+   "old_explanation": "[Re-classified] DOI 10.48550/arXiv.2205.08534 does not resolve and no title match in CrossRef (Original prompt logged in generation script)",
+   "evidence": "arXiv API id_list=2205.08534: title 'Vision Transformer Adapter for Dense Predictions', authors Zhe Chen, Yuchen Duan, Wenhai Wang, Junjun He, Tong Lu, Jifeng Dai, Yu Qiao — no overlap with the cited author list.",
+   "verifier_verdict": "accept"
+  },
+  {
+   "key": "d29bc1a68d33",
+   "split": "dev_public",
+   "explanation": "Completely fabricated paper (fictitious 'Recurrent Giraffe Transformer'); no paper by this title exists, and the cited arXiv ID actually belongs to an unrelated real paper on multi-query transformers (GQA).",
+   "old_explanation": "[Re-classified] DOI 10.48550/arXiv.2305.13245 does not resolve and no title match in CrossRef (Original prompt logged in generation script)",
+   "evidence": "structural only (consistent with subtests: doi_resolves/title_exists/authors_match all false)",
+   "verifier_verdict": "revised"
+  },
+  {
+   "key": "d3baaca6f470",
+   "split": "test_public",
+   "explanation": "Author list padded with five fabricated co-authors; the real paper lists only Leo Gao, John Schulman, and Jacob Hilton.",
+   "old_explanation": "[Re-classified] Weak title match (sim=75), weak author match (jacc=0.00). Likely fabricated. (Original prompt logged in generation script)",
+   "evidence": "arXiv API record for arXiv:2210.10760 (title match) lists exactly Leo Gao, John Schulman, Jacob Hilton — Amanda Askell, Esin Durmus, Long Ouyang, Jan Leike, and Paul Christiano are not co-authors.",
+   "verifier_verdict": "accept"
+  },
+  {
+   "key": "d46c5fa004ad",
+   "split": "dev_public",
+   "explanation": "Real paper published at NeurIPS 2017; cited here with year 2022.",
+   "old_explanation": "[Re-classified] Title matches real paper (sim=98) but authors differ (jacc=0.00): 'Vaswani, Ashish and Shazeer, Noam and Parmar, Niki and Uszkoreit, Jakob and Jones, Llion and Gomez, Aidan N. and Kaiser, {\\L}ukasz and Polosukhin, Illia' vs 'Patrick Mineault' (Original prompt logged in generation script)",
+   "evidence": "DBLP: 'Attention is All you Need' (Vaswani et al.) listed at NIPS 2017; arXiv API confirms original submission 2017-06-12. Field year=2022 in the entry.",
+   "verifier_verdict": "accept"
+  },
+  {
+   "key": "d6907bfc9ba6",
+   "split": "dev_public",
+   "explanation": "DOI belongs to an unrelated ECCV 2020 paper; the real Single Path One-Shot NAS work appeared at ECCV in 2020, not the cited year 2021.",
+   "old_explanation": "[Re-classified] Real DOI 10.1007/978-3-030-58565-5_32 but title mismatch (sim=37): 'Single Path One-Shot Neural Architecture Search with Uniform' vs '3D-Rotation-Equivariant Quaternion Neural Networks' (Original prompt logged in generation script)",
+   "evidence": "CrossRef works/10.1007/978-3-030-58565-5_32 resolves to '3D-Rotation-Equivariant Quaternion Neural Networks' (ECCV 2020). CrossRef bibliographic search confirms real DOI 10.1007/978-3-030-58517-4_32, container 'Computer Vision – ECCV 2020', date 2020.",
+   "verifier_verdict": "accept"
+  },
+  {
+   "key": "d6b94c5ff251",
+   "split": "test_public",
+   "explanation": "Real paper (AutoAttack, arXiv:2003.01690) appeared at ICML 2020; cited here as ICML 2022.",
+   "old_explanation": "[Re-classified] DOI 10.48550/arXiv.2003.01690 does not resolve and no title match in CrossRef (Original prompt logged in generation script)",
+   "evidence": "arXiv API confirms 2020-03-03 submission with matching authors; WebSearch confirms ICML 2020 (proceedings.mlr.press/v119/croce20b).",
+   "verifier_verdict": "accept"
+  },
+  {
+   "key": "d7207be35c33",
+   "split": "dev_public",
+   "explanation": "Author list omits first author Uriel Singer and most co-authors; includes Shelly Sheynin, who is not a co-author of this paper.",
+   "old_explanation": "[Re-classified] DOI 10.48550/arXiv.2209.14792 does not resolve and no title match in CrossRef (Original prompt logged in generation script)",
+   "evidence": "arXiv API id_list=2209.14792: real Make-A-Video authors are Uriel Singer, Adam Polyak, Thomas Hayes, Xi Yin, Jie An, Songyang Zhang, Qiyuan Hu, Harry Yang, Oron Ashual, Oran Gafni, Devi Parikh, Sonal Gupta, Yaniv Taigman; Shelly Sheynin is absent from that list and Singer (first author) is missing from the given field.",
+   "verifier_verdict": "accept"
+  },
+  {
+   "key": "d75c6bc0d6b6",
+   "split": "dev_public",
+   "explanation": "Fabricated title paired with real federated-learning authors (Long, Jiang, Zhang); no paper with this title exists",
+   "old_explanation": "[Re-classified] Title matches real paper (sim=95) but authors differ (jacc=0.00): 'Long, Guodong and Tan, Yijun and Jiang, Jing and Zhang, Chengqi' vs 'Suresh Kumar B and Vinoth Kumar S' (Original prompt logged in generation script)",
+   "evidence": "arXiv API: DOI 1911.06270 = 'Federated Learning for Healthcare Informatics' (Xu, Glicksberg, Su, Walker, Bian, Wang, 2019), confirming the claimed title/DOI pairing is fabricated",
+   "verifier_verdict": "accept"
+  },
+  {
+   "key": "d770091f1852",
+   "split": "dev_public",
+   "explanation": "The cited DOI resolves to an unrelated CVPR paper, not this one. The title matches the wording of the 2022 arXiv preprint; the official published version uses a shorter title without 'All'.",
+   "old_explanation": "[Re-classified] Real DOI 10.1109/CVPR52688.2022.01588 but title mismatch (sim=38): 'Image as a Foreign Language: BEiT Pretraining for All Vision' vs 'LiDAR Snowfall Simulation for Robust 3D Object Detection' (Original prompt logged in generation script)",
+   "evidence": "CrossRef bibliographic search: title 'Image as a Foreign Language: BEIT Pretraining for Vision and Vision-Language Tasks', container '2023 IEEE/CVF CVPR', date 2023-06, DOI 10.1109/cvpr52729.2023.01838. Direct lookup of the entry's DOI 10.1109/CVPR52688.2022.01588 resolves to an unrelated 2022 paper.",
+   "verifier_verdict": "revised"
+  },
+  {
+   "key": "d93d8a95399f",
+   "split": "test_public",
+   "explanation": "Real paper (SNAIL, arXiv:1707.03141) was published at ICLR 2018; cited here as ICLR 2021.",
+   "old_explanation": "[Re-classified] No match in CrossRef (best title sim=57). Completely fabricated paper. (Original prompt logged in generation script)",
+   "evidence": "arXiv API confirms 2017 submission with matching authors; WebSearch confirms ICLR 2018 acceptance, same OpenReview id B1DmUzWAW given in fields.",
+   "verifier_verdict": "accept"
+  },
+  {
+   "key": "d99a37cb1e28",
+   "split": "dev_public",
+   "explanation": "Author list omits real co-author Anh Tuan Luu, present on the actual publication",
+   "old_explanation": "[Re-classified] Weak title match (sim=74), weak author match (jacc=0.00). Likely fabricated. (Original prompt logged in generation script)",
+   "evidence": "arXiv API: ID 2003.00982 real author list is Dwivedi, Joshi, Anh Tuan Luu, Laurent, Bengio, Bresson (6 authors); given entry lists only 5, omitting Luu",
+   "verifier_verdict": "accept"
+  },
+  {
+   "key": "db9a596a4d3f",
+   "split": "dev_public",
+   "explanation": "Real title (ICLR 2023), but author list altered: first author 'Denny Zhou' replaced by fabricated 'Shunyu Zhou' and moved to the end.",
+   "old_explanation": "[Re-classified] DOI 10.48550/arXiv.2205.10625 does not resolve and no title match in CrossRef (Original prompt logged in generation script)",
+   "evidence": "arXiv API: arXiv:2205.10625 real authors are Denny Zhou, Nathanael Schärli, Le Hou, Jason Wei, Nathan Scales, Xuezhi Wang, Dale Schuurmans, Claire Cui, Olivier Bousquet, Quoc Le, Ed Chi (ICLR 2023); entry substitutes 'Shunyu Zhou' as first author, drops Cui/Bousquet, and appends 'Denny Zhou' last, matching authors_match=false, venue_correct=true.",
+   "verifier_verdict": "accept"
+  },
+  {
+   "key": "ddb8c4e940df",
+   "split": "dev_public",
+   "explanation": "Completely fabricated paper with plausible ICML-style metadata; no such title exists, and the cited proceedings.mlr.press URL actually points to an unrelated real paper ('Event Outlier Detection in Continuous Time').",
+   "old_explanation": "[Re-classified] No match in CrossRef (best title sim=62). Completely fabricated paper. (Original prompt logged in generation script)",
+   "evidence": "structural only (consistent with subtests: title_exists/authors_match false, doi_resolves null)",
+   "verifier_verdict": "revised"
+  },
+  {
+   "key": "de35047ec5dd",
+   "split": "test_public",
+   "explanation": "Real paper (Muhammad Abdullah Jamal and Guo-Jun Qi) published at CVPR 2019; cited here with year 2021.",
+   "old_explanation": "[Re-classified] Real DOI 10.1109/CVPR.2019.01199 but title mismatch (sim=82): 'Task-Agnostic Meta-Learning for Few-Shot Learning' vs 'Task Agnostic Meta-Learning for Few-Shot Learning' (Original prompt logged in generation script)",
+   "evidence": "CrossRef DOI 10.1109/CVPR.2019.01199 resolves to 'Task Agnostic Meta-Learning for Few-Shot Learning', same authors, CVPR June 2019; consistent with doi_resolves=true, title_exists=true, authors_match=true, venue_correct=false.",
+   "verifier_verdict": "accept"
+  },
+  {
+   "key": "e184acdf3e0c",
+   "split": "dev_public",
+   "explanation": "Title is a near-miss: the real 2020 paper is 'Quantum embeddings for machine learning' (plural), not 'Quantum Embedding for Machine Learning.'",
+   "old_explanation": "[Re-classified] Title matches real paper (sim=94) but authors differ (jacc=0.00): 'Lloyd, Seth and Schuld, Maria and Ijaz, Ali and Izaac, Josh and Killoran, Nathan' vs 'Phuong-Nam Nguyen' (Original prompt logged in generation script)",
+   "evidence": "arXiv API title search: real paper arXiv:2001.03622, 'Quantum embeddings for machine learning', by Seth Lloyd, Maria Schuld, Aroosa Ijaz, Josh Izaac, Nathan Killoran; given title uses singular 'Embedding' instead of 'embeddings'.",
+   "verifier_verdict": "accept"
+  },
+  {
+   "key": "e24dfb8c96e7",
+   "split": "dev_public",
+   "explanation": "No verified edition of this title was published in 2022, and the author list fails to match the record retrieved for it.",
+   "old_explanation": "[Re-classified] Title matches real paper (sim=88) but authors differ (jacc=0.00): 'Sutton, Richard S. and Barto, Andrew G.' vs 'Zhiqing Xiao' (Original prompt logged in generation script)",
+   "evidence": "structural only: CrossRef search located only a 1998 book review referencing this title (DOI 10.1109/tnn.1998.712192); no 2022 edition record found. Could not independently confirm which real bibliographic record the author-mismatch check flagged, so kept to what the subtests establish.",
+   "verifier_verdict": "accept"
+  },
+  {
+   "key": "e31c32455914",
+   "split": "dev_public",
+   "explanation": "The DOI does not resolve, and the stated Nature Communications venue and author list do not match any verifiable record for this citation.",
+   "old_explanation": "[Re-classified] DOI 10.1038/s41467-023-37674-3 does not resolve and no title match in CrossRef (Original prompt logged in generation script)",
+   "evidence": "structural only -- arXiv and CrossRef searches for the exact title returned no matches; doi.org lookup on 10.1038/s41467-023-37674-3 returned HTTP 404, consistent with subtests doi_resolves=false, title_exists=false.",
+   "verifier_verdict": "revised"
+  },
+  {
+   "key": "e330ece3d2cd",
+   "split": "test_public",
+   "explanation": "Author list does not match the real paper: real authors are Zekai Wang, Tianyu Pang, Chao Du, Min Lin, Weiwei Liu, and Shuicheng Yan.",
+   "old_explanation": "[Re-classified] DOI 10.48550/arXiv.2203.08328 does not resolve and no title match in CrossRef (Original prompt logged in generation script)",
+   "evidence": "arXiv API record for arXiv:2302.04638 (title match) lists Zekai Wang, Tianyu Pang, Chao Du, Min Lin, Weiwei Liu, Shuicheng Yan — none of whom appear in the cited author list.",
+   "verifier_verdict": "accept"
+  },
+  {
+   "key": "e445a0747f9d",
+   "split": "dev_public",
+   "explanation": "Author list is fabricated: the real, title-matching paper (arXiv:2310.19736) is by Zishan Guo, Renren Jin, Chuang Liu, Yufei Huang, Dan Shi, et al.",
+   "old_explanation": "[Re-classified] Weak title match (sim=72), weak author match (jacc=0.00). Likely fabricated. (Original prompt logged in generation script)",
+   "evidence": "arXiv API (id_list=2310.19736 / title search): 'Evaluating Large Language Models: A Comprehensive Survey' is authored by Zishan Guo, Renren Jin, Chuang Liu, Yufei Huang, Dan Shi, et al.; none of the given authors (Yao Li, Xiaoyang Wang, Wei Zhang, Yiming Chen, Qiang Liu) appear on the real paper.",
+   "verifier_verdict": "accept"
+  },
+  {
+   "key": "e4ccaee76472",
+   "split": "test_public",
+   "explanation": "Real paper (Luo et al.) was presented at NeurIPS 2018; the cited URL's own path reads \"/paper/2018/\", contradicting the year field of 2023.",
+   "old_explanation": "[Re-classified] No match in CrossRef (best title sim=67). Completely fabricated paper. (Original prompt logged in generation script)",
+   "evidence": "arXiv API search ti:\"Neural Architecture Optimization\" returns Renqian Luo, Fei Tian, Tao Qin, Enhong Chen, Tie-Yan Liu published 2018-08-22, matching the released URL's /paper/2018/ path against the entry's stated year=2023.",
+   "verifier_verdict": "accept"
+  },
+  {
+   "key": "e5aaea0199f1",
+   "split": "test_public",
+   "explanation": "Real ConvMAE byline is Gao, Ma, Li, Ziyi Lin, Dai, Qiao; here \"Dahua Lin\" and \"Hongyang Li\" replace real co-authors.",
+   "old_explanation": "[Re-classified] DOI 10.48550/arXiv.2205.03892 does not resolve and no title match in CrossRef (Original prompt logged in generation script)",
+   "evidence": "arXiv API id_list=2205.03892 returns authors Peng Gao, Teli Ma, Hongsheng Li, Ziyi Lin, Jifeng Dai, Yu Qiao — no Dahua Lin or Hongyang Li.",
+   "verifier_verdict": "accept"
+  },
+  {
+   "key": "e5e315d40b79",
+   "split": "test_public",
+   "explanation": "DOI 10.1609/aaai.v36i2.20084 resolves to an unrelated real paper ('A Fusion-Denoising Attack on InstaHide with Data Augmentation'); the cited title and authors do not match it.",
+   "old_explanation": "[Re-classified] Real DOI 10.1609/aaai.v36i2.20084 but title mismatch (sim=33): 'Multimodal Co-training for Open-vocabulary Object Detection' vs 'A Fusion-Denoising Attack on InstaHide with Data Augmentatio' (Original prompt logged in generation script)",
+   "evidence": "CrossRef DOI lookup for 10.1609/aaai.v36i2.20084 returns Luo, Xiao, Wu, Liu, Ooi, 'A Fusion-Denoising Attack on InstaHide with Data Augmentation' (AAAI 2022); title search for the cited title returns no matching paper.",
+   "verifier_verdict": "accept"
+  },
+  {
+   "key": "e7b8d9a1670b",
+   "split": "dev_public",
+   "explanation": "This is an arXiv preprint (2018) never published at AISTATS; falsely cited here as AISTATS 2023.",
+   "old_explanation": "[Re-classified] Weak title match (sim=71), weak author match (jacc=0.00). Likely fabricated. (Original prompt logged in generation script)",
+   "evidence": "arXiv API id_list=1811.03604: 'Federated Learning for Mobile Keyboard Prediction' published 2018-11-08 with no journal_ref/acceptance comment; given entry lists booktitle AISTATS, year 2023.",
+   "verifier_verdict": "accept"
+  },
+  {
+   "key": "e7bdea92dcf1",
+   "split": "test_public",
+   "explanation": "Author list is fabricated: the real paper's authors are Zeqiu Wu, Yushi Hu, Weijia Shi, Nouha Dziri, Alane Suhr, and others, none of whom match this byline.",
+   "old_explanation": "[Re-classified] DOI 10.48550/arXiv.2402.00530 does not resolve and no title match in CrossRef (Original prompt logged in generation script)",
+   "evidence": "arXiv API search ti:\"Fine-Grained Human Feedback Gives Better Rewards\" returns authors Zeqiu Wu, Yushi Hu, Weijia Shi, Nouha Dziri, Alane Suhr, Prithviraj Ammanabrolu, Noah A. Smith, Mari Ostendorf, Hannaneh Hajishirzi (2023); the entry's DOI 2402.00530 resolves to an unrelated 2024 paper (\"Superfiltering\").",
+   "verifier_verdict": "accept"
+  },
+  {
+   "key": "ec2394492de9",
+   "split": "dev_public",
+   "explanation": "Author and title are unfilled template placeholders (\"First Author and Second Another\", \"Your Slightly Modified Title Here\"), not real paper metadata.",
+   "old_explanation": "[Re-classified] DOI 10.5555/3295222.3295349 does not resolve and no title match in CrossRef (Original prompt logged in generation script)",
+   "evidence": "structural only — fields contain literal unfilled placeholder text, consistent with title_exists/authors_match/doi_resolves all false",
+   "verifier_verdict": "revised"
+  },
+  {
+   "key": "ec868a1f2815",
+   "split": "test_public",
+   "explanation": "Real paper (arXiv:2004.11362) appeared at NeurIPS 2020; cited here as NeurIPS 2022.",
+   "old_explanation": "[Re-classified] DOI 10.48550/arXiv.2004.11362 does not resolve and no title match in CrossRef (Original prompt logged in generation script)",
+   "evidence": "arXiv API confirms submission 2020-04-23 with matching authors; WebSearch confirms NeurIPS 2020 publication (dblp, papers.nips.cc).",
+   "verifier_verdict": "accept"
+  },
+  {
+   "key": "edd2fb905d4c",
+   "split": "dev_public",
+   "explanation": "Year altered: the real paper appeared at ICLR 2017, not 2023",
+   "old_explanation": "[Re-classified] No match in CrossRef (best title sim=69). Completely fabricated paper. (Original prompt logged in generation script)",
+   "evidence": "dblp API: 'Optimization as a Model for Few-Shot Learning' (Sachin Ravi, Hugo Larochelle) published at ICLR 2017",
+   "verifier_verdict": "accept"
+  },
+  {
+   "key": "ee1994fd0932",
+   "split": "test_public",
+   "explanation": "No such paper exists; the author field is the placeholder 'Anonymous' rather than a real author list, and the venue/year metadata is invented to look plausible.",
+   "old_explanation": "[Re-classified] Weak title match (sim=75), weak author match (jacc=0.00). Likely fabricated. (Original prompt logged in generation script)",
+   "evidence": "structural only; consistent with subtests title_exists=false, authors_match=false, cross_db_agreement=false",
+   "verifier_verdict": "accept"
+  },
+  {
+   "key": "ee49e4bdd9f1",
+   "split": "dev_public",
+   "explanation": "Real paper has five authors (Bastings, Ebert, Zablotskaia, Sandholm, Filippova); listed co-author \"Wilker Aziz\" did not write it.",
+   "old_explanation": "[Re-classified] Real DOI 10.18653/v1/2021.acl-long.257 but title mismatch (sim=45): 'Will You Find These Shortcuts? A Protocol for Evaluating the' vs 'Probabilistic, Structure-Aware Algorithms for Improved Varie' (Original prompt logged in generation script)",
+   "evidence": "DBLP query for the exact title returns authors Jasmijn Bastings, Sebastian Ebert, Polina Zablotskaia, Anders Sandholm, Katja Filippova (EMNLP 2022); 'Wilker Aziz' is not among them.",
+   "verifier_verdict": "accept"
+  },
+  {
+   "key": "ee4f7f0fc29c",
+   "split": "test_public",
+   "explanation": "Author list bears no relation to the real authors (Yuhang Zang, Wei Li, Kaiyang Zhou, Chen Huang, Chen Change Loy); all nine listed names are fabricated substitutes.",
+   "old_explanation": "[Re-classified] Real DOI 10.18653/v1/2022.acl-long.424 but title mismatch (sim=44): 'Unified Vision and Language Prompt Learning' vs 'MSP: Multi-Stage Prompting for Making Pre-trained Language M' (Original prompt logged in generation script)",
+   "evidence": "arXiv API title search for 'Unified Vision and Language Prompt Learning' returns authors Yuhang Zang, Wei Li, Kaiyang Zhou, Chen Huang, Chen Change Loy (2022-10-13); none overlap with the fields' nine-author list.",
+   "verifier_verdict": "accept"
+  },
+  {
+   "key": "eee1d119e4bb",
+   "split": "dev_public",
+   "explanation": "Linformer is an arXiv preprint (2020) never published at NeurIPS; falsely cited here as NeurIPS 2022.",
+   "old_explanation": "[Re-classified] DOI 10.48550/arXiv.2006.04768 does not resolve and no title match in CrossRef (Original prompt logged in generation script)",
+   "evidence": "arXiv API id_list=2006.04768: published 2020-06-08 with no journal_ref/acceptance comment (Linformer remained an arXiv preprint); given entry lists booktitle NeurIPS, year 2022.",
+   "verifier_verdict": "accept"
+  },
+  {
+   "key": "f011a1446112",
+   "split": "dev_public",
+   "explanation": "Real paper published at ICLR 2019; cited here with year 2023.",
+   "old_explanation": "[Re-classified] Weak title match (sim=73), weak author match (jacc=0.00). Likely fabricated. (Original prompt logged in generation script)",
+   "evidence": "arXiv API id_list=1810.00826: title 'How Powerful are Graph Neural Networks?', authors Xu/Hu/Leskovec/Jegelka match, posted 2018-10-01 (well-known ICLR 2019 paper).",
+   "verifier_verdict": "accept"
+  },
+  {
+   "key": "f42736ee2643",
+   "split": "dev_public",
+   "explanation": "Real paper published at NeurIPS 2020; cited here with year 2023.",
+   "old_explanation": "[Re-classified] DOI 10.48550/arXiv.2006.11468 does not resolve and no title match in CrossRef (Original prompt logged in generation script)",
+   "evidence": "arXiv API id_list=2006.11468: 'Beyond Homophily in Graph Neural Networks' carries the comment 'Accepted to NeurIPS 2020'; given entry lists year 2023 for the same venue string.",
+   "verifier_verdict": "accept"
+  },
+  {
+   "key": "f4b35656e3d0",
+   "split": "dev_public",
+   "explanation": "Real paper published at ICML 2020; cited here with year 2023.",
+   "old_explanation": "[Re-classified] Weak title match (sim=71), weak author match (jacc=0.00). Likely fabricated. (Original prompt logged in generation script)",
+   "evidence": "DBLP: 'Simple and Deep Graph Convolutional Networks' listed at ICML 2020. Field year=2023 in the entry.",
+   "verifier_verdict": "accept"
+  },
+  {
+   "key": "f59895b8d009",
+   "split": "test_public",
+   "explanation": "The first three co-authors (Ruiying Geng, Binhua Li, Yongbin Li) match real papers on this topic, but the other six names do not appear in any real author list for this title.",
+   "old_explanation": "[Re-classified] Real DOI 10.18653/v1/P19-1385 but title mismatch (sim=44): 'Induction Networks for Few-Shot Text Classification' vs 'Attention-based Conditioning Methods for External Knowledge ' (Original prompt logged in generation script)",
+   "evidence": "CrossRef title search: real paper is 'Dynamic Memory Induction Networks for Few-Shot Text Classification' (ACL 2020), authors Ruiying Geng, Binhua Li, Yongbin Li, Jian Sun, Xiaodan Zhu; first three names in fields match, rest are substituted.",
+   "verifier_verdict": "revised"
+  },
+  {
+   "key": "f6d93b7505e0",
+   "split": "test_public",
+   "explanation": "Real paper (TCAV) published at ICML 2018; cited here with year 2022.",
+   "old_explanation": "[Re-classified] DOI 10.48550/arXiv.1711.11279 does not resolve and no title match in CrossRef (Original prompt logged in generation script)",
+   "evidence": "PMLR v80 (ICML 2018) listing confirms 'Interpretability Beyond Feature Attribution... (TCAV)' as kim18d, same authors; consistent with title_exists=true, authors_match=true, venue_correct=false.",
+   "verifier_verdict": "accept"
+  },
+  {
+   "key": "f7e521aa3113",
+   "split": "dev_public",
+   "explanation": "DOI resolves to a different real ACL 2023 paper ('MoralDial: A Framework to Train and Evaluate Moral Dialogue Systems'); title and authors do not match.",
+   "old_explanation": "[Re-classified] Real DOI 10.18653/v1/2023.acl-long.123 but title mismatch (sim=42): 'Diffusion Models for Adversarial Purification in Natural Lan' vs 'MoralDial: A Framework to Train and Evaluate Moral Dialogue ' (Original prompt logged in generation script)",
+   "evidence": "CrossRef API: DOI 10.18653/v1/2023.acl-long.123 resolves to 'MoralDial: A Framework to Train and Evaluate Moral Dialogue Systems via Moral Discussions' by Hao Sun et al., ACL 2023 proceedings -- not the entry's title/authors, matching doi_resolves=true, title_exists=false, authors_match=false.",
+   "verifier_verdict": "accept"
+  },
+  {
+   "key": "f887a22f37bf",
+   "split": "dev_public",
+   "explanation": "Real paper published at NeurIPS 2017; cited here with year 2022.",
+   "old_explanation": "[Re-classified] Title matches real paper (sim=98) but authors differ (jacc=0.00): 'Vaswani, Ashish and Shazeer, Noam and Parmar, Niki and Uszkoreit, Jakob and Jones, Llion and Gomez, Aidan N and Kaiser, {\\L}ukasz and Polosukhin, Illia' vs 'Patrick Mineault' (Original prompt logged in generation script)",
+   "evidence": "arXiv API id_list=1706.03762: 'Attention Is All You Need' published 2017-06-12 (the well-documented NeurIPS 2017 paper); given entry lists year 2022 with the same author list (confirmed matching).",
+   "verifier_verdict": "accept"
+  },
+  {
+   "key": "f9247e4251cf",
+   "split": "dev_public",
+   "explanation": "Real paper published at NeurIPS 2020; cited here with year 2023.",
+   "old_explanation": "[Re-classified] Title matches real paper (sim=85) but authors differ (jacc=0.00): 'Brown, Tom B. and Mann, Benjamin and Ryder, Nick and Subbiah, Melanie and Kaplan, Jared and Dhariwal, Prafulla and Neelakantan, Arvind and Shyam, Pranav and Sastry, Girish and Askell, Amanda and Agarwal, Sandhini and Herbert-Voss, Ariel and Krueger, Gretchen and Henighan, Tom and Child, Rewon and Ramesh, Aditya and Ziegler, Daniel and Wu, Jeffrey and Winter, Clemens and Hesse, Chris and Chen, Mark and Sigler, Eric and Litwin, Mateusz and Gray, Scott and Chess, Benjamin and Clark, Jack and Berner, Christopher and McCandlish, Sam and Radford, Alec and Sutskever, Ilya and Amodei, Dario' vs 'Genta Indra Winata and Andrea Madotto and Zhaojiang Lin and Rosanne Liu and Jason Yosinski and Pascale Fung' (Original prompt logged in generation script)",
+   "evidence": "DBLP: 'Language Models are Few-Shot Learners' (Brown et al.) listed at NeurIPS 2020 (and CoRR 2020); confirmed via arXiv API (submitted 2020-05-28). Field year=2023 in the entry.",
+   "verifier_verdict": "accept"
+  },
+  {
+   "key": "fa8c65213dc3",
+   "split": "dev_public",
+   "explanation": "Title fabricated: no such paper exists; real authors (Shi, Bica, van der Schaar) have other treatment-effect papers, none titled this.",
+   "old_explanation": "[Re-classified] Weak title match (sim=82), weak author match (jacc=0.00). Likely fabricated. (Original prompt logged in generation script)",
+   "evidence": "arXiv API: no entry found for this exact title (0 results).",
+   "verifier_verdict": "accept"
+  },
+  {
+   "key": "fb2b9bc24b83",
+   "split": "dev_public",
+   "explanation": "Title drops 'with Observational Data' from the real paper's title; the truncated version matches no published paper verbatim.",
+   "old_explanation": "[Re-classified] Real DOI 10.1609/aaai.v36i7.20735 but title mismatch (sim=48): 'Adversarial Balancing-based Representation Learning for Caus' vs 'Cross-Lingual Adversarial Domain Adaptation for Novice Progr' (Original prompt logged in generation script)",
+   "evidence": "CrossRef bibliographic search: real title 'Adversarial balancing-based representation learning for causal effect inference with observational data', Data Mining and Knowledge Discovery, 2021, DOI 10.1007/s10618-021-00759-3. The entry's DOI 10.1609/aaai.v36i7.20735 resolves to an unrelated AAAI 2022 paper.",
+   "verifier_verdict": "accept"
+  },
+  {
+   "key": "fb39847d5af9",
+   "split": "dev_public",
+   "explanation": "Real co-author Zihang Jiang is dropped, merged into the garbled name 'Francis E. H. Tay Jiang'; one of nine real authors is missing.",
+   "old_explanation": "[Re-classified] Real DOI 10.1109/ICCV48922.2021.01220 but title mismatch (sim=38): 'Tokens-to-Token ViT: Training Vision Transformers from Scrat' vs 'Structured Outdoor Architecture Reconstruction by Exploratio' (Original prompt logged in generation script)",
+   "evidence": "CrossRef and arXiv both list 9 real authors for 'Tokens-to-Token ViT': Li Yuan, Yunpeng Chen, Tao Wang, Weihao Yu, Yujun Shi, Zihang Jiang, Francis E. H. Tay, Jiashi Feng, Shuicheng Yan. The entry's 8-name list fuses Jiang and Tay into one garbled name.",
+   "verifier_verdict": "accept"
+  },
+  {
+   "key": "fbb4488e88d9",
+   "split": "dev_public",
+   "explanation": "Completely fabricated title with plausible author names and a real-format DOI at AAAI; no such paper exists.",
+   "old_explanation": "[Re-classified] DOI 10.1609/aaai.v36i2.20147 does not resolve and no title match in CrossRef (Original prompt logged in generation script)",
+   "evidence": "structural only — title_exists and doi_resolves both false per subtests; author names (e.g. Song-Chun Zhu) belong to real researchers but not to this nonexistent title",
+   "verifier_verdict": "accept"
+  },
+  {
+   "key": "fd9da8902f80",
+   "split": "dev_public",
+   "explanation": "Real paper published at NAACL in 2019; cited here with year 2021.",
+   "old_explanation": "[Re-classified] Real DOI 10.18653/v1/N19-1423 but title mismatch (sim=0): 'BERT: Pre-training of Deep Bidirectional Transformers for La' vs '' (Original prompt logged in generation script)",
+   "evidence": "CrossRef works/10.18653/v1/N19-1423: published-print 2019, container 'Proceedings of the 2019 Conference of the North [American Chapter of the ACL]'.",
+   "verifier_verdict": "accept"
+  },
+  {
+   "key": "fdcf8e3071b7",
+   "split": "dev_public",
+   "explanation": "Real paper published at NeurIPS 2020 (arXiv:2006.07733); cited here with year 2022.",
+   "old_explanation": "[Re-classified] DOI 10.48550/arXiv.2006.07733 does not resolve and no title match in CrossRef (Original prompt logged in generation script)",
+   "evidence": "arXiv API: arXiv:2006.07733 'Bootstrap your own latent...' by Grill et al., published 2020-06-13 (BYOL, NeurIPS 2020); entry lists year 2022 with the same DOI/authors, matching subtests venue_correct=false, authors_match=true.",
+   "verifier_verdict": "accept"
+  }
+ ]
+}

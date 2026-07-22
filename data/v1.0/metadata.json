@@ -1,8 +1,8 @@
 {
-    "version": "1.2.0",
+    "version": "1.2.1",
     "build_date": "2026-05-30",
-    "release_date": "2026-07-20",
-    "release_notes": "v1.2.0 adds evaluation-only extension artifacts (recency-matched cross-domain split, Walters-Wilder ChatGPT-citation supplement results, canonical 448-entry temporal supplement); core split contents are byte-identical to v1.1.1 (post-relabel).",
+    "release_date": "2026-07-22",
+    "release_notes": "v1.2.1 replaces 133 stale explanation strings in dev_public/test_public (generation-pipeline re-classifier output that could contradict the released fields); labels, types, tiers, sub-tests, and split membership are byte-identical to v1.2.0. v1.2.0 adds evaluation-only extension artifacts (recency-matched cross-domain split, Walters-Wilder ChatGPT-citation supplement results, canonical 448-entry temporal supplement); core split contents are byte-identical to v1.1.1 (post-relabel).",
     "relabel": {
         "description": "Released corpus is post-relabel: a systematic ground-truth audit corrected entries where real papers were wrongly flagged HALLUCINATED (arXiv-DataCite-DOI root cause and faithful truncated author lists). Split counts below reflect the corrected labels.",
         "script": "scripts/relabel_ground_truth.py",
@@ -11,6 +11,11 @@
             "1475a2f (#10): systematic ground-truth relabel + benchmark hardening"
         ],
         "flip_log": "results/reviewer_experiments/relabel_flips.json"
+    },
+    "explanation_fix": {
+        "description": "Corrected 133 stale [Re-classified] explanation strings (97 HALLUCINATED rewritten against CrossRef/arXiv records, 36 VALID set to the ground-truth audit relabel_reason). Only the explanation field changed.",
+        "script": "scripts/fix_stale_explanations.py",
+        "fix_log": "results/reviewer_experiments/explanation_fixes_v121.json"
     },
     "seed": 8042,
     "total_entries": 2526,
@@ -183,7 +188,7 @@
                 "hallucination_type": {
                     "plausible_fabrication": 310
                 },
-                "rationale": "Real-world withdrawn preprints from bioRxiv and medRxiv (2023-2025). Each entry has a real DOI that resolves, a real title, and real authors \u2014 but the paper has been formally withdrawn and citing it is a real-world failure mode that no perturbation generator produces. Used as a reusable data source (analogous to real_world_incidents.jsonl); downstream split builders may sample from it.",
+                "rationale": "Real-world withdrawn preprints from bioRxiv and medRxiv (2023-2025). Each entry has a real DOI that resolves, a real title, and real authors — but the paper has been formally withdrawn and citing it is a real-world failure mode that no perturbation generator produces. Used as a reusable data source (analogous to real_world_incidents.jsonl); downstream split builders may sample from it.",
                 "method": "BioRxivClient.find_withdrawn_papers_parallel scans the date range and filters records whose abstract begins with \"Withdrawal Statement\", \"[Withdrawn]\", or contains \"has been withdrawn\". 8-worker parallel pagination; ~10 min for the full 2023-2025 scan."
             },
             "walters_wilder_chatgpt_citations": {
