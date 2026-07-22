@@ -49,10 +49,10 @@
   "@type": "sc:Dataset",
   "conformsTo": "http://mlcommons.org/croissant/1.0",
   "name": "HALLMARK",
-  "description": "HALLMARK (HALLucination benchMARK) is a benchmark for evaluating citation metadata verification systems. It contains 2,525 BibTeX entries spanning 14 hallucination types organized into 3 difficulty tiers, with 6 sub-tests per entry covering DOI resolution, title existence, author matching, venue correctness, field completeness, and cross-database agreement. The benchmark targets ML venue citations (NeurIPS, ICML, ICLR, AAAI, CVPR) from 2021-2023 and includes entries generated via systematic perturbation, LLM generation, adversarial crafting, and real-world hallucination collection.",
-  "url": "https://anonymous.4open.science/r/hallmark/",
+  "description": "HALLMARK (HALLucination benchMARK) is a benchmark for evaluating citation metadata verification systems. It contains 2,526 BibTeX entries spanning 14 hallucination types organized into 3 difficulty tiers, with 6 sub-tests per entry covering DOI resolution, title existence, author matching, venue correctness, field completeness, and cross-database agreement. The benchmark targets ML venue citations (NeurIPS, ICML, ICLR, AAAI, CVPR) from 2021-2023 and includes entries generated via systematic perturbation, LLM generation, adversarial crafting, and real-world hallucination collection.",
+  "url": "https://github.com/rpatrik96/hallmark",
   "license": "https://spdx.org/licenses/MIT.html",
-  "version": "1.0",
+  "version": "1.2.2",
   "datePublished": "2026-05-04",
   "inLanguage": "en",
   "isLiveDataset": false,
@@ -68,9 +68,12 @@
   ],
   "creator": [
     {
-      "@type": "Organization",
-      "name": "Anonymous",
-      "description": "Authors withheld for double-blind review"
+      "@type": "Person",
+      "name": "Patrik Reizinger"
+    },
+    {
+      "@type": "Person",
+      "name": "Wieland Brendel"
     }
   ],
   "distribution": [
@@ -408,5 +411,5 @@
   "rai:dataUseCases": "Intended uses: (1) evaluating and benchmarking citation-verification tools (DOI lookups, metadata cross-referencing, LLM-based verifiers, ensembles); (2) ablation studies over the six per-entry sub-tests (DOI resolution, title existence, author matching, venue correctness, field completeness, cross-database agreement); (3) cross-tool ranking via Plackett-Luce on incomplete coverage; (4) temporal contamination analysis via post-cutoff splits; (5) expanding the taxonomy with community-contributed entries through the documented contribution pipeline. Out-of-scope uses: training generative models to produce convincing fake citations; constructing adversarial examples intended to deceive readers or peer reviewers; any use that violates the MIT license or the terms of service of upstream data sources (DBLP, CrossRef, Semantic Scholar, arXiv).",
   "rai:hasSyntheticData": true,
   "rai:syntheticDataExplanation": "Approximately 60% of the benchmark consists of synthetically generated hallucinated entries produced through four pipelines: (1) systematic perturbation of real entries following 14 deterministic taxonomy-driven rules; (2) LLM-generated entries from multiple models (GPT-5.1, Claude Sonnet 4.5, DeepSeek-R1, DeepSeek-V3, Qwen, Gemini Flash); (3) adversarial hand-crafted entries designed to defeat specific verification strategies; (4) real-world hallucinations collected from documented incidents (GPTZero NeurIPS 2025 audit, GhostCite, HalluCitation). Valid entries (~40%) are not synthetic \u2014 they are scraped from public proceedings and verified against CrossRef and Semantic Scholar.",
-  "citeAs": "@inproceedings{hallmark2026, author = {Anonymous}, title = {HALLMARK: A Benchmark for Citation Hallucination Detection}, booktitle = {Advances in Neural Information Processing Systems (NeurIPS) Track on Evaluations and Datasets}, year = {2026}}"
+  "citeAs": "@misc{reizinger2026hallmarkdiagnosingfailuremodes, title={HALLMARK: Diagnosing Three Failure Modes in LLM Citation Verifiers}, author={Patrik Reizinger and Wieland Brendel}, year={2026}, eprint={2607.18360}, archivePrefix={arXiv}, primaryClass={cs.CR}, url={https://arxiv.org/abs/2607.18360},}"
 }
