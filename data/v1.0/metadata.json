@@ -1,8 +1,8 @@
 {
-    "version": "1.2.1",
+    "version": "1.2.2",
     "build_date": "2026-05-30",
     "release_date": "2026-07-22",
-    "release_notes": "v1.2.1 replaces 133 stale explanation strings in dev_public/test_public (generation-pipeline re-classifier output that could contradict the released fields); labels, types, tiers, sub-tests, and split membership are byte-identical to v1.2.0. v1.2.0 adds evaluation-only extension artifacts (recency-matched cross-domain split, Walters-Wilder ChatGPT-citation supplement results, canonical 448-entry temporal supplement); core split contents are byte-identical to v1.1.1 (post-relabel).",
+    "release_notes": "v1.2.2 replaces the remaining 196 stale explanation strings in the raw generation pool llm_generated.jsonl (not part of any released split); every other file is byte-identical to v1.2.1. v1.2.1 replaces 133 stale explanation strings in dev_public/test_public (generation-pipeline re-classifier output that could contradict the released fields); labels, types, tiers, sub-tests, and split membership are byte-identical to v1.2.0. v1.2.0 adds evaluation-only extension artifacts (recency-matched cross-domain split, Walters-Wilder ChatGPT-citation supplement results, canonical 448-entry temporal supplement); core split contents are byte-identical to v1.1.1 (post-relabel).",
     "relabel": {
         "description": "Released corpus is post-relabel: a systematic ground-truth audit corrected entries where real papers were wrongly flagged HALLUCINATED (arXiv-DataCite-DOI root cause and faithful truncated author lists). Split counts below reflect the corrected labels.",
         "script": "scripts/relabel_ground_truth.py",
@@ -16,6 +16,11 @@
         "description": "Corrected 133 stale [Re-classified] explanation strings (97 HALLUCINATED rewritten against CrossRef/arXiv records, 36 VALID set to the ground-truth audit relabel_reason). Only the explanation field changed.",
         "script": "scripts/fix_stale_explanations.py",
         "fix_log": "results/reviewer_experiments/explanation_fixes_v121.json"
+    },
+    "explanation_fix_pool": {
+        "description": "v1.2.2: corrected the remaining 196 stale [Re-classified] explanation strings in the raw generation pool llm_generated.jsonl (drafted and adversarially verified against CrossRef/arXiv/DBLP records). The pool is pipeline provenance, not part of any released split; labels are unchanged. 58 entries whose metadata fully matches a real publication (perturbations that produced a correct citation; none appear in any released split) carry flag_label=true in the fix log.",
+        "script": "scripts/fix_stale_explanations.py --pool",
+        "fix_log": "results/reviewer_experiments/explanation_fixes_v122_pool.json"
     },
     "seed": 8042,
     "total_entries": 2526,
