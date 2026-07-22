@@ -54,18 +54,24 @@
       <h2 class="section-title">Three failure modes</h2>
       <p class="section-lead">HALLMARK evaluates a DOI-lookup baseline, frontier LLMs zero-shot,
         tool-augmented agents, and the co-designed rule-based verifier
-        <code>bibtex-updater</code> (btu). Three failure modes make the headline finding
-        concrete.</p>
+        <a href="https://github.com/rpatrik96/bibtexupdater"><code>bibtex-updater</code></a>
+        (btu). Three failure modes make the headline finding concrete.</p>
       <div class="failure-grid">
         <div class="card">
           <div class="failure-num">Failure mode i</div>
           <h3>Agentic lookups buy recall but inflate false positives</h3>
           <p class="card-sub">A 5-call tool budget lifts GPT-5.1&rsquo;s recall past
             <code>bibtex-updater</code>&rsquo;s, at roughly five times its false-positive rate.
-            The rise comes from the harness&rsquo;s any-no-match flagging, not the base model:
-            in a deterministic re-aggregation over three of the harness&rsquo;s four sources,
-            any-no-match flagging reaches FPR 0.729 where consensus flagging reaches 0.049
-            (it is the any-vs-consensus ordering that transfers, not the absolute level).</p>
+            The evidence points at the harness&rsquo;s any-no-match flagging rather than the
+            base model: in a deterministic re-aggregation over three of the harness&rsquo;s
+            four sources, any-no-match flagging reaches FPR 0.729 where consensus flagging
+            reaches 0.049 (it is the any-vs-consensus ordering that transfers, not the
+            absolute level).</p>
+          <p class="card-limit">Limitations: no prompt ablations for the agentic harness yet,
+            so prompt-level mitigations remain untested; and the two-stage cascade
+            (bibtex-updater &rarr; Sonnet 4.6, co-designed) shows the inflation is not
+            inevitable: it reaches comparable recall at roughly a quarter of the single-stage
+            agentic false-positive rate.</p>
           <div class="viz" id="viz-mode1"></div>
         </div>
         <div class="card">
@@ -75,6 +81,9 @@
             At a venue-realistic ~2% hallucination rate, even the best verifier reaches only
             ~18% precision: the best catch one true hallucination per 6&ndash;9 flags, the most
             aggressive fewer than one in 35.</p>
+          <p class="card-limit">Limitation: these precisions are derived from dev_public
+            detection and false-positive rates at an assumed 2% base rate; they are not
+            measured on a 2%-prevalence corpus.</p>
           <div class="viz" id="viz-mode2"></div>
         </div>
         <div class="card">
@@ -82,8 +91,16 @@
           <h3>Most LLMs over-flag papers published past their training cutoff</h3>
           <p class="card-sub">On the 448-entry 2024&ndash;25 temporal supplement, 8 of 12 LLMs
             degrade sharply (FPR 0.59&ndash;0.89); GPT-5.1 rises from 41% to 76%. Only the two
-            latest-cutoff models hold near in-distribution levels (a descriptive signal,
-            confounded with possible recall of those entries).</p>
+            latest-cutoff models hold near in-distribution levels.</p>
+          <p class="card-sub">Mitigation: a cutoff-aware prompt addendum drives GPT-5.1&rsquo;s
+            post-cutoff FPR to 0% on the entries it still commits to, at the price of heavy
+            abstention (pre-cutoff UNCERTAIN rises to 52.7%). The effect is model-dependent:
+            Sonnet 4.6 instead abstains selectively (48.9% post-cutoff vs 8.7% pre) while
+            halving its committed-entry FPR.</p>
+          <p class="card-limit">Limitation: reported as descriptive, following the paper: the
+            post-cutoff rise is confounded with whether a model can recall the newer papers
+            at all, and the failure is epistemic miscalibration rather than structural
+            blindness.</p>
           <div class="viz" id="viz-mode3"></div>
         </div>
       </div>
@@ -125,8 +142,9 @@
         in <code>data/v1.0/baseline_results/</code> and the released extension-split metrics.
         Verifiers may abstain (UNCERTAIN): the coverage column shows the share of entries each
         verifier commits to, and headline metrics follow the paper&rsquo;s scoring conventions.
-        <code>bibtex-updater</code> (btu) and its cascades are co-designed with the benchmark
-        and serve as a reference upper bound, excluded from ranking.</p>
+        <a href="https://github.com/rpatrik96/bibtexupdater"><code>bibtex-updater</code></a>
+        (btu) and its cascades are co-designed with the benchmark and serve as a reference
+        upper bound, excluded from ranking.</p>
 
       <div class="filter-block card">
         <div class="filter-row">

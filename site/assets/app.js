@@ -547,12 +547,11 @@
       var m = MODEL[r.tool];
       var tr = el("tr");
       tr.appendChild(el("td", { className: "name-cell" }, [
-        el("span", {
-          className: "dot",
-          style: "display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:7px;background:" + CAT_COLOR[m.category],
-        }),
-        document.createTextNode(m.name),
-        m.tag ? el("span", { className: "cat-tag", text: m.tag }) : null,
+        el("div", { className: "name-flex" }, [
+          el("span", { className: "dot", style: "background:" + CAT_COLOR[m.category] }),
+          el("span", { text: m.name }),
+          m.tag ? el("span", { className: "cat-tag", text: m.tag }) : null,
+        ]),
       ]));
       LB_COLS.slice(1).forEach(function (c) {
         var isBest = m.ranked && best[c.key] !== undefined && r[c.key] === best[c.key];
@@ -611,7 +610,7 @@
       g.appendChild(svgEl("circle", { cx: cx, cy: cy, r: 6, fill: color, stroke: "var(--surface-1)", "stroke-width": 2 }));
       // direct label: try right, then left, then above; tooltip carries it if no room
       var name = m.name;
-      var wEst = name.length * 6.3;
+      var wEst = name.length * 6.8 + 4;
       var candidates = [
         { x: cx + 12 + wEst / 2, y: cy + 4, anchor: "start", tx: cx + 12 },
         { x: cx - 12 - wEst / 2, y: cy + 4, anchor: "end", tx: cx - 12 },
