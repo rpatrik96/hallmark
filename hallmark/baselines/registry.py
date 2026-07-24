@@ -644,6 +644,41 @@ def _register_builtins() -> None:
         )
     )
 
+    # --- LLM: Agentic OpenRouter GPT-5.1 ---
+    # Routes the OpenAI-compatible agentic harness through OpenRouter to use
+    # openai/gpt-5.1 without a native OpenAI API key. Drop-in replacement for
+    # llm_agentic_openai; the GPT-5.1 counterpart of
+    # llm_agentic_openrouter_claude_sonnet_4_6, intended as the Stage 2 diagnoser
+    # for cascade_db_diagnosis GPT-5.1 comparison runs under a lab OpenRouter key.
+    def _run_llm_agentic_openrouter_gpt_5_1(
+        entries: list[BlindEntry], **kw: Any
+    ) -> list[Prediction]:
+        from hallmark.baselines.llm_agentic import verify_agentic_openai
+
+        kw.setdefault("model", "openai/gpt-5.1")
+        kw.setdefault("base_url", "https://openrouter.ai/api/v1")
+        kw.setdefault("api_key", os.environ.get("OPENROUTER_API_KEY"))
+        return verify_agentic_openai(entries, **kw)
+
+    register(
+        BaselineInfo(
+            name="llm_agentic_openrouter_gpt_5_1",
+            description=(
+                "Agentic GPT-5.1 via OpenRouter (openai/gpt-5.1) using the "
+                "OpenAI-compatible SDK. Drop-in for llm_agentic_openai without a "
+                "native OpenAI API key; GPT-5.1 counterpart of "
+                "llm_agentic_openrouter_claude_sonnet_4_6, used as the Stage 2 "
+                "diagnoser for cascade_db_diagnosis GPT-5.1 comparison runs."
+            ),
+            runner=_run_llm_agentic_openrouter_gpt_5_1,
+            pip_packages=["openai"],
+            requires_api_key=True,
+            is_free=False,
+            env_var="OPENROUTER_API_KEY",
+            confidence_type="probabilistic",
+        )
+    )
+
     # --- LLM: Agentic BTU-only (OpenAI) ---
     def _run_llm_agentic_btu_openai(entries: list[BlindEntry], **kw: Any) -> list[Prediction]:
         from hallmark.baselines.llm_agentic import verify_agentic_btu_openai
