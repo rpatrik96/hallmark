@@ -18,7 +18,12 @@ from __future__ import annotations
 
 import csv
 import json
+import sys
 from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+
+from hallmark.dataset.blinding import assert_blinded, blind_record
 
 REPO = Path(__file__).resolve().parent.parent
 OUT = REPO / "results" / "ablations" / "a5_kappa"
@@ -43,6 +48,7 @@ HALLUCINATION_TYPES = [
 
 
 def _to_bibtex(entry: dict) -> str:
+    assert_blinded(entry, context="a5_export_human_kit._to_bibtex")
     if entry.get("raw_bibtex"):
         return str(entry["raw_bibtex"])
     lines = [f"@{entry['bibtex_type']}{{{entry['bibtex_key']},"]
@@ -55,13 +61,15 @@ def _to_bibtex(entry: dict) -> str:
 def main() -> None:
     KIT.mkdir(parents=True, exist_ok=True)
     blinded = [
-        json.loads(line)
+        blind_record(json.loads(line))
         for line in (OUT / "substrate_blinded.jsonl").read_text().splitlines()
         if line.strip()
     ]
 
     # 1. annotation_entries.csv -- human-readable view of each blinded entry.
-    fields_seen = ["title", "author", "year", "booktitle", "journal", "venue", "doi", "url"]
+    # `url` is absent by design: annotators verify the same metadata the
+    # automated raters see, so the kappa compares like with like.
+    fields_seen = ["title", "author", "year", "booktitle", "journal", "venue", "doi"]
     with (KIT / "annotation_entries.csv").open("w", newline="") as fh:
         w = csv.writer(fh)
         w.writerow(["bibtex_key", "bibtex_type", *fields_seen, "other_fields", "raw_bibtex"])

@@ -35,6 +35,10 @@ import time
 from datetime import datetime, timezone
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+
+from hallmark.dataset.blinding import assert_blinded, blind_record
+
 REPO = Path(__file__).resolve().parent.parent
 OUT = REPO / "results" / "ablations" / "a5_kappa"
 PRED_DIR = OUT / "rater_predictions"
@@ -105,6 +109,14 @@ predicted_hallucination_type MUST be null when label is VALID or UNCERTAIN."""
 
 
 def _to_bibtex(entry: dict) -> str:
+    """Render the blinded BibTeX a rater sees.
+
+    The substrate is written blinded, but this script reads it as plain JSONL
+    and never builds a ``BlindEntry``, so it asserts the blind-list here — the
+    boundary where the record becomes prompt text.
+    """
+    entry = blind_record(entry)
+    assert_blinded(entry, context="a5_run_raters._to_bibtex")
     if entry.get("raw_bibtex"):
         return str(entry["raw_bibtex"])
     lines = [f"@{entry['bibtex_type']}{{{entry['bibtex_key']},"]

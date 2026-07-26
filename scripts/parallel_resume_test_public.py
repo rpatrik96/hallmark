@@ -59,6 +59,8 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
 from hallmark.baselines.llm_verifier import VERIFICATION_PROMPT  # noqa: E402
+from hallmark.dataset.blinding import assert_blinded, blind_record  # noqa: E402
+from hallmark.dataset.schema import BlindEntry  # noqa: E402
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(
@@ -74,12 +76,22 @@ def load_jsonl(path: Path) -> list[dict]:
 
 
 def entry_to_bibtex(entry: dict) -> str:
-    """Reconstruct a BibTeX string from the schema's `fields` dict."""
-    btype = entry.get("bibtex_type", "article")
-    key = entry["bibtex_key"]
-    flds = entry["fields"]
-    body = ",\n  ".join(f"{k} = {{{v}}}" for k, v in sorted(flds.items()))
-    return f"@{btype}{{{key},\n  {body}\n}}"
+    """Render the blinded BibTeX a verifier sees.
+
+    This script reads the corpus JSONL directly, so it never went through
+    ``BenchmarkEntry.to_blind()`` and used to serialize every field verbatim —
+    including ``url``, which dispatch-time blinding withholds. It now routes
+    through ``BlindEntry``, which strips the blind-list on construction and
+    renders exactly what the registry path renders, and asserts first so a
+    caller that skipped ``blind_record`` fails loudly instead of leaking.
+    """
+    assert_blinded(entry, context="parallel_resume_test_public.entry_to_bibtex")
+    return BlindEntry(
+        bibtex_key=entry["bibtex_key"],
+        bibtex_type=entry.get("bibtex_type", "article"),
+        fields=entry["fields"],
+        raw_bibtex=entry.get("raw_bibtex"),
+    ).to_bibtex()
 
 
 def parse_response(content: str, bibtex_key: str) -> tuple[str, float, str]:
@@ -371,8 +383,10 @@ def main() -> None:
         done_keys.add(r["bibtex_key"])
     n_done = len(done_keys)
 
-    # Load all entries, filter to remaining
-    all_entries = load_jsonl(args.data_file)
+    # Load all entries, blind them, filter to remaining. Blinding happens here,
+    # at the point the corpus is read, so no code path downstream of this line
+    # can see a withheld field.
+    all_entries = [blind_record(e) for e in load_jsonl(args.data_file)]
     remaining = [e for e in all_entries if e["bibtex_key"] not in done_keys]
     n_total = len(all_entries)
     n_remaining = len(remaining)

@@ -235,7 +235,18 @@ _VENUE_CODE_MAP = {
 
 
 def _ensure_url_presence(entries: list[BenchmarkEntry]) -> int:
-    """Add plausible DBLP-style URLs to entries missing them (prevents URL-presence leak)."""
+    """Add plausible DBLP-style URLs to entries missing them (prevents URL-presence leak).
+
+    This levels URL *presence* so it cannot correlate with the label, which is
+    the opposite mitigation to the one the generators apply (they drop ``url``
+    from cloned entries). Both ran, so the released corpus retains a URL on
+    some entries and not others — see
+    :data:`hallmark.dataset.blinding.BLIND_EXCLUDED_FIELDS`, which withholds
+    the field at dispatch regardless of what the corpus stores. Now that
+    blinding is enforced structurally, filling URLs here is redundant; it stays
+    only so regenerating a pinned release reproduces it byte-for-byte, and a
+    future release should drop both this pass and the stored field.
+    """
     import hashlib
 
     fixed = 0
