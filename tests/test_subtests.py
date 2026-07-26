@@ -66,6 +66,76 @@ class TestRequiredFields:
         assert "title" in fields
         assert "year" in fields
 
+    def test_article_still_requires_journal_without_entry_fields(self):
+        """Passing no entry fields keeps the strict per-type spec."""
+        assert "journal" in _required_fields_for_type("article", None)
+
+    def test_arxiv_doi_article_does_not_require_journal(self):
+        entry = {
+            "author": "Ada Lovelace",
+            "title": "On a Note",
+            "year": "2026",
+            "doi": "10.48550/arXiv.2602.12271v1",
+        }
+        required = _required_fields_for_type("article", entry)
+        assert "journal" not in required
+        assert {"author", "title", "year"} <= set(required)
+
+    def test_eprint_article_does_not_require_journal(self):
+        entry = {
+            "author": "Ada Lovelace",
+            "title": "On a Note",
+            "year": "2026",
+            "eprint": "2602.12271",
+            "archivePrefix": "arXiv",
+        }
+        assert "journal" not in _required_fields_for_type("article", entry)
+
+    def test_plain_article_without_journal_still_fails(self):
+        """A non-arXiv @article with no journal is genuinely incomplete."""
+        entry = {"author": "Ada Lovelace", "title": "On a Note", "year": "2026"}
+        assert "journal" in _required_fields_for_type("article", entry)
+
+    def test_misc_never_requires_journal(self):
+        assert "journal" not in _required_fields_for_type("misc", {})
+
+
+class TestFieldsCompleteEntryTypeAwareness:
+    """16-W5: an optional field for one entry type is not charged against another."""
+
+    def test_arxiv_preprint_article_passes(self):
+        entry = {
+            "author": "Ada Lovelace",
+            "title": "On a Note",
+            "year": "2026",
+            "doi": "10.48550/arXiv.2602.12271v1",
+            "url": "https://arxiv.org/abs/2602.12271",
+        }
+        assert check_fields_complete("article", entry).passed is True
+
+    def test_journal_article_missing_journal_fails(self):
+        entry = {"author": "Ada Lovelace", "title": "On a Note", "year": "2026"}
+        result = check_fields_complete("article", entry)
+        assert result.passed is False
+        assert "journal" in result.detail
+
+    def test_misc_without_venue_passes(self):
+        entry = {"author": "Ada Lovelace", "title": "On a Note", "year": "2026"}
+        assert check_fields_complete("misc", entry).passed is True
+
+    def test_inproceedings_requires_booktitle(self):
+        entry = {"author": "Ada Lovelace", "title": "On a Note", "year": "2026"}
+        assert check_fields_complete("inproceedings", entry).passed is False
+
+    def test_malformed_year_fails_regardless_of_type(self):
+        entry = {
+            "author": "Ada Lovelace",
+            "title": "On a Note",
+            "year": "twenty-twenty-six",
+            "doi": "10.48550/arXiv.2602.12271v1",
+        }
+        assert check_fields_complete("article", entry).passed is False
+
 
 class TestCheckTitleExists:
     def test_exact_match(self):
