@@ -407,7 +407,10 @@ def fig_cost_accuracy(results: list[dict], output_dir: Path) -> None:
 
     ax.set_xlabel("Throughput (entries/sec)")
     ax.set_ylabel("F1 (Hallucination)")
-    ax.set_title("Cost\u2013Accuracy Tradeoff")
+    # Title names the axes actually plotted: the x-axis is throughput
+    # (entries/sec), not a dollar cost. Per-entry dollars live in
+    # tables/baseline_cost_latency.csv and in tab:cost_latency in the paper.
+    ax.set_title("Accuracy vs. throughput")
     ax.set_ylim(0, 1.05)
     ax.spines["top"].set_visible(False)
     ax.spines["right"].set_visible(False)

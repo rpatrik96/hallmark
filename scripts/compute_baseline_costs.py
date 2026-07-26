@@ -1,10 +1,20 @@
 """Compute cost and latency statistics for each main-table baseline.
 
+SUPERSEDED by ``scripts/compute_cost_latency_table.py``, which recomputes every
+row that has a per-entry dump instead of falling back to a hand-written
+estimate, and which reports the median rather than the retry-contaminated mean.
+That script now owns ``tables/baseline_cost_latency.csv``; this one writes to
+``tables/baseline_cost_latency_flat_estimates.csv`` so a stray re-run cannot
+clobber the recomputed table. Kept for provenance: it documents the flat
+600-prompt/80-completion token model that the released cost figures were first
+built on.
+
 Reads checkpoint JSONLs under results/checkpoints/ for dev_public runs.
 For tools with no timing checkpoint (precomputed-only results), uses
-literature/documented estimates flagged with an asterisk in the output.
+literature/documented estimates flagged in the note column.
 
-Output: tables/baseline_cost_latency.csv  +  pipe-separated stdout table.
+Output: tables/baseline_cost_latency_flat_estimates.csv  +  pipe-separated
+stdout table.
 
 Usage:
     uv run python scripts/compute_baseline_costs.py
@@ -20,28 +30,16 @@ from pathlib import Path
 import numpy as np
 
 # ---------------------------------------------------------------------------
-# Price table: (prompt_$/M_tok, completion_$/M_tok)
-# Source: OpenRouter list price as of 2026-05-04
+# Price table and token assumption: imported from compute_cost_latency_table so
+# the two scripts cannot drift apart. That module is the single source of truth.
 # ---------------------------------------------------------------------------
-PRICES: dict[str, tuple[float, float]] = {
-    "openai/gpt-5.1": (1.25, 10.0),
-    "openai/gpt-5.4": (1.25, 10.0),
-    "anthropic/claude-sonnet-4.6": (3.0, 15.0),
-    "anthropic/claude-opus-4.7": (5.0, 25.0),
-    "deepseek/deepseek-r1": (0.55, 2.19),
-    "deepseek/deepseek-v3.2": (0.27, 1.10),
-    "qwen/qwen3-235b-a22b-2507": (0.20, 0.60),
-    "qwen/qwen3-vl-235b-a22b-instruct": (0.20, 0.60),
-    "mistralai/mistral-large-2512": (2.0, 6.0),
-    "google/gemini-2.5-flash": (0.30, 2.50),
-    "google/gemini-2.5-pro": (3.5, 15.0),
-    "meta-llama/llama-4-maverick": (0.20, 0.60),
-    # DOI-only and bibtex-updater: $0 LLM cost (no LLM calls)
-}
+sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-# Assumed token counts when not logged (prompt ~600 tokens, completion varies)
-ASSUMED_PROMPT_TOKENS = 600
-ASSUMED_COMPLETION_TOKENS = 80  # ~320 chars / 4 chars-per-token for short verdicts
+from compute_cost_latency_table import (
+    ASSUMED_COMPLETION_TOKENS,
+    ASSUMED_PROMPT_TOKENS,
+    PRICES,
+)
 
 # ---------------------------------------------------------------------------
 # Checkpoint registry: map display name -> (checkpoint_dir, jsonl_filename,
@@ -318,7 +316,7 @@ def main() -> None:
     # Write CSV
     out_dir = REPO / "tables"
     out_dir.mkdir(exist_ok=True)
-    csv_path = out_dir / "baseline_cost_latency.csv"
+    csv_path = out_dir / "baseline_cost_latency_flat_estimates.csv"
     fieldnames = [
         "tool",
         "mean_sec_per_entry",
@@ -331,7 +329,7 @@ def main() -> None:
         "note",
     ]
     with open(csv_path, "w", newline="") as f:
-        writer = csv.DictWriter(f, fieldnames=fieldnames)
+        writer = csv.DictWriter(f, fieldnames=fieldnames, lineterminator="\n")
         writer.writeheader()
         writer.writerows(rows)
     print(f"\nCSV written to: {csv_path}")
