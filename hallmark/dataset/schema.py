@@ -10,6 +10,13 @@ from enum import Enum
 from pathlib import Path
 from typing import Literal
 
+from hallmark.dataset.blinding import (
+    BLIND_EXCLUDED_FIELDS,
+    assert_blinded,
+    blind_fields,
+    scrub_bibtex,
+)
+
 logger = logging.getLogger(__name__)
 
 
@@ -247,6 +254,14 @@ class BlindEntry:
     Contains only the fields baselines need to perform verification.
     Ground-truth labels, difficulty tiers, and generation metadata are
     intentionally excluded to prevent baselines from accessing oracle information.
+
+    Blinding is enforced *on construction*: every field in
+    :data:`~hallmark.dataset.blinding.BLIND_EXCLUDED_FIELDS` is stripped from
+    ``fields`` and scrubbed out of ``raw_bibtex``, so a ``BlindEntry`` carrying
+    a blinded field cannot exist. Any runner that builds one — including the
+    ad-hoc scripts that load corpus JSONL and construct ``BlindEntry`` directly
+    instead of calling ``BenchmarkEntry.to_blind()`` — therefore blinds by
+    construction rather than by convention.
     """
 
     bibtex_key: str
@@ -255,10 +270,30 @@ class BlindEntry:
     raw_bibtex: str | None = None
 
     def __post_init__(self) -> None:
-        self.fields = dict(self.fields)
+        fields = dict(self.fields)
+        stripped = sorted(k for k in fields if k in BLIND_EXCLUDED_FIELDS)
+        self.fields = blind_fields(fields)
+        scrubbed = scrub_bibtex(self.raw_bibtex)
+        if scrubbed != self.raw_bibtex:
+            stripped.append("raw_bibtex")
+        self.raw_bibtex = scrubbed
+        if stripped:
+            logger.warning(
+                "BlindEntry(%s): stripped blinded field(s) %s on construction; "
+                "the caller should blind via BenchmarkEntry.to_blind() or "
+                "hallmark.dataset.blinding.blind_record()",
+                self.bibtex_key,
+                stripped,
+            )
 
     def to_bibtex(self) -> str:
-        """Reconstruct BibTeX string from fields."""
+        """Render the BibTeX string a verifier sees.
+
+        This is the serialization boundary every runner crosses, so it
+        re-checks the blind-list: construction already strips it, and this
+        catches post-construction mutation of ``fields`` or ``raw_bibtex``.
+        """
+        assert_blinded(self, context="BlindEntry.to_bibtex")
         if self.raw_bibtex:
             return self.raw_bibtex
         lines = [f"@{self.bibtex_type}{{{self.bibtex_key},"]
@@ -400,17 +435,22 @@ class BenchmarkEntry:
     def to_blind(self) -> BlindEntry:
         """Convert to a BlindEntry that hides ground-truth labels from baselines.
 
-        Strips the ``url`` field from all entries so that its presence/absence
-        cannot be used as a signal (generators strip ``url`` from hallucinated
-        entries to prevent metadata-comparison shortcuts).
+        Withholds every field in
+        :data:`~hallmark.dataset.blinding.BLIND_EXCLUDED_FIELDS` (currently
+        ``url``) so its presence or absence cannot be used as a signal, and
+        scrubs the same fields out of ``raw_bibtex``, which ``to_bibtex()``
+        prefers over the field dict and would otherwise ship verbatim into the
+        prompt. ``BlindEntry`` enforces both on construction, so this method is
+        a convenience rather than the only line of defence.
         """
-        fields = dict(self.fields)
-        fields.pop("url", None)
         return BlindEntry(
             bibtex_key=self.bibtex_key,
             bibtex_type=self.bibtex_type,
-            fields=fields,
-            raw_bibtex=self.raw_bibtex,
+            # Blind explicitly here so the sanctioned path stays quiet;
+            # BlindEntry's own warning then fires only for callers that
+            # construct one from unblinded data.
+            fields=blind_fields(self.fields),
+            raw_bibtex=scrub_bibtex(self.raw_bibtex),
         )
 
 

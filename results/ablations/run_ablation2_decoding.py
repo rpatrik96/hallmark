@@ -37,15 +37,10 @@ OUTDIR = REPO / "results/ablations/e_decoding"
 
 def _entries_and_blind() -> tuple[list, list[BlindEntry]]:
     entries = load_entries(SAMPLE)
-    blind = [
-        BlindEntry(
-            bibtex_key=e.bibtex_key,
-            bibtex_type=e.bibtex_type,
-            fields=dict(e.fields),
-            raw_bibtex=e.raw_bibtex,
-        )
-        for e in entries
-    ]
+    # Use to_blind() rather than copying the field dict: hand-rolling the
+    # BlindEntry here forwarded every field verbatim, url included, which is
+    # exactly the dispatch-time blinding this benchmark claims to apply.
+    blind = [e.to_blind() for e in entries]
     return entries, blind
 
 
