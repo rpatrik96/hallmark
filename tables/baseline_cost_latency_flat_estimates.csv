@@ -1,0 +1,19 @@
+tool,mean_sec_per_entry,p95_sec_per_entry,total_min,mean_prompt_tok,mean_completion_tok,est_cost_per_entry_usd,est_cost_per_1k_entries_usd,note
+DOI-only,0.3,1.2,5.6,600.0,80.0,0.0,0.0,estimated (CrossRef HTTP round-trip)
+GPT-5.1 (zero-shot),2.16,3.36,70.3,600.0,80.0,0.00155,1.55,measured
+GPT-5.4 (zero-shot),3.23,3.28,60.2,600.0,80.0,0.00155,1.55,measured
+Claude Sonnet 4.6,4.99,9.98,69.1,600.0,80.0,0.003,3.0,measured (test_public run; dev n=1119 via precomputed)
+Claude Opus 4.7,6.0,14.0,111.9,600.0,80.0,0.005,5.0,estimated (no timing checkpoint; Opus ~1.2x Sonnet latency)
+DeepSeek-R1,25.0,55.0,466.2,600.0,80.0,0.00051,0.505,estimated (paper §4: ~25 s/entry for CoT)
+DeepSeek-V3.2,7.92,15.44,109.7,600.0,80.0,0.00025,0.25,measured (test_public run)
+Qwen3-235B,5.0,12.0,93.2,600.0,80.0,0.00017,0.168,estimated (no timing checkpoint)
+Qwen3-VL-235B,5.0,12.0,93.2,600.0,80.0,0.00017,0.168,estimated (no timing checkpoint)
+Mistral Large,3.5,8.0,65.3,600.0,80.0,0.00168,1.68,estimated (no timing checkpoint)
+Gemini 2.5 Flash,3.0,7.0,56.0,600.0,80.0,0.00038,0.38,estimated (no timing checkpoint)
+Llama 4 Maverick,3.0,7.0,56.0,600.0,80.0,0.00017,0.168,estimated (no timing checkpoint)
+Gemini 2.5 Pro,13.5,21.6,186.9,600.0,80.0,0.0033,3.3,measured (test_public run)
+GPT-5.1 + CrossRef/OA/arXiv,18.0,60.0,335.7,2100.0,280.0,0.00543,5.425,estimated (no timing checkpoint; ~3-5 tool calls per entry)
+GPT-5.1 + BTU (agentic),18.0,60.0,335.7,2100.0,280.0,0.00543,5.425,estimated (no timing checkpoint)
+Sonnet 4.6 + BTU (agentic),18.84,17.58,351.4,1235.0,165.0,0.00618,6.177,measured
+bibtex-updater,8.0,30.0,149.2,600.0,80.0,0.0,0.0,estimated (Semantic Scholar API; no timing in precomputed JSONL)
+GPT-5.1 + BTU (always-call),20.0,65.0,373.0,2400.0,320.0,0.0062,6.2,estimated (no timing checkpoint)
