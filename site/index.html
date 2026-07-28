@@ -4,9 +4,9 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>HALLMARK — Diagnosing Three Failure Modes in LLM Citation Verifiers</title>
-<meta name="description" content="Interactive companion to the HALLMARK benchmark: 2,526 BibTeX entries across 14 hallucination types and 3 difficulty tiers, with explorable results for rule-based, zero-shot, and agentic citation verifiers.">
+<meta name="description" content="Companion site for the HALLMARK benchmark: how well citation verifiers catch fabricated references, and why their false-positive rate on valid ones decides which of them you can use.">
 <meta property="og:title" content="HALLMARK — a benchmark for LLM citation verifiers">
-<meta property="og:description" content="Explore the benchmark and the results: filter verifiers, splits, and hallucination types; browse real benchmark entries.">
+<meta property="og:description" content="How well citation verifiers catch fabricated references, and why their false-positive rate on valid ones decides which of them you can use. Filter verifiers, splits, and hallucination types; browse real entries.">
 <meta property="og:type" content="website">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%94%96%3C/text%3E%3C/svg%3E">
 <link rel="stylesheet" href="assets/style.css">
@@ -16,7 +16,7 @@
 <nav class="site-nav" aria-label="Site">
   <a class="brand" href="#top">HALLMARK</a>
   <div class="links">
-    <a href="#failure-modes">Failure modes</a>
+    <a href="#failure-modes">Findings</a>
     <a href="#benchmark">Benchmark</a>
     <a href="#results">Results</a>
     <a href="#examples">Examples</a>
@@ -30,14 +30,17 @@
 
   <!-- ================= hero ================= -->
   <header class="hero wrap">
-    <p class="kicker">Hall&#8203;ucination bench&#8203;mark &middot; corpus <span class="corpus-version">v1.2.0</span></p>
+    <p class="kicker">Hall&#8203;ucination bench&#8203;mark &middot; corpus <span class="corpus-version">v1.2.2</span></p>
     <h1>H<span style="font-size:0.78em">ALLMARK</span></h1>
-    <p class="expansion">2,526 BibTeX entries spanning 14 hallucination types, three difficulty
-      tiers, six diagnostic sub-tests per entry, and a contamination-resistant held-out split,
-      plus evaluation-only extension splits for temporal, cross-domain, and authentic
-      ChatGPT-citation behavior.</p>
-    <p class="tagline">Across the benchmark one result is consistent: <em>the false-positive
-      rate, not recall, decides whether a verifier is deployable.</em></p>
+    <p class="tagline">Nearly every reference in a real bibliography is real. A citation
+      verifier that flags even a few percent of the valid ones therefore raises more false
+      alarms than true catches, however good it is at spotting the fabrications. Across the
+      tools we tested, false-positive rates span an order of magnitude, and that spread
+      decides which of them you can use.</p>
+    <p class="expansion">HALLMARK is the benchmark we built to measure that: BibTeX entries
+      labeled valid or hallucinated, each with the reason recorded. On them we score a DOI
+      lookup, twelve frontier LLMs, tool-using agents, and our own rule-based verifier
+      <a href="https://github.com/rpatrik96/bibtexupdater"><code>bibtex-updater</code></a>.</p>
     <div class="hero-links">
       <a class="btn primary" href="https://arxiv.org/abs/2607.18360">Paper (arXiv:2607.18360)</a>
       <a class="btn" href="https://github.com/rpatrik96/hallmark">Code &amp; data</a>
@@ -50,57 +53,60 @@
   <!-- ================= failure modes ================= -->
   <section id="failure-modes">
     <div class="wrap">
-      <p class="kicker">The paper in one section</p>
-      <h2 class="section-title">Three failure modes</h2>
-      <p class="section-lead">HALLMARK evaluates a DOI-lookup baseline, frontier LLMs zero-shot,
-        tool-augmented agents, and the co-designed rule-based verifier
-        <a href="https://github.com/rpatrik96/bibtexupdater"><code>bibtex-updater</code></a>
-        (btu). Three failure modes make the headline finding concrete.</p>
+      <p class="kicker">What we found</p>
+      <h2 class="section-title">Three ways verifiers fail</h2>
+      <p class="section-lead">Each one is a different way a verifier ends up flagging
+        references that are real.</p>
       <div class="failure-grid">
         <div class="card">
           <div class="failure-num">Failure mode i</div>
-          <h3>Agentic lookups buy recall but inflate false positives</h3>
-          <p class="card-sub">A 5-call tool budget lifts GPT-5.1&rsquo;s recall past
-            <code>bibtex-updater</code>&rsquo;s, at roughly five times its false-positive rate.
-            The evidence points at the harness&rsquo;s any-no-match flagging rather than the
-            base model: in a deterministic re-aggregation over three of the harness&rsquo;s
-            four sources, any-no-match flagging reaches FPR 0.729 where consensus flagging
-            reaches 0.049 (it is the any-vs-consensus ordering that transfers, not the
-            absolute level).</p>
-          <p class="card-limit">Limitations: no prompt ablations for the agentic harness yet,
-            so prompt-level mitigations remain untested; and the two-stage cascade
-            (bibtex-updater &rarr; Sonnet 4.6, co-designed) shows the inflation is not
-            inevitable: it reaches comparable recall at roughly a quarter of the single-stage
-            agentic false-positive rate.</p>
+          <h3>Letting the model call databases raises recall, and raises false alarms more</h3>
+          <p class="card-sub">Give GPT-5.1 a five-call lookup budget and it finds more
+            fabrications than <code>bibtex-updater</code> does, at about five times its
+            false-positive rate. The cause is the harness rather than the model: the prompted
+            model flags an entry as soon as any one database returns no match, and a real
+            paper is routinely missing from one of them. Requiring the databases to agree that
+            an entry is absent cuts the false-positive rate by more than an order of
+            magnitude, at a cost in recall.</p>
+          <p class="card-sub">Mitigation: run <code>bibtex-updater</code> first and ask
+            Sonnet 4.6 only about the entries it flags. That two-stage cascade reaches the
+            same recall at roughly a quarter of the single-stage false-positive rate, so the
+            inflation is avoidable.</p>
+          <p class="card-limit">Limitation: we did not ablate the agentic prompt, so we cannot
+            say how much of this better prompting would fix.</p>
           <div class="viz" id="viz-mode1"></div>
         </div>
         <div class="card">
           <div class="failure-num">Failure mode ii</div>
-          <h3>At a realistic base rate, the FPR spread governs precision</h3>
-          <p class="card-sub">False-positive rates span an order of magnitude across the cohort.
-            At a venue-realistic ~2% hallucination rate, even the best verifier reaches only
-            ~18% precision: the best catch one true hallucination per 6&ndash;9 flags, the most
-            aggressive fewer than one in 35.</p>
-          <p class="card-limit">Limitation: these precisions are derived from dev_public
-            detection and false-positive rates at an assumed 2% base rate; they are not
-            measured on a 2%-prevalence corpus.</p>
+          <h3>At a realistic rate of fabrication, most flags are wrong</h3>
+          <p class="card-sub">Suppose 2% of a bibliography is fabricated, roughly what venue
+            audits find. Every verifier we tested then raises more false alarms than true
+            catches. The best are wrong on most of their flags; the most aggressive on almost
+            all of them.</p>
+          <p class="card-limit">Limitation: we compute these precisions from detection and
+            false-positive rates measured on dev_public, under an assumed 2% rate of
+            fabrication. We did not measure them on a corpus where 2% of the entries really
+            are fabricated.</p>
           <div class="viz" id="viz-mode2"></div>
         </div>
         <div class="card">
           <div class="failure-num">Failure mode iii</div>
-          <h3>Most LLMs over-flag papers published past their training cutoff</h3>
-          <p class="card-sub">On the 448-entry 2024&ndash;25 temporal supplement, 8 of 12 LLMs
-            degrade sharply (FPR 0.59&ndash;0.89); GPT-5.1 rises from 41% to 76%. Only the two
-            latest-cutoff models hold near in-distribution levels.</p>
-          <p class="card-sub">Mitigation: a cutoff-aware prompt addendum drives GPT-5.1&rsquo;s
-            post-cutoff FPR to 0% on the entries it still commits to, at the price of heavy
-            abstention (pre-cutoff UNCERTAIN rises to 52.7%). The effect is model-dependent:
-            Sonnet 4.6 instead abstains selectively (48.9% post-cutoff vs 8.7% pre) while
-            halving its committed-entry FPR.</p>
-          <p class="card-limit">Limitation: reported as descriptive, following the paper: the
-            post-cutoff rise is confounded with whether a model can recall the newer papers
-            at all, and the failure is epistemic miscalibration rather than structural
-            blindness.</p>
+          <h3>Most LLMs flag real papers published after their training cutoff</h3>
+          <p class="card-sub">Show a model a real 2024&ndash;25 paper it was never trained on
+            and it usually calls the citation fabricated. Two thirds of the LLMs we tested
+            fail this way, some flagging most of the valid entries they see. Only the two
+            models with the latest training cutoffs hold their false-positive rate where it
+            was on the older corpus.</p>
+          <p class="card-sub">Mitigation: telling the model that its cutoff has passed helps,
+            and how it helps differs by model. GPT-5.1 stops committing to almost anything,
+            before or after its cutoff, so its clean post-cutoff record comes from abstaining
+            rather than from judging better. Sonnet 4.6 abstains where it should and halves
+            the false-positive rate on the entries it still judges. That the prompt works at
+            all suggests the models are not blind to these papers, only overconfident about
+            what they know.</p>
+          <p class="card-limit">Limitation: we report the rise as a description, not a
+            diagnosis. It is confounded with whether a model could recall those papers at
+            all.</p>
           <div class="viz" id="viz-mode3"></div>
         </div>
       </div>
@@ -111,13 +117,14 @@
   <section id="benchmark">
     <div class="wrap">
       <p class="kicker">Explore the benchmark</p>
-      <h2 class="section-title">14 hallucination types, 3 tiers, 8 splits</h2>
+      <h2 class="section-title">What is in the corpus</h2>
       <p class="section-lead">Every entry is a BibTeX record labeled VALID or HALLUCINATED, with
-        a hallucination type, a difficulty tier, and six diagnostic sub-tests. Types were
-        derived from documented real-world incidents plus three theoretically-motivated
-        stress-test types. Click a type to see its definition and a real benchmark entry.</p>
+        six checks recorded against it. Hallucinated entries also carry the kind of error and a
+        difficulty tier. Eleven of the fourteen kinds of error come from documented incidents;
+        we built the other three to stress-test verifiers. Click one for its definition and a
+        real entry.</p>
 
-      <h3 style="margin:26px 0 12px">Hallucination types</h3>
+      <h3 style="margin:26px 0 12px">Kinds of hallucination</h3>
       <div class="tax-grid" id="tax-grid"></div>
       <div class="tax-detail" id="tax-detail"></div>
 
@@ -126,10 +133,10 @@
 
       <h3 style="margin:34px 0 12px">Splits</h3>
       <div class="card-grid" id="split-cards"></div>
-      <p class="note" style="margin-top:14px">Counts from the released
-        <code>data/v1.0/metadata.json</code> (corpus <span class="corpus-version">v1.2.0</span>, post ground-truth relabel). The
-        held-out split stays private for contamination resistance; extension splits are
-        evaluation-only.</p>
+      <p class="note" style="margin-top:14px">Counts come from the released
+        <code>data/v1.0/metadata.json</code> (corpus <span class="corpus-version">v1.2.2</span>,
+        after the ground-truth relabel). We keep the held-out split private so it cannot leak
+        into training data. The extension splits are for evaluation only.</p>
     </div>
   </section>
 
@@ -137,14 +144,13 @@
   <section id="results">
     <div class="wrap">
       <p class="kicker">Explore the results</p>
-      <h2 class="section-title">Verifier results, filterable</h2>
-      <p class="section-lead">All numbers are recomputed from the released per-run metric files
-        in <code>data/v1.0/baseline_results/</code> and the released extension-split metrics.
-        Verifiers may abstain (UNCERTAIN): the coverage column shows the share of entries each
-        verifier commits to, and headline metrics follow the paper&rsquo;s scoring conventions.
+      <h2 class="section-title">Results</h2>
+      <p class="section-lead">Every number here is recomputed from the released per-run result
+        files in <code>data/v1.0/baseline_results/</code>. A verifier may answer UNCERTAIN, so
+        the coverage column shows how many entries it actually judged.
         <a href="https://github.com/rpatrik96/bibtexupdater"><code>bibtex-updater</code></a>
-        (btu) and its cascades are co-designed with the benchmark and serve as a reference
-        upper bound, excluded from ranking.</p>
+        and its cascades were built alongside the benchmark, so they are a reference point
+        rather than a ranked entry.</p>
 
       <div class="filter-block card">
         <div class="filter-row">
@@ -172,15 +178,15 @@
 
       <div class="card chart-card">
         <div class="chart-head">
-          <h3>The deployability plane: detection rate vs. false-positive rate</h3>
+          <h3>What it catches against what it gets wrong</h3>
           <div class="spacer"></div>
           <button class="table-toggle" data-table-for="scatter">View as table</button>
         </div>
         <div class="legend" id="scatter-legend"></div>
         <div id="scatter"></div>
         <div class="table-wrap hidden" id="scatter-table"></div>
-        <p class="axis-note">Up and to the left is deployable: high recall on hallucinated
-          entries at a low false-positive rate on valid ones.</p>
+        <p class="axis-note">The top-left corner is what you want: catches most fabrications,
+          flags few valid entries.</p>
       </div>
 
       <div class="card chart-card">
@@ -207,8 +213,8 @@
         <div class="legend" id="tier-legend"></div>
         <div id="tier-bars"></div>
         <div class="table-wrap hidden" id="tiers-table"></div>
-        <p class="axis-note">Tier 1 = single API lookup; Tier 2 = cross-referencing metadata
-          fields; Tier 3 = deep verification or semantic reasoning.</p>
+        <p class="axis-note">Tier 1 = one lookup finds it; Tier 2 = needs cross-referencing;
+          Tier 3 = needs deep checking or judgement.</p>
       </div>
     </div>
   </section>
@@ -218,10 +224,9 @@
     <div class="wrap">
       <p class="kicker">Browse the corpus</p>
       <h2 class="section-title">Benchmark examples</h2>
-      <p class="section-lead">A seeded sample of entries from the public development split
-        &mdash; hallucinated entries with their diagnosis, and valid entries that look
-        suspicious. Expand a card for the BibTeX record, the ground-truth explanation, and the
-        six diagnostic sub-tests.</p>
+      <p class="section-lead">A seeded sample of entries from the public development split:
+        hallucinated ones with their diagnosis, and valid ones that look suspicious. Expand a
+        card for the BibTeX record, the explanation, and the six checks.</p>
 
       <div class="filter-block card">
         <div class="filter-row">
@@ -274,7 +279,7 @@
 
 <footer>
   <div class="wrap">
-    <p>HALLMARK &mdash; MIT License &middot; corpus <span class="corpus-version">v1.2.0</span> &middot;
+    <p>HALLMARK &mdash; MIT License &middot; corpus <span class="corpus-version">v1.2.2</span> &middot;
       <a href="https://arxiv.org/abs/2607.18360">paper</a> &middot;
       <a href="https://github.com/rpatrik96/hallmark">benchmark repo</a> &middot;
       <a href="https://github.com/rpatrik96/bibtexupdater">bibtex-updater</a></p>

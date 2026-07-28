@@ -282,11 +282,11 @@ SPLIT_NOTES = {
     "test_crossdomain": (
         "test_crossdomain: 500 evaluation-only entries (200 valid / 300 "
         "hallucinated) from PubMed/bioRxiv and non-ML CS venues. The "
-        "bibtex-updater row is the released v1.2.0 metrics file (coverage 74%); "
-        "a recency-matched rebuild returns its FPR to 0.112, so out of domain "
-        "its cost is coverage, not precision. LLM FPRs here are dominated by "
-        "post-cutoff recency: 89% of biomedical false positives cite the "
-        "future date."
+        "bibtex-updater row comes from the released v1.2.0 metrics file, where "
+        "it judged 74% of the entries; on a recency-matched rebuild its FPR "
+        "returns to 0.112, so out of domain it loses coverage while holding "
+        "its precision. The LLM false positives here are mostly a recency "
+        "effect: 89% of the biomedical ones cite the future date."
     ),
     "temporal_448": (
         "Canonical 448-entry 2024–25 temporal supplement (300 valid / 148 "
@@ -918,27 +918,30 @@ def main() -> None:
         "mode1": {
             "rows": mode1_rows,
             "note": (
-                "FPR on dev_public valid entries, zero-shot vs the agentic "
-                "harness on the same base model. A deterministic re-aggregation "
-                "over three of the harness's four sources cuts FPR ~15× "
-                "(0.729 → 0.049); the any-vs-consensus ordering is what "
-                "transfers, not the absolute level."
+                "False-positive rate on the valid dev_public entries: the same "
+                "base model zero-shot, then inside the agentic harness. "
+                "Re-scoring those lookups offline over three of the harness's "
+                "four databases, flagging on a single missing match gives FPR "
+                "0.729 where requiring all three to miss gives 0.049. Read the "
+                "ordering rather than the absolute levels, since the offline "
+                "matcher only approximates the harness's own judgement."
             ),
         },
         "mode2": {
             "rows": mode2_rows,
             "note": (
-                "Precision when 2% of a bibliography is hallucinated "
-                "(venue-realistic base rate), from dev_public detection and "
-                "false-positive rates."
+                "Share of flags that are true catches when 2% of a "
+                "bibliography is hallucinated, computed from the dev_public "
+                "detection and false-positive rates."
             ),
         },
         "mode3": {
             "rows": mode3_rows,
             "note": (
-                "FPR on valid entries: 2021–23 corpus (dev_public) vs the "
-                "448-entry 2024–25 supplement. Descriptive: confounded with "
-                "possible recall of those entries."
+                "False-positive rate on valid entries: the 2021–23 corpus "
+                "(dev_public), then the 448-entry 2024–25 supplement. "
+                "Descriptive only, since the rise is confounded with whether a "
+                "model could recall those papers at all."
             ),
         },
     }
