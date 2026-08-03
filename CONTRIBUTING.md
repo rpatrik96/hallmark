@@ -101,6 +101,7 @@ HALLMARK applies a pre-screening layer (DOI resolution, year bounds, author heur
 ```python
 from hallmark.baselines.common import run_with_prescreening
 
+
 def run_my_tool(entries):
     return run_with_prescreening(
         entries=entries,
