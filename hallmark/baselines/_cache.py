@@ -12,7 +12,7 @@ import importlib.util
 import logging
 import shelve
 import time
-from collections.abc import Callable
+from collections.abc import Callable, Sequence
 from pathlib import Path
 from typing import Any, TypeVar
 
@@ -23,6 +23,9 @@ logger = logging.getLogger(__name__)
 T = TypeVar("T")
 
 _DEFAULT_CACHE_DIR = Path.home() / ".cache" / "hallmark"
+
+# CLI flags whose *value* is a credential and must never reach a log file.
+_SECRET_FLAGS = frozenset({"--s2-api-key", "--api-key", "--openai-api-key", "--token"})
 
 # Upper bound on a honoured ``Retry-After``. Servers occasionally answer with windows
 # of an hour or more; sleeping that long would stall an evaluation run, so we wait at
@@ -132,6 +135,38 @@ def cached_call(
     _locked_shelve_write(db_path, key, result)
     logger.debug("Cache miss: %s/%s — stored", versioned_namespace, key[:12])
     return result
+
+
+def redact_command(cmd: Sequence[str]) -> str:
+    """Render a subprocess command for logging with secret values masked.
+
+    Flags such as ``--s2-api-key`` take the credential as the *following*
+    argument, so logging ``" ".join(cmd)`` writes a live key into every log line
+    (a 121-entry run emitted 242 copies before this was added).
+
+    Args:
+        cmd: The command and its arguments.
+
+    Returns:
+        A space-joined rendering with the value after any secret-bearing flag
+        replaced by ``***``.
+    """
+    parts = list(cmd)
+    out: list[str] = []
+    mask_next = False
+    for part in parts:
+        if mask_next:
+            out.append("***")
+            mask_next = False
+            continue
+        flag = part.split("=", 1)[0]
+        if flag in _SECRET_FLAGS:
+            # Both "--flag value" and "--flag=value" spellings.
+            out.append(f"{flag}=***" if "=" in part else part)
+            mask_next = "=" not in part
+        else:
+            out.append(part)
+    return " ".join(out)
 
 
 class RateLimitedError(RuntimeError):
