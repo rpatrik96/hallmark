@@ -644,6 +644,12 @@ def _register_builtins() -> None:
         )
     )
 
+    # NOTE: ``llm_agentic_openrouter_gpt_5_1`` was removed once a native OpenAI key
+    # became available. It routed GPT-5.1 through OpenRouter as ``openai/gpt-5.1``,
+    # which made its runs inconsistent with every other GPT-5.1 experiment (all of
+    # which used the native endpoint and the bare ``gpt-5.1`` model id). Use
+    # ``llm_agentic_openai`` for GPT-5.1 Stage 2 diagnosis.
+
     # --- LLM: Agentic BTU-only (OpenAI) ---
     def _run_llm_agentic_btu_openai(entries: list[BlindEntry], **kw: Any) -> list[Prediction]:
         from hallmark.baselines.llm_agentic import verify_agentic_btu_openai

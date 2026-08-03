@@ -8,6 +8,11 @@ dist/
 build/
 .eggs/
 
+# Secrets — API keys are read from the environment, never committed
+.env
+.env.*
+!.env.example
+
 # Virtual environments
 .venv/
 venv/
