@@ -33,11 +33,18 @@ from contextlib import contextmanager
 from pathlib import Path
 from typing import Any
 
+from hallmark.baselines._cache import NonRetryableError
+
 # 30 days in seconds.
 _CACHE_TTL_SECONDS = 30 * 24 * 60 * 60
 
 # Headers we want to ignore when matching cached responses.
 _IGNORED_HEADERS = ("User-Agent",)
+
+# Response headers that describe the compressed wire format and therefore go stale
+# the moment ``requests`` decompresses the body for us.  Compared case-insensitively
+# because HTTP header names are case-insensitive.
+_STALE_HEADERS = frozenset({"content-encoding", "content-length"})
 
 
 @contextmanager
@@ -93,12 +100,26 @@ def http_cache(cache_path: Path | None) -> Iterator[None]:
         """Adapt a ``requests.Response`` to a duck-typed ``httpx.Response``-ish object."""
         # Build an httpx.Response so callers using .status_code/.text/.json() work.
         content = resp.content if hasattr(resp, "content") else b""
-        headers = dict(resp.headers) if hasattr(resp, "headers") else {}
-        return httpx.Response(
-            status_code=int(resp.status_code),
-            headers=headers,
-            content=content,
-        )
+        # ``requests`` has already decompressed the body, so the transfer-encoding
+        # headers describe bytes we no longer hold: ``Content-Encoding`` would make
+        # httpx decompress plain text (zlib "Error -3 ... incorrect header check"),
+        # and ``Content-Length`` still reports the *compressed* size.  Drop both —
+        # they describe the wire format, not the payload we are handing over.
+        raw_headers = dict(resp.headers) if hasattr(resp, "headers") else {}
+        headers = {k: v for k, v in raw_headers.items() if k.lower() not in _STALE_HEADERS}
+        try:
+            return httpx.Response(
+                status_code=int(resp.status_code),
+                headers=headers,
+                content=content,
+            )
+        except httpx.DecodingError as exc:
+            # Should be unreachable now that the stale headers are stripped, but a
+            # decode failure here is always a client-side defect, never a transient
+            # network condition — surface it immediately rather than retrying it.
+            raise NonRetryableError(
+                f"failed to adapt cached response for {getattr(resp, 'url', '?')}: {exc}"
+            ) from exc
 
     def _cached_request(method: str, url: str, **kwargs: Any) -> Any:
         # Drop httpx-only kwargs requests doesn't recognise.

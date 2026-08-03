@@ -13,15 +13,77 @@ Tool set mirrors bibtex-updater's lookup sources:
 
 from __future__ import annotations
 
+import email.utils
 import logging
 import re
 import urllib.parse
 import urllib.request
+from typing import Any
+
+from hallmark.baselines._cache import RateLimitedError
 
 logger = logging.getLogger(__name__)
 
 _MAX_FIELD_CHARS = 500
 _OPENALEX_MAILTO = "hallmark@example.com"
+
+# ``export.arxiv.org`` is markedly slower than the other metadata sources and is the
+# only one that produced read timeouts in the 2026-07 cascade run (~29 lookups lost at
+# a 15s ceiling, each after three retries). Give it a longer allowance than the rest.
+_ARXIV_TIMEOUT_SECONDS = 30.0
+
+# Status codes that mean "you are being throttled, come back later" rather than
+# "this request was wrong". Both may carry a ``Retry-After`` header.
+_THROTTLE_STATUS_CODES = frozenset({429, 503})
+
+
+def _parse_retry_after(value: str | None) -> float | None:
+    """Parse a ``Retry-After`` header into a number of seconds.
+
+    RFC 9110 permits two forms: delta-seconds (``"30"``) or an HTTP-date
+    (``"Wed, 21 Oct 2026 07:28:00 GMT"``). Both are accepted.
+
+    Args:
+        value: Raw header value, or ``None`` when the server omitted it.
+
+    Returns:
+        Seconds to wait, or ``None`` if absent, unparseable, or already elapsed.
+    """
+    if not value:
+        return None
+    value = value.strip()
+    try:
+        return max(0.0, float(value))
+    except ValueError:
+        pass
+    try:
+        when = email.utils.parsedate_to_datetime(value)
+    except (TypeError, ValueError):
+        return None
+    if when is None:
+        return None
+    import datetime as _dt
+
+    now = _dt.datetime.now(_dt.timezone.utc)
+    if when.tzinfo is None:
+        when = when.replace(tzinfo=_dt.timezone.utc)
+    delta = (when - now).total_seconds()
+    return max(0.0, delta) if delta > 0 else None
+
+
+def _raise_for_throttle(resp: Any, source: str) -> None:
+    """Raise :class:`RateLimitedError` carrying ``Retry-After`` if *resp* is throttled.
+
+    Args:
+        resp: The HTTP response to inspect.
+        source: Human-readable source name used in the error message.
+    """
+    if resp is None or resp.status_code not in _THROTTLE_STATUS_CODES:
+        return
+    retry_after = _parse_retry_after(resp.headers.get("Retry-After"))
+    if retry_after is not None:
+        logger.debug("%s asked us to retry after %.1fs", source, retry_after)
+    raise RateLimitedError(f"{source} returned HTTP {resp.status_code}", retry_after=retry_after)
 
 
 def _trunc(value: object) -> str:
@@ -76,6 +138,7 @@ def resolve_doi(doi: str) -> dict[str, str]:
 
     if resp.status_code == 404:
         raise ValueError(f"DOI not found: {normalized_doi}")
+    _raise_for_throttle(resp, "CrossRef")
     if resp.status_code != 200:
         raise RuntimeError(f"CrossRef returned HTTP {resp.status_code} for {normalized_doi}")
 
@@ -135,6 +198,7 @@ def search_crossref(query: str, limit: int = 5) -> list[dict[str, str]]:
     except httpx.RequestError as exc:
         raise RuntimeError(f"CrossRef search network error: {exc}") from exc
 
+    _raise_for_throttle(resp, "CrossRef search")
     if resp.status_code != 200:
         raise RuntimeError(f"CrossRef search returned HTTP {resp.status_code}")
 
@@ -199,6 +263,7 @@ def search_openalex(query: str, limit: int = 5) -> list[dict[str, str]]:
     except httpx.RequestError as exc:
         raise RuntimeError(f"OpenAlex search network error: {exc}") from exc
 
+    _raise_for_throttle(resp, "OpenAlex")
     if resp.status_code != 200:
         raise RuntimeError(f"OpenAlex returned HTTP {resp.status_code}")
 
@@ -257,10 +322,11 @@ def search_arxiv(query: str, limit: int = 5) -> list[dict[str, str]]:
     url = "https://export.arxiv.org/api/query?" + urllib.parse.urlencode(params)
 
     try:
-        resp = httpx.get(url, timeout=15.0, follow_redirects=True)
+        resp = httpx.get(url, timeout=_ARXIV_TIMEOUT_SECONDS, follow_redirects=True)
     except httpx.RequestError as exc:
         raise RuntimeError(f"arXiv search network error: {exc}") from exc
 
+    _raise_for_throttle(resp, "arXiv")
     if resp.status_code != 200:
         raise RuntimeError(f"arXiv returned HTTP {resp.status_code}")
 
@@ -358,6 +424,7 @@ def search_semantic_scholar(query: str, limit: int = 5) -> list[dict[str, str]]:
             continue
         break
 
+    _raise_for_throttle(resp, "Semantic Scholar")
     if resp is None or resp.status_code != 200:
         code = resp.status_code if resp is not None else "no-response"
         raise RuntimeError(f"Semantic Scholar returned HTTP {code}")
