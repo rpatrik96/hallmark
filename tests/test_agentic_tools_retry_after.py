@@ -12,7 +12,15 @@ from typing import Any
 
 import pytest
 
-from hallmark.baselines._agentic_tools import _parse_retry_after, _raise_for_throttle
+from hallmark.baselines import _agentic_tools
+from hallmark.baselines._agentic_tools import (
+    _openalex_exhausted,
+    _openalex_key_candidates,
+    _parse_retry_after,
+    _raise_for_throttle,
+    _retire_openalex_key,
+    _seconds_until_utc_midnight,
+)
 from hallmark.baselines._cache import RateLimitedError
 
 
@@ -22,6 +30,21 @@ class _Resp:
     def __init__(self, status_code: int, headers: dict[str, str] | None = None) -> None:
         self.status_code = status_code
         self.headers: dict[str, Any] = headers or {}
+
+
+# Observed on the keyless pool during the 2026-08-04 GPT-5.4 dev run: bursts asked for
+# 1-60s, exhausted quota asked for 27087-52660s (each the seconds left until midnight UTC).
+_BURST_RETRY_AFTER = 60.0
+_CAP_RETRY_AFTER = 27087.0
+
+
+@pytest.fixture
+def openalex_state(monkeypatch):
+    """Give each test a clean retirement map and one configured key."""
+    _openalex_exhausted.clear()
+    monkeypatch.setenv("OPENALEX_API_KEY", "testkey1234")
+    yield
+    _openalex_exhausted.clear()
 
 
 class TestParseRetryAfter:
@@ -67,3 +90,72 @@ class TestRaiseForThrottle:
     def test_none_response_passes_through(self):
         """A missing response is not a throttle; the caller reports it separately."""
         assert _raise_for_throttle(None, "TestSource") is None
+
+
+class TestOpenAlexFailover:
+    """Credential rotation for OpenAlex: keyless first, keys as paid fallback.
+
+    The keyless mailto pool is free and generous, so it is spent before the metered
+    key. Retirements carry a deadline rather than lasting the whole process, so a run
+    that outlives a midnight-UTC reset picks the free pool back up.
+    """
+
+    def test_keyless_is_preferred_over_the_key(self, openalex_state):
+        assert list(_openalex_key_candidates()) == [None, "testkey1234"]
+
+    def test_burst_throttle_does_not_fail_over(self, openalex_state):
+        """1-60s means "slow down", not "you are out" — the backoff layer owns it."""
+        assert _retire_openalex_key(None, _BURST_RETRY_AFTER, 429) is False
+        assert list(_openalex_key_candidates()) == [None, "testkey1234"]
+
+    def test_missing_retry_after_does_not_fail_over(self, openalex_state):
+        """With no stated deadline there is nothing to distinguish a cap from a burst."""
+        assert _retire_openalex_key(None, None, 429) is False
+        assert list(_openalex_key_candidates()) == [None, "testkey1234"]
+
+    def test_daily_cap_retires_keyless_and_falls_over_to_the_key(self, openalex_state):
+        assert _retire_openalex_key(None, _CAP_RETRY_AFTER, 429) is True
+        assert list(_openalex_key_candidates()) == ["testkey1234"]
+
+    def test_both_capped_leaves_no_candidates(self, openalex_state):
+        _retire_openalex_key(None, _CAP_RETRY_AFTER, 429)
+        _retire_openalex_key("testkey1234", _CAP_RETRY_AFTER, 429)
+        assert list(_openalex_key_candidates()) == []
+
+    @pytest.mark.parametrize("code", [402, 403])
+    def test_credit_exhaustion_retires_until_utc_midnight(self, openalex_state, code):
+        """A spent metered key states no Retry-After, so assume the daily reset."""
+        assert _retire_openalex_key("testkey1234", None, code) is True
+        assert list(_openalex_key_candidates()) == [None]
+        remaining = _openalex_exhausted["testkey1234"] - _agentic_tools.time.monotonic()
+        assert remaining == pytest.approx(_seconds_until_utc_midnight(), abs=5.0)
+
+    def test_server_outage_never_retires(self, openalex_state):
+        """503 hits every credential alike; failing over just repeats the request."""
+        assert _retire_openalex_key(None, _CAP_RETRY_AFTER, 503) is False
+        assert list(_openalex_key_candidates()) == [None, "testkey1234"]
+
+    def test_keyless_returns_to_the_front_once_its_deadline_lapses(
+        self, openalex_state, monkeypatch
+    ):
+        """The overnight case: capped at 23:00, quota back at 02:00, key stops being spent."""
+        clock = 1000.0
+        monkeypatch.setattr(_agentic_tools.time, "monotonic", lambda: clock)
+        _retire_openalex_key(None, _CAP_RETRY_AFTER, 429)
+        assert list(_openalex_key_candidates()) == ["testkey1234"]
+
+        clock += _CAP_RETRY_AFTER - 1  # one second short of the reset
+        assert list(_openalex_key_candidates()) == ["testkey1234"]
+
+        clock += 2  # past it
+        assert list(_openalex_key_candidates()) == [None, "testkey1234"]
+        assert _openalex_exhausted == {}
+
+    def test_no_configured_key_leaves_only_the_polite_pool(self, openalex_state, monkeypatch):
+        monkeypatch.delenv("OPENALEX_API_KEY")
+        assert list(_openalex_key_candidates()) == [None]
+
+    def test_multiple_keys_are_tried_in_order(self, openalex_state, monkeypatch):
+        """Comma-separated keys let a run fail over again without a code change."""
+        monkeypatch.setenv("OPENALEX_API_KEY", "first1234, second5678 ,")
+        assert list(_openalex_key_candidates()) == [None, "first1234", "second5678"]
