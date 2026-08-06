@@ -111,3 +111,12 @@ results/checkpoints/**/CLAUDE.md
 
 # Prediction checkpoints (regeneratable from committed eval JSONs)
 results/checkpoints/
+
+# Agentic tool HTTP caches — regenerable, and requests-cache expires every entry
+# after 30 days (_http_cache.py:39), so a committed cache silently stops pinning
+# anything after a month. The per-entry *_preds.jsonl files are what reproduce the
+# reported metrics. SQLite WAL/SHM sidecars are transient by design.
+results/**/tools.sqlite
+**/*.sqlite-wal
+**/*.sqlite-shm
+results/**/stage2/
