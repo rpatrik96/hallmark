@@ -1,0 +1,51 @@
+INFO: Loaded 831 entries from test_public
+INFO: Loaded 831 predictions from results/checkpoints/llm_openrouter_claude_haiku_4_5_test_public/openrouter_anthropic_claude-haiku-4.5.jsonl
+INFO: Results written to results/haiku45/haiku45_test_public.json
+
+============================================================
+  HALLMARK Evaluation: llm_openrouter_claude_haiku_4_5
+  Split: test_public
+============================================================
+  Entries:          831
+  Hallucinated:     519 (62.5%)
+  Valid:            312
+  NOTE: Prevalence varies across splits. Use MCC for cross-split comparison.
+────────────────────────────────────────────────────────────
+  Confusion Matrix:
+    TP: 452    FP: 146
+    FN: 67     TN: 166
+────────────────────────────────────────────────────────────
+  Detection Rate:   0.871
+    95% CI: [0.844, 0.898]
+  False Pos. Rate:  0.468
+    95% CI: [0.410, 0.526]
+  F1 (Halluc.):     0.809
+  Coverage:         100.0%
+    95% CI: [0.790, 0.829]
+  Tier-weighted F1: 0.861
+    95% CI: [0.841, 0.878]
+  MCC:              0.434
+    95% CI: [0.372, 0.496]
+  Macro-F1:         0.709
+  ECE:              0.180
+    95% CI: [0.160, 0.223]
+  AUROC:            0.755
+  AUPRC:            0.792
+  Entries/sec:      0.3
+  Mean API calls:   1.0
+────────────────────────────────────────────────────────────
+  Per-tier breakdown:
+    Tier 1: DR=0.969 F1=0.627 (n=130)
+    Tier 2: DR=0.815 F1=0.671 (n=238)
+    Tier 3: DR=0.874 F1=0.615 (n=151)
+────────────────────────────────────────────────────────────
+  Timing breakdown:
+    Total wall-clock:    2540.64s
+    Mean per entry:      3.057s
+    Median per entry:    3.000s
+    p95 per entry:       3.924s
+    Total API calls:     831
+    Mean API calls/entry: 1.00
+    Entries w/ API errors: 0
+============================================================
+
