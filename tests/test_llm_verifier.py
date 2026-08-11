@@ -669,3 +669,126 @@ class TestCheckpointRetryFailed:
         assert "key-b" in loaded
         assert loaded["key-b"].label == "HALLUCINATED"
         assert loaded["key-b"].confidence == pytest.approx(0.92)
+
+
+# ---------------------------------------------------------------------------
+# Qwen3 dense series + Claude Haiku 4.5 OpenRouter registrations (2026-08-03)
+# ---------------------------------------------------------------------------
+
+
+_NEW_2026_08_MODELS = {
+    "qwen3-8b": "qwen/qwen3-8b",
+    "qwen3-14b": "qwen/qwen3-14b",
+    "qwen3-32b": "qwen/qwen3-32b",
+    "claude-haiku-4-5": "anthropic/claude-haiku-4.5",
+}
+
+
+def _mock_openai_capturing(captured: list[dict[str, object]]) -> MagicMock:
+    """Return a mocked ``openai`` module recording every create() kwargs dict."""
+    mock_resp = MagicMock()
+    mock_resp.choices[0].message.content = '{"label": "VALID", "confidence": 0.9, "reason": "ok"}'
+
+    def _capture_create(**kwargs: object) -> MagicMock:
+        captured.append(kwargs)
+        return mock_resp
+
+    mock_client = MagicMock()
+    mock_client.chat.completions.create.side_effect = _capture_create
+    mock_openai = MagicMock()
+    mock_openai.OpenAI.return_value = mock_client
+    return mock_openai
+
+
+class TestQwen3AndHaikuRegistration:
+    @pytest.mark.parametrize(("friendly", "model_id"), sorted(_NEW_2026_08_MODELS.items()))
+    def test_model_id_in_openrouter_models(self, friendly: str, model_id: str) -> None:
+        assert OPENROUTER_MODELS[friendly] == model_id
+
+    @pytest.mark.parametrize("friendly", sorted(_NEW_2026_08_MODELS))
+    def test_baseline_registered_with_openrouter_env_var(self, friendly: str) -> None:
+        from hallmark.baselines.registry import get_registry
+
+        name = f"llm_openrouter_{friendly.replace('-', '_')}"
+        reg = get_registry()
+        assert name in reg
+        assert reg[name].env_var == "OPENROUTER_API_KEY"
+
+    @pytest.mark.parametrize(("friendly", "model_id"), sorted(_NEW_2026_08_MODELS.items()))
+    def test_runner_passes_expected_model_id(self, friendly: str, model_id: str) -> None:
+        import os
+
+        from hallmark.baselines.registry import run_baseline
+        from hallmark.dataset.schema import BenchmarkEntry
+
+        entry = BenchmarkEntry(
+            bibtex_key="k",
+            bibtex_type="article",
+            fields={"title": "t", "author": "a", "year": "2024"},
+            raw_bibtex="@article{k,title={t}}",
+            label="VALID",
+        )
+        captured: list[dict[str, object]] = []
+        with (
+            patch.dict("sys.modules", {"openai": _mock_openai_capturing(captured)}),
+            patch.dict(os.environ, {"OPENROUTER_API_KEY": "test-key"}),
+        ):
+            run_baseline(f"llm_openrouter_{friendly.replace('-', '_')}", [entry])
+
+        assert len(captured) == 1
+        assert captured[0]["model"] == model_id
+
+
+class TestNoThinkGuard:
+    """Qwen3 dense models must get the /no_think switch appended to the prompt.
+
+    Verified live 2026-08-03 (provider=DeepInfra): API-level switches
+    (reasoning.enabled, reasoning.max_tokens, chat_template_kwargs) are all
+    ignored, and unguarded qwen3-32b truncates mid-JSON. Only /no_think works.
+    """
+
+    def _call(self, model: str, **kwargs: object) -> dict[str, object]:
+        from hallmark.baselines.llm_verifier import verify_with_openrouter
+
+        captured: list[dict[str, object]] = []
+        with patch.dict("sys.modules", {"openai": _mock_openai_capturing(captured)}):
+            verify_with_openrouter([_make_entry()], model=model, api_key="k", **kwargs)
+        assert len(captured) == 1
+        return captured[0]
+
+    @staticmethod
+    def _prompt(call_kwargs: dict[str, object]) -> str:
+        messages = call_kwargs["messages"]
+        assert isinstance(messages, list)
+        return str(messages[0]["content"])
+
+    @pytest.mark.parametrize("model", ["qwen/qwen3-8b", "qwen/qwen3-14b", "qwen/qwen3-32b"])
+    def test_qwen3_dense_appends_no_think(self, model: str) -> None:
+        prompt = self._prompt(self._call(model))
+        assert prompt.endswith("/no_think")
+        # The verification instructions must still be intact ahead of it.
+        assert '"predicted_hallucination_type"' in prompt
+
+    def test_non_thinking_model_prompt_untouched(self) -> None:
+        prompt = self._prompt(self._call("anthropic/claude-haiku-4.5"))
+        assert "/no_think" not in prompt
+
+    def test_no_think_composes_with_cutoff_aware_prompt(self) -> None:
+        prompt = self._prompt(self._call("qwen/qwen3-32b", cutoff_aware=True))
+        assert CUTOFF_AWARE_ADDENDUM in prompt
+        assert prompt.endswith("/no_think")
+
+    def test_no_think_composes_with_caller_prompt_fn(self) -> None:
+        prompt = self._prompt(
+            self._call("qwen/qwen3-14b", prompt_fn=lambda entry: f"custom:{entry.bibtex_key}")
+        )
+        assert prompt == "custom:test2024\n\n/no_think"
+
+    def test_no_api_level_reasoning_field_by_default(self) -> None:
+        """DeepInfra ignores it; no model may opt in silently."""
+        assert "extra_body" not in self._call("qwen/qwen3-32b")
+
+    @pytest.mark.parametrize("enabled", [True, False])
+    def test_reasoning_enabled_kwarg_is_explicit_opt_in(self, enabled: bool) -> None:
+        kwargs = self._call("anthropic/claude-haiku-4.5", reasoning_enabled=enabled)
+        assert kwargs["extra_body"] == {"reasoning": {"enabled": enabled}}
