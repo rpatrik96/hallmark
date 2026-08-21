@@ -13,6 +13,10 @@ build/
 venv/
 env/
 
+# API keys — never commit
+.env
+.env.*
+
 # IDE
 .idea/
 .vscode/
