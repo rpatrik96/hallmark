@@ -138,11 +138,25 @@ python scripts/run_all_baselines.py --baselines free --skip-unavailable
 For LLM-based baselines that take >1 hour sequentially, use the parallel-resume scripts to checkpoint and resume:
 
 ```bash
-# Resume zero-shot OpenRouter LLM baselines across multiple processes
-python scripts/parallel_resume_test_public.py --split test_public --num-workers 4
+# Resume zero-shot LLM baselines (--provider openrouter|huggingface)
+python scripts/parallel_resume_test_public.py \
+    --checkpoint-dir results/checkpoints/llm_openrouter_deepseek_r1_test_public \
+    --model deepseek/deepseek-r1 \
+    --jsonl-name openrouter_deepseek_deepseek-r1.jsonl \
+    --workers 4
+
+# Qwen3 dense sweep runs on the HuggingFace router (needs HF_TOKEN)
+python scripts/parallel_resume_test_public.py \
+    --provider huggingface \
+    --checkpoint-dir results/checkpoints/llm_hf_qwen3_4b_test_public \
+    --model Qwen/Qwen3-4B:featherless-ai \
+    --jsonl-name huggingface_qwen3-4b.jsonl \
+    --workers 4
 
 # Resume agentic verifiers (BTU, multi-tool, tool-augmented) with Sonnet 4.6
-python scripts/parallel_agentic_btu_test_public.py --split test_public --verifier agentic_btu_openai
+python scripts/parallel_agentic_btu_test_public.py \
+    --checkpoint-dir results/checkpoints/agentic_btu_openai_test_public \
+    --split test_public --verifier agentic_btu_openai
 ```
 
 Both scripts support checkpointing and can safely resume interrupted runs without recomputing completed entries.
@@ -338,9 +352,9 @@ Any real tool that achieves F1 below the title oracle on the hidden split is arg
 from hallmark.baselines.title_oracle import run_title_oracle
 from hallmark.dataset.loader import load_split
 
-dev_entries  = load_split("dev_public")
+dev_entries = load_split("dev_public")
 test_entries = load_split("test_public")
-blind_test   = [e.to_blind() for e in test_entries]
+blind_test = [e.to_blind() for e in test_entries]
 
 predictions = run_title_oracle(blind_test, reference_pool=dev_entries)
 ```
@@ -447,10 +461,7 @@ from hallmark.dataset.schema import Prediction
 entries = load_split("dev_public")
 
 # Create predictions (your tool's output)
-predictions = [
-    Prediction(bibtex_key=e.bibtex_key, label="VALID", confidence=0.5)
-    for e in entries
-]
+predictions = [Prediction(bibtex_key=e.bibtex_key, label="VALID", confidence=0.5) for e in entries]
 
 # Evaluate
 result = evaluate(entries, predictions, tool_name="my-tool", split_name="dev_public")
