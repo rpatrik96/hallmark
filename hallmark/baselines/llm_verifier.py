@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import json
 import logging
+import re
 import time
 from collections.abc import Callable
 from pathlib import Path
@@ -161,20 +162,15 @@ OPENROUTER_MODELS: dict[str, str] = {
     # Anthropic tier; pairs with claude-sonnet-4-6 / claude-opus-4-7 for a
     # within-family capability sweep.
     "claude-haiku-4-5": "anthropic/claude-haiku-4.5",
-    # Qwen3 dense series — a controlled parameter-count sweep (8B/14B/32B) within
-    # one model family, complementing the MoE "qwen"/"qwen-max" entries.
-    # All three are hybrid-reasoning models that default to thinking ON via
-    # OpenRouter, so they are listed in _NO_THINK_MODELS below; without that
-    # guard they burn the token budget on hidden thinking and return truncated
-    # JSON (the qwen3.5-122b / gemini-3.1-pro failure mode noted above).
-    # qwen/qwen3-4b does not exist on OpenRouter — 8B is the smallest dense tier.
-    # NOTE: qwen3-8b is listed by /api/v1/models but 404s on the lab key —
-    # Alibaba is its only provider and it is outside this account's provider
-    # allowlist (probed 2026-08-03, also with an explicit provider.only override).
-    # Enable Alibaba in OpenRouter account settings to use this baseline.
-    "qwen3-8b": "qwen/qwen3-8b",  # $0.12/$0.46 per M tok — see NOTE above
-    "qwen3-14b": "qwen/qwen3-14b",  # $0.23/$0.91 per M tok
-    "qwen3-32b": "qwen/qwen3-32b",  # $0.08/$0.28 per M tok
+    # DEREGISTERED 2026-08-10 — Qwen3 dense series (4B/8B/14B/32B).
+    # The zero-shot parameter-count sweep now runs against the HuggingFace
+    # Inference API (HF_TOKEN) instead of OpenRouter, which gives the full
+    # dense ladder in one place. OpenRouter could not serve it: qwen/qwen3-4b
+    # does not exist there at all, and qwen3-8b is listed by /api/v1/models but
+    # 404s on the lab key (Alibaba is its only provider and sits outside this
+    # account's provider allowlist — probed 2026-08-03, also with an explicit
+    # provider.only override). The /no_think guard below still applies to these
+    # model IDs wherever they are served from.
     # Skipped models (Q2 2026):
     #   deepseek/deepseek-v4-pro  — thinking model (reasoning_effort high/xhigh supported);
     #                               risk of reasoning tokens consuming the 1024-tok budget.
@@ -187,20 +183,18 @@ OPENROUTER_MODELS: dict[str, str] = {
 # Models that default to thinking mode and must be switched off via Qwen3's own
 # `/no_think` soft switch appended to the prompt.
 #
-# Probed live 2026-08-03 (OpenRouter → provider=DeepInfra). Every API-level
-# switch is silently IGNORED — each still burned 570-1000 reasoning tokens:
-#   reasoning={"enabled": False}                    → 730 (14B) / 997 (32B)
-#   reasoning={"max_tokens": 0}                     → 704 / 574
-#   chat_template_kwargs={"enable_thinking": False} → 757 / 938
-# Only `/no_think` in the prompt works: reasoning_tokens drops to 1 and the
-# reply is ~130-180 tokens. This matters — with no switch at all, qwen3-32b
-# overran the 1024-token budget and returned truncated, unparseable JSON
-# (finish_reason='length'), the same failure recorded for qwen3.5-122b above.
+# Probed live 2026-08-11 on the HF router (Qwen/Qwen3-4B:featherless-ai).
+# Featherless returns reasoning INLINE in message.content as a <think>...</think>
+# block. /no_think cuts the reply from 264 completion tokens to 19; without it
+# the thinking eats the max_completion_tokens budget and the JSON verdict comes
+# back truncated. The empty <think></think> pair remains in the content either
+# way — see _strip_think_block, which is what makes the reply parseable.
 _NO_THINK_MODELS: frozenset[str] = frozenset(
     {
-        "qwen/qwen3-8b",
-        "qwen/qwen3-14b",
-        "qwen/qwen3-32b",
+        "Qwen/Qwen3-4B:featherless-ai",
+        "Qwen/Qwen3-8B:featherless-ai",
+        "Qwen/Qwen3-14B:featherless-ai",
+        "Qwen/Qwen3-32B:featherless-ai",
     }
 )
 _NO_THINK_SUFFIX = "/no_think"
@@ -215,6 +209,23 @@ OPENAI_MODELS: dict[str, str] = {
     "gpt-5.2": "gpt-5.2",
     "gpt-5.4": "gpt-5.4",
     "gpt-5.4-mini": "gpt-5.4-mini",
+}
+
+# HuggingFace Inference Providers router (OpenAI-compatible endpoint, HF_TOKEN).
+# This is where the Qwen3 dense parameter-count sweep lives — it serves the full
+# 4B/8B/14B/32B ladder, which OpenRouter could not (see the deregistration note
+# in OPENROUTER_MODELS above).
+#
+# The `:featherless-ai` suffix pins the serving provider explicitly. Without it
+# the router picks whichever provider is up, so a sweep could silently mix
+# providers across model sizes and confound the parameter-count comparison —
+# the point of the sweep is that only the parameter count varies.
+HF_ROUTER_BASE_URL = "https://router.huggingface.co/v1"
+HF_MODELS: dict[str, str] = {
+    "qwen3-4b": "Qwen/Qwen3-4B:featherless-ai",
+    "qwen3-8b": "Qwen/Qwen3-8B:featherless-ai",
+    "qwen3-14b": "Qwen/Qwen3-14B:featherless-ai",
+    "qwen3-32b": "Qwen/Qwen3-32B:featherless-ai",
 }
 
 # Reference dict of Anthropic model IDs for documentation and kwarg overrides.
@@ -264,6 +275,10 @@ def _load_checkpoint(checkpoint_path: Path, *, skip_failed: bool = False) -> dic
             label=data["label"],
             confidence=data["confidence"],
             reason=reason,
+            # Absent in checkpoints written before this field was persisted;
+            # without the .get() a resumed run silently returns None for every
+            # already-completed entry and subtest_accuracy_table() sees nothing.
+            predicted_hallucination_type=data.get("predicted_hallucination_type"),
             wall_clock_seconds=data.get("wall_clock_seconds", 0.0),
             api_calls=data.get("api_calls", 0),
             api_sources_queried=data.get("api_sources_queried", []),
@@ -447,10 +462,10 @@ def _verify_with_openai_compatible(
     extra_call_kwargs: dict[str, Any] = {}
     if "gpt-5.5" in model:
         extra_call_kwargs["reasoning_effort"] = kwargs.pop("reasoning_effort", "none")
-    # OpenRouter's `reasoning` body field. NOT used to switch off thinking for
-    # the Qwen3 models — DeepInfra ignores it (see _NO_THINK_MODELS); it is an
-    # explicit, caller-driven escape hatch for providers that do honour it, and
-    # no model opts in by default.
+    # OpenRouter's `reasoning` body field. NOT how thinking is switched off for
+    # the Qwen3 dense models — those use the /no_think prompt switch (see
+    # _NO_THINK_MODELS). This is an explicit, caller-driven escape hatch for
+    # providers that honour the API-level field, and no model opts in by default.
     reasoning_enabled = kwargs.pop("reasoning_enabled", None)
     if reasoning_enabled is not None:
         extra_call_kwargs["extra_body"] = {"reasoning": {"enabled": bool(reasoning_enabled)}}
@@ -553,6 +568,34 @@ def verify_with_openrouter(
     )
 
 
+def verify_with_huggingface(
+    entries: list[BlindEntry],
+    model: str = "Qwen/Qwen3-4B:featherless-ai",
+    api_key: str | None = None,
+    log_dir: Path | None = None,
+    checkpoint_dir: Path | None = None,
+    cutoff_aware: bool = False,
+    **kwargs: Any,
+) -> list[Prediction]:
+    """Verify entries via the HuggingFace Inference Providers router.
+
+    OpenAI-compatible endpoint authenticated with ``HF_TOKEN``. Pass a value
+    from :data:`HF_MODELS` as ``model``; the ``:provider`` suffix pins which
+    inference provider serves the weights.
+    """
+    return _verify_with_openai_compatible(
+        entries,
+        model=model,
+        api_key=api_key,
+        base_url=HF_ROUTER_BASE_URL,
+        source_prefix="huggingface",
+        log_dir=log_dir,
+        checkpoint_dir=checkpoint_dir,
+        cutoff_aware=cutoff_aware,
+        **kwargs,
+    )
+
+
 def verify_with_anthropic(
     entries: list[BlindEntry],
     model: str = "claude-sonnet-4-6",
@@ -648,8 +691,27 @@ def _parse_hallucination_type(raw: object, bibtex_key: str, label: str) -> str |
     return None
 
 
+_THINK_BLOCK_RE = re.compile(r"\A\s*<think>.*?</think>\s*", re.DOTALL)
+
+
+def _strip_think_block(content: str) -> str:
+    """Remove a leading ``<think>...</think>`` block from a model reply.
+
+    Some providers surface chain-of-thought inline in ``message.content``
+    instead of in a separate reasoning field — the HF router (Featherless)
+    does this for Qwen3, and emits an empty ``<think></think>`` pair even when
+    thinking is switched off via ``/no_think``. Either way the JSON verdict is
+    no longer at the start of the string, so ``json.loads`` fails and parsing
+    falls through to the lossy regex salvage path, which recovers only label
+    and confidence and silently drops ``reason`` and the predicted
+    hallucination type. Strip the block so the normal parse path works.
+    """
+    return _THINK_BLOCK_RE.sub("", content, count=1)
+
+
 def _parse_llm_response(content: str, bibtex_key: str) -> Prediction:
     """Parse LLM JSON response into a Prediction."""
+    content = _strip_think_block(content)
     original_content = content
 
     def _try_parse(text: str) -> dict | None:
@@ -682,8 +744,6 @@ def _parse_llm_response(content: str, bibtex_key: str) -> Prediction:
         # Salvage path: truncated JSON from verbose reasoning models (e.g.,
         # Gemini 2.5 Pro) often contains a parseable label+confidence before
         # the response is cut off. Regex-extract them rather than giving up.
-        import re
-
         label_match = re.search(
             r'"label"\s*:\s*"(VALID|HALLUCINATED|UNCERTAIN)"',
             original_content,
