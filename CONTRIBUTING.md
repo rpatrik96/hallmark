@@ -1,6 +1,6 @@
 # Contributing to HALLMARK
 
-HALLMARK uses an ever-expanding pool inspired by [ONEBench](https://arxiv.org/abs/2412.07689). We welcome community contributions of new benchmark entries.
+HALLMARK uses an ever-expanding pool inspired by [ONEBench](https://aclanthology.org/2025.acl-long.1560/). We welcome community contributions of new benchmark entries.
 
 ## Entry Requirements
 

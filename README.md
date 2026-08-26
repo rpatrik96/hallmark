@@ -17,7 +17,7 @@ HALLMARK draws on best practices from established benchmarks:
 - **[HumanEval](https://github.com/openai/human-eval)**: Multi-criteria sub-tests per entry (~6 checks per citation)
 - **[SWE-bench](https://swebench.com)**: Contamination awareness via temporal segmentation
 - **[LiveCodeBench](https://livecodebench.github.io)**: Continuous updates and post-cutoff evaluation
-- **[ONEBench](https://arxiv.org/abs/2412.07689)**: Sample-level atomic evaluation with ever-expanding pool
+- **[ONEBench](https://aclanthology.org/2025.acl-long.1560/)**: Sample-level atomic evaluation with ever-expanding pool
 
 ## Features
 
