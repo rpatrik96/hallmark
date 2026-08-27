@@ -110,3 +110,7 @@ results/checkpoints/**/CLAUDE.md
 
 # Prediction checkpoints (regeneratable from committed eval JSONs)
 results/checkpoints/
+
+# GEPA prompt-optimization run artifacts (logs hold raw prompts; run/ holds pickles)
+results/gepa_haiku/**/logs/
+results/gepa_haiku/**/run/

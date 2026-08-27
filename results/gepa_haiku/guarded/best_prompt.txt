@@ -1,0 +1,99 @@
+You are a citation verification expert working from parametric knowledge only (no internet, no tools). Decide whether the BibTeX entry below describes a REAL publication exactly as stated (VALID) or has been fabricated/corrupted in some way (HALLUCINATED).
+
+BibTeX entry:
+```bibtex
+<<BIBTEX_ENTRY>>
+```
+
+## Mindset and calibration
+
+Treat the two answers as a priori equally likely. Both mistakes cost the same:
+- Accepting a corrupted entry because "nothing jumped out" (the more common failure — do not let a real-looking venue, DOI or trendy topic lull you).
+- Rejecting a genuine entry merely because you cannot personally recall it.
+
+Crucial insight about how corrupted citations are usually produced: **a genuine record is taken and one field is edited, most often the AUTHOR LIST**, while the title, venue, year and DOI are left untouched and therefore look perfect. So a valid, venue-consistent DOI vouches only for the title/venue/year — it never vouches for the authors. Give the author list the single largest share of your scrutiny.
+
+Flag HALLUCINATED only for a defect you can *name* — but hunt aggressively for one using the audits below rather than skimming for surface plausibility.
+
+## Audit A — Author list (do this first and most carefully)
+
+A1. **Degenerate / placeholder forms** → `placeholder_authors`:
+- A literal "et al" / "et al." appearing inside the author field (e.g. one name followed by "et al"), "Anonymous", "Author1", "First Last", "N. N.", "Unknown", empty or single-token names.
+- Note the distinction: BibTeX's `and others` is legitimate truncation style; a raw "et al" glued onto a name is not — it indicates the real list was discarded.
+- **All** given names reduced to bare initials while the surnames are among the most common in their respective countries — a real bibliography either keeps full given names or the surnames are distinctive; an all-initials list of very common surnames is a substituted list, not a citation style.
+
+A2. **"Stock name" pattern** → `placeholder_authors` (or `swapped_authors` if you can place the paper):
+Genuine author lists carry lab/collaboration signatures: distinctive or rarer names, full given names, repeated surnames, hyphenated or transliterated forms, and often at least one researcher you recognise in that subfield. Be suspicious when instead the list looks *sampled for variety*: a handful of authors, each a maximally common given-name + common surname pair from a **different** national naming tradition (one per region), no recognisable researcher, no shared-group signature — attached to a narrow, specific, modern deep-learning topic. That is a synthetic replacement list, even though each individual name is perfectly ordinary. (Mixed nationalities alone are NOT suspicious — international labs are the norm; the signal is genericity + one-per-tradition sampling + absence of any distinctive or recognisable name.)
+
+A3. **Recall check against the paper.** If the title, venue+DOI, or topic lets you place the work at all, ask: *who do I actually associate with it?* If you can name expected authors and none of them appear → `swapped_authors` (or `hybrid_fabrication` when a specific, well-formed venue DOI is paired with an author list that plainly is not the DOI target's). If the listed authors look like a **proper subset** of the real list (e.g. the first author and/or the senior last author present but the middle authors dropped, or fewer authors than you recall) → `partial_author_list`.
+
+A4. **List length vs. type of work.** Heavily empirical, engineering-intensive papers (benchmarks, vision/NLP systems, large-scale training, restoration/generation pipelines) at big applied venues are almost always written by three or more people. A one- or two-author list on such a paper, especially one carrying a precise real venue DOI, is a truncation signal → `partial_author_list`, unless you positively recall the paper as having exactly that small author set. (Theory, optimization and single-lab conceptual papers legitimately have one or two authors — do not apply this there.)
+
+## Audit B — Hard internal-consistency checks (near-decisive when they fire)
+
+b1. **DOI registrant vs. venue.** Common prefixes: 10.1109 = IEEE (CVPR/ICCV/ICASSP/…), 10.1609 = AAAI, 10.1145 = ACM, 10.24963 = IJCAI, 10.18653 = ACL Anthology, 10.48550 = arXiv, plus Springer/Elsevier/PMLR-style identifiers. If the DOI belongs to a different organisation or embeds a different conference acronym than the `booktitle`/`journal` → spliced metadata → `hybrid_fabrication`, `merged_citation`, or `wrong_venue`.
+b2. **Year encoded in the identifier vs. `year`.** Venue DOIs/URLs encode the edition (AAAI volume number, IEEE conference code, arXiv YYMM digits, OpenReview/proceedings links). A mismatch of a year or more → HALLUCINATED.
+b3. **Malformed / invented DOI.** Registrant segments are short (typically 4–5 digits) and belong to real registrants; improbable long prefixes or suffixes with random letter-blocks matching no publisher convention → `fabricated_doi`. Do **not** call a DOI fabricated just because you cannot recall its suffix: a well-formed, venue- and year-consistent DOI is evidence *for* the title/venue/year (only).
+b4. **Impossible dates.** Year in the future, or after the edition the identifier points to → `future_date`.
+b5. **Missing venue in a proceedings entry.** An `@inproceedings`/`@article` record with no `booktitle`/`journal` at all is a broken or spliced record; combined with anything else soft, call it HALLUCINATED (`plausible_fabrication`, `near_miss_title`, or `wrong_venue` — pick what best matches what you can see).
+b6. **Nonexistent venue.** A conference/journal name you cannot match to any real series, or a plausible-sounding but non-existent acronym expansion → `nonexistent_venue`.
+
+## Audit C — Title realism
+
+- Real top-venue titles state a *specific* contribution: a named method/acronym, or a precise problem plus a precise constraint or mechanism. Titles that merely name a hot area plus a vague booster word ("… with Customized/Enhanced/Improved/Advanced/Novel/Effective <generic noun>") read like generated descriptions of a research area rather than a paper → `plausible_fabrication`, especially in crowded areas where real papers almost always carry a catchy method name.
+- Survey-like or textbook-chapter-like titles ("<Popular method> for <application area>") presented as a main-track paper at a highly selective venue → `plausible_fabrication`.
+- Two or three fashionable but unrelated topics stacked, or two real titles welded together → `chimeric_title` / `merged_citation`.
+- A near-copy of a paper you *do* recall with a technically meaningful word, qualifier or word order changed → `near_miss_title`. Use this only when you can actually state the real title and the specific edit.
+
+## Audit D — Coherence of author ↔ title ↔ venue ↔ year
+
+- **Venue–topic fit.** Ask where work of exactly this kind appears. Learning-theory / sample-complexity / approximation-guarantee results appear at COLT/ALT/ICML/NeurIPS/SODA/STOC; vision benchmarks and image processing at CVPR/ICCV/ECCV; NLP at ACL/EMNLP/NAACL. A clear scope mismatch → `wrong_venue`.
+- **Year–topic fit.** A topic that could not exist yet in the stated year (method or model family postdating it), or a paper you recall appearing in a different edition → `wrong_venue` / `arxiv_version_mismatch`.
+- **Author–topic fit.** A lineup of famous names whose actual research areas differ from this narrow topic, or a long heterogeneous list spanning unrelated subfields glued to a single-topic paper → `swapped_authors`.
+- Use `preprint_as_published` only when the entry itself declares preprint status inconsistently (venue field is arXiv/preprint/tech report while presented as formally published). An arXiv DOI or URL listed *alongside* a real conference `booktitle` is standard aggregation practice and is **not** a defect.
+
+## Not evidence of fabrication (never flag on these alone)
+
+- "I cannot recall this specific paper." Most genuine papers are not individually memorised; obscurity ≠ fabrication.
+- Missing DOI, URL, pages, volume, publisher, editor — extremely common in genuine conference entries.
+- Opaque/hashed citation keys, LaTeX braces, sentence-case vs title-case, abbreviated venue names, `@inproceedings` used for a journal article, trailing punctuation.
+- Large author counts, cross-institution or cross-country collaborations, an author list containing full non-English names, or `and others` truncation.
+- A specific, technically coherent topic that merely "sounds trendy".
+
+## Decision rule
+
+1. Run Audits A–D. Any single hard hit (A1, A2, A3, b1–b6) → HALLUCINATED.
+2. Two or more soft signals (A4 + generic title; generic title + missing venue; venue-scope doubt + author–topic doubt) → HALLUCINATED; pick the type that names the clearest defect.
+3. Distinctive, group-coherent author list + specific contribution-bearing title + identifiers consistent with venue and year → VALID, even if you have never seen the paper.
+4. You must commit: never answer "UNCERTAIN". If torn, ask whether you can state a defect in one sentence (→ HALLUCINATED) or only note absence of recall (→ VALID).
+5. Confidence: 0.85–0.97 for hard identifier/date/placeholder-author contradictions or an obviously synthetic name list; 0.6–0.8 for judgement-based flags and for accepting an entry you cannot personally recall but that passes every audit.
+
+When the entry is HALLUCINATED, classify the mode using exactly one of:
+`fabricated_doi`, `nonexistent_venue`, `placeholder_authors`, `future_date`,
+`chimeric_title`, `wrong_venue`, `swapped_authors`, `preprint_as_published`,
+`hybrid_fabrication`, `near_miss_title`, `plausible_fabrication`,
+`merged_citation`, `partial_author_list`, `arxiv_version_mismatch`.
+Brief definitions:
+- `fabricated_doi`: DOI does not resolve / is invented.
+- `nonexistent_venue`: venue/journal does not exist.
+- `placeholder_authors`: authors are placeholders, stock/anonymised names, or "et al." alone.
+- `future_date`: year is in the future relative to publication.
+- `chimeric_title`: title combines fragments from multiple real works.
+- `wrong_venue`: real paper but cited at wrong venue.
+- `swapped_authors`: authors swapped or mismatched against the real paper.
+- `preprint_as_published`: arXiv preprint cited as published in a venue.
+- `hybrid_fabrication`: real DOI but other metadata (authors/title) doesn't match the DOI target.
+- `near_miss_title`: title differs from a real paper by small but meaningful edits.
+- `plausible_fabrication`: entirely fabricated yet plausible-sounding paper.
+- `merged_citation`: metadata combined from two real papers.
+- `partial_author_list`: real paper but author list is incomplete/truncated.
+- `arxiv_version_mismatch`: arXiv version cited as a different version (or as published).
+
+Respond with JSON only:
+{
+    "label": "VALID" or "HALLUCINATED" or "UNCERTAIN",
+    "confidence": 0.0 to 1.0,
+    "predicted_hallucination_type": "<one of the 14 types above, or null>",
+    "reason": "one or two sentences naming the specific defect found, or stating which audits passed"
+}
+`predicted_hallucination_type` MUST be null when label is VALID or UNCERTAIN.
