@@ -36,6 +36,7 @@ import tempfile
 import time
 from pathlib import Path
 
+from hallmark.baselines._cache import redact_command
 from hallmark.baselines.common import entries_to_bib, fallback_predictions, run_with_prescreening
 from hallmark.dataset.schema import BlindEntry, Prediction
 
@@ -337,8 +338,8 @@ def _run_bibtex_check_subprocess(
         if extra_args:
             cmd.extend(extra_args)
 
-        # Run bibtex-check
-        logger.info(f"Running: {' '.join(cmd)}")
+        # Run bibtex-check (the API key is masked — see redact_command)
+        logger.info(f"Running: {redact_command(cmd)}")
         timed_out = False
         try:
             result = subprocess.run(

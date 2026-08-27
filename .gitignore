@@ -8,6 +8,11 @@ dist/
 build/
 .eggs/
 
+# Secrets — API keys are read from the environment, never committed
+.env
+.env.*
+!.env.example
+
 # Virtual environments
 .venv/
 venv/
@@ -114,3 +119,11 @@ results/checkpoints/
 # GEPA prompt-optimization run artifacts (logs hold raw prompts; run/ holds pickles)
 results/gepa_haiku/**/logs/
 results/gepa_haiku/**/run/
+# Agentic tool HTTP caches — regenerable, and requests-cache expires every entry
+# after 30 days (_http_cache.py:39), so a committed cache silently stops pinning
+# anything after a month. The per-entry *_preds.jsonl files are what reproduce the
+# reported metrics. SQLite WAL/SHM sidecars are transient by design.
+results/**/tools.sqlite
+**/*.sqlite-wal
+**/*.sqlite-shm
+results/**/stage2/

@@ -632,7 +632,8 @@ def verify_with_anthropic(
             temperature=0.0,
             messages=[{"role": "user", "content": prompt}],
         )
-        return str(resp.content[0].text).strip()
+        # Only text blocks carry `.text`; skip thinking/tool-use blocks.
+        return "".join(block.text for block in resp.content if block.type == "text").strip()
 
     prompt_fn: Callable[[BlindEntry], str] | None = None
     if cutoff_aware:
