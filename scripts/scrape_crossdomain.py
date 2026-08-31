@@ -399,20 +399,48 @@ def scrape_cs_non_ml(target: int, years: list[int]) -> list[BenchmarkEntry]:
 
 
 def verify_doi_resolution(entries: list[BenchmarkEntry], rate: float = 0.3) -> list[BenchmarkEntry]:
-    """Update ``doi_resolves`` subtest by hitting CrossRef. Drops nothing."""
+    """Update ``doi_resolves`` subtest by hitting CrossRef. Drops nothing.
+
+    Three-valued, per the scoping rule beside ``SUBTEST_NAMES`` in
+    ``hallmark.dataset.schema``:
+
+    * ``True``  — the DOI was looked up and resolved.
+    * ``False`` — the DOI was looked up and did NOT resolve.
+    * ``None``  — not applicable (entry carries no DOI) or not verifiable
+      (the lookup itself failed).
+
+    A transient CrossRef error is *not* evidence that a DOI is bad, so it must
+    not be recorded as ``False``: that would bake a network blip into a
+    released split as permanent ground truth. Unverified entries are counted
+    and logged so a degraded run is visible instead of silently shipping.
+    """
     cr = CrossRefClient(rate_limit=rate)
+    unverified = 0
     for i, e in enumerate(entries):
         doi = e.fields.get("doi")
         if not doi:
-            e.subtests["doi_resolves"] = False
+            # No DOI to resolve — not applicable, not a failure.
+            e.subtests["doi_resolves"] = None
             continue
         try:
-            ok = cr.verify_doi(doi)
-        except Exception:
-            ok = False
-        e.subtests["doi_resolves"] = ok
+            e.subtests["doi_resolves"] = cr.verify_doi(doi)
+        except Exception as exc:
+            logger.warning(
+                "DOI lookup failed for %s (%s); leaving doi_resolves=None",
+                e.bibtex_key,
+                exc,
+            )
+            e.subtests["doi_resolves"] = None
+            unverified += 1
         if (i + 1) % 25 == 0:
             logger.info("verified %d/%d", i + 1, len(entries))
+    if unverified:
+        logger.warning(
+            "%d/%d entries left unverified due to lookup errors — "
+            "re-run before treating this pass as ground truth",
+            unverified,
+            len(entries),
+        )
     return entries
 
 
