@@ -33,7 +33,7 @@ _spec.loader.exec_module(vs)
 
 
 # Frozen baseline: current strict mismatch count across all shipped splits.
-# 105/13321 sub-test checks (99.2% agreement). These are documented design
+# 99/13316 sub-test checks (99.3% agreement). These are documented design
 # tensions -- the uniform cross_db_agreement=False convention, and per-entry
 # fields_complete values that legitimately differ from the type-level default
 # in EXPECTED_SUBTESTS -- NOT label errors. Ratchet DOWN after any data pass
@@ -43,7 +43,7 @@ _spec.loader.exec_module(vs)
 # recorded a failed resolution while carrying no DOI. That class is reported
 # separately by verify_entry_structural() in scripts/verify_subtests.py and
 # does not count against this bound.
-MAX_MISMATCHES = 105
+MAX_MISMATCHES = 99
 
 
 class TestVerifyEntrySubtests:
