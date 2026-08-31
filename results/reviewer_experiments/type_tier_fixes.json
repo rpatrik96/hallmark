@@ -1,0 +1,47 @@
+{
+  "description": "Retype 4 real-world entries whose cited paper does not exist at all. Each carried the type of its most visible surface symptom (fake DOI, placeholder authors, speculative venue), but the source evidence (GPTZero NeurIPS-2025 scan; HalluCitation study) states no title or author match anywhere, i.e. full fabrication -> plausible_fabrication, Tier 3. Only hallucination_type and difficulty_tier change; labels, fields, subtests, and explanations are byte-identical (subtests already encoded the fabrication: title_exists=false, authors_match=false on all 4, which scripts/verify_subtests.py had flagged as type/subtest inconsistencies). Detection: systematic sweep for real-world-sourced Tier-1/2 entries with title_exists=false and authors_match=false; exactly these 4 match, no others.",
+  "date": "2026-08-31",
+  "target_release": "v1.3.0",
+  "fixes": [
+    {
+      "key": "ffe715a15b16",
+      "split": "dev_public",
+      "from_type": "fabricated_doi",
+      "from_tier": 1,
+      "to_type": "plausible_fabrication",
+      "to_tier": 3,
+      "source": "gptzero_neurips2025",
+      "evidence": "GPTZero comment: 'No author or title match. Doesn't exist in publication. URL and DOI are fake.' The fake DOI is one symptom of a fully fabricated citation, not a bad DOI on a real paper."
+    },
+    {
+      "key": "ec01d96455e0",
+      "split": "dev_public",
+      "from_type": "preprint_as_published",
+      "from_tier": 2,
+      "to_type": "plausible_fabrication",
+      "to_tier": 3,
+      "source": "real_world (HalluCitation, arXiv:2601.18724)",
+      "evidence": "The TEMPO paper does not exist at all (title_exists=false, authors_match=false); the citation speculates 'Anticipated for NeurIPS 2024'. Not a real preprint miscited as published."
+    },
+    {
+      "key": "ab9c13051a56",
+      "split": "test_public",
+      "from_type": "placeholder_authors",
+      "from_tier": 1,
+      "to_type": "plausible_fabrication",
+      "to_tier": 3,
+      "source": "gptzero_neurips2025",
+      "evidence": "GPTZero comment: 'No title or author match and arXiv ID is incomplete.' Fully fabricated paper; the vague author string ('Sheng Shi and et al') is a symptom, not the cause."
+    },
+    {
+      "key": "cad998c28243",
+      "split": "test_public",
+      "from_type": "placeholder_authors",
+      "from_tier": 1,
+      "to_type": "plausible_fabrication",
+      "to_tier": 3,
+      "source": "gptzero_neurips2025",
+      "evidence": "GPTZero comment: 'No title or author match.' Fully fabricated paper; the placeholder author string ('Firstname Lastname and Others') is a symptom, not the cause."
+    }
+  ]
+}
