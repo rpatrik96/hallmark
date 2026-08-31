@@ -338,9 +338,9 @@ Any real tool that achieves F1 below the title oracle on the hidden split is arg
 from hallmark.baselines.title_oracle import run_title_oracle
 from hallmark.dataset.loader import load_split
 
-dev_entries  = load_split("dev_public")
+dev_entries = load_split("dev_public")
 test_entries = load_split("test_public")
-blind_test   = [e.to_blind() for e in test_entries]
+blind_test = [e.to_blind() for e in test_entries]
 
 predictions = run_title_oracle(blind_test, reference_pool=dev_entries)
 ```
@@ -447,10 +447,7 @@ from hallmark.dataset.schema import Prediction
 entries = load_split("dev_public")
 
 # Create predictions (your tool's output)
-predictions = [
-    Prediction(bibtex_key=e.bibtex_key, label="VALID", confidence=0.5)
-    for e in entries
-]
+predictions = [Prediction(bibtex_key=e.bibtex_key, label="VALID", confidence=0.5) for e in entries]
 
 # Evaluate
 result = evaluate(entries, predictions, tool_name="my-tool", split_name="dev_public")

@@ -119,6 +119,44 @@ def test_restores_httpx_on_exception(tmp_path: Path, monkeypatch: pytest.MonkeyP
     assert httpx.get is original_get
 
 
+@pytest.mark.skipif(not _HAS_REQUESTS_CACHE, reason="requests-cache not installed")
+def test_gzip_labelled_body_is_readable(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
+    """Regression: a body requests already decompressed must not be decompressed again.
+
+    OpenAlex answers with ``Content-Encoding: gzip``; ``requests`` transparently
+    decompresses the payload but leaves the header in place.  Forwarding that stale
+    header onto an ``httpx.Response`` made httpx decompress plain text, raising
+    ``Error -3 while decompressing data: incorrect header check`` — the failure
+    behind 43 lost lookups in the 2026-07 cascade run.
+    """
+    import requests_cache
+
+    def gzip_labelled_send(self: Any, request: Any, **kwargs: Any) -> Any:
+        from requests import Response
+
+        resp = Response()
+        resp.status_code = 200
+        # Body as requests hands it over: already decompressed.
+        resp._content = b'{"meta": {"count": 8}}'
+        # Headers as the server sent them: still describing the compressed bytes.
+        resp.headers["Content-Encoding"] = "gzip"
+        resp.headers["Content-Length"] = "9999"
+        resp.headers["Content-Type"] = "application/json"
+        resp.url = request.url
+        resp.request = request
+        return resp
+
+    monkeypatch.setattr(requests_cache.CachedSession, "send", gzip_labelled_send)
+
+    with http_cache(tmp_path / "gzip.sqlite"):
+        resp = httpx.get("https://api.openalex.org/works?query=x")
+
+    assert resp.json() == {"meta": {"count": 8}}
+    # The stale wire-format headers must not survive onto the adapted response.
+    assert "content-encoding" not in resp.headers
+    assert resp.headers["content-type"] == "application/json"
+
+
 def test_missing_optional_dependency_raises(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
     """If requests-cache is missing, calling http_cache with a path raises ImportError."""
     import builtins

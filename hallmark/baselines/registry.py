@@ -587,6 +587,35 @@ def _register_builtins() -> None:
         )
     )
 
+    # --- LLM: Agentic OpenAI GPT-5.4 ---
+    # Model-pinned variant of llm_agentic_openai: same native endpoint, same tools,
+    # only the model id differs. Pinned to the bare "gpt-5.4" alias to match every
+    # prior GPT-5.4 experiment (scripts/run_gpt54_splits.py). Needed because
+    # `hallmark evaluate` has no --model flag, so a cascade Stage 2 diagnoser can
+    # only be pinned through the registry.
+    def _run_llm_agentic_openai_gpt_5_4(entries: list[BlindEntry], **kw: Any) -> list[Prediction]:
+        from hallmark.baselines.llm_agentic import verify_agentic_openai
+
+        kw.setdefault("model", "gpt-5.4")
+        return verify_agentic_openai(entries, **kw)
+
+    register(
+        BaselineInfo(
+            name="llm_agentic_openai_gpt_5_4",
+            description=(
+                "GPT-5.4 with tool-use: resolve_doi, search_crossref, "
+                "search_openalex, search_arxiv (up to 5 tool calls per entry). "
+                "Native OpenAI endpoint; GPT-5.4 counterpart of llm_agentic_openai."
+            ),
+            runner=_run_llm_agentic_openai_gpt_5_4,
+            pip_packages=["openai"],
+            requires_api_key=True,
+            is_free=False,
+            env_var="OPENAI_API_KEY",
+            confidence_type="probabilistic",
+        )
+    )
+
     # --- LLM: Agentic Anthropic ---
     def _run_llm_agentic_anthropic(entries: list[BlindEntry], **kw: Any) -> list[Prediction]:
         from hallmark.baselines.llm_agentic import verify_agentic_anthropic
@@ -643,6 +672,12 @@ def _register_builtins() -> None:
             confidence_type="probabilistic",
         )
     )
+
+    # NOTE: ``llm_agentic_openrouter_gpt_5_1`` was removed once a native OpenAI key
+    # became available. It routed GPT-5.1 through OpenRouter as ``openai/gpt-5.1``,
+    # which made its runs inconsistent with every other GPT-5.1 experiment (all of
+    # which used the native endpoint and the bare ``gpt-5.1`` model id). Use
+    # ``llm_agentic_openai`` for GPT-5.1 Stage 2 diagnosis.
 
     # --- LLM: Agentic BTU-only (OpenAI) ---
     def _run_llm_agentic_btu_openai(entries: list[BlindEntry], **kw: Any) -> list[Prediction]:

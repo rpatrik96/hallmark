@@ -1,0 +1,53 @@
+INFO: Loaded 121 entries from stress_test
+INFO: Loaded 122 predictions from results/checkpoints/llm_openrouter_claude_haiku_4_5_stress_test/openrouter_anthropic_claude-haiku-4.5.jsonl
+WARNING: Split contains zero valid entries. FPR is undefined and tier-weighted F1 reduces to weighted recall only. Metrics should be interpreted as recall-only diagnostics.
+INFO: Results written to results/haiku45/haiku45_stress_test.json
+
+============================================================
+  HALLMARK Evaluation: llm_openrouter_claude_haiku_4_5
+  Split: stress_test
+============================================================
+  Note: stress_test contains only hallucinated entries (no valid references).
+  FPR and specificity are undefined. Use detection rate as the primary metric.
+────────────────────────────────────────────────────────────
+  Entries:          121
+  Hallucinated:     121 (100.0%)
+  Valid:            0
+  NOTE: Prevalence varies across splits. Use MCC for cross-split comparison.
+────────────────────────────────────────────────────────────
+  Confusion Matrix:
+    TP: 95     FP: 0
+    FN: 26     TN: 0
+────────────────────────────────────────────────────────────
+  Detection Rate:   0.785
+    95% CI: [0.719, 0.851]
+  False Pos. Rate:  N/A
+    95% CI: [0.000, 0.000]
+  F1 (Halluc.):     0.880
+  Coverage:         100.0%
+    95% CI: [0.837, 0.920]
+  Tier-weighted F1: 0.884
+    95% CI: [0.842, 0.922]
+  MCC:              0.000
+    95% CI: [0.000, 0.000]
+  Macro-F1:         0.440
+  ECE:              0.185
+    95% CI: [0.140, 0.252]
+  AUPRC:            1.000
+  Entries/sec:      0.3
+  Mean API calls:   1.0
+────────────────────────────────────────────────────────────
+  Per-tier breakdown:
+    Tier 2: DR=0.765 F1=0.867 (n=85)
+    Tier 3: DR=0.833 F1=0.909 (n=36)
+────────────────────────────────────────────────────────────
+  Timing breakdown:
+    Total wall-clock:    358.49s
+    Mean per entry:      2.938s
+    Median per entry:    2.910s
+    p95 per entry:       3.460s
+    Total API calls:     122
+    Mean API calls/entry: 1.00
+    Entries w/ API errors: 0
+============================================================
+

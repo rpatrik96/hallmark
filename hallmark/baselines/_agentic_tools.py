@@ -13,15 +13,198 @@ Tool set mirrors bibtex-updater's lookup sources:
 
 from __future__ import annotations
 
+import datetime as dt
+import email.utils
 import logging
+import os
 import re
+import threading
+import time
 import urllib.parse
 import urllib.request
+from collections.abc import Iterator
+from typing import Any
+
+from hallmark.baselines._cache import RateLimitedError
 
 logger = logging.getLogger(__name__)
 
 _MAX_FIELD_CHARS = 500
 _OPENALEX_MAILTO = "hallmark@example.com"
+
+# ``export.arxiv.org`` is markedly slower than the other metadata sources and is the
+# only one that produced read timeouts in the 2026-07 cascade run (~29 lookups lost at
+# a 15s ceiling, each after three retries). Give it a longer allowance than the rest.
+_ARXIV_TIMEOUT_SECONDS = 30.0
+
+# Status codes that mean "you are being throttled, come back later" rather than
+# "this request was wrong". Both may carry a ``Retry-After`` header.
+_THROTTLE_STATUS_CODES = frozenset({429, 503})
+
+# OpenAlex answers 429 for two unrelated reasons and distinguishes them only by the
+# size of ``Retry-After``: a burst throttle asks for 1-60s, while an exhausted daily
+# quota asks for the seconds remaining until midnight UTC. The 2026-08-04 GPT-5.4 dev
+# run observed exactly that split — 1-60s bursts, then 27087-52660s caps with nothing
+# in between — so any threshold inside that gap separates them cleanly. Retrying
+# through a cap is futile (that run burned ~7h and lost 239 of 262 lookups doing so);
+# the right move is to fail over to the next credential.
+_OPENALEX_CAP_RETRY_AFTER_SECONDS = 3600.0
+
+# Sentinel for the keyless mailto pool inside ``_openalex_exhausted``, which stores
+# plain key strings for everything else.
+_OPENALEX_POLITE_POOL = ""
+
+# A metered key answers "you are out of credit" with a payment/authorisation status
+# rather than a throttle, and those carry no ``Retry-After`` to read a deadline from.
+_OPENALEX_CREDIT_STATUS_CODES = frozenset({402, 403})
+
+# Credentials retired until their quota is expected back, as monotonic deadlines.
+# Guarded by a lock: the cascade runs Stage 2 across worker threads sharing this module.
+_openalex_exhausted: dict[str, float] = {}
+_openalex_key_lock = threading.Lock()
+
+
+def _seconds_until_utc_midnight() -> float:
+    """Return seconds from now until the next 00:00 UTC.
+
+    OpenAlex resets daily quota at midnight UTC — every capped ``Retry-After`` in the
+    2026-08-04 run pointed there. Used as the fallback deadline for the credit-exhaustion
+    statuses, which state no deadline of their own.
+    """
+    now = dt.datetime.now(dt.timezone.utc)
+    tomorrow = (now + dt.timedelta(days=1)).replace(hour=0, minute=0, second=0, microsecond=0)
+    return (tomorrow - now).total_seconds()
+
+
+def _openalex_keys() -> list[str]:
+    """Return the configured OpenAlex API keys, in preference order.
+
+    ``OPENALEX_API_KEY`` holds one key, or several separated by commas so a run can
+    fail over when the first is spent.
+    """
+    raw = os.environ.get("OPENALEX_API_KEY", "")
+    return [key for part in raw.split(",") if (key := part.strip())]
+
+
+def _openalex_key_candidates() -> Iterator[str | None]:
+    """Yield the keyless mailto pool first, then each key whose quota is believed back.
+
+    Keyless comes first on purpose: the mailto pool is free and generous (100k/day),
+    while an API key draws on a metered daily allowance. Spending the free pool before
+    touching the key keeps the paid budget for when it is the only thing left.
+
+    Retirements expire. A credential whose deadline has passed is pruned here and
+    rejoins the order — which for the polite pool means it returns to the *front*, so a
+    run that outlives a midnight reset stops spending the key without being told to.
+    """
+    now = time.monotonic()
+    with _openalex_key_lock:
+        for slot, until in list(_openalex_exhausted.items()):
+            if until <= now:
+                del _openalex_exhausted[slot]
+        exhausted = set(_openalex_exhausted)
+    if _OPENALEX_POLITE_POOL not in exhausted:
+        yield None
+    for key in _openalex_keys():
+        if key not in exhausted:
+            yield key
+
+
+def _retire_openalex_key(key: str | None, retry_after: float | None, status_code: int) -> bool:
+    """Retire a credential whose quota is gone, until it is expected back.
+
+    Distinguishes the three ways a request can come back unhappy:
+
+    - 429 with a long ``Retry-After`` — daily quota spent; retire until it lifts.
+    - 402/403 — a metered key out of credit; no deadline given, so assume the same
+      midnight-UTC reset the throttled responses use.
+    - anything else, including 503 — not a quota problem. A burst throttle is the
+      backoff layer's job, and a server outage hits every credential equally, so
+      failing over would only repeat the request against the same dead host.
+
+    Args:
+        key: The credential that failed, or ``None`` for the keyless mailto pool.
+        retry_after: Seconds the server asked us to wait, when it said.
+        status_code: HTTP status of the failed response.
+
+    Returns:
+        ``True`` when the credential was retired and the caller should try the next
+        one; ``False`` when this failure is not a reason to fail over.
+    """
+    if status_code in _OPENALEX_CREDIT_STATUS_CODES:
+        wait = _seconds_until_utc_midnight()
+        reason = f"HTTP {status_code}"
+    elif status_code == 429 and retry_after is not None:
+        if retry_after <= _OPENALEX_CAP_RETRY_AFTER_SECONDS:
+            return False
+        wait = retry_after
+        reason = f"asked for {retry_after:.0f}s"
+    else:
+        return False
+
+    slot = _OPENALEX_POLITE_POOL if key is None else key
+    deadline = time.monotonic() + wait
+    with _openalex_key_lock:
+        newly_retired = slot not in _openalex_exhausted
+        _openalex_exhausted[slot] = deadline
+    if newly_retired:
+        label = "keyless mailto pool" if key is None else f"key ...{key[-4:]}"
+        logger.warning(
+            "OpenAlex %s is out of quota (%s); failing over for %.0fs",
+            label,
+            reason,
+            wait,
+        )
+    return True
+
+
+def _parse_retry_after(value: str | None) -> float | None:
+    """Parse a ``Retry-After`` header into a number of seconds.
+
+    RFC 9110 permits two forms: delta-seconds (``"30"``) or an HTTP-date
+    (``"Wed, 21 Oct 2026 07:28:00 GMT"``). Both are accepted.
+
+    Args:
+        value: Raw header value, or ``None`` when the server omitted it.
+
+    Returns:
+        Seconds to wait, or ``None`` if absent, unparseable, or already elapsed.
+    """
+    if not value:
+        return None
+    value = value.strip()
+    try:
+        return max(0.0, float(value))
+    except ValueError:
+        pass
+    try:
+        when = email.utils.parsedate_to_datetime(value)
+    except (TypeError, ValueError):
+        return None
+    if when is None:
+        return None
+    import datetime as _dt
+
+    now = _dt.datetime.now(_dt.timezone.utc)
+    if when.tzinfo is None:
+        when = when.replace(tzinfo=_dt.timezone.utc)
+    delta = (when - now).total_seconds()
+    return max(0.0, delta) if delta > 0 else None
+
+
+def _raise_for_throttle(resp: Any, source: str) -> None:
+    """Raise :class:`RateLimitedError` carrying ``Retry-After`` if *resp* is throttled.
+
+    Args:
+        resp: The HTTP response to inspect.
+        source: Human-readable source name used in the error message.
+    """
+    if resp is None or resp.status_code not in _THROTTLE_STATUS_CODES:
+        return
+    retry_after = _parse_retry_after(resp.headers.get("Retry-After"))
+    if retry_after is not None:
+        logger.debug("%s asked us to retry after %.1fs", source, retry_after)
+    raise RateLimitedError(f"{source} returned HTTP {resp.status_code}", retry_after=retry_after)
 
 
 def _trunc(value: object) -> str:
@@ -76,6 +259,7 @@ def resolve_doi(doi: str) -> dict[str, str]:
 
     if resp.status_code == 404:
         raise ValueError(f"DOI not found: {normalized_doi}")
+    _raise_for_throttle(resp, "CrossRef")
     if resp.status_code != 200:
         raise RuntimeError(f"CrossRef returned HTTP {resp.status_code} for {normalized_doi}")
 
@@ -135,6 +319,7 @@ def search_crossref(query: str, limit: int = 5) -> list[dict[str, str]]:
     except httpx.RequestError as exc:
         raise RuntimeError(f"CrossRef search network error: {exc}") from exc
 
+    _raise_for_throttle(resp, "CrossRef search")
     if resp.status_code != 200:
         raise RuntimeError(f"CrossRef search returned HTTP {resp.status_code}")
 
@@ -172,7 +357,12 @@ def search_crossref(query: str, limit: int = 5) -> list[dict[str, str]]:
 
 
 def search_openalex(query: str, limit: int = 5) -> list[dict[str, str]]:
-    """Search OpenAlex (polite pool) by title/author query.
+    """Search OpenAlex by title/author query.
+
+    Spends the free keyless mailto pool first, then falls over to each key in
+    ``OPENALEX_API_KEY``. A credential whose ``Retry-After`` exceeds an hour has hit
+    its daily cap and is retired for the rest of the process rather than retried
+    against, so the metered keys are only touched once the free pool is gone.
 
     Args:
         query: Free-text query.
@@ -182,23 +372,58 @@ def search_openalex(query: str, limit: int = 5) -> list[dict[str, str]]:
         List of normalised metadata dicts.
 
     Raises:
+        RateLimitedError: The polite pool and every key are capped.
         RuntimeError: Network/API error.
     """
     import httpx
 
-    params = {
+    base_params = {
         "search": query,
         "per-page": str(min(limit, 25)),
         "mailto": _OPENALEX_MAILTO,
         "select": "title,authorships,primary_location,publication_year,doi",
     }
-    url = "https://api.openalex.org/works?" + urllib.parse.urlencode(params)
 
-    try:
-        resp = httpx.get(url, timeout=15.0, follow_redirects=True)
-    except httpx.RequestError as exc:
-        raise RuntimeError(f"OpenAlex search network error: {exc}") from exc
+    capped: RateLimitedError | None = None
+    resp = None
+    for key in _openalex_key_candidates():
+        params = dict(base_params)
+        if key is not None:
+            params["api_key"] = key
+        url = "https://api.openalex.org/works?" + urllib.parse.urlencode(params)
 
+        try:
+            resp = httpx.get(url, timeout=15.0, follow_redirects=True)
+        except httpx.RequestError as exc:
+            raise RuntimeError(f"OpenAlex search network error: {exc}") from exc
+
+        try:
+            _raise_for_throttle(resp, "OpenAlex")
+        except RateLimitedError as exc:
+            # A burst throttle is the backoff layer's job, and a 503 hits every
+            # credential alike; only a daily cap is worth failing over for.
+            if not _retire_openalex_key(key, exc.retry_after, resp.status_code):
+                raise
+            capped = exc
+            continue
+
+        if _retire_openalex_key(key, None, resp.status_code):
+            # A metered key out of credit — not a throttle status, so it arrives here
+            # rather than through _raise_for_throttle, but it fails over the same way.
+            capped = RateLimitedError(
+                f"OpenAlex returned HTTP {resp.status_code}",
+                retry_after=_seconds_until_utc_midnight(),
+            )
+            continue
+        break
+    else:
+        # Every credential is retired — either they were capped in this call, or an
+        # earlier call retired them all. Surface it as a throttle so callers keep
+        # treating it as "come back later" rather than a permanent failure.
+        raise capped or RateLimitedError("OpenAlex: all credentials are out of quota")
+
+    if resp is None:  # pragma: no cover - unreachable once the loop has run a candidate
+        raise capped or RateLimitedError("OpenAlex: all credentials are out of quota")
     if resp.status_code != 200:
         raise RuntimeError(f"OpenAlex returned HTTP {resp.status_code}")
 
@@ -257,10 +482,11 @@ def search_arxiv(query: str, limit: int = 5) -> list[dict[str, str]]:
     url = "https://export.arxiv.org/api/query?" + urllib.parse.urlencode(params)
 
     try:
-        resp = httpx.get(url, timeout=15.0, follow_redirects=True)
+        resp = httpx.get(url, timeout=_ARXIV_TIMEOUT_SECONDS, follow_redirects=True)
     except httpx.RequestError as exc:
         raise RuntimeError(f"arXiv search network error: {exc}") from exc
 
+    _raise_for_throttle(resp, "arXiv")
     if resp.status_code != 200:
         raise RuntimeError(f"arXiv returned HTTP {resp.status_code}")
 
@@ -358,6 +584,7 @@ def search_semantic_scholar(query: str, limit: int = 5) -> list[dict[str, str]]:
             continue
         break
 
+    _raise_for_throttle(resp, "Semantic Scholar")
     if resp is None or resp.status_code != 200:
         code = resp.status_code if resp is not None else "no-response"
         raise RuntimeError(f"Semantic Scholar returned HTTP {code}")

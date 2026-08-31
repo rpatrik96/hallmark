@@ -156,6 +156,25 @@ OPENROUTER_MODELS: dict[str, str] = {
     # anthropic/claude-opus-4.7 via OpenRouter mirror (native path: llm_anthropic_opus_4_7).
     # Released 2026-04-16. $5/$25 per M tok.
     "claude-opus-4-7": "anthropic/claude-opus-4.7",
+    # --- Small/mid-scale additions (confirmed via OpenRouter /api/v1/models 2026-08-03) ---
+    # anthropic/claude-haiku-4.5 via OpenRouter mirror. $1/$5 per M tok. Cheapest
+    # Anthropic tier; pairs with claude-sonnet-4-6 / claude-opus-4-7 for a
+    # within-family capability sweep.
+    "claude-haiku-4-5": "anthropic/claude-haiku-4.5",
+    # Qwen3 dense series — a controlled parameter-count sweep (8B/14B/32B) within
+    # one model family, complementing the MoE "qwen"/"qwen-max" entries.
+    # All three are hybrid-reasoning models that default to thinking ON via
+    # OpenRouter, so they are listed in _NO_THINK_MODELS below; without that
+    # guard they burn the token budget on hidden thinking and return truncated
+    # JSON (the qwen3.5-122b / gemini-3.1-pro failure mode noted above).
+    # qwen/qwen3-4b does not exist on OpenRouter — 8B is the smallest dense tier.
+    # NOTE: qwen3-8b is listed by /api/v1/models but 404s on the lab key —
+    # Alibaba is its only provider and it is outside this account's provider
+    # allowlist (probed 2026-08-03, also with an explicit provider.only override).
+    # Enable Alibaba in OpenRouter account settings to use this baseline.
+    "qwen3-8b": "qwen/qwen3-8b",  # $0.12/$0.46 per M tok — see NOTE above
+    "qwen3-14b": "qwen/qwen3-14b",  # $0.23/$0.91 per M tok
+    "qwen3-32b": "qwen/qwen3-32b",  # $0.08/$0.28 per M tok
     # Skipped models (Q2 2026):
     #   deepseek/deepseek-v4-pro  — thinking model (reasoning_effort high/xhigh supported);
     #                               risk of reasoning tokens consuming the 1024-tok budget.
@@ -164,6 +183,27 @@ OPENROUTER_MODELS: dict[str, str] = {
     #                               same unbounded-thinking risk as gemini-3.1-pro-preview.
     #   google/gemini-3.1-pro-preview — already rejected (see comment above gemini-pro).
 }
+
+# Models that default to thinking mode and must be switched off via Qwen3's own
+# `/no_think` soft switch appended to the prompt.
+#
+# Probed live 2026-08-03 (OpenRouter → provider=DeepInfra). Every API-level
+# switch is silently IGNORED — each still burned 570-1000 reasoning tokens:
+#   reasoning={"enabled": False}                    → 730 (14B) / 997 (32B)
+#   reasoning={"max_tokens": 0}                     → 704 / 574
+#   chat_template_kwargs={"enable_thinking": False} → 757 / 938
+# Only `/no_think` in the prompt works: reasoning_tokens drops to 1 and the
+# reply is ~130-180 tokens. This matters — with no switch at all, qwen3-32b
+# overran the 1024-token budget and returned truncated, unparseable JSON
+# (finish_reason='length'), the same failure recorded for qwen3.5-122b above.
+_NO_THINK_MODELS: frozenset[str] = frozenset(
+    {
+        "qwen/qwen3-8b",
+        "qwen/qwen3-14b",
+        "qwen/qwen3-32b",
+    }
+)
+_NO_THINK_SUFFIX = "/no_think"
 
 # Reference dict of OpenAI model IDs for documentation and kwarg overrides.
 # The llm_openai baseline defaults to "gpt-5.1"; pass model= to use any entry here.
@@ -407,6 +447,13 @@ def _verify_with_openai_compatible(
     extra_call_kwargs: dict[str, Any] = {}
     if "gpt-5.5" in model:
         extra_call_kwargs["reasoning_effort"] = kwargs.pop("reasoning_effort", "none")
+    # OpenRouter's `reasoning` body field. NOT used to switch off thinking for
+    # the Qwen3 models — DeepInfra ignores it (see _NO_THINK_MODELS); it is an
+    # explicit, caller-driven escape hatch for providers that do honour it, and
+    # no model opts in by default.
+    reasoning_enabled = kwargs.pop("reasoning_enabled", None)
+    if reasoning_enabled is not None:
+        extra_call_kwargs["extra_body"] = {"reasoning": {"enabled": bool(reasoning_enabled)}}
 
     def call_fn(prompt: str) -> str:
         resp = client.chat.completions.create(
@@ -422,8 +469,20 @@ def _verify_with_openai_compatible(
     entry_prompt_fn: Callable[[BlindEntry], str] | None = kwargs.pop("prompt_fn", None)
     if entry_prompt_fn is None and cutoff_aware:
 
-        def entry_prompt_fn(entry: BlindEntry) -> str:
+        def _cutoff_aware_prompt(entry: BlindEntry) -> str:
             return _build_verification_prompt(entry, cutoff_aware=True)
+
+        entry_prompt_fn = _cutoff_aware_prompt
+
+    # Thinking-mode guard: append Qwen3's /no_think switch to whatever prompt
+    # would otherwise be sent (default, cutoff-aware, or a caller-supplied one).
+    if model in _NO_THINK_MODELS:
+        _base_prompt_fn = entry_prompt_fn or _build_verification_prompt
+
+        def _no_think_prompt(entry: BlindEntry) -> str:
+            return f"{_base_prompt_fn(entry)}\n\n{_NO_THINK_SUFFIX}"
+
+        entry_prompt_fn = _no_think_prompt
 
     retry_failed = bool(kwargs.pop("retry_failed", False))
 
@@ -530,7 +589,8 @@ def verify_with_anthropic(
             temperature=0.0,
             messages=[{"role": "user", "content": prompt}],
         )
-        return str(resp.content[0].text).strip()
+        # Only text blocks carry `.text`; skip thinking/tool-use blocks.
+        return "".join(block.text for block in resp.content if block.type == "text").strip()
 
     prompt_fn: Callable[[BlindEntry], str] | None = None
     if cutoff_aware:

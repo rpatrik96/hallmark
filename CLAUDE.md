@@ -77,7 +77,10 @@ Any user of the tool would benefit from these.
 - `llm_anthropic` — Claude Sonnet 4.6 via `ANTHROPIC_API_KEY`
 - `llm_openrouter_{deepseek_r1,deepseek_v3,qwen,mistral,gemini_flash}` — via `OPENROUTER_API_KEY` (uses `openai` SDK with custom `base_url`)
 - `llm_openrouter_gemini_flash` — Gemini 2.5 Flash via `OPENROUTER_API_KEY`
+- `llm_openrouter_qwen3_{8b,14b,32b}` — Qwen3 dense series, a controlled parameter-count sweep within one family (`qwen3-4b` does not exist on OpenRouter; `qwen3-8b` 404s on the lab key — Alibaba is its only provider and is outside the account's provider allowlist)
+- `llm_openrouter_claude_haiku_4_5` — Claude Haiku 4.5 via the OpenRouter mirror
 - Model configs live in `OPENROUTER_MODELS` dict in `hallmark/baselines/llm_verifier.py`
+- **Thinking-mode guard**: hybrid-reasoning models default to thinking ON and burn the `max_completion_tokens` budget on hidden reasoning, returning truncated JSON. Model IDs listed in `_NO_THINK_MODELS` get Qwen3's `/no_think` soft switch appended to the prompt. Do NOT reach for the API-level switches first — probed live 2026-08-03, DeepInfra silently ignores `reasoning.enabled`, `reasoning.max_tokens` and `chat_template_kwargs.enable_thinking` (570–1000 reasoning tokens each), while `/no_think` drops it to 1. The `reasoning_enabled=True/False` kwarg remains as an explicit opt-in for providers that honour it; the gpt-5.5 family uses `reasoning_effort="none"` instead
 - `_verify_with_openai_compatible()` is the shared helper for all OpenAI-SDK-based providers
 - Generation script: `scripts/generate_llm_hallucinations.py --backend openrouter --model deepseek/deepseek-r1`
 - Parallel evaluators: `scripts/parallel_resume_test_public.py` (zero-shot), `scripts/parallel_agentic_btu_test_public.py` (agentic) — use for long-running LLM evals with checkpoint recovery
