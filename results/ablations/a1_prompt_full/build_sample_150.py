@@ -17,7 +17,7 @@ from collections import defaultdict
 from pathlib import Path
 
 ROOT = Path("/Users/patrik.reizinger/Documents/GitHub/hallmark")
-DEV = ROOT / "data/v1.0/dev_public.jsonl"
+DEV = ROOT / "data/v1.2/dev_public.jsonl"
 OUTDIR = ROOT / "results/ablations/a1_prompt_full"
 N = 150
 SEED = 42
@@ -74,7 +74,7 @@ def main() -> None:
         "n_hallucinated": n_hall,
         "n_valid": n_valid,
         "allocation": alloc_report,
-        "source": "data/v1.0/dev_public.jsonl",
+        "source": "data/v1.2/dev_public.jsonl",
     }
     (OUTDIR / "sample_150_meta.json").write_text(json.dumps(meta, indent=2))
     print(json.dumps(meta, indent=2))

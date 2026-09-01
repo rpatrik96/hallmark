@@ -49,11 +49,11 @@ from hallmark.dataset.schema import (
 
 # Default data splits to scan. Paths are relative to the repository root.
 DEFAULT_SPLITS: dict[str, str] = {
-    "dev_public": "data/v1.0/dev_public.jsonl",
-    "test_public": "data/v1.0/test_public.jsonl",
+    "dev_public": "data/v1.2/dev_public.jsonl",
+    "test_public": "data/v1.2/test_public.jsonl",
     "test_hidden": "data/hidden/test_hidden.jsonl",
-    "stress_test": "data/v1.0/stress_test.jsonl",
-    "test_crossdomain": "data/v1.0/test_crossdomain.jsonl",
+    "stress_test": "data/v1.2/stress_test.jsonl",
+    "test_crossdomain": "data/v1.2/test_crossdomain.jsonl",
 }
 
 _VALUE_TO_TYPE: dict[str, HallucinationType] = {t.value: t for t in HallucinationType}
@@ -99,9 +99,18 @@ class ScanReport:
         default_factory=lambda: defaultdict(Counter)
     )
 
+    #: Structural violations (field-scoped sub-test False with the field absent).
+    #: Tracked separately from ``mismatches`` so the truth-table agreement rate
+    #: and its ratcheted bound keep their original meaning.
+    structural: list[Mismatch] = field(default_factory=list)
+
     @property
     def num_mismatches(self) -> int:
         return len(self.mismatches)
+
+    @property
+    def num_structural(self) -> int:
+        return len(self.structural)
 
     @property
     def agreement(self) -> float:
@@ -119,6 +128,48 @@ def _expected_subtests_for(entry: dict) -> dict[str, bool | None] | None:
     if enum is None:
         return None
     return EXPECTED_SUBTESTS[enum]
+
+
+#: Sub-tests that inspect a specific BibTeX field. When that field is absent
+#: from the entry, the check is not applicable and the sub-test MUST be None —
+#: never False. See the scoping rule beside ``SUBTEST_NAMES`` in
+#: ``hallmark.dataset.schema``.
+FIELD_SCOPED_SUBTESTS: dict[str, str] = {
+    "doi_resolves": "doi",
+}
+
+
+def verify_entry_structural(entry: dict) -> list[Mismatch]:
+    """Return structural sub-test violations for a single entry.
+
+    This check is independent of ``EXPECTED_SUBTESTS``. It exists because the
+    truth-table pass skips any sub-test whose expected value is ``None``
+    ("depends on the source entry") — which is exactly the case for
+    ``doi_resolves`` on most types, so a ``False`` on a DOI-less entry slips
+    through unnoticed.
+
+    A violation is recorded when a field-scoped sub-test is ``False`` while the
+    field it inspects is absent from ``entry["fields"]``: the check cannot have
+    been performed, so the correct value is ``None``.
+    """
+    subtests = entry.get("subtests") or {}
+    fields = entry.get("fields") or {}
+    split = entry.get("_split", "")
+    out: list[Mismatch] = []
+    for name, field_name in FIELD_SCOPED_SUBTESTS.items():
+        if subtests.get(name) is False and not fields.get(field_name):
+            out.append(
+                Mismatch(
+                    split=split,
+                    bibtex_key=entry.get("bibtex_key", ""),
+                    label=entry.get("label", ""),
+                    hallucination_type=entry.get("hallucination_type"),
+                    subtest=name,
+                    assigned=False,
+                    expected=None,
+                )
+            )
+    return out
 
 
 def verify_entry_subtests(entry: dict) -> list[Mismatch]:
@@ -182,6 +233,10 @@ def scan_splits(splits: dict[str, Path] | None = None) -> ScanReport:
                 if _is_canary(entry) or not (entry.get("subtests") or {}):
                     report.skipped_entries += 1
                     continue
+                # Structural check first: it is independent of the truth table,
+                # so it still applies to unknown types and None-expected fields.
+                entry["_split"] = split_name
+                report.structural.extend(verify_entry_structural(entry))
                 expected = _expected_subtests_for(entry)
                 if expected is None:
                     report.unknown_types[entry.get("hallucination_type")] += 1
@@ -225,6 +280,17 @@ def print_report(report: ScanReport) -> None:
         f"Overall agreement: {report.agreement:.1f}% "
         f"({report.num_mismatches}/{report.total_checks} sub-test checks mismatch the truth table)."
     )
+
+    if report.structural:
+        by_split: Counter = Counter(m.split for m in report.structural)
+        by_subtest: Counter = Counter(m.subtest for m in report.structural)
+        print(
+            f"\nSTRUCTURAL violations: {report.num_structural} "
+            "(field-scoped sub-test is False but the field it inspects is absent; "
+            "the correct value is None -- see the scoping rule in hallmark.dataset.schema)."
+        )
+        print(f"  by sub-test: {dict(by_subtest)}")
+        print(f"  by split   : {dict(by_split)}")
 
     if report.unknown_types:
         print("\nEntries with unknown hallucination_type (not in taxonomy):")
@@ -277,6 +343,7 @@ def main() -> int:
             "skipped_entries": report.skipped_entries,
             "total_checks": report.total_checks,
             "num_mismatches": report.num_mismatches,
+            "num_structural": report.num_structural,
             "agreement_pct": round(report.agreement, 4),
             "per_split": {s: dict(c) for s, c in report.per_split.items()},
             "per_type_subtest": {
@@ -284,6 +351,7 @@ def main() -> int:
             },
             "unknown_types": dict(report.unknown_types),
             "mismatches": [m.as_dict() for m in report.mismatches],
+            "structural": [m.as_dict() for m in report.structural],
         }
         print(json.dumps(payload, indent=2, ensure_ascii=False))
     else:

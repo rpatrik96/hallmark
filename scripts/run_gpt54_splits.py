@@ -58,7 +58,7 @@ def main() -> None:
     )
     parser.add_argument(
         "--version",
-        default="v1.0",
+        default="v1.2",
         help="Dataset version (default: v1.0)",
     )
     args = parser.parse_args()

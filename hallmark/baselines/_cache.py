@@ -12,7 +12,7 @@ import importlib.util
 import logging
 import shelve
 import time
-from collections.abc import Callable
+from collections.abc import Callable, Sequence
 from pathlib import Path
 from typing import Any, TypeVar
 
@@ -23,6 +23,14 @@ logger = logging.getLogger(__name__)
 T = TypeVar("T")
 
 _DEFAULT_CACHE_DIR = Path.home() / ".cache" / "hallmark"
+
+# CLI flags whose *value* is a credential and must never reach a log file.
+_SECRET_FLAGS = frozenset({"--s2-api-key", "--api-key", "--openai-api-key", "--token"})
+
+# Upper bound on a honoured ``Retry-After``. Servers occasionally answer with windows
+# of an hour or more; sleeping that long would stall an evaluation run, so we wait at
+# most this and let the normal retry budget expire.
+MAX_RETRY_AFTER_SECONDS = 60.0
 
 _BENCHMARK_VERSION = "1.0"
 
@@ -129,6 +137,72 @@ def cached_call(
     return result
 
 
+def redact_command(cmd: Sequence[str]) -> str:
+    """Render a subprocess command for logging with secret values masked.
+
+    Flags such as ``--s2-api-key`` take the credential as the *following*
+    argument, so logging ``" ".join(cmd)`` writes a live key into every log line
+    (a 121-entry run emitted 242 copies before this was added).
+
+    Args:
+        cmd: The command and its arguments.
+
+    Returns:
+        A space-joined rendering with the value after any secret-bearing flag
+        replaced by ``***``.
+    """
+    parts = list(cmd)
+    out: list[str] = []
+    mask_next = False
+    for part in parts:
+        if mask_next:
+            out.append("***")
+            mask_next = False
+            continue
+        flag = part.split("=", 1)[0]
+        if flag in _SECRET_FLAGS:
+            # Both "--flag value" and "--flag=value" spellings.
+            out.append(f"{flag}=***" if "=" in part else part)
+            mask_next = "=" not in part
+        else:
+            out.append(part)
+    return " ".join(out)
+
+
+class RateLimitedError(RuntimeError):
+    """An upstream throttle (HTTP 429/503) that told us how long to wait.
+
+    Servers answering 429 usually include a ``Retry-After`` header stating when the
+    caller may return.  Ignoring it and falling back to a fixed exponential schedule
+    means retrying *before* the window reopens and exhausting the budget while being
+    told exactly how to succeed — the shape of the 173 Semantic Scholar and 149
+    OpenAlex failures in the 2026-07 cascade run.
+
+    Attributes:
+        retry_after: Seconds to wait as instructed by the server, or ``None`` when the
+            header was absent or unparseable (callers then fall back to exponential
+            backoff).
+    """
+
+    def __init__(self, message: str, retry_after: float | None = None) -> None:
+        super().__init__(message)
+        self.retry_after = retry_after
+
+
+class NonRetryableError(RuntimeError):
+    """An error that is guaranteed to recur identically on every attempt.
+
+    Raised for deterministic, client-side faults (e.g. decoding a response body
+    we ourselves mislabelled) as opposed to transient network conditions such as
+    HTTP 429, timeouts, or connection resets.  :func:`retry_with_backoff` re-raises
+    these immediately instead of sleeping through a backoff schedule that cannot
+    change the outcome.
+
+    Failing fast also keeps the diagnosis honest: four retries and a backoff make
+    a code defect look like a struggling upstream API.
+    """
+
+
 def retry_with_backoff(
     fn: Callable[[], T],
     max_retries: int = 3,
@@ -136,6 +210,15 @@ def retry_with_backoff(
     exceptions: tuple[type[BaseException], ...] = (Exception,),
 ) -> T:
     """Retry *fn* with exponential backoff on failure.
+
+    Three classes of failure are treated differently:
+
+    - :class:`NonRetryableError` — deterministic client-side fault; re-raised on the
+      first attempt, since retrying cannot change the outcome.
+    - :class:`RateLimitedError` carrying ``retry_after`` — the server stated when to
+      return, so that wait is honoured (capped at :data:`MAX_RETRY_AFTER_SECONDS`)
+      in place of the exponential schedule.
+    - Everything else — ordinary transient errors; exponential backoff.
 
     Args:
         fn: Zero-argument callable.
@@ -155,17 +238,35 @@ def retry_with_backoff(
     for attempt in range(max_retries + 1):
         try:
             return fn()
+        except NonRetryableError as exc:
+            # Deterministic client-side fault — retrying cannot change the result.
+            # Logged at ERROR (not WARNING) because it signals a bug in our code,
+            # not an unhealthy upstream API.
+            logger.error("Non-retryable error, failing immediately: %s", exc)
+            raise
         except exceptions as exc:
             last_exc = exc
+            # Honour a server-stated Retry-After in place of our own guess: retrying
+            # sooner than instructed is guaranteed to be refused again.
+            wait = delay
+            requested = getattr(exc, "retry_after", None)
+            if isinstance(requested, (int, float)) and requested > 0:
+                wait = min(float(requested), MAX_RETRY_AFTER_SECONDS)
+                if float(requested) > MAX_RETRY_AFTER_SECONDS:
+                    logger.warning(
+                        "Server asked for %.0fs, capping wait at %.0fs",
+                        float(requested),
+                        MAX_RETRY_AFTER_SECONDS,
+                    )
             if attempt < max_retries:
                 logger.warning(
                     "Attempt %d/%d failed (%s), retrying in %.1fs...",
                     attempt + 1,
                     max_retries + 1,
                     exc,
-                    delay,
+                    wait,
                 )
-                time.sleep(delay)
+                time.sleep(wait)
                 delay *= 2
             else:
                 logger.error(

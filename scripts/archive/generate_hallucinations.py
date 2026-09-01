@@ -3,8 +3,8 @@
 
 Usage:
     python scripts/generate_hallucinations.py \
-        --valid-entries data/v1.0/valid_entries.jsonl \
-        --output data/v1.0/hallucinated_entries.jsonl \
+        --valid-entries data/v1.2/valid_entries.jsonl \
+        --output data/v1.2/hallucinated_entries.jsonl \
         --tier1 40 --tier2 35 --tier3 25
 """
 

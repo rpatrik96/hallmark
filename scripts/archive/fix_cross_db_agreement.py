@@ -38,7 +38,7 @@ def fix_split(path: Path) -> tuple[int, int]:
 
 
 def main() -> None:
-    data_dir = Path("data/v1.0")
+    data_dir = Path("data/v1.2")
     total_fixed = 0
 
     for split_file in ["dev_public.jsonl", "test_public.jsonl"]:

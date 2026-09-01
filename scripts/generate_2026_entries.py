@@ -49,7 +49,7 @@ from hallmark.dataset.schema import (  # noqa: E402
     save_entries,
 )
 
-DATA_DIR = ROOT / "data" / "v1.0"
+DATA_DIR = ROOT / "data" / "v1.2"
 
 
 def _stable_key(tag: str, idx: int) -> str:

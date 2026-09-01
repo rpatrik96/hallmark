@@ -25,7 +25,7 @@ from sklearn.pipeline import make_pipeline
 from sklearn.preprocessing import StandardScaler
 
 REPO = Path("/Users/patrik.reizinger/Documents/GitHub/hallmark")
-DEV = REPO / "data/v1.0/dev_public.jsonl"
+DEV = REPO / "data/v1.2/dev_public.jsonl"
 
 # Paper's 8 features (appendix.tex L550), in caption order.
 FEATURE_NAMES = [
@@ -140,7 +140,7 @@ def main() -> dict:
             "Variant B (headline): StandardScaler + StratifiedKFold(5, shuffle, seed=42); "
             "LogisticRegression(max_iter=1000, seed=42); accuracy scoring."
         ),
-        "labels_source": "data/v1.0/dev_public.jsonl (v1.1.1 relabeled, dev 513 valid / 606 hall)",
+        "labels_source": "data/v1.2/dev_public.jsonl (v1.1.1 relabeled, dev 513 valid / 606 hall)",
     }
 
     (REPO / "results/relabel_delta/shortcut_refit.json").write_text(

@@ -10,7 +10,7 @@ Produces results/relabel_delta/todo_offline.json with:
   4. gpt51_llm_comparison_row -- the NEW GPT-5.1 dev_public row (manifest sec1).
 
 No API calls. Every number is computed from a stored per-entry prediction file
-re-scored against data/v1.0/dev_public.jsonl (the relabeled v1.1.1 split).
+re-scored against data/v1.2/dev_public.jsonl (the relabeled v1.1.1 split).
 """
 
 from __future__ import annotations
@@ -72,7 +72,7 @@ OFFLINE_DEV = [
     ),
     ("llm_agentic_btu_openai", "results/temporal_checkpoints/agentic_btu_openai_gpt-5.1.jsonl"),
     ("llm_agentic_openai", "results/temporal_checkpoints/agentic_openai_gpt-5.1.jsonl"),
-    ("llm_tool_augmented", "data/v1.0/baseline_results/llm_tool_augmented_dev_public.jsonl"),
+    ("llm_tool_augmented", "data/v1.2/baseline_results/llm_tool_augmented_dev_public.jsonl"),
 ]
 
 # generation_method buckets in paper order.
@@ -262,7 +262,7 @@ def main() -> None:
     result = {
         "_meta": {
             "task": "TASK A offline TODO resolution on v1.1.1 labels",
-            "labels": "data/v1.0/dev_public.jsonl (dev 513 valid / 606 hall, n=1119)",
+            "labels": "data/v1.2/dev_public.jsonl (dev 513 valid / 606 hall, n=1119)",
             "old_rev": "7a52362 (pre-relabel)",
             "method": (
                 "per-entry predictions re-scored vs NEW labels; missing/UNCERTAIN "

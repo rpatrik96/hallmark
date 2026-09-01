@@ -485,7 +485,7 @@ def fix_file(filepath: Path, pool_start: int) -> None:
 
 
 def main() -> None:
-    data_dir = Path("data/v1.0")
+    data_dir = Path("data/v1.2")
     fix_file(data_dir / "dev_public.jsonl", pool_start=0)
     fix_file(data_dir / "test_public.jsonl", pool_start=30)
 

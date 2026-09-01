@@ -69,7 +69,7 @@ def main() -> None:
         default=["dev_public", "test_public"],
     )
     parser.add_argument("--cv-folds", type=int, default=5)
-    parser.add_argument("--version", default="v1.0")
+    parser.add_argument("--version", default="v1.2")
     parser.add_argument("--data-dir", type=str, default=None)
     args = parser.parse_args()
 

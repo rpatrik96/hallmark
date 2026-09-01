@@ -18,7 +18,7 @@ import subprocess
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parent.parent
-RESULTS_DIR = REPO / "data/v1.0/baseline_results"
+RESULTS_DIR = REPO / "data/v1.2/baseline_results"
 OUT_MD = REPO / "results/relabel_delta/btu_v1_2_0_regen.md"
 
 FIELDS = [
@@ -179,31 +179,31 @@ def main() -> None:
     parts.append("## Standalone co-designed bibtex-updater")
     parts.append("")
     parts.append(
-        row_block("dev_public", "data/v1.0/baseline_results/bibtexupdater_dev_public.json")
+        row_block("dev_public", "data/v1.2/baseline_results/bibtexupdater_dev_public.json")
     )
     parts.append(
-        row_block("test_public", "data/v1.0/baseline_results/bibtexupdater_test_public.json")
+        row_block("test_public", "data/v1.2/baseline_results/bibtexupdater_test_public.json")
     )
 
     parts.append("## DB-first cascade (Stage-1 btu 1.2.0 + Stage-2 OpenRouter-Sonnet)")
     parts.append("")
     parts.append(
-        row_block("dev_public", "data/v1.0/baseline_results/cascade_db_diagnosis_dev_public.json")
+        row_block("dev_public", "data/v1.2/baseline_results/cascade_db_diagnosis_dev_public.json")
     )
     parts.append(
-        row_block("test_public", "data/v1.0/baseline_results/cascade_db_diagnosis_test_public.json")
+        row_block("test_public", "data/v1.2/baseline_results/cascade_db_diagnosis_test_public.json")
     )
     parts.append(
-        row_block("stress_test", "data/v1.0/baseline_results/cascade_db_diagnosis_stress_test.json")
+        row_block("stress_test", "data/v1.2/baseline_results/cascade_db_diagnosis_stress_test.json")
     )
 
     parts.append("## Per-type breakdown (standalone btu)")
     parts.append("")
     parts.append(
-        per_type_block("dev_public", "data/v1.0/baseline_results/bibtexupdater_dev_public.json")
+        per_type_block("dev_public", "data/v1.2/baseline_results/bibtexupdater_dev_public.json")
     )
     parts.append(
-        per_type_block("test_public", "data/v1.0/baseline_results/bibtexupdater_test_public.json")
+        per_type_block("test_public", "data/v1.2/baseline_results/bibtexupdater_test_public.json")
     )
 
     parts.append("## Fresh cascade Stage-2 composition")

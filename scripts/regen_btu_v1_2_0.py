@@ -8,8 +8,8 @@ LLM-drift-prone; the cascade Stage-2 (Sonnet via OpenRouter) IS — its output i
 a dated snapshot.
 
 Outputs (overwrite):
-  data/v1.0/baseline_results/bibtexupdater_{dev,test}_public.json   (aggregate)
-  data/v1.0/baseline_results/cascade_db_diagnosis_{dev,test}_public_+_stress.json
+  data/v1.2/baseline_results/bibtexupdater_{dev,test}_public.json   (aggregate)
+  data/v1.2/baseline_results/cascade_db_diagnosis_{dev,test}_public_+_stress.json
   results/relabel_delta/btu_v1_2_0/                                 (per-entry preds + raw)
 
 Checkpointing:
@@ -51,7 +51,7 @@ from hallmark.evaluation.metrics import evaluate  # noqa: E402
 logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
 logger = logging.getLogger("regen_btu")
 
-RESULTS_DIR = REPO / "data/v1.0/baseline_results"
+RESULTS_DIR = REPO / "data/v1.2/baseline_results"
 DELTA_DIR = REPO / "results/relabel_delta/btu_v1_2_0"
 DELTA_DIR.mkdir(parents=True, exist_ok=True)
 
@@ -192,7 +192,7 @@ def add_provenance(result_dict: dict, *, kind: str, splits: list[str]) -> dict:
 
 
 def run_btu_standalone(split: str) -> dict:
-    entries = load_split(split=split, version="v1.0")
+    entries = load_split(split=split, version="v1.2")
     blind = [e.to_blind() for e in entries]
     logger.info("[%s] loaded %d entries", split, len(entries))
 
@@ -245,7 +245,7 @@ def run_btu_standalone(split: str) -> dict:
 def run_cascade_split(split: str, stage2_baseline: str) -> dict:
     from hallmark.baselines.cascade import run_cascade
 
-    entries = load_split(split=split, version="v1.0")
+    entries = load_split(split=split, version="v1.2")
     blind = [e.to_blind() for e in entries]
     logger.info("[%s] cascade: %d entries (Stage-2=%s)", split, len(entries), stage2_baseline)
 

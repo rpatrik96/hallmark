@@ -163,10 +163,10 @@ except ImportError:  # pragma: no cover - environment dependent
 # ---------------------------------------------------------------------------
 DATA_DIR = _REPO_ROOT / "data"
 SPLITS: dict[str, Path] = {
-    "dev_public": DATA_DIR / "v1.0" / "dev_public.jsonl",
-    "test_public": DATA_DIR / "v1.0" / "test_public.jsonl",
-    "stress_test": DATA_DIR / "v1.0" / "stress_test.jsonl",
-    "test_crossdomain": DATA_DIR / "v1.0" / "test_crossdomain.jsonl",
+    "dev_public": DATA_DIR / "v1.2" / "dev_public.jsonl",
+    "test_public": DATA_DIR / "v1.2" / "test_public.jsonl",
+    "stress_test": DATA_DIR / "v1.2" / "stress_test.jsonl",
+    "test_crossdomain": DATA_DIR / "v1.2" / "test_crossdomain.jsonl",
     "test_hidden": DATA_DIR / "hidden" / "test_hidden.jsonl",
 }
 

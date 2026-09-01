@@ -21,6 +21,7 @@ evaluation surfaces as the DB-indexing-lag tax.
 from __future__ import annotations
 
 import logging
+from pathlib import Path
 from typing import Any
 
 from hallmark.baselines.bibtexupdater import run_bibtex_check_with_status
@@ -202,6 +203,17 @@ def run_cascade(
     if not entries:
         return []
 
+    # The harness injects ``checkpoint_dir`` for baselines that support
+    # per-entry resume. Stage 1 (bibtex-check subprocess) has no checkpoint
+    # support and would silently swallow it via ``**_kw`` — route it to the
+    # Stage 2 LLM baseline instead, under a subdirectory so the top-level
+    # resume scan (which globs ``checkpoint_dir/*.jsonl``, non-recursive)
+    # does not skip entries before they re-enter the cascade for Stage 1
+    # verdicts and stage tagging. On resume, Stage 1 re-runs (cheap,
+    # disk-cached by the tool) and Stage 2 returns checkpointed predictions
+    # without new LLM calls.
+    checkpoint_dir = stage1_kwargs.pop("checkpoint_dir", None)
+
     stage1_preds, status_map = run_bibtex_check_with_status(entries, **stage1_kwargs)
     pred_by_key = {p.bibtex_key: p for p in stage1_preds}
 
@@ -223,7 +235,10 @@ def run_cascade(
             final[key] = verdict
 
     if deferred:
-        stage2_preds = _run_stage2(deferred, stage2_baseline, stage2_kwargs or {})
+        merged_stage2: dict[str, Any] = dict(stage2_kwargs or {})
+        if checkpoint_dir is not None:
+            merged_stage2.setdefault("checkpoint_dir", Path(checkpoint_dir) / "stage2")
+        stage2_preds = _run_stage2(deferred, stage2_baseline, merged_stage2)
         for p in stage2_preds:
             tagged = Prediction(
                 bibtex_key=p.bibtex_key,

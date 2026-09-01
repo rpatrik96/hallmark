@@ -32,7 +32,7 @@ from regenerate_summary import (
 )
 
 REPO = Path("/Users/patrik.reizinger/Documents/GitHub/hallmark")
-OUT = REPO / "data/v1.0/baseline_results"
+OUT = REPO / "data/v1.2/baseline_results"
 DELTA = REPO / "results/relabel_delta"
 
 # OLD per-class UNCERTAIN split for the CONSERVATIVE cascade.
@@ -103,38 +103,38 @@ def write_unchanged(out_name: str, pub_rel: str):
 JOBS = [
     (
         "cascade_db_diagnosis_dev_public.json",
-        "data/v1.0/baseline_results/cascade_db_diagnosis_dev_public.json",
+        "data/v1.2/baseline_results/cascade_db_diagnosis_dev_public.json",
         "dev_public",
         False,
     ),
     (
         "cascade_db_diagnosis_test_public.json",
-        "data/v1.0/baseline_results/cascade_db_diagnosis_test_public.json",
+        "data/v1.2/baseline_results/cascade_db_diagnosis_test_public.json",
         "test_public",
         False,
     ),
     (
         "cascade_db_diagnosis_aggressive_dev_public.json",
-        "data/v1.0/baseline_results/cascade_db_diagnosis_aggressive_dev_public.json",
+        "data/v1.2/baseline_results/cascade_db_diagnosis_aggressive_dev_public.json",
         "dev_public",
         True,
     ),
     (
         "cascade_db_diagnosis_aggressive_test_public.json",
-        "data/v1.0/baseline_results/cascade_db_diagnosis_aggressive_test_public.json",
+        "data/v1.2/baseline_results/cascade_db_diagnosis_aggressive_test_public.json",
         "test_public",
         True,
     ),
     # evalmode_aggressive variants (same numbers as aggressive; reconstruct identically)
     (
         "cascade_db_diagnosis_evalmode_aggressive_dev_public.json",
-        "data/v1.0/baseline_results/cascade_db_diagnosis_evalmode_aggressive_dev_public.json",
+        "data/v1.2/baseline_results/cascade_db_diagnosis_evalmode_aggressive_dev_public.json",
         "dev_public",
         True,
     ),
     (
         "cascade_db_diagnosis_evalmode_aggressive_test_public.json",
-        "data/v1.0/baseline_results/cascade_db_diagnosis_evalmode_aggressive_test_public.json",
+        "data/v1.2/baseline_results/cascade_db_diagnosis_evalmode_aggressive_test_public.json",
         "test_public",
         True,
     ),
@@ -142,15 +142,15 @@ JOBS = [
 UNCHANGED = [
     (
         "cascade_db_diagnosis_stress_test.json",
-        "data/v1.0/baseline_results/cascade_db_diagnosis_stress_test.json",
+        "data/v1.2/baseline_results/cascade_db_diagnosis_stress_test.json",
     ),
     (
         "cascade_db_diagnosis_aggressive_stress_test.json",
-        "data/v1.0/baseline_results/cascade_db_diagnosis_aggressive_stress_test.json",
+        "data/v1.2/baseline_results/cascade_db_diagnosis_aggressive_stress_test.json",
     ),
     (
         "cascade_db_diagnosis_evalmode_aggressive_stress_test.json",
-        "data/v1.0/baseline_results/cascade_db_diagnosis_evalmode_aggressive_stress_test.json",
+        "data/v1.2/baseline_results/cascade_db_diagnosis_evalmode_aggressive_stress_test.json",
     ),
 ]
 

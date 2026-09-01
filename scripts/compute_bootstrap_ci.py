@@ -25,14 +25,14 @@ Pass ``--in-place`` to overwrite the source result files.
 Usage:
     # Augment every result JSON that has a matching per-entry prediction file:
     python scripts/compute_bootstrap_ci.py \
-        --results-dir data/v1.0/baseline_results \
-        --predictions-dir data/v1.0/baseline_results \
+        --results-dir data/v1.2/baseline_results \
+        --predictions-dir data/v1.2/baseline_results \
         --output-dir results/ci
 
     # Single result + explicit prediction file:
     python scripts/compute_bootstrap_ci.py \
-        --result data/v1.0/baseline_results/llm_tool_augmented_dev_public.json \
-        --predictions data/v1.0/baseline_results/llm_tool_augmented_dev_public.jsonl \
+        --result data/v1.2/baseline_results/llm_tool_augmented_dev_public.json \
+        --predictions data/v1.2/baseline_results/llm_tool_augmented_dev_public.jsonl \
         --split dev_public --output-dir results/ci
 """
 
@@ -288,7 +288,7 @@ def main() -> None:
     parser.add_argument("--n-bootstrap", type=int, default=10_000)
     parser.add_argument("--seed", type=int, default=42)
     parser.add_argument("--confidence", type=float, default=0.95)
-    parser.add_argument("--version", default="v1.0")
+    parser.add_argument("--version", default="v1.2")
     parser.add_argument("--data-dir", type=str, default=None)
     args = parser.parse_args()
 

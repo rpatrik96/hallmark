@@ -61,7 +61,7 @@ def deduplicate_bibtex_keys(dev_entries, test_entries):
 
 
 def main():
-    data_dir = Path("data/v1.0")
+    data_dir = Path("data/v1.2")
     dev_path = data_dir / "dev_public.jsonl"
     test_path = data_dir / "test_public.jsonl"
 

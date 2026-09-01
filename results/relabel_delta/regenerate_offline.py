@@ -3,7 +3,7 @@
 Each tool/split here has a full-coverage per-entry prediction file that
 reproduces the published aggregate against the pre-relabel (7a52362) labels
 (verified separately). We recompute on the current labels and write the result
-into data/v1.0/baseline_results/, preserving the published JSON's key set.
+into data/v1.2/baseline_results/, preserving the published JSON's key set.
 """
 
 from __future__ import annotations
@@ -18,7 +18,7 @@ from _rescore import rescore
 from _writer import write_aggregate
 
 REPO = Path("/Users/patrik.reizinger/Documents/GitHub/hallmark")
-OUT = REPO / "data/v1.0/baseline_results"
+OUT = REPO / "data/v1.2/baseline_results"
 
 
 def load_template(pub_rel: str) -> dict:
@@ -105,7 +105,7 @@ JOBS = [
         "results/checkpoints/llm_openai/openai_gpt-5.1.jsonl",
         "dev_public",
         "llm_openai",
-        "data/v1.0/baseline_results/llm_openai_dev_public.json",
+        "data/v1.2/baseline_results/llm_openai_dev_public.json",
         "conservative",
     ),
     (
@@ -113,7 +113,7 @@ JOBS = [
         "results/checkpoints/llm_openai_gpt54_dev_public_v3/openai_gpt-5.4.jsonl",
         "dev_public",
         "llm_openai_gpt-5.4",
-        "data/v1.0/baseline_results/llm_openai_gpt54_dev_public.json",
+        "data/v1.2/baseline_results/llm_openai_gpt54_dev_public.json",
         "conservative",
     ),
     # ---- dev_public agentic / co-designed (offline) ----
@@ -123,7 +123,7 @@ JOBS = [
         "agentic_btu_openai_anthropic_claude-sonnet-4.6.jsonl",
         "dev_public",
         "llm_agentic_btu_sonnet_4_6",
-        "data/v1.0/baseline_results/llm_agentic_btu_sonnet_4_6_dev_public.json",
+        "data/v1.2/baseline_results/llm_agentic_btu_sonnet_4_6_dev_public.json",
         "conservative",
     ),
     (
@@ -131,7 +131,7 @@ JOBS = [
         "results/temporal_checkpoints/agentic_btu_openai_gpt-5.1.jsonl",
         "dev_public",
         "llm_agentic_btu_openai",
-        "data/v1.0/baseline_results/llm_agentic_btu_openai_dev_public.json",
+        "data/v1.2/baseline_results/llm_agentic_btu_openai_dev_public.json",
         "conservative",
     ),
     (
@@ -139,7 +139,7 @@ JOBS = [
         "results/temporal_checkpoints/agentic_openai_gpt-5.1.jsonl",
         "dev_public",
         "llm_agentic_openai",
-        "data/v1.0/baseline_results/llm_agentic_openai_dev_public.json",
+        "data/v1.2/baseline_results/llm_agentic_openai_dev_public.json",
         "conservative",
     ),
     # ---- test_public (offline; all verified) ----
@@ -149,7 +149,7 @@ JOBS = [
         "openrouter_deepseek_deepseek-r1.jsonl",
         "test_public",
         "llm_openrouter_deepseek_r1",
-        "data/v1.0/baseline_results/llm_openrouter_deepseek_r1_test_public.json",
+        "data/v1.2/baseline_results/llm_openrouter_deepseek_r1_test_public.json",
         "conservative",
     ),
     (
@@ -166,7 +166,7 @@ JOBS = [
         "openrouter_google_gemini-2.5-flash.jsonl",
         "test_public",
         "llm_openrouter_gemini_flash",
-        "data/v1.0/baseline_results/llm_openrouter_gemini_flash_test_public.json",
+        "data/v1.2/baseline_results/llm_openrouter_gemini_flash_test_public.json",
         "conservative",
     ),
     (
@@ -174,7 +174,7 @@ JOBS = [
         "results/checkpoints/llm_openrouter_gemini_pro/openrouter_google_gemini-2.5-pro.jsonl",
         "test_public",
         "llm_openrouter_gemini_pro",
-        "data/v1.0/baseline_results/llm_openrouter_gemini_pro_test_public.json",
+        "data/v1.2/baseline_results/llm_openrouter_gemini_pro_test_public.json",
         "conservative",
     ),
     (
@@ -183,7 +183,7 @@ JOBS = [
         "openrouter_mistralai_mistral-large-2512.jsonl",
         "test_public",
         "llm_openrouter_mistral",
-        "data/v1.0/baseline_results/llm_openrouter_mistral_test_public.json",
+        "data/v1.2/baseline_results/llm_openrouter_mistral_test_public.json",
         "conservative",
     ),
     (
@@ -191,7 +191,7 @@ JOBS = [
         "results/checkpoints/llm_openrouter_qwen_test_public/openrouter_qwen_qwen3-235b-a22b-2507.jsonl",
         "test_public",
         "llm_openrouter_qwen",
-        "data/v1.0/baseline_results/llm_openrouter_qwen_test_public.json",
+        "data/v1.2/baseline_results/llm_openrouter_qwen_test_public.json",
         "conservative",
     ),
     (
@@ -200,7 +200,7 @@ JOBS = [
         "openrouter_qwen_qwen3-vl-235b-a22b-instruct.jsonl",
         "test_public",
         "llm_openrouter_qwen_max",
-        "data/v1.0/baseline_results/llm_openrouter_qwen_max_test_public.json",
+        "data/v1.2/baseline_results/llm_openrouter_qwen_max_test_public.json",
         "conservative",
     ),
     (
@@ -209,7 +209,7 @@ JOBS = [
         "openrouter_meta-llama_llama-4-maverick.jsonl",
         "test_public",
         "llm_openrouter_llama_4_maverick",
-        "data/v1.0/baseline_results/llm_openrouter_llama_4_maverick_test_public.json",
+        "data/v1.2/baseline_results/llm_openrouter_llama_4_maverick_test_public.json",
         "conservative",
     ),
     (
@@ -218,7 +218,7 @@ JOBS = [
         "openrouter_anthropic_claude-opus-4.7.jsonl",
         "test_public",
         "llm_openrouter_claude_opus_4_7",
-        "data/v1.0/baseline_results/llm_openrouter_claude_opus_4_7_test_public.json",
+        "data/v1.2/baseline_results/llm_openrouter_claude_opus_4_7_test_public.json",
         "conservative",
     ),
     (
@@ -252,7 +252,7 @@ JOBS = [
         "agentic_btu_openai_openai_gpt-5.1.jsonl",
         "test_public",
         "llm_agentic_btu_openai",
-        "data/v1.0/baseline_results/llm_agentic_btu_openai_test_public.json",
+        "data/v1.2/baseline_results/llm_agentic_btu_openai_test_public.json",
         "conservative",
     ),
     (
@@ -260,7 +260,7 @@ JOBS = [
         "results/checkpoints/llm_agentic_openai_test_public/agentic_openai_openai_gpt-5.1.jsonl",
         "test_public",
         "llm_agentic_openai",
-        "data/v1.0/baseline_results/llm_agentic_openai_test_public.json",
+        "data/v1.2/baseline_results/llm_agentic_openai_test_public.json",
         "conservative",
     ),
     (
@@ -269,7 +269,7 @@ JOBS = [
         "agentic_btu_openai_anthropic_claude-sonnet-4.6.jsonl",
         "test_public",
         "llm_agentic_btu_sonnet_4_6",
-        "data/v1.0/baseline_results/llm_agentic_btu_sonnet_4_6_test_public.json",
+        "data/v1.2/baseline_results/llm_agentic_btu_sonnet_4_6_test_public.json",
         "conservative",
     ),
     (
@@ -278,7 +278,7 @@ JOBS = [
         "openai_tool_augmented_openai_gpt-5.1.jsonl",
         "test_public",
         "llm_tool_augmented",
-        "data/v1.0/baseline_results/llm_tool_augmented_test_public.json",
+        "data/v1.2/baseline_results/llm_tool_augmented_test_public.json",
         "conservative",
     ),
 ]

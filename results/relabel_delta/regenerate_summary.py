@@ -28,13 +28,13 @@ sys.path.insert(0, str(Path(__file__).parent))
 from _reconstruct import reconstruct
 
 REPO = Path("/Users/patrik.reizinger/Documents/GitHub/hallmark")
-OUT = REPO / "data/v1.0/baseline_results"
+OUT = REPO / "data/v1.2/baseline_results"
 DELTA = REPO / "results/relabel_delta"
 OLD_REV = "7a52362"
 
 
 def load_old_full(split: str) -> dict:
-    path = f"data/v1.0/{split}.jsonl"
+    path = f"data/v1.2/{split}.jsonl"
     out = subprocess.run(
         ["git", "-C", str(REPO), "show", f"{OLD_REV}:{path}"],
         capture_output=True,
@@ -166,31 +166,31 @@ JOBS = [
     ),
     (
         "doi_only_test_public.json",
-        "data/v1.0/baseline_results/doi_only_test_public.json",
+        "data/v1.2/baseline_results/doi_only_test_public.json",
         "test_public",
         "doi_only_test_public_changed_predictions.json",
     ),
     (
         "bibtexupdater_dev_public.json",
-        "data/v1.0/baseline_results/bibtexupdater_dev_public.json",
+        "data/v1.2/baseline_results/bibtexupdater_dev_public.json",
         "dev_public",
         "bibtexupdater_dev_public_changed_predictions.json",
     ),
     (
         "bibtexupdater_test_public.json",
-        "data/v1.0/baseline_results/bibtexupdater_test_public.json",
+        "data/v1.2/baseline_results/bibtexupdater_test_public.json",
         "test_public",
         "bibtexupdater_test_public_changed_predictions.json",
     ),
     (
         "llm_openrouter_claude_sonnet_4_6_dev_public.json",
-        "data/v1.0/baseline_results/llm_openrouter_claude_sonnet_4_6_dev_public.json",
+        "data/v1.2/baseline_results/llm_openrouter_claude_sonnet_4_6_dev_public.json",
         "dev_public",
         "llm_openrouter_claude_sonnet_4_6_dev_public_changed_predictions.json",
     ),
     (
         "llm_openrouter_claude_opus_4_7_dev_public.json",
-        "data/v1.0/baseline_results/llm_openrouter_claude_opus_4_7_dev_public.json",
+        "data/v1.2/baseline_results/llm_openrouter_claude_opus_4_7_dev_public.json",
         "dev_public",
         "llm_openrouter_claude_opus_4_7_dev_public_changed_predictions.json",
     ),

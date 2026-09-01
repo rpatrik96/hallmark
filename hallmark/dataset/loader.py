@@ -48,14 +48,14 @@ def _resolve_rolling_path(data_dir: Path, version: str, split: str) -> Path:
 
 def load_split(
     split: str = "dev_public",
-    version: str = "v1.0",
+    version: str = "v1.2",
     data_dir: str | Path | None = None,
 ) -> list[BenchmarkEntry]:
     """Load a benchmark split.
 
     Args:
         split: Split name (e.g., "dev_public", "test_public", "rolling_test").
-        version: Dataset version. Use "v1.0" for frozen splits, "rolling" for
+        version: Dataset version. Use "v1.2" for frozen splits, "rolling" for
             the latest rolling split, or "rolling/YYYY-MM-DD" for a specific date.
         data_dir: Override data directory. Defaults to data/ in package root.
 
@@ -83,7 +83,7 @@ def load_split(
 
 
 def load_metadata(
-    version: str = "v1.0",
+    version: str = "v1.2",
     data_dir: str | Path | None = None,
 ) -> dict[str, object]:
     """Load metadata for a benchmark version."""

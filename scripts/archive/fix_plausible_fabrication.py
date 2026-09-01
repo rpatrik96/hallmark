@@ -167,7 +167,7 @@ def fix_file(filepath: Path, titles: list[str]) -> None:
 
 
 def main() -> None:
-    data_dir = Path("data/v1.0")
+    data_dir = Path("data/v1.2")
     fix_file(data_dir / "dev_public.jsonl", DEV_TITLES)
     fix_file(data_dir / "test_public.jsonl", TEST_TITLES)
 

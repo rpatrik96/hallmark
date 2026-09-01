@@ -505,7 +505,7 @@ def parse_args() -> argparse.Namespace:
         default=Path("results/checkpoints/smoke_test_thinking_budget"),
         help="Output directory",
     )
-    p.add_argument("--data-dir", type=Path, default=Path("data/v1.0"), help="Data directory")
+    p.add_argument("--data-dir", type=Path, default=Path("data/v1.2"), help="Data directory")
     p.add_argument("--seed", type=int, default=42, help="Random seed for sampling")
     p.add_argument(
         "--dry-run",

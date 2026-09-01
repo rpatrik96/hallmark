@@ -5,7 +5,7 @@ Closes the paper's "LLM verifiers remain unevaluated on it" gap
 numbers (FPR 0.092 -> 0.375, app:codesign), but none of the twelve zero-shot
 LLM baselines from tab:results do.
 
-Split: data/v1.0/test_crossdomain.jsonl -- 500 entries (200 valid / 300
+Split: data/v1.2/test_crossdomain.jsonl -- 500 entries (200 valid / 300
 hallucinated); domains via `source`: pubmed (156) + biorxiv (143) = biomedical,
 dblp_cs_non_ml (201) = non-ML CS venues.
 
@@ -42,7 +42,7 @@ REPO = Path(__file__).resolve().parents[1]
 # would make one split read the other's cached verdicts.
 SPLITS: dict[str, Path] = {
     # confounded original: valid biomed all 2026 (post-cutoff), CS 2023-25
-    "v2026": REPO / "data/v1.0/test_crossdomain.jsonl",
+    "v2026": REPO / "data/v1.2/test_crossdomain.jsonl",
     # recency-matched: all valid entries 2021-2023 (pre-cutoff) -> isolates domain
     "matched": REPO / "data/v1.1_crossdomain_matched/test_crossdomain_matched.jsonl",
 }

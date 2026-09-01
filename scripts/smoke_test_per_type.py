@@ -23,7 +23,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 CHECKPOINT_DIR = ROOT / "results" / "checkpoints" / "smoke_test_thinking_budget"
-DATA_FILE = ROOT / "data" / "v1.0" / "dev_public.jsonl"
+DATA_FILE = ROOT / "data" / "v1.2" / "dev_public.jsonl"
 TABLES_DIR = ROOT / "tables"
 
 CELLS: list[tuple[str, str, str]] = [

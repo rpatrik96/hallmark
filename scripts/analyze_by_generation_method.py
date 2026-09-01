@@ -214,7 +214,7 @@ def main() -> None:
     try:
         entries = load_split(
             args.split,
-            version="v1.0",
+            version="v1.2",
             data_dir=str(args.data_dir) if args.data_dir else None,
         )
         logger.info(f"Loaded {len(entries)} entries from {args.split}")

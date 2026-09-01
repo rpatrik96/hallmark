@@ -698,7 +698,7 @@ def main():
     print()
 
     # Save to file
-    output_path = Path(__file__).parent.parent / "data" / "v1.0" / "real_world_incidents.jsonl"
+    output_path = Path(__file__).parent.parent / "data" / "v1.2" / "real_world_incidents.jsonl"
     output_path.parent.mkdir(parents=True, exist_ok=True)
 
     print(f"Saving to {output_path}...")

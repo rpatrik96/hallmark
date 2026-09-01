@@ -2,7 +2,7 @@
 
 **Date:** 2026-05-29
 **Auditor tag:** `mislabel-audit-2026-05-29`
-**Target:** `data/v1.0/dev_public.jsonl` (1119 entries: 486 VALID, 633 HALLUCINATED)
+**Target:** `data/v1.2/dev_public.jsonl` (1119 entries: 486 VALID, 633 HALLUCINATED)
 **Patch script:** `scripts/patch_mislabels.py` *(removed — superseded by `scripts/relabel_ground_truth.py`, which re-verifies EVERY hallucinated entry from source evidence rather than a hand-curated allow-list; this doc is retained as the historical record of the original opportunistic pass)*
 
 > **Adversarial-review correction (2026-05-29).** The first pass proposed 16

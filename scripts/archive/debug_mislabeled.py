@@ -4,7 +4,7 @@
 import json
 from pathlib import Path
 
-data_dir = Path(__file__).parent.parent / "data" / "v1.0"
+data_dir = Path(__file__).parent.parent / "data" / "v1.2"
 
 # Get mislabeled keys
 mislabeled_keys = set()

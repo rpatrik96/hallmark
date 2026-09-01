@@ -125,7 +125,7 @@ def build_source_mapping(dev_file: Path, test_file: Path, output_file: Path) -> 
 def main():
     """Main entry point."""
     repo_root = Path(__file__).parent.parent
-    data_dir = repo_root / "data" / "v1.0"
+    data_dir = repo_root / "data" / "v1.2"
 
     dev_file = data_dir / "dev_public.jsonl"
     test_file = data_dir / "test_public.jsonl"

@@ -70,7 +70,7 @@ def load_predictions(path: Path) -> dict[str, Prediction]:
 
 
 def main() -> None:
-    entries = load_split("dev_public", version="v1.0")
+    entries = load_split("dev_public", version="v1.2")
     by_method: dict[str, list[BenchmarkEntry]] = defaultdict(list)
     for e in entries:
         by_method[e.generation_method].append(e)

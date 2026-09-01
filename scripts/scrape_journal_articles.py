@@ -19,8 +19,8 @@ def main() -> None:
     parser.add_argument(
         "--output",
         type=Path,
-        default=Path("data/v1.0/journal_articles.jsonl"),
-        help="Output JSONL file path (default: data/v1.0/journal_articles.jsonl)",
+        default=Path("data/v1.2/journal_articles.jsonl"),
+        help="Output JSONL file path (default: data/v1.2/journal_articles.jsonl)",
     )
     parser.add_argument(
         "--dry-run",

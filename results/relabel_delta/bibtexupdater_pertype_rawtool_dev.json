@@ -1,7 +1,7 @@
 {
   "tool": "bibtexupdater (RAW bibtex-check tool only, NO prescreening/DOI-resolution layer)",
   "split": "dev_public (NEW post-relabel labels)",
-  "source": "data/v1.0/baseline_results/bibtexupdater_raw_dev_public.jsonl (released raw run, 1112/1119 keys; 7 missing -> conservative VALID)",
+  "source": "data/v1.2/baseline_results/bibtexupdater_raw_dev_public.jsonl (released raw run, 1112/1119 keys; 7 missing -> conservative VALID)",
   "status_to_label_map": "hallmark/baselines/bibtexupdater.py STATUS_TO_LABEL",
   "aggregate_new": {
     "TP": 589,
@@ -84,5 +84,5 @@
       "detected": 47
     }
   },
-  "published_per_type_dr_OLD_carried": "see data/v1.0/baseline_results/bibtexupdater_dev_public.json per_type_metrics (OLD type counts, 633 hall)"
+  "published_per_type_dr_OLD_carried": "see data/v1.2/baseline_results/bibtexupdater_dev_public.json per_type_metrics (OLD type counts, 633 hall)"
 }

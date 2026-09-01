@@ -165,7 +165,7 @@ def compare_distributions(
 
 def main() -> None:
     """Run synthetic vs real-world comparison analysis."""
-    data_dir = Path(__file__).parent.parent / "data" / "v1.0"
+    data_dir = Path(__file__).parent.parent / "data" / "v1.2"
     dev_path = data_dir / "dev_public.jsonl"
 
     print("Loading dev_public.jsonl...")

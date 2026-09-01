@@ -56,7 +56,7 @@ def main() -> None:
     )
     parser.add_argument("--alpha", type=float, default=0.05)
     parser.add_argument("--power", type=float, default=0.80)
-    parser.add_argument("--version", default="v1.0")
+    parser.add_argument("--version", default="v1.2")
     parser.add_argument("--data-dir", type=str, default=None)
     args = parser.parse_args()
 

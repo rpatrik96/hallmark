@@ -104,7 +104,7 @@ def main(argv: list[str] | None = None) -> int:
     )
     eval_parser.add_argument("--output", type=str, help="Path to write evaluation results JSON")
     eval_parser.add_argument("--data-dir", type=str, help="Override data directory")
-    eval_parser.add_argument("--version", default="v1.0", help="Dataset version")
+    eval_parser.add_argument("--version", default="v1.2", help="Dataset version")
     eval_parser.add_argument(
         "--max-entries",
         type=int,
@@ -292,7 +292,7 @@ def main(argv: list[str] | None = None) -> int:
         choices=_SPLIT_CHOICES,
     )
     stats_parser.add_argument("--data-dir", type=str, help="Override data directory")
-    stats_parser.add_argument("--version", default="v1.0", help="Dataset version")
+    stats_parser.add_argument("--version", default="v1.2", help="Dataset version")
 
     # --- leaderboard ---
     lb_parser = subparsers.add_parser("leaderboard", help="Show leaderboard for a split")
@@ -394,7 +394,7 @@ def main(argv: list[str] | None = None) -> int:
         help="Filter entries by label",
     )
     inspect_parser.add_argument("--data-dir", type=str, help="Override data directory")
-    inspect_parser.add_argument("--version", default="v1.0", help="Dataset version")
+    inspect_parser.add_argument("--version", default="v1.2", help="Dataset version")
 
     # --- validate-results ---
     val_parser = subparsers.add_parser(
@@ -403,7 +403,7 @@ def main(argv: list[str] | None = None) -> int:
     val_parser.add_argument(
         "--results-dir",
         type=str,
-        default="data/v1.0/baseline_results",
+        default="data/v1.2/baseline_results",
         help="Directory containing manifest.json and result files",
     )
     val_parser.add_argument(
@@ -439,7 +439,7 @@ def main(argv: list[str] | None = None) -> int:
         help="Exit with code 1 if any misclassifications are found",
     )
     diag_parser.add_argument("--data-dir", type=str, help="Override data directory")
-    diag_parser.add_argument("--version", default="v1.0", help="Dataset version")
+    diag_parser.add_argument("--version", default="v1.2", help="Dataset version")
 
     # --- validate-predictions ---
     vp_parser = subparsers.add_parser(
@@ -453,7 +453,7 @@ def main(argv: list[str] | None = None) -> int:
         help="Benchmark split to validate bibtex_keys against (optional)",
     )
     vp_parser.add_argument("--data-dir", type=str, help="Override data directory")
-    vp_parser.add_argument("--version", default="v1.0", help="Dataset version")
+    vp_parser.add_argument("--version", default="v1.2", help="Dataset version")
 
     # --- history-append ---
     hist_parser = subparsers.add_parser(

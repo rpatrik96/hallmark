@@ -27,7 +27,7 @@ def deduplicate_keys(entries: list[BenchmarkEntry]) -> list[BenchmarkEntry]:
 
 
 def main():
-    data_dir = Path("data/v1.0")
+    data_dir = Path("data/v1.2")
 
     for split_file in ["dev_public.jsonl", "test_public.jsonl"]:
         path = data_dir / split_file

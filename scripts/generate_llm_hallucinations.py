@@ -714,8 +714,8 @@ def main():
     )
     parser.add_argument(
         "--output",
-        default="data/v1.0/llm_generated.jsonl",
-        help="Output JSONL file (default: data/v1.0/llm_generated.jsonl)",
+        default="data/v1.2/llm_generated.jsonl",
+        help="Output JSONL file (default: data/v1.2/llm_generated.jsonl)",
     )
     parser.add_argument(
         "--target-per-type",

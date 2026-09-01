@@ -2,7 +2,7 @@
 """Run rate-limited baselines (HaRC, verify-citations) with extended timeouts.
 
 Reads `S2_API_KEY` from env (typically from /tmp/.s2_env). Writes evaluation
-results to data/v1.0/baseline_results/ and updates manifest.json checksums,
+results to data/v1.2/baseline_results/ and updates manifest.json checksums,
 matching the format of scripts/generate_reference_results.py.
 
 Usage:
@@ -31,7 +31,7 @@ from hallmark.evaluation.validate import compute_sha256
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s: %(message)s")
 logger = logging.getLogger(__name__)
 
-DEFAULT_RESULTS_DIR = Path("data/v1.0/baseline_results")
+DEFAULT_RESULTS_DIR = Path("data/v1.2/baseline_results")
 
 
 def _env_meta() -> dict[str, str]:
@@ -55,7 +55,7 @@ def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--baseline", required=True, choices=["harc", "verify_citations"])
     parser.add_argument("--split", default="dev_public")
-    parser.add_argument("--version", default="v1.0")
+    parser.add_argument("--version", default="v1.2")
     parser.add_argument(
         "--total-timeout",
         type=float,

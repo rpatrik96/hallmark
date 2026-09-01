@@ -30,7 +30,7 @@ from hallmark.evaluation.validate import compute_sha256, validate_reference_resu
 logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
 logger = logging.getLogger(__name__)
 
-DEFAULT_RESULTS_DIR = Path("data/v1.0/baseline_results")
+DEFAULT_RESULTS_DIR = Path("data/v1.2/baseline_results")
 
 
 def _get_hallmark_version() -> str:
@@ -59,7 +59,7 @@ def _get_environment_metadata() -> dict[str, str]:
 def generate(
     baselines: list[str],
     split: str = "dev_public",
-    version: str = "v1.0",
+    version: str = "v1.2",
     results_dir: Path = DEFAULT_RESULTS_DIR,
 ) -> None:
     """Run baselines, evaluate, write results and manifest."""
@@ -148,7 +148,7 @@ def main() -> None:
         choices=["dev_public", "test_public"],
         help="Benchmark split to evaluate on",
     )
-    parser.add_argument("--version", default="v1.0", help="Dataset version")
+    parser.add_argument("--version", default="v1.2", help="Dataset version")
     parser.add_argument(
         "--results-dir",
         type=Path,

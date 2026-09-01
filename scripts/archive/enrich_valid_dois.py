@@ -322,7 +322,7 @@ def enrich_file(input_path: Path, output_path: Path) -> dict[str, int]:
 def main() -> None:
     """Main entry point."""
     # Define paths
-    data_dir = Path(__file__).parent.parent / "data" / "v1.0"
+    data_dir = Path(__file__).parent.parent / "data" / "v1.2"
 
     files_to_process = [
         ("dev_public.jsonl", "dev_public_enriched.jsonl"),

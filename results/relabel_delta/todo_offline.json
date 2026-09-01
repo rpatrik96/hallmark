@@ -1,7 +1,7 @@
 {
   "_meta": {
     "task": "TASK A offline TODO resolution on v1.1.1 labels",
-    "labels": "data/v1.0/dev_public.jsonl (dev 513 valid / 606 hall, n=1119)",
+    "labels": "data/v1.2/dev_public.jsonl (dev 513 valid / 606 hall, n=1119)",
     "old_rev": "7a52362 (pre-relabel)",
     "method": "per-entry predictions re-scored vs NEW labels; missing/UNCERTAIN treated as non-HALLUCINATED (conservative, matches evaluate())"
   },
@@ -57,7 +57,7 @@
       "has_booktitle"
     ],
     "method": "Variant B (headline): StandardScaler + StratifiedKFold(5, shuffle, seed=42); LogisticRegression(max_iter=1000, seed=42); accuracy scoring.",
-    "labels_source": "data/v1.0/dev_public.jsonl (v1.1.1 relabeled, dev 513 valid / 606 hall)",
+    "labels_source": "data/v1.2/dev_public.jsonl (v1.1.1 relabeled, dev 513 valid / 606 hall)",
     "how_to_reproduce": "uv run --with scikit-learn --with numpy python results/relabel_delta/refit_shortcut.py"
   },
   "doi_pertype": {
@@ -1555,7 +1555,7 @@
       },
       "llm_tool_augmented": {
         "display": "GPT-5.1 + bibtex-updater (always-call)",
-        "pred_file": "data/v1.0/baseline_results/llm_tool_augmented_dev_public.jsonl",
+        "pred_file": "data/v1.2/baseline_results/llm_tool_augmented_dev_public.jsonl",
         "overall_new": {
           "detection_rate": 0.8432,
           "false_positive_rate": 0.1443,

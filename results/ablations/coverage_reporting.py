@@ -15,7 +15,7 @@ It produces three things, written to ``coverage_reporting.{md,json}``:
      ``evaluate(eval_mode="aggressive")``).
    Reuses the same per-entry files as ``results/relabel_delta/regenerate_offline.py``
    and the same ``hallmark.evaluation.evaluate`` so the conservative numbers
-   reproduce the regenerated aggregates in ``data/v1.0/baseline_results/``.
+   reproduce the regenerated aggregates in ``data/v1.2/baseline_results/``.
 
 2. Risk-coverage / selective-prediction view (appendix figure):
    For each tool with graded confidences, the FPR-vs-coverage curve as an
@@ -53,8 +53,8 @@ from hallmark.evaluation.metrics import evaluate  # noqa: E402
 ABL = REPO / "results" / "ablations"
 A3 = ABL / "a3_threshold_full" / "a3_full_result.json"
 DATA = {
-    "dev_public": REPO / "data/v1.0/dev_public.jsonl",
-    "test_public": REPO / "data/v1.0/test_public.jsonl",
+    "dev_public": REPO / "data/v1.2/dev_public.jsonl",
+    "test_public": REPO / "data/v1.2/test_public.jsonl",
 }
 
 # ---------------------------------------------------------------------------

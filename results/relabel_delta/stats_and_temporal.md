@@ -9,11 +9,11 @@ Source files (all counts computed directly from these, not from `metadata.json`,
 stale — it still says `total_entries: 2526` / `build_date: 2026-02-20` and a pre-relabel
 hidden split of 200/253):
 
-- `data/v1.0/dev_public.jsonl`
-- `data/v1.0/test_public.jsonl`
-- `data/v1.0/stress_test.jsonl`
+- `data/v1.2/dev_public.jsonl`
+- `data/v1.2/test_public.jsonl`
+- `data/v1.2/stress_test.jsonl`
 - `data/hidden/test_hidden.jsonl`
-- `data/v1.0/test_crossdomain.jsonl` (v1.1 eval-only; **not** part of `tab:stats`)
+- `data/v1.2/test_crossdomain.jsonl` (v1.1 eval-only; **not** part of `tab:stats`)
 
 Conventions matching the paper:
 - **Tier distribution counts hallucinated entries only** (paper caption, `benchmark.tex:91`).
@@ -247,5 +247,5 @@ the raw GPT-5.4 448 predictions need to be exported into `results/temporal_suppl
    for the six checkpoint-appended models, so the whole temporal table is reproducible
    without the first-wins caveat.
 
-`metadata.json` (`data/v1.0/metadata.json`) is stale and should be regenerated from the
+`metadata.json` (`data/v1.2/metadata.json`) is stale and should be regenerated from the
 relabeled splits (it still encodes the pre-relabel hidden 200/253 and the old totals).

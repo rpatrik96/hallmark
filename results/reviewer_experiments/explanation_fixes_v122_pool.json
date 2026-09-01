@@ -1,7 +1,7 @@
 {
  "version": "1.2.2",
  "date": "2026-07-22",
- "target": "data/v1.0/llm_generated.jsonl (raw generation pool; not part of any released split)",
+ "target": "data/v1.2/llm_generated.jsonl (raw generation pool; not part of any released split)",
  "method": "20 Sonnet draft agents (10 entries each) with mandatory CrossRef/arXiv/DBLP API verification of real-paper claims, followed by 20 adversarial verify agents re-checking every asserted fact; positional batch mapping disambiguates the 6 bibtex_keys that appear twice in the pool (occurrence = 0-indexed position among a key's lines in file order).",
  "flag_label_semantics": "true = both draft and verify agents found the entry's metadata to fully match a real publication, i.e. the generation-pipeline perturbation appears to have produced a correct citation; labels are NOT changed by this release — the flag is recorded provenance only.",
  "fixes": [

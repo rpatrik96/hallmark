@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 """Build the cross-domain test split from raw valid entries.
 
-Reads ``data/v1.0/raw_crossdomain_valid.jsonl`` (produced by
+Reads ``data/v1.2/raw_crossdomain_valid.jsonl`` (produced by
 ``scrape_crossdomain.py``), generates hallucinated perturbations using the
 existing tier1/tier2/tier3 batch generators, and writes a single split file
-``data/v1.0/test_crossdomain.jsonl`` containing both VALID and HALLUCINATED
+``data/v1.2/test_crossdomain.jsonl`` containing both VALID and HALLUCINATED
 entries with bibtex_key namespaced as ``hallmark_xd_NNNN``.
 
 This script intentionally:
@@ -50,8 +50,8 @@ def load_valid(path: Path) -> list[BenchmarkEntry]:
 
 def main() -> int:
     p = argparse.ArgumentParser(description=__doc__)
-    p.add_argument("--input", type=Path, default=Path("data/v1.0/raw_crossdomain_valid.jsonl"))
-    p.add_argument("--output", type=Path, default=Path("data/v1.0/test_crossdomain.jsonl"))
+    p.add_argument("--input", type=Path, default=Path("data/v1.2/raw_crossdomain_valid.jsonl"))
+    p.add_argument("--output", type=Path, default=Path("data/v1.2/test_crossdomain.jsonl"))
     p.add_argument(
         "--keep-valid", type=int, default=200, help="How many valid entries to keep in the split."
     )

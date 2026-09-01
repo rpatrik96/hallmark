@@ -192,7 +192,7 @@ def identify_recommendations(
 
 def main() -> None:
     """Run LLM filtering bias analysis."""
-    data_dir = Path(__file__).parent.parent / "data" / "v1.0"
+    data_dir = Path(__file__).parent.parent / "data" / "v1.2"
     llm_path = data_dir / "llm_generated.jsonl"
     dev_path = data_dir / "dev_public.jsonl"
 

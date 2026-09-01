@@ -5,7 +5,7 @@
   "endpoint": "openrouter.ai/api/v1",
   "endpoint_drift_note": "FRESH dated snapshot; NOT a reproduction of the 2026-05-04 published delta-eval aggregates. Within-run format/field deltas are the deliverable and are robust to absolute-level endpoint drift.",
   "sample": {
-    "source": "data/v1.0/dev_public.jsonl",
+    "source": "data/v1.2/dev_public.jsonl",
     "n": 150,
     "n_hall": 81,
     "n_valid": 69,

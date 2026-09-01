@@ -28,7 +28,7 @@ from hallmark.dataset.schema import (  # noqa: E402
     HallucinationType,
 )
 
-DATA_DIR = ROOT / "data" / "v1.0"
+DATA_DIR = ROOT / "data" / "v1.2"
 SPLITS = ["dev_public.jsonl", "test_public.jsonl", "stress_test.jsonl"]
 
 MAX_VENUE_LEN = 80

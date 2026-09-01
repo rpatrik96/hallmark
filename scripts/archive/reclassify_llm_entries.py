@@ -357,7 +357,7 @@ def classify_entry(entry: BenchmarkEntry) -> tuple[str, int, str, dict]:
 
 
 def main() -> int:
-    data_dir = Path(__file__).parent.parent / "data" / "v1.0"
+    data_dir = Path(__file__).parent.parent / "data" / "v1.2"
     llm_path = data_dir / "llm_generated.jsonl"
 
     if not llm_path.exists():

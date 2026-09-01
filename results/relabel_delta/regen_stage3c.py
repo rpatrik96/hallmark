@@ -2,7 +2,7 @@
 counts, and summary-only MCC — all on the NEW (post-relabel) labels, offline.
 
 This consolidates the remaining open-flag work (F4/F5/F7/F9) into one script that
-reads the already-regenerated aggregates in ``data/v1.0/baseline_results/`` (which
+reads the already-regenerated aggregates in ``data/v1.2/baseline_results/`` (which
 were rescored against the NEW labels by ``regenerate_offline.py`` /
 ``regenerate_summary.py`` / ``regenerate_cascade.py``) and derives the paper-facing
 numbers from them. No API calls, no re-runs.
@@ -33,7 +33,7 @@ from pathlib import Path
 from typing import Any
 
 REPO = Path("/Users/patrik.reizinger/Documents/GitHub/hallmark")
-BR = REPO / "data/v1.0/baseline_results"
+BR = REPO / "data/v1.2/baseline_results"
 OUT = REPO / "results/relabel_delta/stage3c.json"
 
 # Paper column order + display abbreviations for tab:pertype_full.
@@ -248,13 +248,13 @@ def section_mcc() -> dict[str, Any]:
         (
             "bibtexupdater",
             "dev_public",
-            "data/v1.0/baseline_results/bibtexupdater_dev_public.json",
+            "data/v1.2/baseline_results/bibtexupdater_dev_public.json",
             "bibtexupdater_dev_public_changed_predictions.json",
         ),
         (
             "bibtexupdater",
             "test_public",
-            "data/v1.0/baseline_results/bibtexupdater_test_public.json",
+            "data/v1.2/baseline_results/bibtexupdater_test_public.json",
             "bibtexupdater_test_public_changed_predictions.json",
         ),
         (
@@ -266,7 +266,7 @@ def section_mcc() -> dict[str, Any]:
         (
             "doi_only",
             "test_public",
-            "data/v1.0/baseline_results/doi_only_test_public.json",
+            "data/v1.2/baseline_results/doi_only_test_public.json",
             "doi_only_test_public_changed_predictions.json",
         ),
     ]

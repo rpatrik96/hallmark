@@ -6,7 +6,7 @@ The existing ``results/temporal_supplement/temporal_supplement_2024_2025.jsonl``
 keyed by ``bibtex_key``. We must NOT change keys for entries already present —
 that would invalidate every eval JSON in ``results/temporal_supplement/``.
 
-The May 2026 re-scrape (``data/v1.0/test_temporal_2024_2025.jsonl``, 450
+The May 2026 re-scrape (``data/v1.2/test_temporal_2024_2025.jsonl``, 450
 entries) covers the same intent but has more even hallucination type coverage,
 particularly on swapped_authors and merged_citation which the original is
 sparse on.
@@ -74,7 +74,7 @@ def main() -> int:
     p.add_argument(
         "--new",
         type=Path,
-        default=Path("data/v1.0/test_temporal_2024_2025.jsonl"),
+        default=Path("data/v1.2/test_temporal_2024_2025.jsonl"),
     )
     p.add_argument(
         "--output",

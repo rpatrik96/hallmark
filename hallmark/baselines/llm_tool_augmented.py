@@ -17,6 +17,7 @@ import tempfile
 from pathlib import Path
 from typing import Any
 
+from hallmark.baselines._cache import redact_command
 from hallmark.baselines.common import entries_to_bib
 from hallmark.dataset.schema import BlindEntry, Prediction
 
@@ -161,7 +162,7 @@ def save_tool_evidence(
         if extra_args:
             cmd.extend(extra_args)
 
-        logger.info(f"Running bibtex-check for tool evidence: {' '.join(cmd)}")
+        logger.info(f"Running bibtex-check for tool evidence: {redact_command(cmd)}")
         try:
             subprocess.run(cmd, capture_output=True, text=True, timeout=timeout)
         except FileNotFoundError:

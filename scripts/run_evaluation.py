@@ -39,7 +39,7 @@ def main() -> None:
         ],
     )
     parser.add_argument("--data-dir", type=str)
-    parser.add_argument("--version", default="v1.0")
+    parser.add_argument("--version", default="v1.2")
     parser.add_argument("--output", type=str, required=True)
     parser.add_argument(
         "--eval-mode",

@@ -51,8 +51,8 @@ This is a single atomic workflow. The commit is not done until all hooks pass an
 - `hallmark/evaluation/ranking.py` — ONEBench-inspired Plackett-Luce ranking
 - `scripts/` — orchestrator scripts (run_all_baselines.py, run_evaluation.py, generate_reference_results.py, generate_new_instances.py)
 - `tests/` — pytest test suite (562 tests)
-- `data/v1.0/` — benchmark data splits (dev: 1,119, test: 831, hidden: 453, stress: 122; total 2,525 entries)
-- `data/v1.0/baseline_results/` — pre-computed reference results for rate-limited baselines
+- `data/v1.2/` — benchmark data splits (dev: 1,119, test: 831, hidden: 453, stress: 122; total 2,525 entries)
+- `data/v1.2/baseline_results/` — pre-computed reference results for rate-limited baselines
 - `.github/workflows/` — CI (tests.yml, baselines.yml)
 
 ## Baseline Wrapper Architecture
@@ -89,8 +89,8 @@ Any user of the tool would benefit from these.
 - Optional dependencies (choix, harcx, openai, anthropic) use lazy imports
 - bibtex-updater, harcx, and verify-citations all require bibtexparser 1.x; install in isolation with `pipx install`
 - harc and bibtexupdater baselines time out in CI due to Semantic Scholar API rate-limiting on shared IPs
-- Rate-limited baselines use pre-computed reference results: run locally via `python scripts/generate_reference_results.py --baselines harc,bibtexupdater`, commit to `data/v1.0/baseline_results/`, CI validates checksums instead of re-running
-- Validate reference results: `hallmark validate-results --results-dir data/v1.0/baseline_results/ --strict`
+- Rate-limited baselines use pre-computed reference results: run locally via `python scripts/generate_reference_results.py --baselines harc,bibtexupdater`, commit to `data/v1.2/baseline_results/`, CI validates checksums instead of re-running
+- Validate reference results: `hallmark validate-results --results-dir data/v1.2/baseline_results/ --strict`
 - CI evaluates live baselines (doi_only, verify_citations) normally; precomputed baselines (harc, bibtexupdater) are validated and copied
 - Baselines use the registry pattern in `hallmark/baselines/registry.py`
 - Pre-commit hooks run mypy with `--ignore-missing-imports` on `hallmark/`

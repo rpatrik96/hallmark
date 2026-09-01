@@ -19,7 +19,7 @@ For ``stress_test`` (no persisted Stage-1 cache), the real ``run_cascade`` is us
 but with the persistent SQLite cache so re-runs resume; it is small (121 entries).
 
 Outputs (overwrite):
-  data/v1.0/baseline_results/cascade_db_diagnosis_{dev_public,test_public,stress_test}.json
+  data/v1.2/baseline_results/cascade_db_diagnosis_{dev_public,test_public,stress_test}.json
   results/relabel_delta/btu_v1_2_0/cascade_db_diagnosis_{split}_per_entry.jsonl
 
 Usage:
@@ -50,7 +50,7 @@ from hallmark.evaluation.metrics import evaluate  # noqa: E402
 logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
 logger = logging.getLogger("regen_cascade_fast")
 
-RESULTS_DIR = REPO / "data/v1.0/baseline_results"
+RESULTS_DIR = REPO / "data/v1.2/baseline_results"
 DELTA_DIR = REPO / "results/relabel_delta/btu_v1_2_0"
 
 BTU_VERSION = "1.2.0"
@@ -285,7 +285,7 @@ def persist_per_entry(path: Path, entries: list[BenchmarkEntry], preds: list[Pre
 
 
 def run_split(split: str, stage2_baseline: str) -> dict:
-    entries = load_split(split=split, version="v1.0")
+    entries = load_split(split=split, version="v1.2")
     blind = [e.to_blind() for e in entries]
     logger.info("[%s] cascade: %d entries (Stage-2=%s)", split, len(entries), stage2_baseline)
     t0 = time.time()

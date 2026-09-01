@@ -46,7 +46,7 @@ Usage
 -----
     python scripts/ingest_walters_wilder.py \
         --xlsx /path/to/41598_2023_41032_MOESM3_ESM.xlsx \
-        --out data/v1.0/supplement_chatgpt_citations.jsonl
+        --out data/v1.2/supplement_chatgpt_citations.jsonl
 
 If --xlsx is omitted the appendix is downloaded from Springer.
 """

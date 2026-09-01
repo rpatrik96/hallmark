@@ -171,7 +171,7 @@ def compute_diversity_metrics(all_results: dict[int, dict[str, list[dict[str, An
 
 def main() -> None:
     """Run seed sensitivity analysis."""
-    data_dir = Path(__file__).parent.parent / "data" / "v1.0"
+    data_dir = Path(__file__).parent.parent / "data" / "v1.2"
     dev_path = data_dir / "dev_public.jsonl"
 
     print("Loading valid entries from dev_public.jsonl...")

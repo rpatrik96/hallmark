@@ -14,9 +14,9 @@ random.seed(42)
 
 ROOT = Path(__file__).resolve().parent.parent
 HIDDEN_PATH = ROOT / "data" / "hidden" / "test_hidden.jsonl"
-METADATA_PATH = ROOT / "data" / "v1.0" / "metadata.json"
-DEV_PATH = ROOT / "data" / "v1.0" / "dev_public.jsonl"
-TEST_PATH = ROOT / "data" / "v1.0" / "test_public.jsonl"
+METADATA_PATH = ROOT / "data" / "v1.2" / "metadata.json"
+DEV_PATH = ROOT / "data" / "v1.2" / "dev_public.jsonl"
+TEST_PATH = ROOT / "data" / "v1.2" / "test_public.jsonl"
 
 ADDED_DATE = "2026-02-13"
 

@@ -66,19 +66,19 @@ Use 5 backends for maximum diversity, rotating across types:
 ```bash
 # Step 1: Generate with each backend (run separately, ~30 min each)
 python scripts/generate_llm_hallucinations.py --backend openai --model gpt-5.1 \
-    --strategy both --target-per-type 10 --output data/v1.0/llm_openai.jsonl
+    --strategy both --target-per-type 10 --output data/v1.2/llm_openai.jsonl
 
 python scripts/generate_llm_hallucinations.py --backend anthropic --model claude-sonnet-4-5-20250929 \
-    --strategy both --target-per-type 8 --output data/v1.0/llm_anthropic.jsonl
+    --strategy both --target-per-type 8 --output data/v1.2/llm_anthropic.jsonl
 
 python scripts/generate_llm_hallucinations.py --backend ollama --model llama3.1:70b \
-    --strategy both --target-per-type 8 --output data/v1.0/llm_ollama.jsonl
+    --strategy both --target-per-type 8 --output data/v1.2/llm_ollama.jsonl
 
 python scripts/generate_llm_hallucinations.py --backend mistral --model mistral-large-latest \
-    --strategy both --target-per-type 6 --output data/v1.0/llm_mistral.jsonl
+    --strategy both --target-per-type 6 --output data/v1.2/llm_mistral.jsonl
 
 python scripts/generate_llm_hallucinations.py --backend gemini --model gemini-2.0-flash \
-    --strategy both --target-per-type 6 --output data/v1.0/llm_gemini.jsonl
+    --strategy both --target-per-type 6 --output data/v1.2/llm_gemini.jsonl
 
 # Step 2: Merge and deduplicate
 python scripts/merge_llm_entries.py  # TODO: write this
@@ -106,7 +106,7 @@ The `integrate` stage in `scripts/stages/integrate.py` already handles external 
 LLM-generated entries go through the same validation pipeline as all other entries.
 
 After generation:
-1. Run `scripts/build_dataset.py` with LLM JSONL files in `data/v1.0/`
+1. Run `scripts/build_dataset.py` with LLM JSONL files in `data/v1.2/`
 2. The integrate stage picks them up automatically
 3. Sanitize stage ensures URL presence and field consistency
 4. Finalize stage writes updated splits

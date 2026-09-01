@@ -61,7 +61,7 @@ except ImportError:
 # ---------------------------------------------------------------------------
 # Constants
 # ---------------------------------------------------------------------------
-DATA_DIR = Path("data/v1.0")
+DATA_DIR = Path("data/v1.2")
 SPLITS = {
     "dev": DATA_DIR / "dev_public.jsonl",
     "test": DATA_DIR / "test_public.jsonl",

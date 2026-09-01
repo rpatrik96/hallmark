@@ -8,13 +8,13 @@ aborts on a hit; pass --allow-deanonymized only after the review period ends.
 
 Mirrors the LIVE hub layout (which differs from the repo layout):
 
-    jsonl/<split>.jsonl            <- data/v1.0/<split>.jsonl   (6 files)
+    jsonl/<split>.jsonl            <- data/v1.2/<split>.jsonl   (6 files)
     data/<split>.parquet           <- built from jsonl           (3 files)
     blind/<split>_blind.parquet    <- built from jsonl           (3 files)
-    sources/llm_generated.jsonl    <- data/v1.0/llm_generated.jsonl
-    metadata.json                  <- data/v1.0/metadata.json
-    source_mapping.json            <- data/v1.0/source_mapping.json
-    valid_entry_verification.json  <- data/v1.0/valid_entry_verification.json
+    sources/llm_generated.jsonl    <- data/v1.2/llm_generated.jsonl
+    metadata.json                  <- data/v1.2/metadata.json
+    source_mapping.json            <- data/v1.2/source_mapping.json
+    valid_entry_verification.json  <- data/v1.2/valid_entry_verification.json
     croissant.json                 <- croissant.json
     README.md                      <- hf/README.md (dataset card, tracked here)
 
@@ -42,7 +42,7 @@ import tempfile
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-DATA_DIR = ROOT / "data" / "v1.0"
+DATA_DIR = ROOT / "data" / "v1.2"
 
 JSONL_SPLITS = [
     "dev_public",

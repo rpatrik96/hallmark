@@ -218,7 +218,25 @@ STRESS_TEST_TYPES: set[HallucinationType] = {
 MAIN_TYPES: set[HallucinationType] = set(HallucinationType) - STRESS_TEST_TYPES
 
 
-# Standard sub-test names
+# Standard sub-test names.
+#
+# Scoping rule (three-valued, entry-relative)
+# -------------------------------------------
+# Every sub-test is evaluated **against the fields actually present in this
+# entry**, never against the citation as a whole:
+#
+#   True   the check was performed and passed
+#   False  the check was performed and FAILED
+#   None   the check is not applicable — the field it inspects is absent
+#
+# So ``doi_resolves`` answers "did *this entry's* ``doi`` field resolve?", not
+# "does this reference have any resolvable identifier?". An entry with no
+# ``doi`` field is ``None`` (nothing to resolve), never ``False``. The same
+# holds for every other sub-test: absence of the inspected field is ``None``.
+#
+# Rationale: baselines only ever see ``BlindEntry.fields``, so a ``False`` on a
+# field that is not there asks a tool to detect something it cannot observe.
+# Enforced by the structural check in ``scripts/verify_subtests.py``.
 SUBTEST_NAMES = [
     "doi_resolves",
     "title_exists",

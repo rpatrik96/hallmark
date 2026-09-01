@@ -2,9 +2,9 @@
 """Generate site/data/site_data.js for the companion website (site/).
 
 Reads only released, tracked artifacts:
-  - data/v1.0/metadata.json                    (corpus composition)
-  - data/v1.0/dev_public.jsonl                 (example entries; public labels)
-  - data/v1.0/baseline_results/*.json          (dev/test leaderboards)
+  - data/v1.2/metadata.json                    (corpus composition)
+  - data/v1.2/dev_public.jsonl                 (example entries; public labels)
+  - data/v1.2/baseline_results/*.json          (dev/test leaderboards)
   - results/crossdomain_llms/result_*.json     (cross-domain split, n=500)
   - results/relabel_delta/btu_v1_2_0/test_crossdomain_metrics.json
   - results/temporal_supplement/*              (canonical 448-entry supplement)
@@ -27,7 +27,7 @@ ROOT = Path(__file__).resolve().parents[1]
 OUT = ROOT / "site" / "data" / "site_data.js"
 SEED = 8042  # matches the corpus build seed
 
-BR = ROOT / "data" / "v1.0" / "baseline_results"
+BR = ROOT / "data" / "v1.2" / "baseline_results"
 TS = ROOT / "results" / "temporal_supplement"
 XD = ROOT / "results" / "crossdomain_llms"
 
@@ -730,7 +730,7 @@ def ppv(dr: float | None, fpr: float | None, base_rate: float = 0.02) -> float |
 
 
 def main() -> None:
-    metadata = load_json(ROOT / "data" / "v1.0" / "metadata.json")
+    metadata = load_json(ROOT / "data" / "v1.2" / "metadata.json")
 
     results: dict[str, list[dict]] = {}
     for split, sources in RESULT_SOURCES.items():
@@ -969,7 +969,7 @@ def main() -> None:
     ]
 
     entries = []
-    dev_path = ROOT / "data" / "v1.0" / "dev_public.jsonl"
+    dev_path = ROOT / "data" / "v1.2" / "dev_public.jsonl"
     with open(dev_path, encoding="utf-8") as f:
         for line in f:
             line = line.strip()

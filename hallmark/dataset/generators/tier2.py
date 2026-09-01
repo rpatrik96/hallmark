@@ -213,7 +213,8 @@ def generate_merged_citation(
         f"authors from '{entry_a.bibtex_key}', title from '{entry_b.bibtex_key}'"
     )
     subtests = dict(EXPECTED_SUBTESTS[HallucinationType.MERGED_CITATION])
-    subtests["doi_resolves"] = entry_b.doi is not None
+    # N/A when the donor entry has no DOI — absence is not a failed resolution.
+    subtests["doi_resolves"] = True if entry_b.doi is not None else None
     new_entry.subtests = subtests
     new_entry.bibtex_key = f"merged_{entry_b.bibtex_key}"
     return new_entry
@@ -273,7 +274,8 @@ def generate_partial_author_list(
         f"{len(new_entry.fields.get('author', '').split(' and '))}"
     )
     subtests = dict(EXPECTED_SUBTESTS[HallucinationType.PARTIAL_AUTHOR_LIST])
-    subtests["doi_resolves"] = entry.doi is not None
+    # N/A when the source entry has no DOI — absence is not a failed resolution.
+    subtests["doi_resolves"] = True if entry.doi is not None else None
     new_entry.subtests = subtests
     new_entry.bibtex_key = f"partial_authors_{new_entry.bibtex_key}"
     return new_entry
