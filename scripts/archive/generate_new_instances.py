@@ -106,7 +106,7 @@ def generate_instances_for_split(
 
 def main() -> None:
     """Generate new instances and append to dataset files."""
-    data_dir = Path("data/v1.0")
+    data_dir = Path("data/v1.2")
     dev_path = data_dir / "dev_public.jsonl"
     test_path = data_dir / "test_public.jsonl"
 

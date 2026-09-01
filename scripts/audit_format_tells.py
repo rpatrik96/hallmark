@@ -22,7 +22,7 @@ from pathlib import Path
 # ---------------------------------------------------------------------------
 REPO_ROOT = Path(__file__).parent.parent
 GENERATORS_DIR = REPO_ROOT / "hallmark" / "dataset" / "generators"
-DEV_PUBLIC = REPO_ROOT / "data" / "v1.0" / "dev_public.jsonl"
+DEV_PUBLIC = REPO_ROOT / "data" / "v1.2" / "dev_public.jsonl"
 OUTPUT_CSV = REPO_ROOT / "tables" / "format_tells_audit.csv"
 
 # ---------------------------------------------------------------------------

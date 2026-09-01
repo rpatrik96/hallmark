@@ -37,7 +37,7 @@ import json
 from pathlib import Path
 from typing import Any
 
-DATA_DIR = Path("data/v1.0")
+DATA_DIR = Path("data/v1.2")
 
 #: Released splits — entries here are scored against by tools.
 SPLIT_FILES = ["dev_public", "test_public", "test_crossdomain"]

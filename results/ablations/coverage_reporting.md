@@ -17,7 +17,7 @@ Definitions used throughout:
   (`evaluate(eval_mode="aggressive")`).
 
 Every conservative cell below reproduces the regenerated post-relabel aggregates
-in `data/v1.0/baseline_results/` to within 5e-4 (the manifest §1 check;
+in `data/v1.2/baseline_results/` to within 5e-4 (the manifest §1 check;
 verified tool-by-tool), so this surfaces existing numbers rather than recomputing
 the benchmark.
 
@@ -177,7 +177,7 @@ this is ahead-of-field.
 two stances. The conservative triple is the existing headline number (already what
 the table shows); the aggressive triple and Coverage are the additions. Transcribe
 the §(a) grids directly — conservative cells already match
-`data/v1.0/baseline_results/`. Hold bibtex-updater's **test_public** row until GEN
+`data/v1.2/baseline_results/`. Hold bibtex-updater's **test_public** row until GEN
 workflow `wkp97jqbb` finishes; its **dev_public** row (coverage 0.746) is final.
 The two Anthropic **dev** rows keep their published point estimates with Coverage
 printed as "n/a (drift)" and no aggressive cell.

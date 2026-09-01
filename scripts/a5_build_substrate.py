@@ -28,7 +28,7 @@ import subprocess
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parent.parent
-DATA = REPO / "data" / "v1.0"
+DATA = REPO / "data" / "v1.2"
 OUT = REPO / "results" / "ablations" / "a5_kappa"
 PRE_RELABEL_REF = "f58f779"  # last commit before the systematic relabel pass
 
@@ -55,7 +55,7 @@ def _load_ref(ref: str, rel_path: str) -> dict[str, dict]:
 def _relabel_recovered_keys() -> set[str]:
     """Keys flipped HALLUCINATED -> VALID by the relabel pass."""
     keys: set[str] = set()
-    for rel in ("data/v1.0/dev_public.jsonl", "data/v1.0/test_public.jsonl"):
+    for rel in ("data/v1.2/dev_public.jsonl", "data/v1.2/test_public.jsonl"):
         old = _load_ref(PRE_RELABEL_REF, rel)
         new = _load_ref("HEAD", rel)
         for k, e in new.items():

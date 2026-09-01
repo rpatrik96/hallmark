@@ -21,7 +21,7 @@ import random
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
-RESULTS_FILE = REPO_ROOT / "data" / "v1.0" / "baseline_results" / "bibtexupdater_dev_public.json"
+RESULTS_FILE = REPO_ROOT / "data" / "v1.2" / "baseline_results" / "bibtexupdater_dev_public.json"
 TABLES_DIR = REPO_ROOT / "tables"
 OUTPUT_CSV = TABLES_DIR / "codesign_bound.csv"
 

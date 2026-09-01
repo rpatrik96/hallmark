@@ -21,7 +21,7 @@ from hallmark.dataset.schema import (
     load_entries,
 )
 
-DATA_DIR = Path("data/v1.0")
+DATA_DIR = Path("data/v1.2")
 DEV_PATH = DATA_DIR / "dev_public.jsonl"
 TEST_PATH = DATA_DIR / "test_public.jsonl"
 MIN_PER_TYPE = 10

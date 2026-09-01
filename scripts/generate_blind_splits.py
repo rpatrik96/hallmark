@@ -6,7 +6,7 @@ bibtex_type, fields, raw_bibtex). Ground-truth labels, hallucination types,
 generation metadata, and subtests are stripped.
 
 Usage:
-    python scripts/generate_blind_splits.py [--data-dir data/v1.0/]
+    python scripts/generate_blind_splits.py [--data-dir data/v1.2/]
 """
 
 from __future__ import annotations
@@ -60,8 +60,8 @@ def main() -> None:
     )
     parser.add_argument(
         "--data-dir",
-        default="data/v1.0/",
-        help="Directory containing the source JSONL files (default: data/v1.0/)",
+        default="data/v1.2/",
+        help="Directory containing the source JSONL files (default: data/v1.2/)",
     )
     args = parser.parse_args()
 

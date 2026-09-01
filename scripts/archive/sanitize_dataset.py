@@ -22,7 +22,7 @@ import sys
 from collections import Counter, defaultdict
 from pathlib import Path
 
-DATA_DIR = Path("data/v1.0")
+DATA_DIR = Path("data/v1.2")
 SEED = 42
 
 # Fields that ONLY appear in hallucinated entries — leak labels

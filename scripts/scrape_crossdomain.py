@@ -16,7 +16,7 @@ file the same way they do for the existing v1.0 valid pool.
 Usage:
 
     python scripts/scrape_crossdomain.py \\
-        --output data/v1.0/raw_crossdomain_valid.jsonl \\
+        --output data/v1.2/raw_crossdomain_valid.jsonl \\
         --target-bio 150 --target-med 150 --target-csml 200
 
 The script never modifies any v1.0 split. Verification keys come from

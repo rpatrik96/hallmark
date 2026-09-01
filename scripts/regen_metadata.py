@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Regenerate ``data/v1.0/metadata.json`` count fields from the live data files.
+"""Regenerate ``data/v1.2/metadata.json`` count fields from the live data files.
 
 Why this exists
 ---------------
@@ -24,7 +24,7 @@ Re-running on already-correct data is a byte-identical no-op (idempotent).
 
 Usage
 -----
-    python scripts/regen_metadata.py            # rewrite data/v1.0/metadata.json
+    python scripts/regen_metadata.py            # rewrite data/v1.2/metadata.json
     python scripts/regen_metadata.py --check     # exit 1 if file is stale (CI-friendly)
 """
 
@@ -44,16 +44,16 @@ if str(_REPO_ROOT) not in sys.path:
 from hallmark.dataset.schema import BenchmarkEntry  # noqa: E402
 
 DATA_DIR = _REPO_ROOT / "data"
-METADATA_PATH = DATA_DIR / "v1.0" / "metadata.json"
+METADATA_PATH = DATA_DIR / "v1.2" / "metadata.json"
 
 # Map every split named in metadata.json to the data file that backs it. The
-# hidden split lives under data/hidden/; all others under data/v1.0/.
+# hidden split lives under data/hidden/; all others under data/v1.2/.
 SPLIT_FILES: dict[str, Path] = {
-    "dev_public": DATA_DIR / "v1.0" / "dev_public.jsonl",
-    "test_public": DATA_DIR / "v1.0" / "test_public.jsonl",
-    "stress_test": DATA_DIR / "v1.0" / "stress_test.jsonl",
+    "dev_public": DATA_DIR / "v1.2" / "dev_public.jsonl",
+    "test_public": DATA_DIR / "v1.2" / "test_public.jsonl",
+    "stress_test": DATA_DIR / "v1.2" / "stress_test.jsonl",
     "test_hidden": DATA_DIR / "hidden" / "test_hidden.jsonl",
-    "test_crossdomain": DATA_DIR / "v1.0" / "test_crossdomain.jsonl",
+    "test_crossdomain": DATA_DIR / "v1.2" / "test_crossdomain.jsonl",
 }
 
 

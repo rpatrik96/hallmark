@@ -293,7 +293,7 @@ def main() -> None:
     parser.add_argument(
         "--data-file",
         type=Path,
-        default=ROOT / "data" / "v1.0" / "test_public.jsonl",
+        default=ROOT / "data" / "v1.2" / "test_public.jsonl",
         help="Benchmark JSONL file to evaluate (default: test_public).",
     )
     parser.add_argument("--workers", type=int, default=8, help="Concurrent API threads.")

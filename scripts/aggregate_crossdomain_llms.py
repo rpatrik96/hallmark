@@ -27,7 +27,7 @@ from collections import defaultdict
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[1]
-XD = REPO / "data/v1.0/test_crossdomain.jsonl"
+XD = REPO / "data/v1.2/test_crossdomain.jsonl"
 RES = REPO / "results/crossdomain_llms"
 BTU_XD = REPO / "results/relabel_delta/btu_v1_2_0/bibtexupdater_test_crossdomain_per_entry.jsonl"
 

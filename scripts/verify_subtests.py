@@ -49,11 +49,11 @@ from hallmark.dataset.schema import (
 
 # Default data splits to scan. Paths are relative to the repository root.
 DEFAULT_SPLITS: dict[str, str] = {
-    "dev_public": "data/v1.0/dev_public.jsonl",
-    "test_public": "data/v1.0/test_public.jsonl",
+    "dev_public": "data/v1.2/dev_public.jsonl",
+    "test_public": "data/v1.2/test_public.jsonl",
     "test_hidden": "data/hidden/test_hidden.jsonl",
-    "stress_test": "data/v1.0/stress_test.jsonl",
-    "test_crossdomain": "data/v1.0/test_crossdomain.jsonl",
+    "stress_test": "data/v1.2/stress_test.jsonl",
+    "test_crossdomain": "data/v1.2/test_crossdomain.jsonl",
 }
 
 _VALUE_TO_TYPE: dict[str, HallucinationType] = {t.value: t for t in HallucinationType}
