@@ -6,7 +6,7 @@ writes both a metrics JSON and a Markdown report.
 
 Usage:
     python scripts/analyze_walters_wilder.py \
-        --supplement data/v1.0/supplement_chatgpt_citations.jsonl \
+        --supplement data/v1.2/supplement_chatgpt_citations.jsonl \
         --results <bibtex-check .jsonl> \
         --xlsx appendix3_walters_wilder.xlsx \
         --out-json results/walters_wilder/bibtexupdater_metrics.json \

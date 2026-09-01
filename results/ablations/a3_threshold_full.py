@@ -50,7 +50,7 @@ from typing import Any
 ROOT = Path("/Users/patrik.reizinger/Documents/GitHub/hallmark")
 ABL = ROOT / "results" / "ablations"
 OUT = ABL / "a3_threshold_full"
-DEV = ROOT / "data" / "v1.0" / "dev_public.jsonl"
+DEV = ROOT / "data" / "v1.2" / "dev_public.jsonl"
 
 # ---- persisted zero-shot prediction files (per-entry confidence) ----
 # name -> (path, provenance/date+endpoint).  All ALREADY ON DISK; no fresh calls.
@@ -90,7 +90,7 @@ ZEROSHOT_FILES: dict[str, tuple[Path, str]] = {
 }
 
 # Real-DB-resolver per-entry records (bibtexupdater; NOT LLM-drift-prone).
-BTU_RAW = ROOT / "data/v1.0/baseline_results/bibtexupdater_raw_dev_public.jsonl"
+BTU_RAW = ROOT / "data/v1.2/baseline_results/bibtexupdater_raw_dev_public.jsonl"
 
 # Agentic-BTU (Sonnet) vs its zero-shot base. v2 has real verdicts (v1 was
 # 660/1119 UNCERTAIN error-fallback -> reported as a caveat only).

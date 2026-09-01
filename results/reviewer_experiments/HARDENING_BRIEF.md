@@ -83,9 +83,9 @@ Five issues dominate, and they share a single root cause: **a CrossRef-only auto
 
 ## Key files for the blocking work
 
-- Relabeller target + current allow-list: `data/v1.0/dev_public.jsonl`, `data/v1.0/test_public.jsonl`, `scripts/patch_mislabels.py`, read-only suspect-lister `scripts/check_mislabeled_entries.py`
+- Relabeller target + current allow-list: `data/v1.2/dev_public.jsonl`, `data/v1.2/test_public.jsonl`, `scripts/patch_mislabels.py`, read-only suspect-lister `scripts/check_mislabeled_entries.py`
 - Generator bug (hard-coded HALL label): `scripts/generate_llm_hallucinations.py:547`
 - Pre-screening bug: `hallmark/baselines/prescreening.py` (~316–323, 593)
 - Temporal regen: `results/temporal_supplement/temporal_supplement_2024_2025.jsonl` (858), `.../regen858/`
-- Stale counts: `data/v1.0/metadata.json`; paper `sections/benchmark.tex` (`tab:stats`), `sections/experiments.tex` (`tab:results`, prescreening L11), `sections/abstract.tex` (L9 temporal FPRs), `appendix.tex` (datasheet, `app:bootstrap`, `app:codesign`), `sections/limitations.tex` (L18 spans-providers, L26 uniform pre-screening), `sections/analysis.tex:45` (the `% TODO`)
+- Stale counts: `data/v1.2/metadata.json`; paper `sections/benchmark.tex` (`tab:stats`), `sections/experiments.tex` (`tab:results`, prescreening L11), `sections/abstract.tex` (L9 temporal FPRs), `appendix.tex` (datasheet, `app:bootstrap`, `app:codesign`), `sections/limitations.tex` (L18 spans-providers, L26 uniform pre-screening), `sections/analysis.tex:45` (the `% TODO`)
 - Sub-test QA to extend + CI-gate: `scripts/verify_subtests.py`; canary code: `hallmark/dataset/schema.py:626–653`

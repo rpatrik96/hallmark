@@ -102,7 +102,7 @@ def round_ci(ci: list[float] | None) -> list[float] | None:
 
 
 def main() -> None:
-    entries = load_split("dev_public", "v1.0", None)
+    entries = load_split("dev_public", "v1.2", None)
     n_total = len(entries)
     n_hall = sum(1 for e in entries if e.label == "HALLUCINATED")
     n_valid = sum(1 for e in entries if e.label == "VALID")

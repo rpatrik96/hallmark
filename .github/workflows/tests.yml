@@ -45,7 +45,7 @@ jobs:
         # the split it scores. `--warn-only` reports without failing while the
         # released results are pending regeneration; drop the flag to make this
         # a hard gate once results are regenerated.
-        run: python scripts/check_results_freshness.py --results-dir data/v1.0/baseline_results --data-dir data --version v1.0 --warn-only
+        run: python scripts/check_results_freshness.py --results-dir data/v1.2/baseline_results --data-dir data --version v1.0 --warn-only
 
       - name: Run tests
         run: pytest --tb=short -q --cov=hallmark --cov-report=term-missing

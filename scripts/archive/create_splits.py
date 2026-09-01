@@ -20,9 +20,9 @@ Usage:
     python scripts/create_splits.py \
         --valid-entries data/raw/valid_entries.jsonl \
         --hallucinated-entries data/raw/hallucinated_entries.jsonl \
-        --output-dir data/v1.0 \
+        --output-dir data/v1.2 \
         --hidden-dir data/hidden
-    python scripts/sanitize_dataset.py --data-dir data/v1.0
+    python scripts/sanitize_dataset.py --data-dir data/v1.2
 """
 
 from __future__ import annotations
@@ -195,7 +195,7 @@ def main() -> None:
     parser = argparse.ArgumentParser(description="Create benchmark splits")
     parser.add_argument("--valid-entries", type=str, required=True)
     parser.add_argument("--hallucinated-entries", type=str, required=True)
-    parser.add_argument("--output-dir", type=str, default="data/v1.0")
+    parser.add_argument("--output-dir", type=str, default="data/v1.2")
     parser.add_argument("--hidden-dir", type=str, default="data/hidden")
     parser.add_argument("--seed", type=int, default=42)
     parser.add_argument(

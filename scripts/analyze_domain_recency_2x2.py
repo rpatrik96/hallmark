@@ -37,7 +37,7 @@ from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[1]
 MATCHED_SPLIT = REPO / "data/v1.1_crossdomain_matched/test_crossdomain_matched.jsonl"
-V2026_SPLIT = REPO / "data/v1.0/test_crossdomain.jsonl"
+V2026_SPLIT = REPO / "data/v1.2/test_crossdomain.jsonl"
 MATCHED_RES = REPO / "results/crossdomain_matched_llms"
 V2026_RES = REPO / "results/crossdomain_llms"
 

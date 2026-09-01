@@ -6,7 +6,7 @@ Handles:
 - llm_agentic_btu_openai / llm_agentic_btu_anthropic (BTU-only tool-use)
 
 Reads ``OPENAI_API_KEY`` or ``ANTHROPIC_API_KEY`` from env. Writes results to
-``data/v1.0/baseline_results/{baseline}_{split}.json`` and updates
+``data/v1.2/baseline_results/{baseline}_{split}.json`` and updates
 ``manifest.json`` checksums, matching other reference result entries.
 Per-entry JSONL checkpoint lives in ``results/temporal_checkpoints/`` and
 is used to resume partially-completed runs.
@@ -35,7 +35,7 @@ from hallmark.evaluation.validate import compute_sha256
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s: %(message)s")
 logger = logging.getLogger(__name__)
 
-DEFAULT_RESULTS_DIR = Path("data/v1.0/baseline_results")
+DEFAULT_RESULTS_DIR = Path("data/v1.2/baseline_results")
 DEFAULT_CHECKPOINT_DIR = Path("results/temporal_checkpoints")
 AGENTIC_BASELINES = {
     "llm_agentic_openai",
@@ -66,7 +66,7 @@ def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--baseline", required=True, choices=sorted(AGENTIC_BASELINES))
     parser.add_argument("--split", default="dev_public")
-    parser.add_argument("--version", default="v1.0")
+    parser.add_argument("--version", default="v1.2")
     parser.add_argument("--checkpoint-dir", type=Path, default=DEFAULT_CHECKPOINT_DIR)
     parser.add_argument("--cache-db-path", type=Path, default=Path(".cache/agentic_tools.sqlite"))
     parser.add_argument(

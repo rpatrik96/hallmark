@@ -76,11 +76,11 @@ jobs:
         if: matrix.precomputed == true
         run: |
           python -m hallmark.cli validate-results \
-            --results-dir data/v1.0/baseline_results \
-            --metadata data/v1.0/metadata.json \
+            --results-dir data/v1.2/baseline_results \
+            --metadata data/v1.2/metadata.json \
             --strict
           mkdir -p results
-          cp data/v1.0/baseline_results/${{ matrix.baseline }}_${{ inputs.split || 'dev_public' }}.json \
+          cp data/v1.2/baseline_results/${{ matrix.baseline }}_${{ inputs.split || 'dev_public' }}.json \
             results/ 2>/dev/null || echo "No pre-computed result for ${{ matrix.baseline }} on ${{ inputs.split || 'dev_public' }}"
 
       - name: Upload results

@@ -31,7 +31,7 @@ if str(_SCRIPTS_DIR) not in sys.path:
 import check_results_freshness as crf  # noqa: E402
 
 _REPO_ROOT = Path(__file__).resolve().parent.parent
-_REAL_RESULTS_DIR = _REPO_ROOT / "data" / "v1.0" / "baseline_results"
+_REAL_RESULTS_DIR = _REPO_ROOT / "data" / "v1.2" / "baseline_results"
 _REAL_DATA_DIR = _REPO_ROOT / "data"
 
 
@@ -101,9 +101,9 @@ def _write_result(
 def _build_env(tmp_path: Path, *, n_hall: int = 10, n_valid: int = 10):
     """Create a fake data dir + results dir mirroring the real layout."""
     data_dir = tmp_path / "data"
-    split_file = data_dir / "v1.0" / "dev_public.jsonl"
+    split_file = data_dir / "v1.2" / "dev_public.jsonl"
     _write_split(split_file, n_hall=n_hall, n_valid=n_valid)
-    results_dir = data_dir / "v1.0" / "baseline_results"
+    results_dir = data_dir / "v1.2" / "baseline_results"
     results_dir.mkdir(parents=True, exist_ok=True)
     return data_dir, split_file, results_dir
 
@@ -126,7 +126,7 @@ def test_fresh_result_passes(tmp_path):
     future = time.time() + 100
     os.utime(result_file, (future, future))
 
-    res = crf.check_freshness(results_dir, version="v1.0", data_dir=data_dir)
+    res = crf.check_freshness(results_dir, version="v1.2", data_dir=data_dir)
     assert res.passed is True
     assert res.stale_files == []
 
@@ -151,7 +151,7 @@ def test_stale_by_mtime(tmp_path):
     new = time.time() + 100
     os.utime(split_file, (new, new))
 
-    res = crf.check_freshness(results_dir, version="v1.0", data_dir=data_dir)
+    res = crf.check_freshness(results_dir, version="v1.2", data_dir=data_dir)
     assert res.passed is False
     assert "mytool_dev_public.json" in res.stale_files
     report = next(r for r in res.reports if r.result_file == "mytool_dev_public.json")
@@ -176,7 +176,7 @@ def test_stale_by_count_mismatch(tmp_path):
     future = time.time() + 100
     os.utime(result_file, (future, future))
 
-    res = crf.check_freshness(results_dir, version="v1.0", data_dir=data_dir)
+    res = crf.check_freshness(results_dir, version="v1.2", data_dir=data_dir)
     assert res.passed is False
     report = next(r for r in res.reports if r.result_file == "mytool_dev_public.json")
     assert any("num_hallucinated mismatch" in r for r in report.reasons)
@@ -203,7 +203,7 @@ def test_split_inferred_from_filename_when_field_missing(tmp_path):
     future = time.time() + 100
     os.utime(result_file, (future, future))
 
-    res = crf.check_freshness(results_dir, version="v1.0", data_dir=data_dir)
+    res = crf.check_freshness(results_dir, version="v1.2", data_dir=data_dir)
     report = next(r for r in res.reports if r.result_file == "cascade_db_diagnosis_dev_public.json")
     assert report.split == "dev_public"
     assert report.is_stale is False
@@ -224,7 +224,7 @@ def test_manifest_json_is_ignored(tmp_path):
     future = time.time() + 100
     os.utime(result_file, (future, future))
 
-    res = crf.check_freshness(results_dir, version="v1.0", data_dir=data_dir)
+    res = crf.check_freshness(results_dir, version="v1.2", data_dir=data_dir)
     assert "manifest.json" not in [r.result_file for r in res.reports]
     assert res.passed is True
 
@@ -243,14 +243,14 @@ def test_dual_mode_payload_uses_conservative_block(tmp_path):
     future = time.time() + 100
     os.utime(result_file, (future, future))
 
-    res = crf.check_freshness(results_dir, version="v1.0", data_dir=data_dir)
+    res = crf.check_freshness(results_dir, version="v1.2", data_dir=data_dir)
     report = next(r for r in res.reports if r.result_file == result_file.name)
     assert report.split == "dev_public"
     assert report.is_stale is False
 
 
 def test_missing_results_dir_fails():
-    res = crf.check_freshness("/nonexistent/dir/xyz", version="v1.0")
+    res = crf.check_freshness("/nonexistent/dir/xyz", version="v1.2")
     assert res.passed is False
     assert res.errors
 
@@ -267,7 +267,7 @@ def test_unparseable_split_makes_stale(tmp_path):
         n_hall=10,
         n_valid=10,
     )
-    res = crf.check_freshness(results_dir, version="v1.0", data_dir=data_dir)
+    res = crf.check_freshness(results_dir, version="v1.2", data_dir=data_dir)
     report = next(r for r in res.reports if r.result_file == result_file.name)
     assert report.is_stale is True
     assert any("split file missing" in r for r in report.reasons)
@@ -282,5 +282,5 @@ def test_unparseable_split_makes_stale(tmp_path):
     strict=False,
 )
 def test_real_repo_results_are_fresh():
-    res = crf.check_freshness(_REAL_RESULTS_DIR, version="v1.0", data_dir=_REAL_DATA_DIR)
+    res = crf.check_freshness(_REAL_RESULTS_DIR, version="v1.2", data_dir=_REAL_DATA_DIR)
     assert res.passed, f"Stale result artifacts: {res.stale_files}"

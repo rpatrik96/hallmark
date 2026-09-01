@@ -60,24 +60,24 @@ b1b4f41ce89a2d43fb67ae961f22070b2e33b88a961c0d68994fe1b363ad9026  blind/dev_publ
 
 Paths in this section are HuggingFace-relative (under `https://huggingface.co/datasets/hallmark-neurips2026/HALLMARK/resolve/main/`).
 
-### JSONL mirror (repo `data/v1.0/` and HuggingFace `jsonl/`)
+### JSONL mirror (repo `data/v1.2/` and HuggingFace `jsonl/`)
 
 ```
-9b6391c236d2f60d1c33918c13a68d8ac9f53083143eec16620f4559d0188f3e  data/v1.0/dev_public.jsonl
-46b9a23a1e1a7564c52ac490a492090fdc8d87f15bfea4c62bc49f8fd9ce42b7  data/v1.0/dev_public_blind.jsonl
-ac6da9614e2c36bb4eb553f0bccdff2b73c303ea4a06e373f4bceb067650ba0d  data/v1.0/test_public.jsonl
-0461cef293e6f2a1e1448b6fa56de72c0efd18a240cdf426377616afc00649bd  data/v1.0/test_public_blind.jsonl
-af3a11606948fea8edccbbd5c512e6efd69c1f9056032d446f01c66950da07d3  data/v1.0/stress_test.jsonl
-cf6f829b2ad99c6badd9eb513214e2d811e6b0fe3218a64263aeecb690ea49e3  data/v1.0/stress_test_blind.jsonl
-caf4f5597846b4cbca404fb44e2c1550db69ae062288a78f7028f95bd7a3e065  data/v1.0/metadata.json
-f6b5b3fcc7964a8b74be8a30b6c4566582d81f42764f2b1501d89d29ee2dfdbb  data/v1.0/source_mapping.json
-3e772d02f71ae74601c419f6bfd6244f13acd329be61e003910cb9eb3c1f03b3  data/v1.0/valid_entry_verification.json
+d04a19f469765345febd5ca1a8c45edbe07c1937734edd695fd87f6184890a27  data/v1.2/dev_public.jsonl
+46b9a23a1e1a7564c52ac490a492090fdc8d87f15bfea4c62bc49f8fd9ce42b7  data/v1.2/dev_public_blind.jsonl
+b06821c91398da9aecf35ce4cba0baf8eea6632f384e9984530e10bbd27ce45b  data/v1.2/test_public.jsonl
+0461cef293e6f2a1e1448b6fa56de72c0efd18a240cdf426377616afc00649bd  data/v1.2/test_public_blind.jsonl
+af3a11606948fea8edccbbd5c512e6efd69c1f9056032d446f01c66950da07d3  data/v1.2/stress_test.jsonl
+cf6f829b2ad99c6badd9eb513214e2d811e6b0fe3218a64263aeecb690ea49e3  data/v1.2/stress_test_blind.jsonl
+ea4f34bc80e844823b9604d880b0b4a7dec63cb1c193014969f6d7fe972751a0  data/v1.2/metadata.json
+f6b5b3fcc7964a8b74be8a30b6c4566582d81f42764f2b1501d89d29ee2dfdbb  data/v1.2/source_mapping.json
+3e772d02f71ae74601c419f6bfd6244f13acd329be61e003910cb9eb3c1f03b3  data/v1.2/valid_entry_verification.json
 ```
 
 Verify the JSONL mirror locally:
 
 ```bash
-shasum -a 256 --check <(grep "data/v1.0/" HOSTING.md | grep -v "^#")
+shasum -a 256 --check <(grep "data/v1.2/" HOSTING.md | grep -v "^#")
 ```
 
 ---
@@ -92,7 +92,7 @@ submission instructions.
 
 ## Versioning
 
-The `version` field in `data/v1.0/metadata.json` tracks the dataset version using semver.
+The `version` field in `data/v1.2/metadata.json` tracks the dataset version using semver.
 Current version: **1.0**.
 
 Breaking schema changes increment the major version and receive a new `data/vX.Y/` directory.

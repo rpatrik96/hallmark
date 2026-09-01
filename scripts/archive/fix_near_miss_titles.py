@@ -369,7 +369,7 @@ def fix_file(filepath: Path) -> None:
 
 
 def main() -> None:
-    data_dir = Path("data/v1.0")
+    data_dir = Path("data/v1.2")
     fix_file(data_dir / "dev_public.jsonl")
     fix_file(data_dir / "test_public.jsonl")
 

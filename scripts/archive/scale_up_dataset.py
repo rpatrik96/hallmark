@@ -490,7 +490,7 @@ def print_summary(
 
 def main() -> None:
     """Scale up dataset to ≥10 hallucinated entries per type per split."""
-    data_dir = Path("data/v1.0")
+    data_dir = Path("data/v1.2")
     dev_path = data_dir / "dev_public.jsonl"
     test_path = data_dir / "test_public.jsonl"
     metadata_path = data_dir / "metadata.json"

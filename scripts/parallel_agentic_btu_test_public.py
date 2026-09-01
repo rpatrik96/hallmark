@@ -103,7 +103,7 @@ def main() -> None:
     )
     parser.add_argument("--model", default="anthropic/claude-sonnet-4.6")
     parser.add_argument("--split", default="test_public")
-    parser.add_argument("--version", default="v1.0")
+    parser.add_argument("--version", default="v1.2")
     parser.add_argument("--workers", type=int, default=6)
     parser.add_argument("--max-entries", type=int, default=0)
     parser.add_argument("--cache-db-path", type=Path, default=Path(".cache/agentic_tools.sqlite"))

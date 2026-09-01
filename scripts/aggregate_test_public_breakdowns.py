@@ -6,7 +6,7 @@ Deliverables:
   C) tables/cross_split_per_tier.tex                     — booktabs LaTeX table
 
 Dev-public sources:
-  - claude_opus_4_7 : data/v1.0/baseline_results/llm_openrouter_claude_opus_4_7_dev_public.json
+  - claude_opus_4_7 : data/v1.2/baseline_results/llm_openrouter_claude_opus_4_7_dev_public.json
   - others          : evaluate from results/llm_openrouter_*_dev_public_predictions.jsonl
                       or results/new_models/*.jsonl (qwen_max, llama_4_maverick)
 
@@ -95,7 +95,7 @@ MODELS: list[dict] = [
         / "results/checkpoints/llm_openrouter_claude_opus_4_7_test_public/eval.json",
         "dev_predictions": None,
         "dev_eval_json": REPO
-        / "data/v1.0/baseline_results/llm_openrouter_claude_opus_4_7_dev_public.json",
+        / "data/v1.2/baseline_results/llm_openrouter_claude_opus_4_7_dev_public.json",
     },
 ]
 

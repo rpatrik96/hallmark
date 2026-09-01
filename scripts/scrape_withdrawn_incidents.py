@@ -15,7 +15,7 @@ Output entries are tagged:
     source = "biorxiv_withdrawn" | "medrxiv_withdrawn"
     explanation = "Withdrawn from {server}: {first sentence of statement}"
 
-The output file ``data/v1.0/biorxiv_withdrawn_incidents.jsonl`` is meant
+The output file ``data/v1.2/biorxiv_withdrawn_incidents.jsonl`` is meant
 to be a reusable data source — analogous to ``real_world_incidents.jsonl``
 and ``gptzero_neurips2025.jsonl`` — that downstream split builders can
 sample from.
@@ -200,7 +200,7 @@ def scrape_server(
 def main() -> int:
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument(
-        "--output", type=Path, default=Path("data/v1.0/biorxiv_withdrawn_incidents.jsonl")
+        "--output", type=Path, default=Path("data/v1.2/biorxiv_withdrawn_incidents.jsonl")
     )
     p.add_argument("--years", nargs="+", type=int, default=[2023, 2024, 2025])
     p.add_argument(

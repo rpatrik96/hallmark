@@ -4,7 +4,7 @@
 import json
 from pathlib import Path
 
-data_dir = Path(__file__).parent.parent / "data" / "v1.0"
+data_dir = Path(__file__).parent.parent / "data" / "v1.2"
 
 # Load mislabeled titles
 mislabeled_titles = set()

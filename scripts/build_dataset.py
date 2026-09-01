@@ -84,8 +84,8 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--output-dir",
         type=str,
-        default="data/v1.0",
-        help="Output directory for public splits (default: data/v1.0)",
+        default="data/v1.2",
+        help="Output directory for public splits (default: data/v1.2)",
     )
     parser.add_argument(
         "--hidden-dir",
@@ -108,7 +108,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--llm-entries",
         type=str,
-        default="data/v1.0/llm_generated.jsonl",
+        default="data/v1.2/llm_generated.jsonl",
         help="Path to LLM-generated entries JSONL",
     )
     parser.add_argument(
