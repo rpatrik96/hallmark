@@ -14,6 +14,7 @@ from hallmark.baselines.cascade import (
     _aggressive_fallback,
     _stage1_predict,
     run_cascade,
+    run_cascade_with_health,
 )
 from hallmark.dataset.schema import BlindEntry, Prediction
 
@@ -395,3 +396,95 @@ def test_prediction_rejects_invalid_predicted_type() -> None:
             confidence=0.9,
             predicted_hallucination_type="not_a_real_type",
         )
+
+
+# ---------------------------------------------------------------------------
+# Failed-lookup routing and the batch-level sanity check
+#
+# 2026-09-02: a wifi outage made every source lookup fail DNS resolution,
+# bibtex-check returned ``not_found`` for 2,500 consecutive references, and the
+# cascade forwarded all of them to an expensive Stage 2 with no database
+# evidence behind any of them.
+# ---------------------------------------------------------------------------
+
+
+def test_transport_statuses_route_to_stage2_and_carry_no_type() -> None:
+    """A failed request is not a fabricated reference."""
+    for status in ("network_error", "coverage_incomplete"):
+        assert status in ROUTE_TO_STAGE2
+        assert status not in STATUS_TO_TYPE
+        assert status not in STAGE1_VERIFIED
+
+
+def test_stage1_network_error_defers_instead_of_deciding() -> None:
+    out = _stage1_predict(_entry("k"), _raw("k", label="VALID"), "network_error")
+    assert out is None
+
+
+def test_stage1_never_emits_hallucinated_for_a_failed_lookup() -> None:
+    """Whatever the upgraded tool names its transport status, Stage 1 must not
+    turn it into a fabrication verdict."""
+    for status in (
+        "network_error",
+        "coverage_incomplete",
+        "api_error",
+        "transport_failure_some_future_name",
+    ):
+        out = _stage1_predict(_entry("k"), _raw("k", label="VALID"), status)
+        assert out is None or out.label != "HALLUCINATED", status
+
+
+def test_unmapped_status_defers_to_stage2_deliberately() -> None:
+    """Open-world default: an unknown status is routed on, never decided here."""
+    assert _stage1_predict(_entry("k"), _raw("k"), "a_status_from_the_future") is None
+
+
+def test_cascade_network_error_reaches_stage2_and_stays_valid() -> None:
+    entries = [_entry("a")]
+    name = _mock_stage2({"a": {"label": "VALID", "confidence": 0.9}})
+    with patch(
+        "hallmark.baselines.cascade.run_bibtex_check_with_status",
+        _mock_stage1({"a": "network_error"}),
+    ):
+        preds = run_cascade(entries, stage2_baseline=name)
+
+    assert preds[0].label == "VALID"
+    assert preds[0].label != "HALLUCINATED"
+    assert preds[0].cascade_stage == "stage2_diagnosis"
+
+
+def test_cascade_exposes_poisoned_batch_health() -> None:
+    """The signal a checkpointing caller gates on."""
+    entries = [_entry(f"k{i}") for i in range(40)]
+    statuses = {e.bibtex_key: "not_found" for e in entries}
+    name = _mock_stage2({e.bibtex_key: {"label": "UNCERTAIN"} for e in entries})
+    with patch(
+        "hallmark.baselines.cascade.run_bibtex_check_with_status",
+        _mock_stage1(statuses),
+    ):
+        preds, health = run_cascade_with_health(entries, stage2_baseline=name)
+
+    assert len(preds) == 40
+    assert health.suspected_transport_failure
+    assert health.not_found == 40
+
+
+def test_cascade_health_is_clean_on_a_normal_batch() -> None:
+    entries = [_entry(f"k{i}") for i in range(40)]
+    statuses = {e.bibtex_key: "verified" for e in entries}
+    statuses["k0"] = "not_found"
+    name = _mock_stage2({"k0": {"label": "UNCERTAIN"}})
+    with patch(
+        "hallmark.baselines.cascade.run_bibtex_check_with_status",
+        _mock_stage1(statuses),
+    ):
+        preds, health = run_cascade_with_health(entries, stage2_baseline=name)
+
+    assert len(preds) == 40
+    assert not health.suspected_transport_failure
+
+
+def test_cascade_with_health_handles_empty_input() -> None:
+    preds, health = run_cascade_with_health([])
+    assert preds == []
+    assert not health.suspected_transport_failure
