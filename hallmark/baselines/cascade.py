@@ -19,7 +19,10 @@ Aggressive mode: any entry that remains UNCERTAIN after Stage 2 is forced to
 HALLUCINATED with type ``plausible_fabrication`` and confidence 0.55. This
 implements the "treat DB lookups as gold standard" stance — at the cost of
 inflated FPR on legitimately-but-not-yet-indexed entries, which the dual-mode
-evaluation surfaces as the DB-indexing-lag tax.
+evaluation surfaces as the DB-indexing-lag tax.  The promotion is suppressed on a
+batch whose Stage 1 produced no database evidence: during an outage there is no
+gold standard to treat as one, and promoting the residue would manufacture mass
+fabrication verdicts out of failed requests.
 
 Stage 1 statuses are also scored as a batch: ``run_cascade_with_health`` returns
 the ``BatchHealth`` record for the bibtex-check invocation so a caller can refuse
@@ -199,6 +202,10 @@ def _aggressive_fallback(pred: Prediction) -> Prediction:
     The aggressive policy is "if no DB or diagnoser confidently asserted real,
     treat as fabricated"; we type the residual as ``plausible_fabrication``
     since that is the catch-all for "looks plausible but unverifiable".
+
+    The function itself is unchanged and unconditional; whether it runs at all is
+    decided in ``run_cascade_with_health``, which skips the promotion entirely on
+    a batch flagged by ``BatchHealth.suspected_transport_failure``.
     """
     if pred.label == "HALLUCINATED":
         return pred
@@ -262,7 +269,9 @@ def run_cascade_with_health(
         aggressive: if True, any entry still UNCERTAIN/low-confidence VALID
             after Stage 2 is forced to HALLUCINATED@0.55 with type
             ``plausible_fabrication``. This implements the "DB-as-gold-standard"
-            stance from the reviewer feedback.
+            stance from the reviewer feedback. The promotion is skipped when
+            ``health.suspected_transport_failure`` is set, since a batch with no
+            database evidence has no gold standard to stand on.
         stage2_kwargs: kwargs forwarded to the Stage 2 baseline runner.
         **stage1_kwargs: forwarded to ``run_bibtex_check_with_status``.
 
@@ -271,6 +280,19 @@ def run_cascade_with_health(
         map: when ``health.suspected_transport_failure`` is True the Stage 1
         lookups produced no database evidence, every Stage 2 verdict in the batch
         rests on nothing, and the caller must not checkpoint the results.
+
+    Note on the published results
+    -----------------------------
+    The aggressive-mode numbers in the paper were produced before this guard
+    existed, and they are not recomputed by it: they are frozen files in
+    ``data/v1.2/baseline_results/`` that CI validates by checksum rather than
+    re-running.  The guard cannot alter them.  It is also inert on a healthy
+    batch by construction — ``suspected_transport_failure`` is False whenever the
+    no-evidence share stays under the threshold, and the frozen conservative runs
+    bound that share below it (``cascade_breakdown_stats``: 23.8% of dev_public
+    and 26.7% of test_public deferred to Stage 2 at all, and the no-evidence
+    statuses are a subset of the deferred).  Only a future run on degraded input
+    behaves differently.
     """
     if not entries:
         return [], assess_batch_health([])
@@ -353,9 +375,25 @@ def run_cascade_with_health(
             )
 
     if aggressive:
-        for key, pred in list(final.items()):
-            if pred.cascade_stage in {"stage2_diagnosis"}:
-                final[key] = _aggressive_fallback(pred)
+        if health.suspected_transport_failure:
+            # "DB-as-gold-standard" needs a DB. With no database evidence behind
+            # the batch, promoting the residue to HALLUCINATED would turn an
+            # outage into mass fabrication verdicts, so the entries stay as
+            # Stage 2 returned them. Inert on a healthy batch: the flag is False
+            # for every run that is not degraded, so aggressive mode there is
+            # byte-identical to what it was before this guard existed.
+            logger.warning(
+                "cascade: aggressive promotion suppressed — Stage 1 produced no "
+                "database evidence for %d/%d entries, so there is no gold standard "
+                "to treat as one. Stage 2 verdicts are returned unpromoted; do not "
+                "checkpoint this batch.",
+                health.no_evidence,
+                health.total,
+            )
+        else:
+            for key, pred in list(final.items()):
+                if pred.cascade_stage in {"stage2_diagnosis"}:
+                    final[key] = _aggressive_fallback(pred)
 
     return [final[entry.bibtex_key] for entry in entries], health
 
