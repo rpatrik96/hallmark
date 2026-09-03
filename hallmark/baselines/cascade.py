@@ -287,12 +287,22 @@ def run_cascade_with_health(
     existed, and they are not recomputed by it: they are frozen files in
     ``data/v1.2/baseline_results/`` that CI validates by checksum rather than
     re-running.  The guard cannot alter them.  It is also inert on a healthy
-    batch by construction — ``suspected_transport_failure`` is False whenever the
-    no-evidence share stays under the threshold, and the frozen conservative runs
-    bound that share below it (``cascade_breakdown_stats``: 23.8% of dev_public
-    and 26.7% of test_public deferred to Stage 2 at all, and the no-evidence
-    statuses are a subset of the deferred).  Only a future run on degraded input
-    behaves differently.
+    batch by construction: ``suspected_transport_failure`` is False whenever the
+    no-evidence share stays under the threshold, and the no-evidence statuses are
+    a subset of what defers to Stage 2, so the frozen conservative runs'
+    ``cascade_breakdown_stats`` bound the share from above.  For dev_public
+    (266/1119 = 23.8% deferred) and test_public (222/831 = 26.7%) the bound is
+    below the 30% threshold, so those splits' aggressive numbers cannot change on
+    a re-run.
+
+    stress_test defers 53/121 = 43.8%, which is an upper bound only: deferrals
+    also include ``unconfirmed``, ``partial_match``, ``skipped`` and ``missing``,
+    none of which count toward the no-evidence share.  The raw status dump needed
+    to compute the actual share is not in the repo:
+    ``bibtexupdater_raw_dev_public.jsonl`` is an unfetched git-lfs pointer and
+    there is no stress_test raw dump at all.  A future re-run of the aggressive
+    stress_test split is therefore the one place this guard could in principle
+    produce different numbers; the frozen file is untouched regardless.
     """
     if not entries:
         return [], assess_batch_health([])
