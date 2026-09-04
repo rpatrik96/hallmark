@@ -230,6 +230,61 @@ See [`examples/03_custom_baseline.py`](examples/03_custom_baseline.py) for a com
 | `plausible_fabrication` | Entirely fabricated but realistic | Realistic author + plausible title |
 | `arxiv_version_mismatch` | Mixed preprint/published metadata | arXiv ID with conference venue claim |
 
+### Four of these modes describe papers that exist
+
+`wrong_venue`, `preprint_as_published`, `partial_author_list` and
+`arxiv_version_mismatch` are conditions on real works. An entry carrying one of
+them cites a paper that exists and says something inaccurate about it, usually a
+stale venue string or a preprint cited by its conference version. They sit under
+a label the agentic system prompt defines as "a HALLUCINATED (fabricated)
+citation", so a tool that correctly identifies a stale venue is scored as having
+found a fabrication. They are 26.1% of the positive class on `dev_public` and
+26.8% on `test_public`.
+
+**The ranking is not stable if they stop counting as fabrication.** Scoring every
+tool three ways — as shipped, with the four modes out of the scored set, and with
+them as negatives so flagging one is a false accusation:
+
+| split | folded out of the scored set | scored as false positives |
+|---|---|---|
+| `test_public` | Kendall tau 0.886, 14 of 21 tools change rank | tau 0.829, 17 of 21 change |
+| `dev_public` | tau 0.905, 15 of 20 change | tau 0.811, 17 of 20 change |
+
+The top of the table changes identity: `cascade_db_diagnosis` leads as shipped at
+MCC 0.897 on `test_public`, and `bibtexupdater` takes first place under
+as-false-positives on both splits (0.685 against 0.631).
+
+How much of a tool's credit comes from these modes varies widely, and no
+published column shows it. On `test_public` they are 27.0% of the cascade's 514
+detections, 23.2% of Sonnet 4.6's, 20.0% of `bibtexupdater`'s and 9.1% of
+`doi_only`'s. Detection rate on the four ranges from 0.065 (`doi_only`) to 1.000
+(the cascade), median 0.755 across 21 tools.
+
+Two controls bound what this means. Folding `hybrid_fabrication` alone moves
+nothing — tau 1.000 with no tool changing position on either public split — so
+the instability belongs to the four modes rather than to folding a mode class,
+though at 4.3% and 5.6% of positives that null carries less weight than the
+effect it contrasts with. And the cascade's 1.000 is not an artefact of how the
+entries were generated: a gradient-boosted classifier over surface features
+alone, with no lookup of any kind, reaches detection rate 0.468 on `dev_public`
+and 0.388 on `test_public` against false-positive rates of 0.045 and 0.096. Some
+separability is there, and it is far short of what the cascade achieves.
+
+`stress_test` inherits the same property by construction. It holds three modes,
+two of which are on this list: 75 of its 121 scored entries, 62%. It carries no
+VALID entries, so its false-positive rate is undefined and its MCC is 0.0 by
+degeneracy rather than by measurement, and every one of the cascade's misses
+there is on the two real-paper modes — folding them takes it from 0.953 to 1.000.
+
+**No labels change in this release.** Separating the two questions means
+relabelling across every split and moving every per-type and per-tier number, so
+the instability is reported rather than repaired; treat a ranking on the current
+target as a ranking over both questions at once. Reproduce with
+`python scripts/ablate_taxonomy_fold.py --split test_public`, which writes
+`tables/taxonomy_fold_ablation_*.csv` and rebuilds each tool's confusion matrix
+from `per_type_metrics`, validating it against that result's own published
+figures first. Discussion is in [issue #36](https://github.com/rpatrik96/hallmark/issues/36).
+
 ## Hosting & Croissant
 
 The dataset is mirrored on HuggingFace (parquet + jsonl + baseline results + RAI Croissant metadata):
