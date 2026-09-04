@@ -120,10 +120,10 @@ class TestTypeBalance:
         from hallmark.dataset.schema import STRESS_TEST_TYPES, load_entries
 
         stress_values = {ht.value for ht in STRESS_TEST_TYPES}
-        try:
-            entries = load_entries("stress_test")
-        except FileNotFoundError:
-            pytest.skip("stress_test split not found")
+        stress_path = DATA_DIR / "stress_test.jsonl"
+        if not stress_path.exists():
+            pytest.skip(f"stress_test split not found at {stress_path}")
+        entries = load_entries(stress_path)
         found = {e.hallucination_type for e in entries if e.label == "HALLUCINATED"}
         assert stress_values <= found, (
             f"Missing stress types in stress_test: {stress_values - found}"
