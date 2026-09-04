@@ -347,7 +347,22 @@ predictions = run_title_oracle(blind_test, reference_pool=dev_entries)
 
 ## Main Results (dev_public, 1,119 entries)
 
-Twelve full-coverage tools evaluated on `dev_public`. All numbers reproduce Table 1 of the paper. **Bold** = best among independent (non-co-designed) full-coverage tools. ΔFPR is the cross-split shift `test_public − dev_public`; `—` means no `test_public` evaluation.
+Twelve tools evaluated on `dev_public`. All numbers reproduce Table 1 of the paper. **Bold** = best among independent (non-co-designed) tools. ΔFPR is the cross-split shift `test_public − dev_public`; `—` means no `test_public` evaluation.
+
+> **Coverage caveat.** These tools are not all full-coverage. A tool that returns
+> `UNCERTAIN` is excluded from the confusion matrix, so every metric in this
+> table is computed over the entries a tool actually answered, and that
+> denominator differs by row. Some `UNCERTAIN` records are not model abstentions
+> at all but API failures written into the prediction file after a run hit
+> consecutive errors: on `test_public`, all 180 of DeepSeek-R1's are of this
+> kind, so its metrics there cover 651 of 831 entries. **Its ΔFPR of −0.310, the
+> largest cross-split shift in the table, is therefore a comparison between a
+> dev figure over 1,101 answered entries and a test figure over 651, and should
+> not be read as a robustness result.** Affected splits are `dev_public` (124
+> records), `test_public` (183) and the cross-domain splits; `stress_test` and
+> `hidden` contain none. `EvaluationResult.coverage` now reports the answered
+> fraction rather than 1.0, but the numbers in this table predate that fix and
+> have not yet been recomputed — see `notes/eval-hardening-plan-2026-09.md`.
 
 | Tool | DR ↑ | FPR ↓ | F1 ↑ | MCC ↑ | TW-F1 ↑ | ECE ↓ | ΔFPR ↓ |
 |------|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
@@ -374,7 +389,9 @@ Twelve full-coverage tools evaluated on `dev_public`. All numbers reproduce Tabl
 | bibtex-updater | .946 | .179 | .908 | .781 | .936 | .297 | +0.159 |
 | GPT-5.1 + bibtex-updater (always-call; output in prompt) | .818 | .144 | .846 | .670 | .856 | .086 | +0.110 |
 
-DR = Detection Rate · FPR = False Positive Rate · TW-F1 = Tier-weighted F1 · MCC = Matthews Correlation Coefficient · ECE = Expected Calibration Error. The shaded *co-designed* block is a reference upper bound: `bibtex-updater`'s development overlapped with the benchmark's taxonomy design, so its scores risk construct-overfitting and should not be compared head-to-head with independent tools. `HaRC` and `verify-citations` are omitted: Semantic Scholar throttling collapses their effective coverage to <7% on `dev_public`.
+DR = Detection Rate · FPR = False Positive Rate · TW-F1 = Tier-weighted F1 · MCC = Matthews Correlation Coefficient · ECE = Expected Calibration Error. The shaded *co-designed* block is a reference upper bound: `bibtex-updater`'s development overlapped with the benchmark's taxonomy design, so its scores risk construct-overfitting and should not be compared head-to-head with independent tools. `HaRC` and `verify-citations` are omitted. For HaRC the stated reason — Semantic Scholar throttling collapsing effective coverage below 7% — does not survive inspection: given a key, HaRC runs at **full coverage** on `dev_public` (`harc_with_s2key_dev_public.json`). That keyed run is itself scored against the pre-relabel ground truth, so its detection rate and FPR are not comparable to the current-label results above and are not quoted here; it is registered as known-stale in `scripts/check_results_freshness.py`. Regenerating it needs a working Semantic Scholar key, which as of 2026-09-04 returns HTTP 403. The unkeyed `harc_dev_public.json` was withdrawn the same day: it scored 521 of 1,119 entries, matching no split, and reported FPR 0.000 — a truncated run, not a result.
+
+Two caveats on that omission, both open. `bibtexupdater.py` reads `S2_API_KEY` from the environment automatically and the HaRC wrapper did not until 2026-09-04, so a default side-by-side run handed the co-designed tool authenticated access and its competitor the unauthenticated pool. And if HaRC leans on Semantic Scholar where bibtex-updater's cascade can fall through to CrossRef and OpenAlex, then "HaRC throttles" is partly a measurement of which tool depended on the source that was down rather than a property of the tools. That is not currently checkable: the HaRC wrapper records `mean_api_calls: 0.0` and no per-source counts, so the released artifacts cannot answer it.
 
 ### Key Takeaways
 
@@ -434,6 +451,73 @@ See also:
 - [GhostCite paper](https://arxiv.org/abs/2602.06718) — large-scale analysis of 2.2M citations across 56K papers
 - [HalluCitation paper](https://arxiv.org/abs/2601.18724) — analysis of ~300 hallucinated papers in ACL conferences
 - [GPTZero Hallucination Detector](https://gptzero.me/hallucination-detector) — commercial API for citation verification
+
+
+## What these numbers mean on a real bibliography
+
+`test_public` is 62.5% hallucinated by construction, and that is the operating
+point every number above is measured at. Detection rate and false-positive rate
+are properties of a detector and do not move with prevalence, but **precision
+does** — and precision is what a user actually experiences, because it is the
+share of the flags handed to them that are real. A tool can therefore post an
+honest 99% detection rate at a 16% false-positive rate and still hand a user
+mostly false accusations.
+
+Holding each tool's measured DR and FPR fixed and sweeping the assumed
+prevalence (`python scripts/compute_base_rate_precision.py`, full table in
+[`tables/base_rate_precision.csv`](tables/base_rate_precision.csv)):
+
+| assumed prevalence | cascade precision | flags read per true finding |
+|---|---|---|
+| 0.1% | 0.6% | 162 |
+| 1% | 5.9% | 17 |
+| 5% | 24.6% | 4.1 |
+| 20% | 60.8% | 1.6 |
+| **62.5%** (this benchmark) | **91.2%** | **1.1** |
+
+The benchmark's own prevalence is the only point on that curve where the
+instrument looks good, and no arithmetic here is new — it is Bayes' rule over
+numbers already in `data/v1.2/baseline_results/`.
+
+### The wild base rate is not 62.5%
+
+We ran HALLMARK's own `cascade_db_diagnosis` with an agentic Stage 2 over 5,043
+deduplicated references from 267 real NeurIPS-workshop submissions. Stage 1
+located a matching record for every reference it ruled on, and **not one
+fabricated work was found in 5,043 references.** Of those, 3,244 were confirmed
+outright, 920 differed from the indexed record only in the venue string, 187
+carried some other metadata difference, 431 were flagged and 261 abstained.
+
+Eleven accusations survived re-adjudication and hand audit, and none was a
+citation to something that does not exist:
+
+| n | what it actually was |
+|---|---|
+| 3 | corrupt OpenAlex index records — correct DOI, correct author list, wrong title |
+| 3 | real papers whose DOIs were never registered |
+| 2 | real works in humanities venues the indexes do not cover |
+| 2 | unverifiable by construction (author `Anonymous`, under review) |
+| 1 | a work whose existence was proved by the rebuttal that names it in its own title, read as evidence of absence |
+
+So on real bibliographies the instrument's main output is false positives, and
+the flag list is dominated by citation-style artefacts and tool bugs rather than
+fabrication. That is worth stating plainly rather than leaving for a reader to
+derive: at a wild prevalence indistinguishable from zero, the left-hand column
+of the table above is the column that applies.
+
+Two consequences for how these baselines should be read. **Report precision at
+the prevalence you expect, not the benchmark's**, and prefer a tool that
+abstains over one that guesses — a citation flagged as fabricated is a serious
+accusation against a named author, and at these base rates most such flags are
+wrong. **The gap between "this work does not exist" and "this entry describes a
+real work incorrectly" carries most of the real signal**, and the current
+taxonomy folds the second into the first (see
+[issue #36](https://github.com/rpatrik96/hallmark/issues/36)); on the wild
+corpus, 63% of flags were real works described wrongly, 47% from venue and
+preprint status alone.
+
+This analysis is joint work with the InterpScience submission-screening effort,
+which contributed the 5,043-reference corpus and its adjudications.
 
 
 ## Python API

@@ -79,6 +79,7 @@ def _write_result(
     n_entries: int,
     n_hall: int,
     n_valid: int,
+    split_sha256: str | None = None,
 ) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(
@@ -89,6 +90,7 @@ def _write_result(
                 "num_entries": n_entries,
                 "num_hallucinated": n_hall,
                 "num_valid": n_valid,
+                **({"split_sha256": split_sha256} if split_sha256 is not None else {}),
                 "detection_rate": 0.8,
                 "false_positive_rate": 0.1,
                 "f1_hallucination": 0.75,
@@ -131,11 +133,12 @@ def test_fresh_result_passes(tmp_path):
     assert res.stale_files == []
 
 
-# --- Tests: stale by mtime -------------------------------------------------
+# --- Tests: stale by split hash --------------------------------------------
 
 
-def test_stale_by_mtime(tmp_path):
-    data_dir, split_file, results_dir = _build_env(tmp_path)
+def test_stale_when_recorded_split_hash_does_not_match(tmp_path):
+    """The result names a split revision that is no longer on disk."""
+    data_dir, _split_file, results_dir = _build_env(tmp_path)
     result_file = results_dir / "mytool_dev_public.json"
     _write_result(
         result_file,
@@ -144,18 +147,54 @@ def test_stale_by_mtime(tmp_path):
         n_entries=20,
         n_hall=10,
         n_valid=10,
+        split_sha256="0" * 64,
     )
-    # Result older than the split.
-    old = time.time() - 10_000
-    os.utime(result_file, (old, old))
-    new = time.time() + 100
-    os.utime(split_file, (new, new))
 
     res = crf.check_freshness(results_dir, version="v1.2", data_dir=data_dir)
     assert res.passed is False
     assert "mytool_dev_public.json" in res.stale_files
     report = next(r for r in res.reports if r.result_file == "mytool_dev_public.json")
-    assert any("mtime" in reason for reason in report.reasons)
+    assert any("scored split" in reason for reason in report.reasons)
+
+
+def test_fresh_when_recorded_split_hash_matches(tmp_path):
+    data_dir, split_file, results_dir = _build_env(tmp_path)
+    _write_result(
+        results_dir / "mytool_dev_public.json",
+        tool="mytool",
+        split="dev_public",
+        n_entries=20,
+        n_hall=10,
+        n_valid=10,
+        split_sha256=crf.compute_sha256(split_file),
+    )
+
+    res = crf.check_freshness(results_dir, version="v1.2", data_dir=data_dir)
+    assert res.passed is True
+    assert res.stale_files == []
+
+
+def test_missing_split_hash_is_unverifiable_not_stale(tmp_path):
+    """Results predating the field must not be called stale.
+
+    Treating them as stale is what made the old guard permanently red, which is
+    why it ended up behind --warn-only and an xfail.
+    """
+    data_dir, _split_file, results_dir = _build_env(tmp_path)
+    _write_result(
+        results_dir / "mytool_dev_public.json",
+        tool="mytool",
+        split="dev_public",
+        n_entries=20,
+        n_hall=10,
+        n_valid=10,
+    )
+
+    res = crf.check_freshness(results_dir, version="v1.2", data_dir=data_dir)
+    assert res.passed is True
+    assert res.stale_files == []
+    report = next(r for r in res.reports if r.result_file == "mytool_dev_public.json")
+    assert report.unverifiable is True
 
 
 # --- Tests: stale by count mismatch ----------------------------------------
@@ -273,14 +312,33 @@ def test_unparseable_split_makes_stale(tmp_path):
     assert any("split file missing" in r for r in report.reasons)
 
 
-# --- Real repository guard (documents the known-stale state) ---------------
+# --- Real repository guard --------------------------------------------------
+#
+# This was xfail-ed, with the reason "released result JSONs predate the relabel;
+# regenerate them in a later stage". The deeper problem was that the check
+# compared file mtimes, which git does not preserve, so on a fresh clone it read
+# checkout order and called every released result stale. It now hashes the split
+# file, and the two genuinely stale results are registered in KNOWN_STALE.
 
 
 @pytest.mark.skipif(not _REAL_RESULTS_DIR.is_dir(), reason="real baseline_results dir not present")
-@pytest.mark.xfail(
-    reason="released result JSONs predate the relabel; regenerate them in a later stage",
-    strict=False,
-)
 def test_real_repo_results_are_fresh():
     res = crf.check_freshness(_REAL_RESULTS_DIR, version="v1.2", data_dir=_REAL_DATA_DIR)
-    assert res.passed, f"Stale result artifacts: {res.stale_files}"
+    unexpected = [f for f in res.stale_files if f not in crf.KNOWN_STALE]
+    assert not unexpected, f"Unexpectedly stale result artifacts: {unexpected}"
+    assert res.passed, f"Freshness check failed: {res.errors}"
+
+
+@pytest.mark.skipif(not _REAL_RESULTS_DIR.is_dir(), reason="real baseline_results dir not present")
+def test_known_stale_register_only_shrinks():
+    """A KNOWN_STALE entry that is no longer stale must be removed.
+
+    Otherwise the register becomes a list of excuses that outlive their cause,
+    which is how the xfail above survived long enough to hide a broken check.
+    """
+    res = crf.check_freshness(_REAL_RESULTS_DIR, version="v1.2", data_dir=_REAL_DATA_DIR)
+    stale = set(res.stale_files)
+    obsolete = sorted(name for name in crf.KNOWN_STALE if name not in stale)
+    assert not obsolete, (
+        f"listed in KNOWN_STALE but no longer stale: {obsolete}. Remove them from the register."
+    )

@@ -6,14 +6,100 @@
       "baseline": "bibtexupdater",
       "split": "dev_public",
       "num_entries": 1119,
-      "f1_hallucination": 0.9086687306501547
+      "f1_hallucination": 0.8903993203058623
     },
-    "harc_dev_public.json": {
-      "sha256": "0ffd87e4bf301839912b3464cb033b3eff4b994fbf64ce8e2acb058e31cf1636",
+    "bibtexupdater_test_public.json": {
+      "sha256": "6cd2f9acc540179a88f8b94875433ff313a9f33b3ecf97247b5e7209ff55b82f",
+      "baseline": "bibtexupdater",
+      "split": "test_public",
+      "num_entries": 831,
+      "f1_hallucination": 0.900990099009901
+    },
+    "cascade_db_diagnosis_aggressive_dev_public.json": {
+      "sha256": "0f54d388799fbf499937679ba7e8b779d2fe8e3b05646e7f3933b966b16f3a3a",
+      "baseline": "cascade_db_diagnosis",
+      "split": "dev_public",
+      "num_entries": 1119,
+      "f1_hallucination": 0.9393468118195957
+    },
+    "cascade_db_diagnosis_aggressive_stress_test.json": {
+      "sha256": "8e12d13b07e0dd37a8ce0bc9bd1dfe09b8075df0f957a32567be4f527290a4ed",
+      "baseline": "cascade_db_diagnosis",
+      "split": "stress_test",
+      "num_entries": 121,
+      "f1_hallucination": 0.9789029535864979
+    },
+    "cascade_db_diagnosis_aggressive_test_public.json": {
+      "sha256": "f8c2b0cdc4a311a741c9528880de28fea8759cd3dd4bfd1ca715851c3f2595c5",
+      "baseline": "cascade_db_diagnosis",
+      "split": "test_public",
+      "num_entries": 831,
+      "f1_hallucination": 0.9501845018450185
+    },
+    "cascade_db_diagnosis_dev_public.json": {
+      "sha256": "5df803dde0d7fe80413072132677630b09761e9d313370611712ae0a7851747c",
+      "baseline": "cascade_db_diagnosis",
+      "split": "dev_public",
+      "num_entries": 1119,
+      "f1_hallucination": 0.946550048590865
+    },
+    "cascade_db_diagnosis_evalmode_aggressive_dev_public.json": {
+      "sha256": "0f54d388799fbf499937679ba7e8b779d2fe8e3b05646e7f3933b966b16f3a3a",
+      "baseline": "cascade_db_diagnosis",
+      "split": "dev_public",
+      "num_entries": 1119,
+      "f1_hallucination": 0.9393468118195957
+    },
+    "cascade_db_diagnosis_evalmode_aggressive_stress_test.json": {
+      "sha256": "8e12d13b07e0dd37a8ce0bc9bd1dfe09b8075df0f957a32567be4f527290a4ed",
+      "baseline": "cascade_db_diagnosis",
+      "split": "stress_test",
+      "num_entries": 121,
+      "f1_hallucination": 0.9789029535864979
+    },
+    "cascade_db_diagnosis_evalmode_aggressive_test_public.json": {
+      "sha256": "f8c2b0cdc4a311a741c9528880de28fea8759cd3dd4bfd1ca715851c3f2595c5",
+      "baseline": "cascade_db_diagnosis",
+      "split": "test_public",
+      "num_entries": 831,
+      "f1_hallucination": 0.9501845018450185
+    },
+    "cascade_db_diagnosis_stress_test.json": {
+      "sha256": "623222b43e505060ddd7fcf5c209c7961f77395bccc177d0fc09f41f5adfa21c",
+      "baseline": "cascade_db_diagnosis",
+      "split": "stress_test",
+      "num_entries": 121,
+      "f1_hallucination": 0.9748743718592965
+    },
+    "cascade_db_diagnosis_test_public.json": {
+      "sha256": "0b8e28af6ceaa9b327d17bea79a9fd5c7d59d596c7eff966dfcd076485241d77",
+      "baseline": "cascade_db_diagnosis",
+      "split": "test_public",
+      "num_entries": 831,
+      "f1_hallucination": 0.9571263035921205
+    },
+    "doi_only_dev_public.json": {
+      "sha256": "6580622f7c22e40bf24bf660c4cb375b2e1d3ec45bff716c2cbc1e9f1504397e",
+      "baseline": "doi_only",
+      "split": "dev_public",
+      "num_entries": 1119,
+      "f1_hallucination": 0.34736842105263155,
+      "split_sha256": "0f75d390f95a086aaf39b627369af2bd03a5eb87cd3bf4cea5d5025e203bb09e"
+    },
+    "doi_only_test_public.json": {
+      "sha256": "716ed587dc829f3b549ad5e846310a4705626758c80b432e42218d4aad274fda",
+      "baseline": "doi_only",
+      "split": "test_public",
+      "num_entries": 831,
+      "f1_hallucination": 0.3137876386687797,
+      "split_sha256": "0637ffc80747c36f3e010cd613f16481dcb916f944874122b2e2d3f872429973"
+    },
+    "harc_with_s2key_dev_public.json": {
+      "sha256": "79d7a33050e82e3609a1418641c189bcfe98c5c06b3f14270c9a08d62c4968a6",
       "baseline": "harc",
       "split": "dev_public",
-      "num_entries": 521,
-      "f1_hallucination": 0.26829268292682923
+      "num_entries": 1119,
+      "f1_hallucination": 0.3354510800508259
     },
     "llm_agentic_btu_openai_dev_public.json": {
       "sha256": "c3545fea4b9bb6001146fa135e15989781e4fe757b08689a8eb11a2dc82ad407",
@@ -24,7 +110,30 @@
         "platform": "macOS-26.3.1-x86_64-i386-64bit-Mach-O",
         "timestamp": "2026-04-22T10:19:44.618539+00:00",
         "hallmark_version": "0.1.0.post1.dev126+g6f6fdf0ce.d20260222"
-      }
+      },
+      "num_entries": 1119,
+      "f1_hallucination": 0.8244274809160305
+    },
+    "llm_agentic_btu_openai_test_public.json": {
+      "sha256": "f8001545cd20f90ea06bd9a13590c74d5e32491a0a573c59fa249de2edc92f20",
+      "baseline": "llm_agentic_btu_openai",
+      "split": "test_public",
+      "num_entries": 831,
+      "f1_hallucination": 0.8829787234042553
+    },
+    "llm_agentic_btu_sonnet_4_6_dev_public.json": {
+      "sha256": "0d6912bfe80852ebff13fde66d9c909fac96ff68bcfbfa91f20c2fe67fce97b6",
+      "baseline": "llm_agentic_btu_sonnet_4_6",
+      "split": "dev_public",
+      "num_entries": 1119,
+      "f1_hallucination": 0.8409250175192712
+    },
+    "llm_agentic_btu_sonnet_4_6_test_public.json": {
+      "sha256": "0963a85c4f81f985824784389e3b8a890d3d6aabaa992070d42acdb115ad875c",
+      "baseline": "llm_agentic_btu_sonnet_4_6",
+      "split": "test_public",
+      "num_entries": 831,
+      "f1_hallucination": 0.9017543859649122
     },
     "llm_agentic_openai_dev_public.json": {
       "sha256": "704377dd833fb67370cb0a713883bc4bdd1856d2d8fd703248a4ebbdb5f1eba1",
@@ -35,49 +144,52 @@
         "platform": "macOS-26.3.1-x86_64-i386-64bit-Mach-O",
         "timestamp": "2026-04-22T10:19:49.660129+00:00",
         "hallmark_version": "0.1.0.post1.dev126+g6f6fdf0ce.d20260222"
-      }
+      },
+      "num_entries": 1119,
+      "f1_hallucination": 0.8155880306193459
     },
-    "bibtexupdater_test_public.json": {
-      "sha256": "6cd2f9acc540179a88f8b94875433ff313a9f33b3ecf97247b5e7209ff55b82f",
-      "baseline": "bibtexupdater",
+    "llm_agentic_openai_test_public.json": {
+      "sha256": "72c88ccfbfb11e51a2e84307649b31da6d8ff9695871412b9cea7e4349bacc93",
+      "baseline": "llm_agentic_openai",
       "split": "test_public",
       "num_entries": 831,
-      "f1_hallucination": 0.8633879781420764
+      "f1_hallucination": 0.8274111675126905
     },
-    "llm_openrouter_gemini_flash_test_public.json": {
-      "sha256": "92e214dddaf601a17da430d2dbe2d4e4f5fedaa6741f9cdcbadf55c09073ee75",
-      "baseline": "llm_openrouter_gemini_flash",
+    "llm_openai_dev_public.json": {
+      "sha256": "8f3a57c91876571d2e6751bb42d707944491f760689c1896e2786cd61ca08096",
+      "baseline": "llm_openai",
+      "split": "dev_public",
+      "num_entries": 1119,
+      "f1_hallucination": 0.7658610271903323
+    },
+    "llm_openai_gpt54_dev_public.json": {
+      "sha256": "d5c8708dff2ae44f9c72e25a863d718d1d7bf0e0b5a24833fcdd8b1612424465",
+      "baseline": "llm_openai_gpt-5.4",
+      "split": "dev_public",
+      "num_entries": 1119,
+      "f1_hallucination": 0.7828282828282829
+    },
+    "llm_openai_gpt54_test_public.json": {
+      "sha256": "083db8e3aee44cb76dd63a2b9fa6977c5f2a8cfdbcb267c02b4dc3e5415faba8",
+      "baseline": "llm_openai_gpt-5.4",
       "split": "test_public",
       "num_entries": 831,
-      "f1_hallucination": 0.6437346437346437
+      "f1_hallucination": 0.8148893360160966,
+      "split_sha256": "0637ffc80747c36f3e010cd613f16481dcb916f944874122b2e2d3f872429973"
     },
-    "llm_openrouter_qwen_max_test_public.json": {
-      "sha256": "d056b6dec811bbd02114a993bd033fe023ce493f42ce3b60ced096d34c3917e2",
-      "baseline": "llm_openrouter_qwen_max",
+    "llm_openai_test_public.json": {
+      "sha256": "2f9d90370a88ea219f15f644a26cd1eecfbaeedf973c8bd2b75feeaecd0d38fa",
+      "baseline": "llm_openai",
       "split": "test_public",
       "num_entries": 831,
-      "f1_hallucination": 0.8043478260869565
+      "f1_hallucination": 0.7956795679567956
     },
-    "llm_openrouter_mistral_test_public.json": {
-      "sha256": "2f71622e7f10c85a8c150e70e722c4dbcf67279c6e2070151f5883221ebdf417",
-      "baseline": "llm_openrouter_mistral",
-      "split": "test_public",
-      "num_entries": 831,
-      "f1_hallucination": 0.7406639004149379
-    },
-    "llm_openrouter_llama_4_maverick_test_public.json": {
-      "sha256": "3747f84716fb0c78ccf573f0acee9db083f3823192b4d0a76460c2364bb85bf4",
-      "baseline": "llm_openrouter_llama_4_maverick",
-      "split": "test_public",
-      "num_entries": 831,
-      "f1_hallucination": 0.7290969899665551
-    },
-    "llm_openrouter_qwen_test_public.json": {
-      "sha256": "8fbe6f79acba8de6618131ec2c3819ab7391e0eb8ecebf34ae3ef60c1f052f81",
-      "baseline": "llm_openrouter_qwen",
-      "split": "test_public",
-      "num_entries": 831,
-      "f1_hallucination": 0.7976291278577476
+    "llm_openrouter_claude_opus_4_7_dev_public.json": {
+      "sha256": "9cfd7dd060d5e62b6ef37c0dfd53f089c47e5aca0ad1c4a596e3b7d80cca3c42",
+      "baseline": "llm_openrouter_claude_opus_4_7",
+      "split": "dev_public",
+      "num_entries": 1119,
+      "f1_hallucination": 0.8298453139217471
     },
     "llm_openrouter_claude_opus_4_7_test_public.json": {
       "sha256": "76ac6ee463bc94091e93125333b8ff8f3ae98461d6ff7f31b7667be599ce0b45",
@@ -86,6 +198,27 @@
       "num_entries": 831,
       "f1_hallucination": 0.8458244111349036
     },
+    "llm_openrouter_claude_sonnet_4_6_dev_public.json": {
+      "sha256": "c91421103aa3bfa9c7ac861118f331e1d5f137e0dda972485b45d3a31218a21a",
+      "baseline": "llm_openrouter_claude_sonnet_4_6",
+      "split": "dev_public",
+      "num_entries": 1119,
+      "f1_hallucination": 0.8269230769230769
+    },
+    "llm_openrouter_claude_sonnet_4_6_test_public.json": {
+      "sha256": "e6c1f49975d71787d5dcefb213a0c9e7dcb50f6a350577f062d77f14a8a1f0ec",
+      "baseline": "llm_openrouter_claude_sonnet_4_6",
+      "split": "test_public",
+      "num_entries": 831,
+      "f1_hallucination": 0.8658536585365855
+    },
+    "llm_openrouter_deepseek_r1_dev_public.json": {
+      "sha256": "8759f41352e2bf55e5cf92c883260e9a78ad17116b30a2af2acd021c840b9db3",
+      "baseline": "llm_openrouter_deepseek_r1",
+      "split": "dev_public",
+      "num_entries": 1119,
+      "f1_hallucination": 0.7387387387387387
+    },
     "llm_openrouter_deepseek_r1_test_public.json": {
       "sha256": "1be5ff175483727ffd35644f394b0fe556dc958acddf0e6a2af95ead9689ab6d",
       "baseline": "llm_openrouter_deepseek_r1",
@@ -93,12 +226,103 @@
       "num_entries": 831,
       "f1_hallucination": 0.8116646415552855
     },
-    "llm_agentic_btu_sonnet_4_6_test_public.json": {
-      "sha256": "0963a85c4f81f985824784389e3b8a890d3d6aabaa992070d42acdb115ad875c",
-      "baseline": "llm_agentic_btu_sonnet_4_6",
+    "llm_openrouter_deepseek_v3_dev_public.json": {
+      "sha256": "dd488980fa86114c53b796404dcef7e60290759986be652e9615444a41544650",
+      "baseline": "llm_openrouter_deepseek_v3",
+      "split": "dev_public",
+      "num_entries": 1119,
+      "f1_hallucination": 0.7272727272727273
+    },
+    "llm_openrouter_deepseek_v3_test_public.json": {
+      "sha256": "67f12ffeb2fcc28fe6b6fc2154ffadab6f71d89be8520a80f11c71822cf2378f",
+      "baseline": "llm_openrouter_deepseek_v3",
       "split": "test_public",
       "num_entries": 831,
-      "f1_hallucination": 0.9017543859649122
+      "f1_hallucination": 0.7760459392945036
+    },
+    "llm_openrouter_gemini_flash_dev_public.json": {
+      "sha256": "b516570a1044b4adff676d07c7ff7f271f25fa85d42155e49ff102f50f54b5e9",
+      "baseline": "llm_openrouter_gemini_flash",
+      "split": "dev_public",
+      "num_entries": 1119,
+      "f1_hallucination": 0.6306878306878306
+    },
+    "llm_openrouter_gemini_flash_test_public.json": {
+      "sha256": "92e214dddaf601a17da430d2dbe2d4e4f5fedaa6741f9cdcbadf55c09073ee75",
+      "baseline": "llm_openrouter_gemini_flash",
+      "split": "test_public",
+      "num_entries": 831,
+      "f1_hallucination": 0.6437346437346437
+    },
+    "llm_openrouter_gemini_pro_dev_public.json": {
+      "sha256": "4ef767f45850bdf5aa15af6d5427679ea3db0cc7b41ce5121022ed6788257abb",
+      "baseline": "llm_openrouter_gemini_pro",
+      "split": "dev_public",
+      "num_entries": 1119,
+      "f1_hallucination": 0.6266968325791855
+    },
+    "llm_openrouter_gemini_pro_test_public.json": {
+      "sha256": "28f783bb26239d324305d51912eebf015fc5dbdb68a4bc591e2d5e1ec5d80515",
+      "baseline": "llm_openrouter_gemini_pro",
+      "split": "test_public",
+      "num_entries": 831,
+      "f1_hallucination": 0.6131805157593123
+    },
+    "llm_openrouter_llama_4_maverick_dev_public.json": {
+      "sha256": "a306a7702d4e2472ea8a958d380b77074f1322bbaeb45f6d65f4977317bd5abb",
+      "baseline": "llm_openrouter_llama_4_maverick",
+      "split": "dev_public",
+      "num_entries": 1119,
+      "f1_hallucination": 0.7065527065527065
+    },
+    "llm_openrouter_llama_4_maverick_test_public.json": {
+      "sha256": "3747f84716fb0c78ccf573f0acee9db083f3823192b4d0a76460c2364bb85bf4",
+      "baseline": "llm_openrouter_llama_4_maverick",
+      "split": "test_public",
+      "num_entries": 831,
+      "f1_hallucination": 0.7290969899665551
+    },
+    "llm_openrouter_mistral_dev_public.json": {
+      "sha256": "0f19865f16bc030c114e78bffa1765b18b510068895dd6729a60483787dbc421",
+      "baseline": "llm_openrouter_mistral",
+      "split": "dev_public",
+      "num_entries": 1119,
+      "f1_hallucination": 0.7419635099913119
+    },
+    "llm_openrouter_mistral_test_public.json": {
+      "sha256": "2f71622e7f10c85a8c150e70e722c4dbcf67279c6e2070151f5883221ebdf417",
+      "baseline": "llm_openrouter_mistral",
+      "split": "test_public",
+      "num_entries": 831,
+      "f1_hallucination": 0.7406639004149379
+    },
+    "llm_openrouter_qwen_dev_public.json": {
+      "sha256": "e55be09851163eb3f07138e2bb73d2961e538065f867ef2dc5acaf747723e30e",
+      "baseline": "llm_openrouter_qwen",
+      "split": "dev_public",
+      "num_entries": 1119,
+      "f1_hallucination": 0.7439198855507868
+    },
+    "llm_openrouter_qwen_max_dev_public.json": {
+      "sha256": "1d762ec5d65f3fc3677062706e1fd6bcb4c39c92f8972f7610e0cb493f89d67d",
+      "baseline": "llm_openrouter_qwen_max",
+      "split": "dev_public",
+      "num_entries": 1119,
+      "f1_hallucination": 0.7395315826827539
+    },
+    "llm_openrouter_qwen_max_test_public.json": {
+      "sha256": "d056b6dec811bbd02114a993bd033fe023ce493f42ce3b60ced096d34c3917e2",
+      "baseline": "llm_openrouter_qwen_max",
+      "split": "test_public",
+      "num_entries": 831,
+      "f1_hallucination": 0.8043478260869565
+    },
+    "llm_openrouter_qwen_test_public.json": {
+      "sha256": "8fbe6f79acba8de6618131ec2c3819ab7391e0eb8ecebf34ae3ef60c1f052f81",
+      "baseline": "llm_openrouter_qwen",
+      "split": "test_public",
+      "num_entries": 831,
+      "f1_hallucination": 0.7976291278577476
     },
     "llm_tool_augmented_test_public.json": {
       "sha256": "7d7733e0363906790592d11a953af83590024f0c54d7b56e290680dfa6a3e836",
@@ -106,27 +330,6 @@
       "split": "test_public",
       "num_entries": 831,
       "f1_hallucination": 0.8513902205177373
-    },
-    "llm_agentic_btu_openai_test_public.json": {
-      "sha256": "f8001545cd20f90ea06bd9a13590c74d5e32491a0a573c59fa249de2edc92f20",
-      "baseline": "llm_agentic_btu_openai",
-      "split": "test_public",
-      "num_entries": 831,
-      "f1_hallucination": 0.8829787234042553
-    },
-    "doi_only_test_public.json": {
-      "sha256": "01b17dca247bdd80613355482f31f5853ad0013711af27f41e45fb3537f2a631",
-      "baseline": "doi_only",
-      "split": "test_public",
-      "num_entries": 831,
-      "f1_hallucination": 0.4981412639405204
-    },
-    "llm_agentic_openai_test_public.json": {
-      "sha256": "72c88ccfbfb11e51a2e84307649b31da6d8ff9695871412b9cea7e4349bacc93",
-      "baseline": "llm_agentic_openai",
-      "split": "test_public",
-      "num_entries": 831,
-      "f1_hallucination": 0.8274111675126905
     }
   },
   "environment": {

@@ -40,7 +40,20 @@ from typing import Any
 DATA_DIR = Path("data/v1.2")
 
 #: Released splits — entries here are scored against by tools.
-SPLIT_FILES = ["dev_public", "test_public", "test_crossdomain"]
+#:
+#: ``test_hidden`` is the one most scored against, and it was missing from this
+#: list until 2026-09-04, so the original pass left exactly 14 VALID entries in
+#: it carrying ``doi_resolves: False`` with no ``doi`` field — precisely the
+#: defect this script exists to remove, in the split whose labels no external
+#: contributor can inspect. It lives outside ``data_dir`` (``data/hidden/`` is
+#: gitignored), hence the explicit relative path rather than a bare name.
+SPLIT_FILES = ["dev_public", "test_public", "test_crossdomain", "test_hidden"]
+
+#: Splits whose file is not ``<data_dir>/<name>.jsonl``. Paths are relative to
+#: the repository root.
+SPLIT_PATH_OVERRIDES: dict[str, str] = {
+    "test_hidden": "data/hidden/test_hidden.jsonl",
+}
 
 #: Curated pools and generation-pipeline provenance; not part of any split.
 POOL_FILES = [
@@ -107,9 +120,14 @@ def main() -> int:
     print(f"Scope: {scope}\n")
 
     all_fixes: list[dict[str, Any]] = []
+    repo_root = Path(__file__).resolve().parent.parent
     for name in targets:
-        path = args.data_dir / f"{name}.jsonl"
+        override = SPLIT_PATH_OVERRIDES.get(name)
+        path = repo_root / override if override else args.data_dir / f"{name}.jsonl"
         if not path.exists():
+            # data/hidden/ is gitignored, so test_hidden is absent on any
+            # checkout without the full dataset. Say so rather than reporting a
+            # clean pass over a split that was never opened.
             print(f"  [skip] {path} not found")
             continue
         fixes, total = process_file(path, args.apply)

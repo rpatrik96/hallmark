@@ -39,6 +39,8 @@ from __future__ import annotations
 
 import json
 import logging
+import os
+import shutil
 import subprocess
 import tempfile
 import time
@@ -286,6 +288,117 @@ def assess_batch_health(
         threshold=threshold,
         min_batch_size=min_batch_size,
     )
+
+
+#: Environment variable pinning which ``bibtex-check`` build to run.
+#:
+#: The wrapper used to invoke ``bibtex-check`` by name, so PATH order decided
+#: which build answered -- and on a developer machine the first entry is an
+#: EDITABLE install pointing at the bibtexupdater working tree, which changes
+#: whenever anyone commits there. A pre-screening ablation run on 2026-09-04
+#: was three hours into measuring "1.10.1" when the resolved binary turned out
+#: to import from the checkout and report 1.3.1.dev18, with two commits landing
+#: in that tree mid-run. Entries scored before and after were scored by
+#: different code, and nothing in the output would have said so.
+#:
+#: Set this to an absolute path to pin a build, e.g. the pipx copy:
+#:   HALLMARK_BIBTEX_CHECK_BIN=~/.local/pipx/venvs/bibtex-updater/bin/bibtex-check
+BIBTEX_CHECK_BIN_ENV = "HALLMARK_BIBTEX_CHECK_BIN"
+
+#: Environment variable overriding the per-service request rate.
+#:
+#: The wrapper drives ``--rate-limit 120`` where bibtex-check's own documented
+#: baseline is 45 (scale 1.0), so a HALLMARK run paces roughly 2.7x harder than
+#: the tool assumes. Under load that shows up as source lookups that never
+#: complete, which bibtex-check correctly refuses to turn into verdicts -- and
+#: an evaluation whose sources went dark measures availability, not the tool.
+#: Pacing is therefore part of the run condition and belongs on the same
+#: footing as the binary: settable, and recorded in the log.
+BIBTEX_CHECK_RATE_ENV = "HALLMARK_BIBTEX_CHECK_RATE_LIMIT"
+
+
+def resolve_bibtex_check_rate_limit(default: int) -> int:
+    """Per-service request rate for this run, from the environment or *default*."""
+    raw = os.environ.get(BIBTEX_CHECK_RATE_ENV)
+    if not raw:
+        return default
+    try:
+        value = int(raw)
+    except ValueError:
+        logger.error("%s is not an integer: %r -- using %d", BIBTEX_CHECK_RATE_ENV, raw, default)
+        return default
+    if value <= 0:
+        logger.error(
+            "%s must be positive, got %d -- using %d", BIBTEX_CHECK_RATE_ENV, value, default
+        )
+        return default
+    return value
+
+
+def resolve_bibtex_check_bin() -> str | None:
+    """Absolute path of the ``bibtex-check`` build this run will use."""
+    pinned = os.environ.get(BIBTEX_CHECK_BIN_ENV)
+    if pinned:
+        expanded = os.path.expanduser(pinned)
+        if not Path(expanded).exists():
+            logger.error("%s points at a missing file: %s", BIBTEX_CHECK_BIN_ENV, expanded)
+            return None
+        return expanded
+    return shutil.which("bibtex-check")
+
+
+_VERSION_PROBE = (
+    "import importlib.metadata as md, bibtex_updater as m;"
+    "print(getattr(m, '__version__', '?'));"
+    "print(md.version('bibtex-updater'));"
+    "print(m.__file__)"
+)
+
+
+def bibtex_check_version(binary: str | None = None) -> str | None:
+    """Version of the bibtex_updater package backing *binary*.
+
+    There is no ``--version`` flag, so ask the interpreter in the binary's own
+    environment to import the package and report itself.
+
+    It reports BOTH ``__version__`` and the packaging metadata, because for an
+    editable install they disagree: the dist-info is frozen at whatever was
+    installed when the editable link was made, while ``__version__`` tracks the
+    source. The editable build on this machine answers 0.9.2 and 1.3.1.dev18
+    from the same interpreter at the same moment, so no single number identifies
+    it -- and the disagreement is itself the signal that a build is editable and
+    therefore moves under you. When they agree, only one is reported.
+
+    Returns None rather than raising: provenance must never break an evaluation.
+    """
+    binary = binary or resolve_bibtex_check_bin()
+    if not binary:
+        return None
+    python = Path(binary).with_name("python")
+    if not python.exists():
+        python = Path(binary).with_name("python3")
+    if not python.exists():
+        return None
+    try:
+        out = subprocess.run(
+            [str(python), "-c", _VERSION_PROBE],
+            capture_output=True,
+            text=True,
+            timeout=30,
+        )
+    except (OSError, subprocess.SubprocessError):
+        return None
+    lines = [ln.strip() for ln in out.stdout.splitlines() if ln.strip()]
+    if not lines:
+        return None
+    source_version = lines[0]
+    metadata_version = lines[1] if len(lines) > 1 else None
+    if metadata_version and metadata_version != source_version:
+        return (
+            f"{source_version} (dist-info says {metadata_version}; "
+            "they disagree, so this is an editable install)"
+        )
+    return source_version
 
 
 def run_bibtex_check(
@@ -552,8 +665,22 @@ def _run_bibtex_check_subprocess(
         bib_path.write_text(bib_content)
 
         # Build command with performance optimizations
+        binary = resolve_bibtex_check_bin() or "bibtex-check"
+        rate_limit = resolve_bibtex_check_rate_limit(rate_limit)
+        # Say which build is answering. Without this the run is silent about the
+        # single fact that decides whether its numbers are comparable to any
+        # other run's, and PATH may be resolving an editable install.
+        logger.info(
+            "bibtex-check binary: %s (bibtex_updater %s)%s",
+            binary,
+            bibtex_check_version(binary) or "version unknown",
+            ""
+            if os.environ.get(BIBTEX_CHECK_BIN_ENV)
+            else f" [unpinned; set {BIBTEX_CHECK_BIN_ENV} to pin]",
+        )
+        logger.info("bibtex-check rate limit: %d req/min per service", rate_limit)
         cmd = [
-            "bibtex-check",
+            binary,
             str(bib_path),
             "--jsonl",
             str(jsonl_path),
@@ -563,8 +690,6 @@ def _run_bibtex_check_subprocess(
         if academic_only:
             cmd.append("--academic-only")
         # Pass S2 API key if available (bibtex-check supports --s2-api-key)
-        import os
-
         s2_key = os.environ.get("S2_API_KEY")
         if s2_key:
             cmd.extend(["--s2-api-key", s2_key])

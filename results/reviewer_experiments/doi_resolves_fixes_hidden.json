@@ -1,0 +1,437 @@
+{
+  "description": "doi_resolves fix log (released splits): set doi_resolves=None for entries recording a failed resolution while carrying no DOI field. The schema reserves False for a check that ran and failed, None for not-applicable.",
+  "rule": "subtests.doi_resolves is False and 'doi' not in fields -> None",
+  "count": 43,
+  "fixes": [
+    {
+      "key": "ad68ace15a9a",
+      "split": "test_hidden",
+      "label": "HALLUCINATED",
+      "hallucination_type": "wrong_venue",
+      "generation_method": "llm_generated",
+      "subtest": "doi_resolves",
+      "before": false,
+      "after": null
+    },
+    {
+      "key": "c49e134a8b82",
+      "split": "test_hidden",
+      "label": "HALLUCINATED",
+      "hallucination_type": "partial_author_list",
+      "generation_method": "perturbation",
+      "subtest": "doi_resolves",
+      "before": false,
+      "after": null
+    },
+    {
+      "key": "bd3fe0d538e5",
+      "split": "test_hidden",
+      "label": "HALLUCINATED",
+      "hallucination_type": "partial_author_list",
+      "generation_method": "perturbation",
+      "subtest": "doi_resolves",
+      "before": false,
+      "after": null
+    },
+    {
+      "key": "e218b1efeaa2",
+      "split": "test_hidden",
+      "label": "VALID",
+      "hallucination_type": null,
+      "generation_method": "scraped",
+      "subtest": "doi_resolves",
+      "before": false,
+      "after": null
+    },
+    {
+      "key": "f61733a815f7",
+      "split": "test_hidden",
+      "label": "HALLUCINATED",
+      "hallucination_type": "merged_citation",
+      "generation_method": "perturbation",
+      "subtest": "doi_resolves",
+      "before": false,
+      "after": null
+    },
+    {
+      "key": "b2224f989f9f",
+      "split": "test_hidden",
+      "label": "HALLUCINATED",
+      "hallucination_type": "near_miss_title",
+      "generation_method": "real_world",
+      "subtest": "doi_resolves",
+      "before": false,
+      "after": null
+    },
+    {
+      "key": "b55f93182641",
+      "split": "test_hidden",
+      "label": "HALLUCINATED",
+      "hallucination_type": "merged_citation",
+      "generation_method": "perturbation",
+      "subtest": "doi_resolves",
+      "before": false,
+      "after": null
+    },
+    {
+      "key": "db1b33b81308",
+      "split": "test_hidden",
+      "label": "VALID",
+      "hallucination_type": null,
+      "generation_method": "scraped",
+      "subtest": "doi_resolves",
+      "before": false,
+      "after": null
+    },
+    {
+      "key": "a9f9cc0fcf53",
+      "split": "test_hidden",
+      "label": "VALID",
+      "hallucination_type": null,
+      "generation_method": "scraped",
+      "subtest": "doi_resolves",
+      "before": false,
+      "after": null
+    },
+    {
+      "key": "f3f516e89441",
+      "split": "test_hidden",
+      "label": "HALLUCINATED",
+      "hallucination_type": "partial_author_list",
+      "generation_method": "perturbation",
+      "subtest": "doi_resolves",
+      "before": false,
+      "after": null
+    },
+    {
+      "key": "bbc00f6add2e",
+      "split": "test_hidden",
+      "label": "VALID",
+      "hallucination_type": null,
+      "generation_method": "scraped",
+      "subtest": "doi_resolves",
+      "before": false,
+      "after": null
+    },
+    {
+      "key": "c31bfb092258",
+      "split": "test_hidden",
+      "label": "HALLUCINATED",
+      "hallucination_type": "merged_citation",
+      "generation_method": "perturbation",
+      "subtest": "doi_resolves",
+      "before": false,
+      "after": null
+    },
+    {
+      "key": "c0de89970ccc",
+      "split": "test_hidden",
+      "label": "VALID",
+      "hallucination_type": null,
+      "generation_method": "scraped",
+      "subtest": "doi_resolves",
+      "before": false,
+      "after": null
+    },
+    {
+      "key": "fde6f570a760",
+      "split": "test_hidden",
+      "label": "VALID",
+      "hallucination_type": null,
+      "generation_method": "scraped",
+      "subtest": "doi_resolves",
+      "before": false,
+      "after": null
+    },
+    {
+      "key": "fb7998777131",
+      "split": "test_hidden",
+      "label": "HALLUCINATED",
+      "hallucination_type": "partial_author_list",
+      "generation_method": "perturbation",
+      "subtest": "doi_resolves",
+      "before": false,
+      "after": null
+    },
+    {
+      "key": "d6a7f40fa80d",
+      "split": "test_hidden",
+      "label": "HALLUCINATED",
+      "hallucination_type": "placeholder_authors",
+      "generation_method": "real_world",
+      "subtest": "doi_resolves",
+      "before": false,
+      "after": null
+    },
+    {
+      "key": "f58b419b8ca6",
+      "split": "test_hidden",
+      "label": "VALID",
+      "hallucination_type": null,
+      "generation_method": "scraped",
+      "subtest": "doi_resolves",
+      "before": false,
+      "after": null
+    },
+    {
+      "key": "b26f6186c9b3",
+      "split": "test_hidden",
+      "label": "HALLUCINATED",
+      "hallucination_type": "merged_citation",
+      "generation_method": "perturbation",
+      "subtest": "doi_resolves",
+      "before": false,
+      "after": null
+    },
+    {
+      "key": "fe9b99801200",
+      "split": "test_hidden",
+      "label": "HALLUCINATED",
+      "hallucination_type": "partial_author_list",
+      "generation_method": "perturbation",
+      "subtest": "doi_resolves",
+      "before": false,
+      "after": null
+    },
+    {
+      "key": "d5e22ea3a4a2",
+      "split": "test_hidden",
+      "label": "HALLUCINATED",
+      "hallucination_type": "partial_author_list",
+      "generation_method": "perturbation",
+      "subtest": "doi_resolves",
+      "before": false,
+      "after": null
+    },
+    {
+      "key": "d5a0e6b768fa",
+      "split": "test_hidden",
+      "label": "HALLUCINATED",
+      "hallucination_type": "nonexistent_venue",
+      "generation_method": "real_world",
+      "subtest": "doi_resolves",
+      "before": false,
+      "after": null
+    },
+    {
+      "key": "d793fffca07d",
+      "split": "test_hidden",
+      "label": "HALLUCINATED",
+      "hallucination_type": "merged_citation",
+      "generation_method": "perturbation",
+      "subtest": "doi_resolves",
+      "before": false,
+      "after": null
+    },
+    {
+      "key": "e41064932642",
+      "split": "test_hidden",
+      "label": "HALLUCINATED",
+      "hallucination_type": "merged_citation",
+      "generation_method": "perturbation",
+      "subtest": "doi_resolves",
+      "before": false,
+      "after": null
+    },
+    {
+      "key": "b0a9de5236ff",
+      "split": "test_hidden",
+      "label": "HALLUCINATED",
+      "hallucination_type": "placeholder_authors",
+      "generation_method": "real_world",
+      "subtest": "doi_resolves",
+      "before": false,
+      "after": null
+    },
+    {
+      "key": "a044fd4135ff",
+      "split": "test_hidden",
+      "label": "VALID",
+      "hallucination_type": null,
+      "generation_method": "scraped",
+      "subtest": "doi_resolves",
+      "before": false,
+      "after": null
+    },
+    {
+      "key": "cabed1fcce99",
+      "split": "test_hidden",
+      "label": "HALLUCINATED",
+      "hallucination_type": "merged_citation",
+      "generation_method": "perturbation",
+      "subtest": "doi_resolves",
+      "before": false,
+      "after": null
+    },
+    {
+      "key": "cb742883b55a",
+      "split": "test_hidden",
+      "label": "HALLUCINATED",
+      "hallucination_type": "merged_citation",
+      "generation_method": "perturbation",
+      "subtest": "doi_resolves",
+      "before": false,
+      "after": null
+    },
+    {
+      "key": "b35d73e4183f",
+      "split": "test_hidden",
+      "label": "VALID",
+      "hallucination_type": null,
+      "generation_method": "scraped",
+      "subtest": "doi_resolves",
+      "before": false,
+      "after": null
+    },
+    {
+      "key": "ed5f349e142c",
+      "split": "test_hidden",
+      "label": "VALID",
+      "hallucination_type": null,
+      "generation_method": "scraped",
+      "subtest": "doi_resolves",
+      "before": false,
+      "after": null
+    },
+    {
+      "key": "d1d562ed274c",
+      "split": "test_hidden",
+      "label": "VALID",
+      "hallucination_type": null,
+      "generation_method": "scraped",
+      "subtest": "doi_resolves",
+      "before": false,
+      "after": null
+    },
+    {
+      "key": "e93f4602027b",
+      "split": "test_hidden",
+      "label": "HALLUCINATED",
+      "hallucination_type": "partial_author_list",
+      "generation_method": "perturbation",
+      "subtest": "doi_resolves",
+      "before": false,
+      "after": null
+    },
+    {
+      "key": "f19e66c4afd1",
+      "split": "test_hidden",
+      "label": "VALID",
+      "hallucination_type": null,
+      "generation_method": "scraped",
+      "subtest": "doi_resolves",
+      "before": false,
+      "after": null
+    },
+    {
+      "key": "b9ee19e0a7c5",
+      "split": "test_hidden",
+      "label": "HALLUCINATED",
+      "hallucination_type": "merged_citation",
+      "generation_method": "perturbation",
+      "subtest": "doi_resolves",
+      "before": false,
+      "after": null
+    },
+    {
+      "key": "c19bc26713db",
+      "split": "test_hidden",
+      "label": "HALLUCINATED",
+      "hallucination_type": "swapped_authors",
+      "generation_method": "llm_generated",
+      "subtest": "doi_resolves",
+      "before": false,
+      "after": null
+    },
+    {
+      "key": "ba6ec5772b7b",
+      "split": "test_hidden",
+      "label": "HALLUCINATED",
+      "hallucination_type": "merged_citation",
+      "generation_method": "perturbation",
+      "subtest": "doi_resolves",
+      "before": false,
+      "after": null
+    },
+    {
+      "key": "dc24d3141979",
+      "split": "test_hidden",
+      "label": "HALLUCINATED",
+      "hallucination_type": "merged_citation",
+      "generation_method": "perturbation",
+      "subtest": "doi_resolves",
+      "before": false,
+      "after": null
+    },
+    {
+      "key": "e2e20c505f90",
+      "split": "test_hidden",
+      "label": "HALLUCINATED",
+      "hallucination_type": "merged_citation",
+      "generation_method": "perturbation",
+      "subtest": "doi_resolves",
+      "before": false,
+      "after": null
+    },
+    {
+      "key": "d42fbf8f7b3d",
+      "split": "test_hidden",
+      "label": "VALID",
+      "hallucination_type": null,
+      "generation_method": "scraped",
+      "subtest": "doi_resolves",
+      "before": false,
+      "after": null
+    },
+    {
+      "key": "a7cdc875597b",
+      "split": "test_hidden",
+      "label": "HALLUCINATED",
+      "hallucination_type": "partial_author_list",
+      "generation_method": "perturbation",
+      "subtest": "doi_resolves",
+      "before": false,
+      "after": null
+    },
+    {
+      "key": "f29541007b4e",
+      "split": "test_hidden",
+      "label": "VALID",
+      "hallucination_type": null,
+      "generation_method": "scraped",
+      "subtest": "doi_resolves",
+      "before": false,
+      "after": null
+    },
+    {
+      "key": "b37b195191d2",
+      "split": "test_hidden",
+      "label": "HALLUCINATED",
+      "hallucination_type": "partial_author_list",
+      "generation_method": "perturbation",
+      "subtest": "doi_resolves",
+      "before": false,
+      "after": null
+    },
+    {
+      "key": "f7233fd08a27",
+      "split": "test_hidden",
+      "label": "HALLUCINATED",
+      "hallucination_type": "partial_author_list",
+      "generation_method": "perturbation",
+      "subtest": "doi_resolves",
+      "before": false,
+      "after": null
+    },
+    {
+      "key": "a28e1dd880db",
+      "split": "test_hidden",
+      "label": "HALLUCINATED",
+      "hallucination_type": "swapped_authors",
+      "generation_method": "llm_generated",
+      "subtest": "doi_resolves",
+      "before": false,
+      "after": null
+    }
+  ]
+}

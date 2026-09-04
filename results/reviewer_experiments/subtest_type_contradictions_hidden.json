@@ -1,0 +1,351 @@
+{
+  "description": "Repaired sub-tests that contradicted their entry's own hallucination type. Only the True->False direction, and only for pairs where the type's semantics, EXPECTED_SUBTESTS and the public splits all agree.",
+  "excluded": "future_date/fields_complete: check_fields_complete returns True for a future-dated entry with all fields present, so the taxonomy is wrong there, not the data.",
+  "count": 43,
+  "fixes": [
+    {
+      "key": "de5a280d2b67",
+      "split": "test_hidden",
+      "hallucination_type": "preprint_as_published",
+      "subtest": "cross_db_agreement",
+      "before": true,
+      "after": false
+    },
+    {
+      "key": "f198a0a50eff",
+      "split": "test_hidden",
+      "hallucination_type": "preprint_as_published",
+      "subtest": "cross_db_agreement",
+      "before": true,
+      "after": false
+    },
+    {
+      "key": "e507d1c5d3ed",
+      "split": "test_hidden",
+      "hallucination_type": "wrong_venue",
+      "subtest": "cross_db_agreement",
+      "before": true,
+      "after": false
+    },
+    {
+      "key": "ad68ace15a9a",
+      "split": "test_hidden",
+      "hallucination_type": "wrong_venue",
+      "subtest": "cross_db_agreement",
+      "before": true,
+      "after": false
+    },
+    {
+      "key": "b9c68b6f8122",
+      "split": "test_hidden",
+      "hallucination_type": "arxiv_version_mismatch",
+      "subtest": "cross_db_agreement",
+      "before": true,
+      "after": false
+    },
+    {
+      "key": "b60ec139139e",
+      "split": "test_hidden",
+      "hallucination_type": "arxiv_version_mismatch",
+      "subtest": "cross_db_agreement",
+      "before": true,
+      "after": false
+    },
+    {
+      "key": "cb7f8c067746",
+      "split": "test_hidden",
+      "hallucination_type": "wrong_venue",
+      "subtest": "cross_db_agreement",
+      "before": true,
+      "after": false
+    },
+    {
+      "key": "cdb2031fe4f6",
+      "split": "test_hidden",
+      "hallucination_type": "arxiv_version_mismatch",
+      "subtest": "cross_db_agreement",
+      "before": true,
+      "after": false
+    },
+    {
+      "key": "b95b3fa7934a",
+      "split": "test_hidden",
+      "hallucination_type": "preprint_as_published",
+      "subtest": "cross_db_agreement",
+      "before": true,
+      "after": false
+    },
+    {
+      "key": "d4fc8476c6dc",
+      "split": "test_hidden",
+      "hallucination_type": "arxiv_version_mismatch",
+      "subtest": "cross_db_agreement",
+      "before": true,
+      "after": false
+    },
+    {
+      "key": "a0f4d67211d2",
+      "split": "test_hidden",
+      "hallucination_type": "arxiv_version_mismatch",
+      "subtest": "cross_db_agreement",
+      "before": true,
+      "after": false
+    },
+    {
+      "key": "da881df2b70b",
+      "split": "test_hidden",
+      "hallucination_type": "preprint_as_published",
+      "subtest": "cross_db_agreement",
+      "before": true,
+      "after": false
+    },
+    {
+      "key": "dd8d308ab431",
+      "split": "test_hidden",
+      "hallucination_type": "arxiv_version_mismatch",
+      "subtest": "cross_db_agreement",
+      "before": true,
+      "after": false
+    },
+    {
+      "key": "fdab316b8b69",
+      "split": "test_hidden",
+      "hallucination_type": "arxiv_version_mismatch",
+      "subtest": "cross_db_agreement",
+      "before": true,
+      "after": false
+    },
+    {
+      "key": "ef4e377627b9",
+      "split": "test_hidden",
+      "hallucination_type": "arxiv_version_mismatch",
+      "subtest": "cross_db_agreement",
+      "before": true,
+      "after": false
+    },
+    {
+      "key": "a152bef15433",
+      "split": "test_hidden",
+      "hallucination_type": "preprint_as_published",
+      "subtest": "cross_db_agreement",
+      "before": true,
+      "after": false
+    },
+    {
+      "key": "a65c19e4b834",
+      "split": "test_hidden",
+      "hallucination_type": "arxiv_version_mismatch",
+      "subtest": "cross_db_agreement",
+      "before": true,
+      "after": false
+    },
+    {
+      "key": "df9d28ee2fa3",
+      "split": "test_hidden",
+      "hallucination_type": "wrong_venue",
+      "subtest": "cross_db_agreement",
+      "before": true,
+      "after": false
+    },
+    {
+      "key": "d02a67776c8b",
+      "split": "test_hidden",
+      "hallucination_type": "arxiv_version_mismatch",
+      "subtest": "cross_db_agreement",
+      "before": true,
+      "after": false
+    },
+    {
+      "key": "c7b0514bf727",
+      "split": "test_hidden",
+      "hallucination_type": "arxiv_version_mismatch",
+      "subtest": "cross_db_agreement",
+      "before": true,
+      "after": false
+    },
+    {
+      "key": "da6eae6bc991",
+      "split": "test_hidden",
+      "hallucination_type": "preprint_as_published",
+      "subtest": "cross_db_agreement",
+      "before": true,
+      "after": false
+    },
+    {
+      "key": "dd2fe1abdfb2",
+      "split": "test_hidden",
+      "hallucination_type": "preprint_as_published",
+      "subtest": "cross_db_agreement",
+      "before": true,
+      "after": false
+    },
+    {
+      "key": "c0e92852773c",
+      "split": "test_hidden",
+      "hallucination_type": "wrong_venue",
+      "subtest": "cross_db_agreement",
+      "before": true,
+      "after": false
+    },
+    {
+      "key": "b7193373483d",
+      "split": "test_hidden",
+      "hallucination_type": "arxiv_version_mismatch",
+      "subtest": "cross_db_agreement",
+      "before": true,
+      "after": false
+    },
+    {
+      "key": "dda298b6b245",
+      "split": "test_hidden",
+      "hallucination_type": "preprint_as_published",
+      "subtest": "cross_db_agreement",
+      "before": true,
+      "after": false
+    },
+    {
+      "key": "b76fdc534404",
+      "split": "test_hidden",
+      "hallucination_type": "arxiv_version_mismatch",
+      "subtest": "cross_db_agreement",
+      "before": true,
+      "after": false
+    },
+    {
+      "key": "ebc958496362",
+      "split": "test_hidden",
+      "hallucination_type": "wrong_venue",
+      "subtest": "cross_db_agreement",
+      "before": true,
+      "after": false
+    },
+    {
+      "key": "d951f5ea28cc",
+      "split": "test_hidden",
+      "hallucination_type": "preprint_as_published",
+      "subtest": "cross_db_agreement",
+      "before": true,
+      "after": false
+    },
+    {
+      "key": "f9e3c8ec7090",
+      "split": "test_hidden",
+      "hallucination_type": "arxiv_version_mismatch",
+      "subtest": "cross_db_agreement",
+      "before": true,
+      "after": false
+    },
+    {
+      "key": "ca3c56f201ba",
+      "split": "test_hidden",
+      "hallucination_type": "wrong_venue",
+      "subtest": "cross_db_agreement",
+      "before": true,
+      "after": false
+    },
+    {
+      "key": "b4003a5eb9e1",
+      "split": "test_hidden",
+      "hallucination_type": "wrong_venue",
+      "subtest": "cross_db_agreement",
+      "before": true,
+      "after": false
+    },
+    {
+      "key": "f59c7e66f96f",
+      "split": "test_hidden",
+      "hallucination_type": "preprint_as_published",
+      "subtest": "cross_db_agreement",
+      "before": true,
+      "after": false
+    },
+    {
+      "key": "c43783283c4d",
+      "split": "test_hidden",
+      "hallucination_type": "preprint_as_published",
+      "subtest": "cross_db_agreement",
+      "before": true,
+      "after": false
+    },
+    {
+      "key": "e44d8aa0bc26",
+      "split": "test_hidden",
+      "hallucination_type": "preprint_as_published",
+      "subtest": "cross_db_agreement",
+      "before": true,
+      "after": false
+    },
+    {
+      "key": "a6fa335a6c5b",
+      "split": "test_hidden",
+      "hallucination_type": "wrong_venue",
+      "subtest": "cross_db_agreement",
+      "before": true,
+      "after": false
+    },
+    {
+      "key": "d36dbe1e5fc8",
+      "split": "test_hidden",
+      "hallucination_type": "preprint_as_published",
+      "subtest": "cross_db_agreement",
+      "before": true,
+      "after": false
+    },
+    {
+      "key": "a4b333a6c8eb",
+      "split": "test_hidden",
+      "hallucination_type": "wrong_venue",
+      "subtest": "cross_db_agreement",
+      "before": true,
+      "after": false
+    },
+    {
+      "key": "a452ddb7ebfc",
+      "split": "test_hidden",
+      "hallucination_type": "preprint_as_published",
+      "subtest": "cross_db_agreement",
+      "before": true,
+      "after": false
+    },
+    {
+      "key": "e0bac2e8943a",
+      "split": "test_hidden",
+      "hallucination_type": "arxiv_version_mismatch",
+      "subtest": "cross_db_agreement",
+      "before": true,
+      "after": false
+    },
+    {
+      "key": "d5e4c21ecfed",
+      "split": "test_hidden",
+      "hallucination_type": "preprint_as_published",
+      "subtest": "cross_db_agreement",
+      "before": true,
+      "after": false
+    },
+    {
+      "key": "dfe598695e5d",
+      "split": "test_hidden",
+      "hallucination_type": "wrong_venue",
+      "subtest": "cross_db_agreement",
+      "before": true,
+      "after": false
+    },
+    {
+      "key": "a9a2534768fd",
+      "split": "test_hidden",
+      "hallucination_type": "wrong_venue",
+      "subtest": "cross_db_agreement",
+      "before": true,
+      "after": false
+    },
+    {
+      "key": "bd145e418a61",
+      "split": "test_hidden",
+      "hallucination_type": "wrong_venue",
+      "subtest": "cross_db_agreement",
+      "before": true,
+      "after": false
+    }
+  ]
+}

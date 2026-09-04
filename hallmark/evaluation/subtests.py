@@ -45,18 +45,38 @@ def check_doi_resolves(doi: str | None, timeout: float = 10.0) -> SubTestResult:
     url = f"https://doi.org/{doi}"
     try:
         resp = httpx.head(url, follow_redirects=True, timeout=timeout)
-        resolved = resp.status_code == 200
-        return SubTestResult(
-            name="doi_resolves",
-            passed=resolved,
-            detail=f"HTTP {resp.status_code}" + (f" -> {resp.url}" if resolved else ""),
-            score=1.0 if resolved else 0.0,
-        )
-    except (httpx.TimeoutException, httpx.ConnectError) as e:
+        # Only doi.org answering 404/410 itself shows the DOI is unregistered.
+        # Anything else that is not a 200 is indeterminate (``passed=None``),
+        # matching prescreening.check_doi_resolves and doi_only.check_doi.
+        # Collapsing all of it to False made a publisher's bot mitigation look
+        # like a broken DOI: 56 of 150 sampled VALID entries return HTTP 202
+        # from IEEE and ACM landing pages after doi.org redirects successfully.
+        if resp.status_code == 200:
+            return SubTestResult(
+                name="doi_resolves",
+                passed=True,
+                detail=f"HTTP 200 -> {resp.url}",
+                score=1.0,
+            )
+        if resp.status_code in (404, 410) and not resp.history:
+            return SubTestResult(
+                name="doi_resolves",
+                passed=False,
+                detail=f"HTTP {resp.status_code} at doi.org",
+                score=0.0,
+            )
         return SubTestResult(
             name="doi_resolves",
             passed=None,
-            detail=f"Connection error: {e}",
+            detail=f"HTTP {resp.status_code} (indeterminate)",
+        )
+    except (httpx.TimeoutException, httpx.RequestError) as e:
+        # RequestError covers RemoteProtocolError ("server disconnected"),
+        # ReadError and the rest; catching only ConnectError let those escape.
+        return SubTestResult(
+            name="doi_resolves",
+            passed=None,
+            detail=f"Connection error: {type(e).__name__}: {e}",
         )
 
 

@@ -8,10 +8,22 @@ that no longer exists. This guard makes that desynchronisation a hard failure:
 
 A result JSON is **stale** if either
 
-1. its mtime is older than the split file it scores (the data changed after the
-   result was produced), or
+1. its recorded ``split_sha256`` does not match the split file it scores (the
+   data changed after the result was produced), or
 2. its recorded ground-truth counts (``num_entries`` / ``num_hallucinated`` /
    ``num_valid``) disagree with the *current* split data.
+
+Check 1 used to compare mtimes, which cannot work in a git repo: git does not
+preserve them, so on a fresh clone the ordering is whatever order git wrote
+files in. On a clean checkout it called all 46 released results stale off
+sub-second differences, which is why CI ran it ``--warn-only`` and the repo test
+was ``xfail``-ed -- a guard reporting into a void. Hashing the split file is the
+check it was reaching for, and it survives a clone.
+
+A result predating ``split_sha256`` is reported as **unverifiable**, not stale.
+Treating it as stale would make the guard red until everything is regenerated,
+which is exactly how the previous one came to be switched off; the count check
+still applies to it.
 
 The split scored by a result is taken from its ``split_name`` field, falling
 back to the ``<tool>_<split>.json`` filename suffix.
@@ -40,11 +52,26 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from hallmark.dataset.loader import DEFAULT_DATA_DIR, SPLIT_PATHS, load_split
+from hallmark.evaluation.validate import compute_sha256
 
 logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
 logger = logging.getLogger(__name__)
 
 DEFAULT_RESULTS_DIR = Path("data/v1.2/baseline_results")
+
+#: Results known to be stale, with the reason. CI fails on anything stale that is
+#: NOT listed here, so a new regression is caught immediately while a known debt
+#: does not keep the guard red -- which is what --warn-only was papering over.
+#: Ratchet DOWN only: a name leaves this dict when the result is regenerated, and
+#: adding one is a decision to ship a number scored against data that has moved.
+KNOWN_STALE: dict[str, str] = {
+    "harc_with_s2key_dev_public.json": (
+        "scored against the pre-relabel ground truth (633 hallucinated / 486 valid "
+        "against the current 606 / 513). Full coverage at n=1,119, but its DR 0.209 "
+        "and FPR 0.045 are not comparable to current-label results. Needs harcx and "
+        "a Semantic Scholar key to re-run."
+    ),
+}
 
 
 @dataclass
@@ -55,6 +82,11 @@ class StalenessReport:
     split: str | None
     is_stale: bool
     reasons: list[str] = field(default_factory=list)
+    #: True when the result predates ``split_sha256`` and so cannot be checked
+    #: against a split revision. Reported, never fatal -- otherwise the guard
+    #: would be red until every result is regenerated, which is how the previous
+    #: one ended up switched off.
+    unverifiable: bool = False
 
 
 @dataclass
@@ -126,7 +158,7 @@ def check_freshness(
         )
 
     counts_cache: dict[str, dict[str, int]] = {}
-    mtime_cache: dict[str, float] = {}
+    hash_cache: dict[str, str] = {}
 
     for result_path in sorted(results_dir.glob("*.json")):
         if result_path.name == "manifest.json":
@@ -160,16 +192,32 @@ def check_freshness(
             reports.append(report)
             continue
 
-        # (1) mtime check: result must not predate the data it scores.
-        if split not in mtime_cache:
-            mtime_cache[split] = split_file.stat().st_mtime
-        split_mtime = mtime_cache[split]
-        result_mtime = result_path.stat().st_mtime
-        if result_mtime < split_mtime:
+        # (1) content check: the result must name the split revision it scored.
+        #
+        # This replaced an mtime comparison, which could not work: git does not
+        # preserve mtimes, so on any fresh clone the ordering is whatever order
+        # git happened to write files in. Run on a clean checkout it reported all
+        # 46 released results as stale off sub-second differences, which is why
+        # CI carried --warn-only and the repo test was xfail-ed. A hash is the
+        # same check the guard was reaching for, and it survives a clone.
+        #
+        # A result with no ``split_sha256`` is NOT stale: results predating the
+        # field cannot be judged this way, and calling them stale would recreate
+        # the always-red guard. They are reported so the gap stays visible, and
+        # the count check below still applies to them.
+        if split not in hash_cache:
+            hash_cache[split] = compute_sha256(split_file)
+        recorded_hash = probe.get("split_sha256")
+        if recorded_hash is None:
+            report.unverifiable = True
+            report.reasons.append(
+                "no split_sha256 recorded — cannot verify which split revision this scored"
+            )
+        elif recorded_hash != hash_cache[split]:
             report.is_stale = True
             report.reasons.append(
-                f"result mtime ({result_mtime:.0f}) older than split "
-                f"{split} mtime ({split_mtime:.0f})"
+                f"scored split {split} at {recorded_hash[:12]}… but the current file "
+                f"is {hash_cache[split][:12]}…"
             )
 
         # (2) count check: recorded counts must match the current split.
@@ -186,7 +234,20 @@ def check_freshness(
 
         reports.append(report)
 
-    passed = not result_errors and not any(r.is_stale for r in reports)
+    unexpected = [r for r in reports if r.is_stale and r.result_file not in KNOWN_STALE]
+    # A KNOWN_STALE entry that is no longer stale is a stale excuse: the result
+    # was regenerated and nobody removed the exemption. Fail on it, so the
+    # register can only shrink.
+    fixed = [
+        name
+        for name in KNOWN_STALE
+        if any(r.result_file == name and not r.is_stale for r in reports)
+    ]
+    for name in fixed:
+        result_errors.append(
+            f"{name}: listed in KNOWN_STALE but is now fresh — remove it from the register"
+        )
+    passed = not result_errors and not unexpected
     return FreshnessResult(passed=passed, reports=reports, errors=result_errors)
 
 
@@ -213,20 +274,50 @@ def main() -> None:
             logger.error("STALE %s [%s]:", report.result_file, report.split)
             for reason in report.reasons:
                 logger.error("    - %s", reason)
+        elif report.unverifiable:
+            logger.warning(
+                "unverifiable %s [%s]: %s",
+                report.result_file,
+                report.split,
+                "; ".join(report.reasons),
+            )
         else:
             logger.info("fresh %s [%s]", report.result_file, report.split)
 
     for err in result.errors:
         logger.error("ERROR: %s", err)
 
+    unverifiable = [r.result_file for r in result.reports if r.unverifiable]
     if result.passed:
-        logger.info("All %d result file(s) are fresh.", len(result.reports))
+        known = [f for f in result.stale_files if f in KNOWN_STALE]
+        verified = len(result.reports) - len(unverifiable)
+        if known:
+            logger.warning(
+                "%d file(s) stale but registered in KNOWN_STALE, pending regeneration: %s",
+                len(known),
+                ", ".join(known),
+            )
+        logger.info(
+            "No unexpected staleness: %d of %d result file(s) fresh "
+            "(%d verified against the split hash, %d predate split_sha256 and were "
+            "checked on counts only).",
+            len(result.reports) - len(known),
+            len(result.reports),
+            verified,
+            len(unverifiable),
+        )
         sys.exit(0)
 
     stale = result.stale_files
+    unexpected = [f for f in stale if f not in KNOWN_STALE]
+    known = [f for f in stale if f in KNOWN_STALE]
+    if known:
+        logger.warning(
+            "%d known-stale file(s) pending regeneration: %s", len(known), ", ".join(known)
+        )
     logger.error(
-        "Freshness check FAILED: %d stale file(s)%s.",
-        len(stale),
+        "Freshness check FAILED: %d unexpected stale file(s)%s.",
+        len(unexpected),
         " + errors" if result.errors else "",
     )
     if args.warn_only:
