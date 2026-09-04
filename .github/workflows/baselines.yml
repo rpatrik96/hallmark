@@ -19,6 +19,12 @@ jobs:
     name: Evaluate ${{ matrix.baseline }}
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    # Kept so one throttled baseline does not abort the others -- these hit
+    # Semantic Scholar and CrossRef from a shared runner IP and a 429 is
+    # routine. The cost is that the workflow's own conclusion stops meaning
+    # anything: on 2026-08-31 run 33390676403 reported SUCCESS with all four
+    # jobs failed, and nobody looked for months. The `gate` job at the bottom
+    # restores the signal without giving up the isolation.
     continue-on-error: true
     strategy:
       fail-fast: false
@@ -147,3 +153,37 @@ jobs:
           name: combined-results
           path: results/
           if-no-files-found: warn
+
+  gate:
+    name: Fail if any baseline failed
+    runs-on: ubuntu-latest
+    needs: [baseline, aggregate]
+    if: always()
+    steps:
+      # `continue-on-error` on the matrix means `needs.baseline.result` is
+      # 'success' even when every job inside it failed; the honest signal is
+      # `outcome`, which the matrix does not expose to a dependent job. So read
+      # the run's own jobs through the API and fail on any conclusion that is
+      # not success or skipped. This is the check that would have caught the
+      # four TypeError failures on 2026-08-31 the same morning.
+      - name: Check every job in this run
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          gh api --paginate \
+            "repos/${{ github.repository }}/actions/runs/${{ github.run_id }}/jobs" \
+            --jq '.jobs[] | select(.name != "Fail if any baseline failed") |
+                  [.name, .conclusion] | @tsv' > jobs.tsv
+          cat jobs.tsv
+          if ! [ -s jobs.tsv ]; then
+            echo "::error::no jobs reported for this run -- refusing to pass blind"
+            exit 1
+          fi
+          failed=$(awk -F'\t' '$2 != "success" && $2 != "skipped"' jobs.tsv || true)
+          if [ -n "$failed" ]; then
+            echo "::error::baseline jobs failed:"
+            echo "$failed"
+            exit 1
+          fi
+          echo "all jobs succeeded"
