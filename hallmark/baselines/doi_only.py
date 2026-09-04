@@ -78,6 +78,7 @@ def run_doi_only(
     timeout_per_doi: float = 10.0,
     skip_prescreening: bool = False,
     reference_year: int | None = None,
+    **_kw: object,
 ) -> list[Prediction]:
     """Run DOI-only verification on all entries.
 

@@ -173,3 +173,29 @@ def test_released_results_are_internally_consistent(results_dir: Path):
             if data.get(key) is None:
                 bad.append(f"{path.name}: no {key}")
     assert not bad, "malformed released results: " + "; ".join(bad)
+
+
+def test_every_registered_runner_accepts_the_kwargs_the_registry_passes():
+    """A baseline that rejects an unexpected kwarg cannot be run at all.
+
+    ``run_baseline`` forwards ``split=`` to every runner. ``run_doi_only`` had
+    no ``**_kw`` catch-all, so ``hallmark evaluate --baseline doi_only`` raised
+    TypeError before making a single request -- which is a plausible reason its
+    released result sat stale at 1,068 of 1,119 entries: it could not be re-run.
+    """
+    import inspect
+
+    from hallmark.baselines.registry import get_registry
+
+    offenders: list[str] = []
+    for name, info in sorted(get_registry().items()):
+        try:
+            sig = inspect.signature(info.runner)
+        except (TypeError, ValueError):  # builtins / C callables
+            continue
+        if not any(p.kind is inspect.Parameter.VAR_KEYWORD for p in sig.parameters.values()):
+            offenders.append(name)
+    assert not offenders, (
+        f"runner(s) without a **kwargs catch-all: {offenders}. run_baseline forwards "
+        "split= to every runner, so these raise TypeError instead of running."
+    )
