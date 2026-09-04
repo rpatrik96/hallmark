@@ -12,7 +12,7 @@ Dynamic complement to the static W6 format-tell audit. Two questions:
       evidence) vs a HALLUCINATED verdict.
 
 Design:
-  * Sample: n=150 drawn deterministically (seed 42) from data/v1.0/dev_public.jsonl,
+  * Sample: n=150 drawn deterministically (seed 42) from data/v1.2/dev_public.jsonl,
     stratified to preserve the split's HALL:VALID ratio.
   * Conditions (7): full, structured, loo_{title,author,venue,year,doi}.
   * Models: deepseek/deepseek-v3.2 (cheap anchor) + google/gemini-2.5-flash
@@ -49,7 +49,7 @@ from hallmark.evaluation import evaluate
 
 HERE = Path(__file__).resolve().parent
 REPO = HERE.parent.parent
-DEV_PUBLIC = REPO / "data" / "v1.0" / "dev_public.jsonl"
+DEV_PUBLIC = REPO / "data" / "v1.2" / "dev_public.jsonl"
 OUT_DIR = HERE / "a4_field_loo"
 
 BASE_URL = "https://openrouter.ai/api/v1"
@@ -252,7 +252,7 @@ def main() -> None:
     (OUT_DIR / "sample_keys.json").write_text(
         json.dumps(
             {
-                "source": "data/v1.0/dev_public.jsonl",
+                "source": "data/v1.2/dev_public.jsonl",
                 "n": len(entries),
                 "n_hall": n_hall,
                 "n_valid": len(entries) - n_hall,
@@ -283,7 +283,7 @@ def main() -> None:
             "and are robust to absolute-level endpoint drift."
         ),
         "sample": {
-            "source": "data/v1.0/dev_public.jsonl",
+            "source": "data/v1.2/dev_public.jsonl",
             "n": len(entries),
             "n_hall": n_hall,
             "n_valid": len(entries) - n_hall,

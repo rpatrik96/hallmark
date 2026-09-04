@@ -27,7 +27,7 @@ v1.2.0 regeneration; leave its values.
 
 | Quantity | Source file (in `hallmark/`) |
 |---|---|
-| btu 1.2.0 dev/test aggregate (DR/FPR/F1/MCC/TW-F1/ECE) | `data/v1.0/baseline_results/bibtexupdater_{dev,test}_public.json` (already committed v1.2.0; verified below) and `results/relabel_delta/btu_hallmark_full.json` |
+| btu 1.2.0 dev/test aggregate (DR/FPR/F1/MCC/TW-F1/ECE) | `data/v1.2/baseline_results/bibtexupdater_{dev,test}_public.json` (already committed v1.2.0; verified below) and `results/relabel_delta/btu_hallmark_full.json` |
 | btu 1.2.0 abstention / selective-prediction coverage | `results/ablations/coverage_reporting.json` (`per_tool_coverage_dual.bibtexupdater_v1_2_0`) + `coverage_reporting.md` §(a) |
 | Coverage column + conservative/aggressive for all tools | `results/ablations/coverage_reporting.{json,md}` |
 | Risk–coverage curves + FPR@90%-coverage | `results/ablations/coverage_reporting.json["risk_coverage"]` |
@@ -389,7 +389,7 @@ by-pool majority-vote accuracy (0.975 vs 0.327).
 Source: `coverage_reporting.{md,json}`. This is the **abstention/selective-prediction contribution**
 and the home for the btu precision-via-abstention number.
 - **Coverage table** = `coverage_reporting.md` §(a) dev + test grids (per-tool Coverage + cons./aggr.
-  DR/FPR/F1). Transcribe directly (cons. cells already match `data/v1.0/baseline_results/` to 5e-4).
+  DR/FPR/F1). Transcribe directly (cons. cells already match `data/v1.2/baseline_results/` to 5e-4).
   **btu dev_public is final** (cov .746, cons .979/.045/.962, aggr .987/.140/.937); **btu test_public
   is PENDING** (raw 500/831; mark INCOMPLETE, hold until GEN `wkp97jqbb` completes — FLAG-G).
 - **Risk–coverage figure** = `coverage_reporting.json["risk_coverage"][*]["curve"]` (FPR vs coverage,

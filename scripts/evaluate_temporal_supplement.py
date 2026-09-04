@@ -848,7 +848,7 @@ def main() -> None:
 
     # Load v1.0 dev_public for comparison
     try:
-        v1_entries = load_split("dev_public", version="v1.0")
+        v1_entries = load_split("dev_public", version="v1.2")
         logger.info("Loaded %d v1.0 dev_public entries", len(v1_entries))
     except FileNotFoundError as e:
         print(f"Error loading v1.0 dev_public: {e}", file=sys.stderr)

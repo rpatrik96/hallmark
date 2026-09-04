@@ -81,7 +81,7 @@ All 341 pass `hallmark.contribution.validate_entry.validate_batch`. Built by
 wrapper (`hallmark/baselines/bibtexupdater.py`) and `hallmark.evaluation.evaluate`.
 Full coverage 341/341 (the run took ~4 h of wall-clock under sustained Semantic
 Scholar / OpenAlex rate-limiting — the documented shared-IP throttling). Reference
-output: `data/v1.0/baseline_results/bibtexupdater_raw_supplement_chatgpt_citations.jsonl`;
+output: `data/v1.2/baseline_results/bibtexupdater_raw_supplement_chatgpt_citations.jsonl`;
 metrics: `results/walters_wilder/bibtexupdater_metrics.json`.
 
 ### Headline
@@ -236,7 +236,7 @@ performance on author swaps (`swapped_authors` DR 0.75 → 0.25).
 # 1. Build the supplement (downloads Appendix 3 if --xlsx omitted)
 python scripts/ingest_walters_wilder.py \
     --xlsx 41598_2023_41032_MOESM3_ESM.xlsx \
-    --out data/v1.0/supplement_chatgpt_citations.jsonl
+    --out data/v1.2/supplement_chatgpt_citations.jsonl
 
 # 2. Run bibtexupdater (isolated install; slow under shared-IP rate limits)
 uv tool install bibtex-updater
@@ -245,7 +245,7 @@ bibtex-check supplement.bib --jsonl results.jsonl --academic-only \
 
 # 3. Analyze
 python scripts/analyze_walters_wilder.py \
-    --supplement data/v1.0/supplement_chatgpt_citations.jsonl \
+    --supplement data/v1.2/supplement_chatgpt_citations.jsonl \
     --results results.jsonl --xlsx 41598_2023_41032_MOESM3_ESM.xlsx \
     --out-json results/walters_wilder/bibtexupdater_metrics.json \
     --out-md results/walters_wilder/bibtexupdater_report.md

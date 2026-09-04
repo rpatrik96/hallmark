@@ -137,20 +137,20 @@ def main() -> None:
     parser.add_argument(
         "--dev",
         type=Path,
-        default=Path("data/v1.0/dev_public.jsonl"),
-        help="Dev set path (default: data/v1.0/dev_public.jsonl)",
+        default=Path("data/v1.2/dev_public.jsonl"),
+        help="Dev set path (default: data/v1.2/dev_public.jsonl)",
     )
     parser.add_argument(
         "--test",
         type=Path,
-        default=Path("data/v1.0/test_public.jsonl"),
-        help="Test set path (default: data/v1.0/test_public.jsonl)",
+        default=Path("data/v1.2/test_public.jsonl"),
+        help="Test set path (default: data/v1.2/test_public.jsonl)",
     )
     parser.add_argument(
         "--output",
         type=Path,
-        default=Path("data/v1.0/valid_entry_verification.json"),
-        help="Output JSON file path (default: data/v1.0/valid_entry_verification.json)",
+        default=Path("data/v1.2/valid_entry_verification.json"),
+        help="Output JSON file path (default: data/v1.2/valid_entry_verification.json)",
     )
     parser.add_argument(
         "--sample",

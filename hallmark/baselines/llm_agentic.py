@@ -49,7 +49,7 @@ MAX_TOOL_CALLS = 5
 # uses the alias "claude-sonnet-4-6" because Anthropic has not published a
 # date-stamped form for the 4.6 release at the time of this benchmark run; the
 # actual run timestamp is recorded in
-# ``data/v1.0/baseline_results/manifest.json``'s ``environment.timestamp`` field
+# ``data/v1.2/baseline_results/manifest.json``'s ``environment.timestamp`` field
 # for reproducibility purposes.
 OPENAI_MODEL = "gpt-5.1"
 ANTHROPIC_MODEL = "claude-sonnet-4-6"

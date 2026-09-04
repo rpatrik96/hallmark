@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """Guard against stale baseline result artifacts.  [evaluation]
 
-Task #2: aggregate result JSONs in ``data/v1.0/baseline_results/`` score a
-specific data split (``data/v1.0/<split>.jsonl``). When the split is relabeled
+Task #2: aggregate result JSONs in ``data/v1.2/baseline_results/`` score a
+specific data split (``data/v1.2/<split>.jsonl``). When the split is relabeled
 or regenerated, the result JSONs become stale -- their numbers describe data
 that no longer exists. This guard makes that desynchronisation a hard failure:
 
@@ -19,8 +19,8 @@ back to the ``<tool>_<split>.json`` filename suffix.
 Used as a library (``check_freshness``) by the pytest guard and as a CLI in CI:
 
     python scripts/check_results_freshness.py \
-        --results-dir data/v1.0/baseline_results \
-        --data-dir data --version v1.0
+        --results-dir data/v1.2/baseline_results \
+        --data-dir data --version v1.2
 
 Exit code 0 when everything is fresh, 1 when any result is stale (CLI). Pass
 ``--warn-only`` to report without failing (used while results are pending
@@ -44,7 +44,7 @@ from hallmark.dataset.loader import DEFAULT_DATA_DIR, SPLIT_PATHS, load_split
 logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
 logger = logging.getLogger(__name__)
 
-DEFAULT_RESULTS_DIR = Path("data/v1.0/baseline_results")
+DEFAULT_RESULTS_DIR = Path("data/v1.2/baseline_results")
 
 
 @dataclass
@@ -99,14 +99,14 @@ def _split_counts(split: str, version: str, data_dir: Path) -> dict[str, int]:
 def check_freshness(
     results_dir: str | Path = DEFAULT_RESULTS_DIR,
     *,
-    version: str = "v1.0",
+    version: str = "v1.2",
     data_dir: str | Path | None = None,
 ) -> FreshnessResult:
     """Check that every aggregate result JSON is fresh w.r.t. its split.
 
     Args:
         results_dir: Directory of ``<tool>_<split>.json`` aggregate results.
-        version: Dataset version (default ``v1.0``).
+        version: Dataset version (default ``v1.2``).
         data_dir: Root data directory; defaults to the package ``data/`` dir.
 
     Returns:
@@ -193,7 +193,7 @@ def check_freshness(
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--results-dir", type=Path, default=DEFAULT_RESULTS_DIR)
-    parser.add_argument("--version", default="v1.0")
+    parser.add_argument("--version", default="v1.2")
     parser.add_argument("--data-dir", type=str, default=None)
     parser.add_argument(
         "--warn-only",

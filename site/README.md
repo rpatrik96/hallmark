@@ -12,7 +12,7 @@ theme follow the OS setting with a manual toggle.
 
 `data/site_data.js` is **generated** — do not edit it by hand. It is derived
 exclusively from released, tracked artifacts (corpus `metadata.json`,
-`data/v1.0/baseline_results/*.json`, the tracked cross-domain and canonical
+`data/v1.2/baseline_results/*.json`, the tracked cross-domain and canonical
 448-entry temporal supplement metrics, and a seeded sample of
 `dev_public.jsonl` entries for the examples browser).
 

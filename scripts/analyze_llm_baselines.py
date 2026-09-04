@@ -1010,7 +1010,7 @@ def main() -> None:
 
     # Load benchmark entries
     try:
-        entries = load_split(args.split, version="v1.0")
+        entries = load_split(args.split, version="v1.2")
         logger.info("Loaded %d entries from %s", len(entries), args.split)
     except FileNotFoundError as e:
         print(f"Error: {e}", file=sys.stderr)

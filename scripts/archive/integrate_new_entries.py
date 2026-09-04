@@ -21,7 +21,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from hallmark.dataset.schema import HALLUCINATION_TIER_MAP, BenchmarkEntry, HallucinationType
 
-DATA_DIR = Path(__file__).parent.parent / "data" / "v1.0"
+DATA_DIR = Path(__file__).parent.parent / "data" / "v1.2"
 HIDDEN_DIR = Path(__file__).parent.parent / "data" / "hidden"
 
 # Split ratios for new entries (dev, test, hidden)

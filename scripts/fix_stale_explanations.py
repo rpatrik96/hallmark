@@ -73,7 +73,7 @@ def main() -> None:
     n_h = n_v = 0
 
     for split in splits:
-        path = ROOT / "data" / "v1.0" / f"{split}.jsonl"
+        path = ROOT / "data" / "v1.2" / f"{split}.jsonl"
         out_lines: list[str] = []
         changed = 0
         with open(path, encoding="utf-8") as fin:

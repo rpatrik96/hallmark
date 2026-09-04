@@ -25,6 +25,14 @@ as before (the precomputed reference results are unaffected):
 - ``p_valid`` (float in [0, 1]): explicit P(entry as cited is genuine) — the
   value to threshold on.  When present it replaces the older realness
   inversion heuristic for deriving ``Prediction.confidence``.
+
+Every invocation is scored by a batch-level sanity check (``assess_batch_health``)
+before the results are handed back.  ``not_found`` is evidence of fabrication only
+when the sources were actually reached, so a batch where most entries come back
+``not_found`` — or carry an explicit transport-failure status — is reported as a
+broken lookup path rather than a bibliography of invented papers.  Callers that
+persist results should gate on ``BatchHealth.suspected_transport_failure`` via
+``run_bibtex_check_with_health`` and refuse to checkpoint a batch that trips it.
 """
 
 from __future__ import annotations
@@ -34,8 +42,11 @@ import logging
 import subprocess
 import tempfile
 import time
+from collections.abc import Iterable
+from dataclasses import dataclass
 from pathlib import Path
 
+from hallmark.baselines._cache import redact_command
 from hallmark.baselines.common import entries_to_bib, fallback_predictions, run_with_prescreening
 from hallmark.dataset.schema import BlindEntry, Prediction
 
@@ -55,6 +66,8 @@ STATUS_TO_LABEL: dict[str, str] = {
     "partial_match": "HALLUCINATED",
     "hallucinated": "HALLUCINATED",
     "api_error": "VALID",  # Conservative: don't flag on errors
+    "network_error": "VALID",  # Lookup never reached a source: abstention, not evidence
+    "coverage_incomplete": "VALID",  # Sources throttled/errored: abstention, not evidence
     # bibtex-updater >=1.2.0 statuses
     "unconfirmed": "VALID",  # Abstention (could-not-verify): conservative VALID
     "given_name_substitution": "HALLUCINATED",  # Co-author given name is a different person
@@ -99,6 +112,8 @@ STATUS_TO_CONFIDENCE: dict[str, float] = {
     "partial_match": 0.70,
     "hallucinated": 0.90,
     "api_error": 0.30,
+    "network_error": 0.30,
+    "coverage_incomplete": 0.45,
     "unconfirmed": 0.45,
     "given_name_substitution": 0.75,
     "arxiv_id_mismatch": 0.90,
@@ -123,6 +138,154 @@ STATUS_TO_CONFIDENCE: dict[str, float] = {
     "working_paper_not_found": 0.70,
     "skipped": 0.50,
 }
+
+
+# ---------------------------------------------------------------------------
+# Batch-level sanity check
+# ---------------------------------------------------------------------------
+
+# Statuses that say the lookup never reached a source, as opposed to reaching
+# the sources and being told nothing is there.  ``api_error`` is the tool's
+# long-standing catch-all; ``network_error`` is carried here so an upgraded tool
+# that reports transport failures under their own status is handled the same way.
+TRANSPORT_FAILURE_STATUSES: frozenset[str] = frozenset({"api_error", "network_error"})
+
+# Statuses that say the sources answered but the sweep was not exhaustive — a
+# source was throttled or errored out, so the absence of a record proves nothing.
+# ``coverage_incomplete`` is currently a boolean flag on a ``not_found`` record;
+# it is accepted as a status name here so the check keeps working if the tool
+# promotes it to one.
+COVERAGE_INCOMPLETE_STATUSES: frozenset[str] = frozenset({"coverage_incomplete"})
+
+# Share of a batch that may come back without database evidence before we stop
+# believing the batch.  Healthy HALLMARK runs sit at ~52% ``verified`` and 1-3%
+# ``not_found``.  On 2026-09-02 a wifi outage made every source lookup fail DNS
+# resolution and bibtex-check returned ``not_found`` for 2,500 consecutive
+# references; the poisoned chunks ran 85-98% ``not_found``.  30% is an order of
+# magnitude above the healthy ceiling and far below the observed poisoning, so it
+# separates the two regimes with room on both sides — a genuinely
+# fabrication-heavy bibliography stays under it, and no partial outage that
+# matters lands beneath it.
+NOT_FOUND_SHARE_THRESHOLD: float = 0.30
+
+# Below this many entries the share is too noisy to act on.  At the healthy 3%
+# base rate, 6 of 20 entries returning ``not_found`` has probability ~2e-5, so 20
+# is the smallest batch where crossing 30% is decisive rather than unlucky.
+MIN_BATCH_FOR_HEALTH_CHECK: int = 20
+
+
+@dataclass(frozen=True)
+class BatchHealth:
+    """Batch-level sanity signal for one ``bibtex-check`` invocation.
+
+    ``not_found`` means "every source was asked and none had this paper", which
+    is only evidence of fabrication when the sources were actually reached.  A
+    batch where most entries carry ``not_found`` or a transport-failure status is
+    far more likely to be a broken network path than a bibliography of invented
+    papers, so a caller that persists results should refuse to checkpoint it and
+    re-run once connectivity is back.
+
+    The ``"missing"`` sentinel is deliberately not counted here: it means
+    bibtex-check produced no record at all (usually a timeout), which
+    ``_run_bibtex_check_subprocess`` already logs on its own terms.
+
+    Attributes:
+        total: Number of entries in the batch.
+        not_found: Entries whose status was ``not_found``.
+        transport_error: Entries whose status was in
+            ``TRANSPORT_FAILURE_STATUSES``.
+        coverage_incomplete: Entries whose status was in
+            ``COVERAGE_INCOMPLETE_STATUSES`` (sources reached but throttled or
+            partially errored).
+        threshold: No-evidence share above which the batch is suspect.
+        min_batch_size: Smallest batch the share is evaluated on.
+    """
+
+    total: int
+    not_found: int
+    transport_error: int
+    coverage_incomplete: int = 0
+    threshold: float = NOT_FOUND_SHARE_THRESHOLD
+    min_batch_size: int = MIN_BATCH_FOR_HEALTH_CHECK
+
+    @property
+    def not_found_share(self) -> float:
+        """Fraction of the batch that came back ``not_found``."""
+        return self.not_found / self.total if self.total else 0.0
+
+    @property
+    def transport_error_share(self) -> float:
+        """Fraction of the batch that reported an explicit transport failure."""
+        return self.transport_error / self.total if self.total else 0.0
+
+    @property
+    def no_evidence(self) -> int:
+        """Entries the batch produced no usable database evidence for."""
+        return self.not_found + self.transport_error + self.coverage_incomplete
+
+    @property
+    def no_evidence_share(self) -> float:
+        """Fraction of the batch for which no source returned a usable verdict.
+
+        Combines ``not_found``, transport failures and coverage-incomplete
+        abstentions so the check reads the same signal whether or not the
+        upstream tool has been upgraded to report failed lookups under their own
+        status.
+        """
+        return self.no_evidence / self.total if self.total else 0.0
+
+    @property
+    def suspected_transport_failure(self) -> bool:
+        """True when the batch looks like a broken lookup path, not a bad bibliography.
+
+        This is the flag to gate checkpointing on.
+        """
+        return self.total >= self.min_batch_size and self.no_evidence_share > self.threshold
+
+    def warning_message(self) -> str:
+        """Operator-facing description of why the batch is not usable."""
+        return (
+            f"bibtex-check returned no database evidence for "
+            f"{self.no_evidence}/{self.total} entries "
+            f"({self.no_evidence_share:.1%}: {self.not_found} not_found, "
+            f"{self.transport_error} transport errors, "
+            f"{self.coverage_incomplete} coverage-incomplete), above the "
+            f"{self.threshold:.0%} batch threshold. Healthy runs sit at 1-3% "
+            f"not_found, so a share this high is almost always a broken lookup "
+            f"path — a DNS, network or proxy outage, or sustained throttling — "
+            f"rather than a bibliography of invented papers. Treat these "
+            f"predictions as unusable: do not checkpoint this batch, and re-run "
+            f"once the lookup path is healthy."
+        )
+
+
+def assess_batch_health(
+    statuses: Iterable[str],
+    *,
+    threshold: float = NOT_FOUND_SHARE_THRESHOLD,
+    min_batch_size: int = MIN_BATCH_FOR_HEALTH_CHECK,
+) -> BatchHealth:
+    """Score one batch of bibtex-check statuses for transport-failure poisoning.
+
+    Args:
+        statuses: Raw per-entry status strings, e.g. the values of the dict
+            returned by ``run_bibtex_check_with_status``.
+        threshold: No-evidence share above which the batch is suspect.
+        min_batch_size: Smallest batch on which the share is evaluated.
+
+    Returns:
+        A ``BatchHealth`` record; ``suspected_transport_failure`` is the flag a
+        caller gates checkpointing on.
+    """
+    status_list = list(statuses)
+    return BatchHealth(
+        total=len(status_list),
+        not_found=sum(1 for s in status_list if s == "not_found"),
+        transport_error=sum(1 for s in status_list if s in TRANSPORT_FAILURE_STATUSES),
+        coverage_incomplete=sum(1 for s in status_list if s in COVERAGE_INCOMPLETE_STATUSES),
+        threshold=threshold,
+        min_batch_size=min_batch_size,
+    )
 
 
 def run_bibtex_check(
@@ -182,11 +345,30 @@ def run_bibtex_check_with_status(
     Values are the raw ``status`` field from the bibtex-check JSONL output, e.g.:
 
     - ``"verified"`` — found in at least one academic database and metadata matches
-    - ``"not_found"`` — no database returned a matching record.  The same status
-      string also covers coverage-incomplete lookups (post-1.2.0
-      ``coverage_incomplete`` records, where sources errored / were throttled);
-      the prediction for those is an abstention-style VALID, and downstream
-      cascades should keep routing ``"not_found"`` as uncertain.
+    - ``"not_found"`` — **an exhaustive miss, and a positive claim about the
+      lookup**: every source consulted completed successfully and returned no
+      matching record.  A transport failure must NOT be reported under this
+      status.  If any source failed for a technical reason — DNS resolution,
+      connection refused or reset, TLS failure, timeout, 5xx, or a 429 that ended
+      the attempt without an answer — the entry is an abstention, not an
+      exhaustive miss, even when the sources that did answer found nothing.
+      Conflating the two is what let a 2026-09-02 wifi outage produce
+      ``not_found`` for 2,500 consecutive references with zero database evidence
+      behind any of them.  Older tool builds do carry ``coverage_incomplete`` on
+      such records; the wrapper reads that flag and downgrades the prediction to
+      an abstention-style VALID, and downstream cascades keep routing
+      ``"not_found"`` to Stage 2 as uncertain either way.  ``assess_batch_health``
+      is the batch-level backstop for builds that report neither.
+    - ``"network_error"`` — the lookup never reached a source (DNS, connection,
+      TLS, or timeout).  An abstention: conservative VALID, routed to Stage 2,
+      never HALLUCINATED.  Note that an HTTP error response is not this — a 4xx
+      or 5xx proves the network came up — so a throttling 429 belongs under
+      ``coverage_incomplete``, not here.
+    - ``"coverage_incomplete"`` — the sources answered but the sweep was not
+      exhaustive (a source was throttled or errored out).  An abstention on the
+      same terms as ``network_error``.  In current tool builds this arrives as a
+      boolean flag on a ``not_found`` record rather than as a status of its own;
+      both shapes are handled.
     - ``"title_mismatch"`` / ``"author_mismatch"`` / ``"year_mismatch"`` /
       ``"venue_mismatch"`` — found but a field differs from the claimed value
     - ``"nonexistent_venue"`` — claimed venue unknown to the DBLP/OpenAlex venue
@@ -227,6 +409,11 @@ def run_bibtex_check_with_status(
         A 2-tuple ``(predictions, status_dict)`` where ``status_dict`` maps every
         input ``bibtex_key`` to a status string.  The dict is guaranteed to contain
         an entry for every key in ``entries``.
+
+    The batch is scored by ``assess_batch_health`` before returning and a
+    poisoned batch is logged at WARNING level.  Callers that persist results
+    should use ``run_bibtex_check_with_health`` instead and gate checkpointing on
+    ``BatchHealth.suspected_transport_failure``.
     """
     all_keys: list[str] = [e.bibtex_key for e in entries]
 
@@ -294,7 +481,54 @@ def run_bibtex_check_with_status(
         else:
             status_dict[key] = tool_key_to_status.get(key, "missing")
 
+    # Step 7: Batch-level sanity check. A batch that is mostly no-evidence is a
+    # broken lookup path, not a bibliography of invented papers — say so loudly
+    # so an operator watching the log can kill the run before it burns Stage 2
+    # budget on entries no database was ever asked about.
+    health = assess_batch_health(status_dict.values())
+    if health.suspected_transport_failure:
+        logger.warning(health.warning_message())
+
     return final_predictions, status_dict
+
+
+def run_bibtex_check_with_health(
+    entries: list[BlindEntry],
+    extra_args: list[str] | None = None,
+    timeout: float = 7200.0,
+    rate_limit: int = 120,
+    academic_only: bool = True,
+    skip_prescreening: bool = False,
+    **_kw: object,
+) -> tuple[list[Prediction], dict[str, str], BatchHealth]:
+    """Run bibtex-check and return predictions, statuses, and the batch health signal.
+
+    Same behaviour as ``run_bibtex_check_with_status`` with the batch-level sanity
+    check returned rather than only logged.  Use this from anything that persists
+    results: when ``BatchHealth.suspected_transport_failure`` is True the batch
+    carries no database evidence and must not be checkpointed, since a resumed run
+    would then treat the poisoned verdicts as settled.
+
+    Args:
+        entries: Benchmark entries to verify.
+        extra_args: Additional CLI arguments for bibtex-check.
+        timeout: Timeout in seconds (default: 7200).
+        rate_limit: API requests per minute (default: 120).
+        academic_only: Skip web/book/working-paper checks (default: True).
+        skip_prescreening: Skip pre-screening checks (default: False).
+
+    Returns:
+        A 3-tuple ``(predictions, status_dict, health)``.
+    """
+    predictions, status_dict = run_bibtex_check_with_status(
+        entries,
+        extra_args=extra_args,
+        timeout=timeout,
+        rate_limit=rate_limit,
+        academic_only=academic_only,
+        skip_prescreening=skip_prescreening,
+    )
+    return predictions, status_dict, assess_batch_health(status_dict.values())
 
 
 def _run_bibtex_check_subprocess(
@@ -337,8 +571,8 @@ def _run_bibtex_check_subprocess(
         if extra_args:
             cmd.extend(extra_args)
 
-        # Run bibtex-check
-        logger.info(f"Running: {' '.join(cmd)}")
+        # Run bibtex-check (the API key is masked — see redact_command)
+        logger.info(f"Running: {redact_command(cmd)}")
         timed_out = False
         try:
             result = subprocess.run(

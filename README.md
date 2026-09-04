@@ -46,7 +46,7 @@ HALLMARK draws on best practices from established benchmarks:
 | `stress_test`  | conservative | 0.969 |   —   | 0.985 |     0.983 |   —   |
 | `stress_test`  | **aggressive** | 0.975 |   —   | 0.987 |     0.986 |   —   |
 
-Aggressive promotion of residual `UNCERTAIN` (the "DB-as-gold-standard" stance) lifts Tier-3 F1 by **+11.1 pp on `test_public`** and **+15.3 pp on `dev_public`** at ≤0.1 pp FPR cost; the trade is paid in rank-discrimination (AUROC −6.2 / −9.3 pp). Runner-level (`cascade_db_diagnosis_aggressive`) and evaluator-level (`--eval-mode aggressive`) promotion paths agree to within ~1 pp on every metric. Full JSONs (incl. per-tier/per-type breakdowns) in [`data/v1.0/baseline_results/`](data/v1.0/baseline_results/); see paper §Stage-2 diagnosis cascade for analysis.
+Aggressive promotion of residual `UNCERTAIN` (the "DB-as-gold-standard" stance) lifts Tier-3 F1 by **+11.1 pp on `test_public`** and **+15.3 pp on `dev_public`** at ≤0.1 pp FPR cost; the trade is paid in rank-discrimination (AUROC −6.2 / −9.3 pp). Runner-level (`cascade_db_diagnosis_aggressive`) and evaluator-level (`--eval-mode aggressive`) promotion paths agree to within ~1 pp on every metric. Full JSONs (incl. per-tier/per-type breakdowns) in [`data/v1.2/baseline_results/`](data/v1.2/baseline_results/); see paper §Stage-2 diagnosis cascade for analysis.
 
 ## Installation
 
@@ -241,7 +241,7 @@ A [Croissant 1.0](https://mlcommons.org/croissant/) metadata file is included at
 mlcroissant validate --jsonld croissant.json
 ```
 
-The data is also shipped in `data/v1.0/` for direct repo-relative access without any external download.
+The data is also shipped in `data/v1.2/` for direct repo-relative access without any external download.
 
 ## Dataset
 
@@ -338,9 +338,9 @@ Any real tool that achieves F1 below the title oracle on the hidden split is arg
 from hallmark.baselines.title_oracle import run_title_oracle
 from hallmark.dataset.loader import load_split
 
-dev_entries  = load_split("dev_public")
+dev_entries = load_split("dev_public")
 test_entries = load_split("test_public")
-blind_test   = [e.to_blind() for e in test_entries]
+blind_test = [e.to_blind() for e in test_entries]
 
 predictions = run_title_oracle(blind_test, reference_pool=dev_entries)
 ```
@@ -447,10 +447,7 @@ from hallmark.dataset.schema import Prediction
 entries = load_split("dev_public")
 
 # Create predictions (your tool's output)
-predictions = [
-    Prediction(bibtex_key=e.bibtex_key, label="VALID", confidence=0.5)
-    for e in entries
-]
+predictions = [Prediction(bibtex_key=e.bibtex_key, label="VALID", confidence=0.5) for e in entries]
 
 # Evaluate
 result = evaluate(entries, predictions, tool_name="my-tool", split_name="dev_public")

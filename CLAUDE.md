@@ -51,8 +51,8 @@ This is a single atomic workflow. The commit is not done until all hooks pass an
 - `hallmark/evaluation/ranking.py` — ONEBench-inspired Plackett-Luce ranking
 - `scripts/` — orchestrator scripts (run_all_baselines.py, run_evaluation.py, generate_reference_results.py, generate_new_instances.py)
 - `tests/` — pytest test suite (562 tests)
-- `data/v1.0/` — benchmark data splits (dev: 1,119, test: 831, hidden: 453, stress: 122; total 2,525 entries)
-- `data/v1.0/baseline_results/` — pre-computed reference results for rate-limited baselines
+- `data/v1.2/` — benchmark data splits (dev: 1,119, test: 831, hidden: 453, stress: 122; total 2,525 entries)
+- `data/v1.2/baseline_results/` — pre-computed reference results for rate-limited baselines
 - `.github/workflows/` — CI (tests.yml, baselines.yml)
 
 ## Baseline Wrapper Architecture
@@ -77,7 +77,10 @@ Any user of the tool would benefit from these.
 - `llm_anthropic` — Claude Sonnet 4.6 via `ANTHROPIC_API_KEY`
 - `llm_openrouter_{deepseek_r1,deepseek_v3,qwen,mistral,gemini_flash}` — via `OPENROUTER_API_KEY` (uses `openai` SDK with custom `base_url`)
 - `llm_openrouter_gemini_flash` — Gemini 2.5 Flash via `OPENROUTER_API_KEY`
+- `llm_openrouter_qwen3_{8b,14b,32b}` — Qwen3 dense series, a controlled parameter-count sweep within one family (`qwen3-4b` does not exist on OpenRouter; `qwen3-8b` 404s on the lab key — Alibaba is its only provider and is outside the account's provider allowlist)
+- `llm_openrouter_claude_haiku_4_5` — Claude Haiku 4.5 via the OpenRouter mirror
 - Model configs live in `OPENROUTER_MODELS` dict in `hallmark/baselines/llm_verifier.py`
+- **Thinking-mode guard**: hybrid-reasoning models default to thinking ON and burn the `max_completion_tokens` budget on hidden reasoning, returning truncated JSON. Model IDs listed in `_NO_THINK_MODELS` get Qwen3's `/no_think` soft switch appended to the prompt. Do NOT reach for the API-level switches first — probed live 2026-08-03, DeepInfra silently ignores `reasoning.enabled`, `reasoning.max_tokens` and `chat_template_kwargs.enable_thinking` (570–1000 reasoning tokens each), while `/no_think` drops it to 1. The `reasoning_enabled=True/False` kwarg remains as an explicit opt-in for providers that honour it; the gpt-5.5 family uses `reasoning_effort="none"` instead
 - `_verify_with_openai_compatible()` is the shared helper for all OpenAI-SDK-based providers
 - Generation script: `scripts/generate_llm_hallucinations.py --backend openrouter --model deepseek/deepseek-r1`
 - Parallel evaluators: `scripts/parallel_resume_test_public.py` (zero-shot), `scripts/parallel_agentic_btu_test_public.py` (agentic) — use for long-running LLM evals with checkpoint recovery
@@ -86,8 +89,8 @@ Any user of the tool would benefit from these.
 - Optional dependencies (choix, harcx, openai, anthropic) use lazy imports
 - bibtex-updater, harcx, and verify-citations all require bibtexparser 1.x; install in isolation with `pipx install`
 - harc and bibtexupdater baselines time out in CI due to Semantic Scholar API rate-limiting on shared IPs
-- Rate-limited baselines use pre-computed reference results: run locally via `python scripts/generate_reference_results.py --baselines harc,bibtexupdater`, commit to `data/v1.0/baseline_results/`, CI validates checksums instead of re-running
-- Validate reference results: `hallmark validate-results --results-dir data/v1.0/baseline_results/ --strict`
+- Rate-limited baselines use pre-computed reference results: run locally via `python scripts/generate_reference_results.py --baselines harc,bibtexupdater`, commit to `data/v1.2/baseline_results/`, CI validates checksums instead of re-running
+- Validate reference results: `hallmark validate-results --results-dir data/v1.2/baseline_results/ --strict`
 - CI evaluates live baselines (doi_only, verify_citations) normally; precomputed baselines (harc, bibtexupdater) are validated and copied
 - Baselines use the registry pattern in `hallmark/baselines/registry.py`
 - Pre-commit hooks run mypy with `--ignore-missing-imports` on `hallmark/`
