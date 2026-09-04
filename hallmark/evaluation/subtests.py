@@ -70,11 +70,13 @@ def check_doi_resolves(doi: str | None, timeout: float = 10.0) -> SubTestResult:
             passed=None,
             detail=f"HTTP {resp.status_code} (indeterminate)",
         )
-    except (httpx.TimeoutException, httpx.ConnectError) as e:
+    except (httpx.TimeoutException, httpx.RequestError) as e:
+        # RequestError covers RemoteProtocolError ("server disconnected"),
+        # ReadError and the rest; catching only ConnectError let those escape.
         return SubTestResult(
             name="doi_resolves",
             passed=None,
-            detail=f"Connection error: {e}",
+            detail=f"Connection error: {type(e).__name__}: {e}",
         )
 
 

@@ -39,7 +39,10 @@ def check_doi(doi: str, timeout: float = 10.0) -> tuple[bool | None, str]:
             lambda: httpx.head(url, follow_redirects=True, timeout=timeout),
             max_retries=2,
             base_delay=1.0,
-            exceptions=(httpx.TimeoutException, httpx.ConnectError),
+            # RequestError is the base of ConnectError, RemoteProtocolError,
+            # ReadError and the rest. Catching only two of them let a server
+            # disconnect propagate and abort the whole run mid-split.
+            exceptions=(httpx.TimeoutException, httpx.RequestError),
         )
         # Only doi.org answering 404/410 itself is evidence the DOI is not
         # registered. Everything else that is not a 200 is indeterminate, and
@@ -69,8 +72,8 @@ def check_doi(doi: str, timeout: float = 10.0) -> tuple[bool | None, str]:
         # 202/403/429/5xx and friends: bot blocks, rate limits and server
         # errors are transient, never evidence of fabrication.
         return None, f"DOI returned HTTP {resp.status_code} (indeterminate)"
-    except (httpx.TimeoutException, httpx.ConnectError) as e:
-        return None, f"Network error (unresolved): {e}"
+    except (httpx.TimeoutException, httpx.RequestError) as e:
+        return None, f"Network error (unresolved): {type(e).__name__}: {e}"
 
 
 def run_doi_only(

@@ -102,3 +102,33 @@ def test_a_transient_status_never_yields_a_hallucinated_prediction(monkeypatch):
     preds = doi_only.run_doi_only(entries, skip_prescreening=True)
     assert [p.label for p in preds] == ["VALID"]
     assert "indeterminate" in (preds[0].reason or "")
+
+
+@pytest.mark.parametrize(
+    "exc",
+    [
+        httpx.ConnectError("refused"),
+        httpx.RemoteProtocolError("Server disconnected without sending a response."),
+        httpx.ReadError("read failed"),
+        httpx.ConnectTimeout("timed out"),
+    ],
+)
+def test_transport_failures_are_indeterminate_not_crashes(monkeypatch, exc):
+    """A transport failure must abstain, not abort the run.
+
+    ``check_doi`` caught only TimeoutException and ConnectError, so a
+    RemoteProtocolError -- an ordinary server disconnect -- propagated out of the
+    baseline and killed a full-split evaluation partway through. It happened on
+    the first real re-run after the 202 fix.
+    """
+
+    def _raise(*_a, **_k):
+        raise exc
+
+    monkeypatch.setattr(httpx, "head", _raise)
+    resolves, detail = doi_only.check_doi("10.1000/x")
+    assert resolves is None
+    assert type(exc).__name__ in detail
+
+    result = subtests.check_doi_resolves("10.1000/x")
+    assert result.passed is None

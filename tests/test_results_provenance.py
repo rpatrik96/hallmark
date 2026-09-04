@@ -199,3 +199,44 @@ def test_every_registered_runner_accepts_the_kwargs_the_registry_passes():
         f"runner(s) without a **kwargs catch-all: {offenders}. run_baseline forwards "
         "split= to every runner, so these raise TypeError instead of running."
     )
+
+
+class TestBibtexCheckBinaryPinning:
+    """Which bibtex-check build answers must be decidable and knowable.
+
+    The wrapper invoked ``bibtex-check`` by name, so PATH order chose the build.
+    On this machine the first entry is an editable install importing from the
+    bibtexupdater working tree: it reports 1.3.1.dev18 while the pipx copy on the
+    same PATH is 1.10.1. An ablation ran three hours against the checkout while
+    two commits landed in it, so entries before and after were scored by
+    different code and nothing in the output said so.
+    """
+
+    def test_env_var_pins_the_binary(self, monkeypatch, tmp_path):
+        from hallmark.baselines import bibtexupdater as btu
+
+        fake = tmp_path / "bibtex-check"
+        fake.write_text("#!/bin/sh\nexit 0\n")
+        fake.chmod(0o755)
+        monkeypatch.setenv(btu.BIBTEX_CHECK_BIN_ENV, str(fake))
+        assert btu.resolve_bibtex_check_bin() == str(fake)
+
+    def test_missing_pinned_binary_is_reported_not_silently_ignored(self, monkeypatch, tmp_path):
+        """Falling back to PATH would run a different build than the operator asked for."""
+        from hallmark.baselines import bibtexupdater as btu
+
+        monkeypatch.setenv(btu.BIBTEX_CHECK_BIN_ENV, str(tmp_path / "nope"))
+        assert btu.resolve_bibtex_check_bin() is None
+
+    def test_falls_back_to_path_when_unpinned(self, monkeypatch):
+        from hallmark.baselines import bibtexupdater as btu
+
+        monkeypatch.delenv(btu.BIBTEX_CHECK_BIN_ENV, raising=False)
+        monkeypatch.setattr(btu.shutil, "which", lambda _n: "/usr/bin/bibtex-check")
+        assert btu.resolve_bibtex_check_bin() == "/usr/bin/bibtex-check"
+
+    def test_version_probe_never_raises(self, monkeypatch, tmp_path):
+        """Provenance must not be able to break an evaluation."""
+        from hallmark.baselines import bibtexupdater as btu
+
+        assert btu.bibtex_check_version(str(tmp_path / "absent")) is None
