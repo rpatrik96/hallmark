@@ -13,6 +13,7 @@ bibtexparser>=2.0.  It must be installed in an isolated environment
 from __future__ import annotations
 
 import logging
+import os
 import re
 import shutil
 import subprocess
@@ -158,6 +159,15 @@ def run_harc(
     Returns:
         List of Predictions.
     """
+    # Fall back to the environment for the Semantic Scholar key, matching
+    # bibtexupdater.py. Without this the registry passed no api_key while the
+    # co-designed tool read S2_API_KEY for itself, so a default side-by-side run
+    # on a machine with the key handed one tool authenticated access and its
+    # competitor the unauthenticated pool -- and HaRC was then excluded from the
+    # main table for the throttling that asymmetry produced.
+    if api_key is None:
+        api_key = os.environ.get("S2_API_KEY")
+
     harcx_bin = shutil.which("harcx")
     if harcx_bin is None:
         logger.error(
