@@ -48,8 +48,22 @@ from hallmark.evaluation.table_provenance import record_table
 REPO_ROOT = Path(__file__).resolve().parent.parent
 TABLES_DIR = REPO_ROOT / "tables"
 
-#: The modes the issue is about. Each is defined in the agentic system prompt as
-#: a condition on a paper that exists.
+#: Named fold sets. ``real_paper`` is what the issue is about: each mode is
+#: defined in the agentic system prompt as a condition on a paper that exists.
+#: ``hybrid_fabrication`` is folded separately and never with them -- it means
+#: the entry claims one work and the DOI resolves to another, so whether it is a
+#: fabrication depends on whether the index is right, and merging it into the
+#: real-paper fold would introduce a second conflation while undoing the first.
+FOLD_SETS: dict[str, tuple[str, ...]] = {
+    "real_paper": (
+        "wrong_venue",
+        "preprint_as_published",
+        "partial_author_list",
+        "arxiv_version_mismatch",
+    ),
+    "hybrid_fabrication": ("hybrid_fabrication",),
+}
+
 REAL_PAPER_MODES = (
     "wrong_venue",
     "preprint_as_published",
@@ -92,16 +106,25 @@ class Confusion:
         return num / den if den else 0.0
 
 
-def _confusions(payload: dict) -> dict[str, Confusion] | None:
+def _confusions(payload: dict, fold_modes: tuple[str, ...]) -> dict[str, object] | None:
     """Rebuild the three confusion matrices from a result's per-type rates."""
     per_type = payload.get("per_type_metrics")
     num_valid = payload.get("num_valid")
     fpr = payload.get("false_positive_rate")
-    if not isinstance(per_type, dict) or num_valid is None or fpr is None:
+    if not isinstance(per_type, dict) or num_valid is None:
         return None
 
-    fp = round(float(fpr) * float(num_valid))
-    tn = float(num_valid) - fp
+    # A split with no VALID entries -- stress_test is all positives -- has no
+    # false-positive rate and no MCC. It still has a detection rate, and the
+    # fold still changes what that detection rate is over, so it is scored with
+    # an empty negative class rather than skipped.
+    if not num_valid:
+        fp = tn = 0.0
+    elif fpr is None:
+        return None
+    else:
+        fp = float(round(float(fpr) * float(num_valid)))
+        tn = float(num_valid) - fp
 
     kept = {"tp": 0.0, "fn": 0.0}
     real = {"tp": 0.0, "fn": 0.0}
@@ -110,7 +133,7 @@ def _confusions(payload: dict) -> dict[str, Confusion] | None:
             continue
         count = float(m.get("count") or 0.0)
         detected = float(m.get("detection_rate") or 0.0) * count
-        bucket = real if mode in REAL_PAPER_MODES else kept
+        bucket = real if mode in fold_modes else kept
         bucket["tp"] += detected
         bucket["fn"] += count - detected
 
@@ -134,12 +157,19 @@ def _confusions(payload: dict) -> dict[str, Confusion] | None:
 def _reconstruction_error(payload: dict, shipped: Confusion) -> list[str]:
     """Where the rebuilt matrix disagrees with the result's own published figures."""
     problems = []
-    for field, rebuilt in (
+    has_negatives = bool(payload.get("num_valid"))
+    checks = [
         ("detection_rate", shipped.detection_rate),
-        ("false_positive_rate", shipped.false_positive_rate),
-        ("mcc", shipped.mcc),
         ("f1_hallucination", shipped.f1),
-    ):
+    ]
+    # With no negative class both are degenerate rather than wrong: FPR is
+    # undefined and MCC is reported as 0.0, so neither can validate anything.
+    if has_negatives:
+        checks += [
+            ("false_positive_rate", shipped.false_positive_rate),
+            ("mcc", shipped.mcc),
+        ]
+    for field, rebuilt in checks:
         published = payload.get(field)
         if published is None:
             continue
@@ -169,19 +199,34 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--split", default="test_public")
     parser.add_argument(
+        "--fold",
+        default="real_paper",
+        choices=sorted(FOLD_SETS),
+        help="which modes stop counting as fabrication (default: the four real-paper modes)",
+    )
+    parser.add_argument(
         "--results-dir", type=Path, default=REPO_ROOT / "data" / "v1.2" / "baseline_results"
     )
     parser.add_argument("--output", type=Path, default=None)
     args = parser.parse_args()
     if args.output is None:
-        args.output = TABLES_DIR / f"taxonomy_fold_ablation_{args.split}.csv"
+        suffix = "" if args.fold == "real_paper" else f"_{args.fold}"
+        args.output = TABLES_DIR / f"taxonomy_fold_ablation_{args.split}{suffix}.csv"
+    fold_modes = FOLD_SETS[args.fold]
+
+    results = sorted(args.results_dir.glob(f"*_{args.split}.json"))
+    if not results:
+        parser.error(
+            f"no result JSONs for split {args.split!r} in {args.results_dir}. "
+            "test_hidden is not distributed with the repository and cannot be folded here."
+        )
 
     scored: dict[str, dict[str, Confusion]] = {}
     real_mode_drs: dict[str, float] = {}
     dropped: dict[str, str] = {}
     used_inputs: list[Path] = []
 
-    for path in sorted(args.results_dir.glob(f"*_{args.split}.json")):
+    for path in results:
         try:
             payload = json.loads(path.read_text())
         except (OSError, json.JSONDecodeError) as exc:
@@ -190,7 +235,7 @@ def main() -> int:
         if not isinstance(payload, dict):
             dropped[path.stem] = "unexpected JSON shape"
             continue
-        rebuilt = _confusions(payload)
+        rebuilt = _confusions(payload, fold_modes)
         if rebuilt is None:
             dropped[path.stem] = "no per_type_metrics to reconstruct from"
             continue
@@ -243,7 +288,16 @@ def main() -> int:
         for scoring in ("as_shipped", "folded_out", "as_false_positives")
     }
 
-    print(f"Taxonomy fold ablation, {args.split}: {len(scored)} tools reconstructed")
+    has_negatives = any(m["as_shipped"].fp + m["as_shipped"].tn for m in scored.values())
+    print(
+        f"Taxonomy fold ablation [{args.fold}: {', '.join(fold_modes)}], {args.split}: "
+        f"{len(scored)} tools reconstructed"
+    )
+    if not has_negatives:
+        print(
+            "  This split has no VALID entries, so FPR and MCC are undefined and there is no "
+            "ranking to destabilise. Detection rate is the whole measurement."
+        )
     if dropped:
         print(f"{len(dropped)} dropped:")
         for name, why in sorted(dropped.items()):
@@ -260,6 +314,10 @@ def main() -> int:
             f"{tool[:44]:<44} {m['as_shipped'].mcc:>11.4f} {m['folded_out'].mcc:>9.4f} "
             f"{m['as_false_positives'].mcc:>9.4f}  {move:>+9d}  {real_mode_drs[tool]:>11.4f}"
         )
+
+    if not has_negatives:
+        print(f"\nWrote {args.output.relative_to(REPO_ROOT)}")
+        return 0
 
     print("\nRanking agreement with as_shipped (Kendall tau over MCC):")
     for scoring in ("folded_out", "as_false_positives"):

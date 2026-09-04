@@ -24,7 +24,66 @@
       "data/v1.2/baseline_results/llm_openrouter_qwen_max_dev_public.json": "1d762ec5d65f3fc3677062706e1fd6bcb4c39c92f8972f7610e0cb493f89d67d"
     }
   },
+  "taxonomy_fold_ablation_dev_public_hybrid_fabrication.csv": {
+    "generator": "scripts/ablate_taxonomy_fold.py",
+    "inputs": {
+      "data/v1.2/baseline_results/bibtexupdater_dev_public.json": "ffc80199709b72e5afb6e4b8d45476b3746ccde8f9825c43b59b7ab5191aed8b",
+      "data/v1.2/baseline_results/cascade_db_diagnosis_aggressive_dev_public.json": "0f54d388799fbf499937679ba7e8b779d2fe8e3b05646e7f3933b966b16f3a3a",
+      "data/v1.2/baseline_results/cascade_db_diagnosis_dev_public.json": "5df803dde0d7fe80413072132677630b09761e9d313370611712ae0a7851747c",
+      "data/v1.2/baseline_results/cascade_db_diagnosis_evalmode_aggressive_dev_public.json": "0f54d388799fbf499937679ba7e8b779d2fe8e3b05646e7f3933b966b16f3a3a",
+      "data/v1.2/baseline_results/doi_only_dev_public.json": "6580622f7c22e40bf24bf660c4cb375b2e1d3ec45bff716c2cbc1e9f1504397e",
+      "data/v1.2/baseline_results/harc_with_s2key_dev_public.json": "79d7a33050e82e3609a1418641c189bcfe98c5c06b3f14270c9a08d62c4968a6",
+      "data/v1.2/baseline_results/llm_agentic_btu_openai_dev_public.json": "c3545fea4b9bb6001146fa135e15989781e4fe757b08689a8eb11a2dc82ad407",
+      "data/v1.2/baseline_results/llm_agentic_btu_sonnet_4_6_dev_public.json": "0d6912bfe80852ebff13fde66d9c909fac96ff68bcfbfa91f20c2fe67fce97b6",
+      "data/v1.2/baseline_results/llm_agentic_openai_dev_public.json": "704377dd833fb67370cb0a713883bc4bdd1856d2d8fd703248a4ebbdb5f1eba1",
+      "data/v1.2/baseline_results/llm_openai_dev_public.json": "8f3a57c91876571d2e6751bb42d707944491f760689c1896e2786cd61ca08096",
+      "data/v1.2/baseline_results/llm_openai_gpt54_dev_public.json": "d5c8708dff2ae44f9c72e25a863d718d1d7bf0e0b5a24833fcdd8b1612424465",
+      "data/v1.2/baseline_results/llm_openrouter_claude_sonnet_4_6_dev_public.json": "c91421103aa3bfa9c7ac861118f331e1d5f137e0dda972485b45d3a31218a21a",
+      "data/v1.2/baseline_results/llm_openrouter_deepseek_r1_dev_public.json": "8759f41352e2bf55e5cf92c883260e9a78ad17116b30a2af2acd021c840b9db3",
+      "data/v1.2/baseline_results/llm_openrouter_deepseek_v3_dev_public.json": "dd488980fa86114c53b796404dcef7e60290759986be652e9615444a41544650",
+      "data/v1.2/baseline_results/llm_openrouter_gemini_flash_dev_public.json": "b516570a1044b4adff676d07c7ff7f271f25fa85d42155e49ff102f50f54b5e9",
+      "data/v1.2/baseline_results/llm_openrouter_gemini_pro_dev_public.json": "4ef767f45850bdf5aa15af6d5427679ea3db0cc7b41ce5121022ed6788257abb",
+      "data/v1.2/baseline_results/llm_openrouter_llama_4_maverick_dev_public.json": "a306a7702d4e2472ea8a958d380b77074f1322bbaeb45f6d65f4977317bd5abb",
+      "data/v1.2/baseline_results/llm_openrouter_mistral_dev_public.json": "0f19865f16bc030c114e78bffa1765b18b510068895dd6729a60483787dbc421",
+      "data/v1.2/baseline_results/llm_openrouter_qwen_dev_public.json": "e55be09851163eb3f07138e2bb73d2961e538065f867ef2dc5acaf747723e30e",
+      "data/v1.2/baseline_results/llm_openrouter_qwen_max_dev_public.json": "1d762ec5d65f3fc3677062706e1fd6bcb4c39c92f8972f7610e0cb493f89d67d"
+    }
+  },
+  "taxonomy_fold_ablation_stress_test.csv": {
+    "generator": "scripts/ablate_taxonomy_fold.py",
+    "inputs": {
+      "data/v1.2/baseline_results/cascade_db_diagnosis_aggressive_stress_test.json": "8e12d13b07e0dd37a8ce0bc9bd1dfe09b8075df0f957a32567be4f527290a4ed",
+      "data/v1.2/baseline_results/cascade_db_diagnosis_evalmode_aggressive_stress_test.json": "8e12d13b07e0dd37a8ce0bc9bd1dfe09b8075df0f957a32567be4f527290a4ed",
+      "data/v1.2/baseline_results/cascade_db_diagnosis_stress_test.json": "623222b43e505060ddd7fcf5c209c7961f77395bccc177d0fc09f41f5adfa21c"
+    }
+  },
   "taxonomy_fold_ablation_test_public.csv": {
+    "generator": "scripts/ablate_taxonomy_fold.py",
+    "inputs": {
+      "data/v1.2/baseline_results/bibtexupdater_test_public.json": "6cd2f9acc540179a88f8b94875433ff313a9f33b3ecf97247b5e7209ff55b82f",
+      "data/v1.2/baseline_results/cascade_db_diagnosis_aggressive_test_public.json": "f8c2b0cdc4a311a741c9528880de28fea8759cd3dd4bfd1ca715851c3f2595c5",
+      "data/v1.2/baseline_results/cascade_db_diagnosis_evalmode_aggressive_test_public.json": "f8c2b0cdc4a311a741c9528880de28fea8759cd3dd4bfd1ca715851c3f2595c5",
+      "data/v1.2/baseline_results/cascade_db_diagnosis_test_public.json": "0b8e28af6ceaa9b327d17bea79a9fd5c7d59d596c7eff966dfcd076485241d77",
+      "data/v1.2/baseline_results/doi_only_test_public.json": "716ed587dc829f3b549ad5e846310a4705626758c80b432e42218d4aad274fda",
+      "data/v1.2/baseline_results/llm_agentic_btu_openai_test_public.json": "f8001545cd20f90ea06bd9a13590c74d5e32491a0a573c59fa249de2edc92f20",
+      "data/v1.2/baseline_results/llm_agentic_btu_sonnet_4_6_test_public.json": "0963a85c4f81f985824784389e3b8a890d3d6aabaa992070d42acdb115ad875c",
+      "data/v1.2/baseline_results/llm_agentic_openai_test_public.json": "72c88ccfbfb11e51a2e84307649b31da6d8ff9695871412b9cea7e4349bacc93",
+      "data/v1.2/baseline_results/llm_openai_gpt54_test_public.json": "083db8e3aee44cb76dd63a2b9fa6977c5f2a8cfdbcb267c02b4dc3e5415faba8",
+      "data/v1.2/baseline_results/llm_openai_test_public.json": "2f9d90370a88ea219f15f644a26cd1eecfbaeedf973c8bd2b75feeaecd0d38fa",
+      "data/v1.2/baseline_results/llm_openrouter_claude_opus_4_7_test_public.json": "76ac6ee463bc94091e93125333b8ff8f3ae98461d6ff7f31b7667be599ce0b45",
+      "data/v1.2/baseline_results/llm_openrouter_claude_sonnet_4_6_test_public.json": "e6c1f49975d71787d5dcefb213a0c9e7dcb50f6a350577f062d77f14a8a1f0ec",
+      "data/v1.2/baseline_results/llm_openrouter_deepseek_r1_test_public.json": "1be5ff175483727ffd35644f394b0fe556dc958acddf0e6a2af95ead9689ab6d",
+      "data/v1.2/baseline_results/llm_openrouter_deepseek_v3_test_public.json": "67f12ffeb2fcc28fe6b6fc2154ffadab6f71d89be8520a80f11c71822cf2378f",
+      "data/v1.2/baseline_results/llm_openrouter_gemini_flash_test_public.json": "92e214dddaf601a17da430d2dbe2d4e4f5fedaa6741f9cdcbadf55c09073ee75",
+      "data/v1.2/baseline_results/llm_openrouter_gemini_pro_test_public.json": "28f783bb26239d324305d51912eebf015fc5dbdb68a4bc591e2d5e1ec5d80515",
+      "data/v1.2/baseline_results/llm_openrouter_llama_4_maverick_test_public.json": "3747f84716fb0c78ccf573f0acee9db083f3823192b4d0a76460c2364bb85bf4",
+      "data/v1.2/baseline_results/llm_openrouter_mistral_test_public.json": "2f71622e7f10c85a8c150e70e722c4dbcf67279c6e2070151f5883221ebdf417",
+      "data/v1.2/baseline_results/llm_openrouter_qwen_max_test_public.json": "d056b6dec811bbd02114a993bd033fe023ce493f42ce3b60ced096d34c3917e2",
+      "data/v1.2/baseline_results/llm_openrouter_qwen_test_public.json": "8fbe6f79acba8de6618131ec2c3819ab7391e0eb8ecebf34ae3ef60c1f052f81",
+      "data/v1.2/baseline_results/llm_tool_augmented_test_public.json": "7d7733e0363906790592d11a953af83590024f0c54d7b56e290680dfa6a3e836"
+    }
+  },
+  "taxonomy_fold_ablation_test_public_hybrid_fabrication.csv": {
     "generator": "scripts/ablate_taxonomy_fold.py",
     "inputs": {
       "data/v1.2/baseline_results/bibtexupdater_test_public.json": "6cd2f9acc540179a88f8b94875433ff313a9f33b3ecf97247b5e7209ff55b82f",
