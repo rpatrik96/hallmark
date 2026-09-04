@@ -216,12 +216,21 @@ class TestPerTypeMetricsWilsonCI:
         assert "dr_ci_lower" in result["fabricated_doi"]
         assert "dr_ci_upper" in result["fabricated_doi"]
 
-    def test_ci_keys_absent_when_compute_ci_false(self):
-        """Default (compute_ci=False) must not add CI keys — backward compat."""
+    def test_ci_keys_present_by_default(self):
+        """The Wilson interval is emitted unconditionally.
+
+        It is closed-form arithmetic with no bootstrap behind it, and per-type
+        DR with its interval is the primary per-type number: precision there is
+        dominated by the tool's shared false-positive count, so per-type F1
+        tracks type frequency more than detector quality. ``compute_ci`` still
+        gates the expensive bootstrap intervals elsewhere.
+        """
         entries, preds = self._make_entries_preds(20, 0.6)
         result = per_type_metrics(entries, preds)
-        assert "dr_ci_lower" not in result["fabricated_doi"]
-        assert "dr_ci_upper" not in result["fabricated_doi"]
+        assert "dr_ci_lower" in result["fabricated_doi"]
+        assert "dr_ci_upper" in result["fabricated_doi"]
+        assert result["fabricated_doi"]["dr_ci_lower"] <= 0.6
+        assert result["fabricated_doi"]["dr_ci_upper"] >= 0.6
 
     def test_ci_brackets_detection_rate(self):
         """CI lower <= DR <= CI upper for every type."""
