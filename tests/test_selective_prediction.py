@@ -363,6 +363,21 @@ class TestRunsThatAreNotMeasurements:
         """The one with half the null signature and a real result."""
         assert not_a_measurement("harc_with_s2key_dev_public") is None
 
+    def test_the_degenerate_baseline_scores_normally(self):
+        """``always_valid`` predicts VALID at confidence 1.0 for every entry.
+
+        DR 0.0 and FPR 0.0 with no API calls is its correct output, so it is the
+        case a null-signature rule would silently discard. It carries no marker
+        and it ran, so nothing here excludes it: its curve is flat at the base
+        rate, which is the honest description of a constant baseline.
+        """
+        entries = [entry("a", "HALLUCINATED"), entry("b"), entry("c")]
+        preds = {k: pred(k, "VALID", 1.0) for k in ("a", "b", "c")}
+        curve = risk_coverage_curve(entries, preds, run_name="always_valid_dev_public")
+        assert curve.unscoreable is None
+        assert curve.n_scored == 3
+        assert curve.risk_at_full_coverage == pytest.approx(1 / 3)
+
     def test_scoring_a_registered_run_raises(self):
         entries = [entry("a", "HALLUCINATED")]
         preds = {"a": pred("a", "VALID", 0.5)}

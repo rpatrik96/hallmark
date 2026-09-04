@@ -53,13 +53,19 @@ records it as a field, which is the convention to build on; the marker test
 remains only because predictions written before that field exists cannot be
 reclassified, and it retires when those runs are regenerated.
 
+A partially backfilled run keeps everything it did decide and simply loses
+coverage, since coverage is a share of the entry set rather than of the
+predictions returned. Only a run with nothing left after the exclusion is
+refused.
+
 Neither test is reliable in reverse. A historical prediction lacking ``evaluated``
 reads as evaluated, so the four quarantined pre-screening ablations cannot be
 detected here at all; they are named in :data:`NOT_A_MEASUREMENT` instead, and
 scoring one raises. Inferring "never ran" from a rate of 0.0 is not the
 alternative: ``harc_with_s2key_dev_public`` reports ``mean_api_calls`` 0.0 and is
-a real evaluation at coverage 1.0, so the signature would throw away a genuine
-result — the same conflation one level further out.
+a real evaluation at coverage 1.0, and the ``always_valid`` baseline produces
+that signature as its correct output by construction. The rule would discard
+both — the same conflation one level further out.
 """
 
 from __future__ import annotations
@@ -84,7 +90,11 @@ ERROR_FALLBACK_MARKER = "[Error fallback]"
 #: ``harc_with_s2key_dev_public`` is deliberately NOT here. It reports
 #: ``mean_api_calls`` 0.0, which is half the null signature, but it is a real
 #: evaluation at coverage 1.0 with DR 0.209 -- which is exactly why the signature
-#: is not safe to infer from and why this register is a list of names.
+#: is not safe to infer from and why this register is a list of names. The
+#: ``always_valid`` baseline in the registry is the stronger case: it predicts
+#: VALID for every entry at confidence 1.0, so DR 0.0 and FPR 0.0 with no API
+#: calls is its CORRECT output, and a rule that excluded the signature would
+#: throw away the degenerate baseline the benchmark keeps on purpose.
 NOT_A_MEASUREMENT: dict[str, str] = {
     "bibtexupdater_no_prescreening_dev_public": (
         "DR 0.0, FPR 0.0 and mean_api_calls 0.0 over 1,079 entries: fallback_predictions "
