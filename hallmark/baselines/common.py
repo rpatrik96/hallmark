@@ -17,7 +17,13 @@ def fallback_predictions(
 ) -> list[Prediction]:
     """Conservative fallback predictions when a baseline tool fails.
 
-    Returns VALID with confidence=0.5 for all entries.
+    Returns VALID with confidence=0.5 for all entries, marked ``evaluated=False``.
+
+    The label is kept so downstream consumers that expect one keep working. The
+    flag is what stops the result being read as a measurement: a tool that never
+    ran and a tool that checked everything and found nothing wrong both produce
+    detection rate 0.0, and without the flag they are indistinguishable. Four
+    pre-screening ablations shipped as null runs for exactly that reason.
     """
     return [
         Prediction(
@@ -27,6 +33,7 @@ def fallback_predictions(
             reason=reason,
             api_sources_queried=api_sources or [],
             api_calls=api_calls,
+            evaluated=False,
         )
         for e in entries
     ]
@@ -83,6 +90,12 @@ def run_with_prescreening(
                     label="VALID",
                     confidence=0.5,
                     reason=backfill_reason,
+                    # The tool returned nothing for this entry -- it was not in
+                    # the output, or its batch never completed. The label is a
+                    # placeholder so downstream keeps working; the flag is what
+                    # stops it being counted as the tool having checked and
+                    # cleared the entry.
+                    evaluated=False,
                 )
             )
 
