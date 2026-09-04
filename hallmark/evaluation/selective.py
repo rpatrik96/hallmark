@@ -29,15 +29,43 @@ decomposition splits it into reliability (calibration error, lower is better)
 and resolution (discrimination, higher is better) over an irreducible
 uncertainty term, which says which of the two to go and fix.
 
-Error fallbacks
----------------
-Baselines write ``[Error fallback]`` into ``reason`` when an API call failed, and
-those records carry label UNCERTAIN. They are not abstentions — no model decided
-anything — so counting them as such flatters the tool's selective behaviour. They
-are excluded from the curve by default and reported separately, never silently
-dropped: a reader needs to know how much of an abstention rate was never a
-decision at all. In the released v1.2 results these number 9,652, concentrated in
-the crossdomain splits, with none in ``stress_test`` or ``hidden``.
+Records that are not decisions
+------------------------------
+Two different failures produce a prediction no model stands behind, and both are
+excluded from the curve by default, counted, and reported — never silently
+dropped, because a reader needs to know how much of an abstention rate was never
+a decision at all.
+
+**A failed call inside a run that ran.** ``llm_verifier`` and the parallel worker
+write ``[Error fallback]`` into ``reason`` on an API error, a parse failure or an
+unhandled exception, and those records carry label UNCERTAIN. They are not
+abstentions: no model declined, a request failed. 818 such records sit in the
+prediction files under ``results/``, concentrated in the crossdomain and temporal
+supplements — 432 of them in one deepseek-r1 crossdomain run — and none in the
+aggregate results under ``data/``.
+
+**A run that never happened.** ``fallback_predictions`` manufactures a VALID
+prediction at confidence 0.5 for every entry when the tool itself is unavailable,
+and eight baselines use it. These carry no marker and reason ``Tool unavailable``,
+so the marker test above cannot see them: a harc run whose every batch timed out
+enters the curve as a set of confident correct answers. ``Prediction.evaluated``
+records it as a field, which is the convention to build on; the marker test
+remains only because predictions written before that field exists cannot be
+reclassified, and it retires when those runs are regenerated.
+
+A partially backfilled run keeps everything it did decide and simply loses
+coverage, since coverage is a share of the entry set rather than of the
+predictions returned. Only a run with nothing left after the exclusion is
+refused.
+
+Neither test is reliable in reverse. A historical prediction lacking ``evaluated``
+reads as evaluated, so the four quarantined pre-screening ablations cannot be
+detected here at all; they are named in :data:`NOT_A_MEASUREMENT` instead, and
+scoring one raises. Inferring "never ran" from a rate of 0.0 is not the
+alternative: ``harc_with_s2key_dev_public`` reports ``mean_api_calls`` 0.0 and is
+a real evaluation at coverage 1.0, and the ``always_valid`` baseline produces
+that signature as its correct output by construction. The rule would discard
+both — the same conflation one level further out.
 """
 
 from __future__ import annotations
@@ -49,10 +77,92 @@ from hallmark.dataset.schema import BenchmarkEntry, Prediction
 
 ERROR_FALLBACK_MARKER = "[Error fallback]"
 
+#: Runs that are not measurements, by name, with the evidence. A prediction set
+#: written before ``Prediction.evaluated`` existed reads as fully evaluated, so
+#: these cannot be detected and a caller that scores one gets a plausible number
+#: for a tool that never ran. Naming them is the only honest option until they
+#: are re-run.
+#:
+#: Shrink-only, like ``KNOWN_STALE`` in the freshness guard: an entry leaves when
+#: its run is re-run, and ``test_register_names_only_quarantined_runs`` fails if
+#: a named run reappears among the released results.
+#:
+#: ``harc_with_s2key_dev_public`` is deliberately NOT here. It reports
+#: ``mean_api_calls`` 0.0, which is half the null signature, but it is a real
+#: evaluation at coverage 1.0 with DR 0.209 -- which is exactly why the signature
+#: is not safe to infer from and why this register is a list of names. The
+#: ``always_valid`` baseline in the registry is the stronger case: it predicts
+#: VALID for every entry at confidence 1.0, so DR 0.0 and FPR 0.0 with no API
+#: calls is its CORRECT output, and a rule that excluded the signature would
+#: throw away the degenerate baseline the benchmark keeps on purpose.
+NOT_A_MEASUREMENT: dict[str, str] = {
+    "bibtexupdater_no_prescreening_dev_public": (
+        "DR 0.0, FPR 0.0 and mean_api_calls 0.0 over 1,079 entries: fallback_predictions "
+        "firing because the external CLI was not on PATH. Archived to results/failed_runs/."
+    ),
+    "bibtexupdater_no_prescreening_test_public": (
+        "DR 0.0, FPR 0.0 and mean_api_calls 0.0 over 849 entries: the CLI never ran. "
+        "Archived to results/failed_runs/."
+    ),
+    "harc_no_prescreening_dev_public": (
+        "DR 0.0, FPR 0.0 and mean_api_calls 0.0 over 1,079 entries: the CLI never ran. "
+        "Archived to results/failed_runs/."
+    ),
+    "harc_no_prescreening_test_public": (
+        "DR 0.0, FPR 0.0 and mean_api_calls 0.0 over 849 entries: the CLI never ran. "
+        "Archived to results/failed_runs/."
+    ),
+}
+
+
+def not_a_measurement(run_name: str | None) -> str | None:
+    """Why a named run must not be scored, or None if it may be.
+
+    Accepts a run name with or without a ``.json`` suffix, so a caller can pass
+    a result filename straight through.
+    """
+    if not run_name:
+        return None
+    return NOT_A_MEASUREMENT.get(run_name.removesuffix(".json"))
+
 
 def is_error_fallback(pred: Prediction) -> bool:
-    """True when a prediction records an API failure rather than a judgement."""
+    """True when a prediction records an API failure rather than a judgement.
+
+    A marker in prose, which is why it is not the primary test. It is kept for
+    predictions written before ``Prediction.evaluated`` existed, and for the
+    per-entry failures inside a run that did run — a population the flag does
+    not cover, since the flag marks a tool that never ran at all.
+    """
     return ERROR_FALLBACK_MARKER in (pred.reason or "")
+
+
+def is_unevaluated(pred: Prediction) -> bool:
+    """True when the tool never ran on this entry.
+
+    Reads ``Prediction.evaluated``, which ``fallback_predictions`` sets False
+    when a baseline is unavailable. Absent, it defaults True: a prediction
+    written before the field existed cannot be reclassified, and assuming
+    otherwise would silently drop real measurements.
+    """
+    return not getattr(pred, "evaluated", True)
+
+
+def is_not_a_decision(pred: Prediction) -> bool:
+    """True when a prediction carries no judgement, by either mechanism."""
+    return is_unevaluated(pred) or is_error_fallback(pred)
+
+
+def run_made_no_decisions(predictions: dict[str, Prediction] | list[Prediction]) -> bool:
+    """True when a non-empty prediction set contains nothing anyone decided.
+
+    Scoring such a run reports the selective behaviour of a tool that never
+    made a choice. An EMPTY set is not this: having nothing to evaluate is a
+    different situation from having evaluated nothing. The narrower run-level
+    predicate on the flag alone is ``metrics.run_evaluated_nothing``.
+    """
+    preds = list(predictions.values()) if isinstance(predictions, dict) else list(predictions)
+    return bool(preds) and all(is_not_a_decision(p) for p in preds)
 
 
 def p_hallucinated(pred: Prediction) -> float:
@@ -106,6 +216,14 @@ class RiskCoverageCurve:
     n_scored: int
     n_error_fallbacks: int
     n_missing: int
+    #: Predictions the tool never made, counted separately from the failures it
+    #: recorded while running: they say different things about a run.
+    n_unevaluated: int = 0
+    #: Set when the curve must not be read as a measurement, with the reason.
+    #: Only ever populated under ``strict=False``; strict callers get an
+    #: exception instead, since a number that must not be used is worse than no
+    #: number when nobody checks a field.
+    unscoreable: str | None = None
 
     @property
     def risk_at_full_coverage(self) -> float:
@@ -136,7 +254,9 @@ def risk_coverage_curve(
     entries: list[BenchmarkEntry],
     predictions: dict[str, Prediction] | list[Prediction],
     *,
-    exclude_error_fallbacks: bool = True,
+    exclude_non_decisions: bool = True,
+    run_name: str | None = None,
+    strict: bool = True,
 ) -> RiskCoverageCurve:
     """Risk as a function of coverage, rejecting least-confident predictions first.
 
@@ -151,17 +271,72 @@ def risk_coverage_curve(
     Args:
         entries: Benchmark entries (ground truth).
         predictions: Tool predictions, keyed by bibtex_key or parallel to entries.
-        exclude_error_fallbacks: Drop records marking an API failure. These are
-            not abstentions and counting them as such flatters the curve.
+        exclude_non_decisions: Drop records that carry no judgement — a recorded
+            API failure, or an entry the tool never ran on. Neither is an
+            abstention, and counting them as such flatters the curve.
+        run_name: Name of the run being scored, checked against
+            :data:`NOT_A_MEASUREMENT`. Omitting it skips that check.
+        strict: Raise when the run cannot be scored. Set False in a batch, where
+            one dead arm should not take the whole comparison down: the curve
+            comes back with ``unscoreable`` set and every figure on it meaningless.
+
+    Raises:
+        ValueError: Under ``strict``, when the run is a registered null run or
+            when every prediction was excluded. AURC over an empty curve is 0.0,
+            which reads as a flawless selective predictor, so a run that decided
+            nothing must not be quietly scorable.
     """
+    registered = not_a_measurement(run_name)
+    if registered:
+        if strict:
+            raise ValueError(f"{run_name} is not a measurement: {registered}")
+        return RiskCoverageCurve(
+            points=[],
+            aurc=0.0,
+            coverage_range=(0.0, 0.0),
+            n_scored=0,
+            n_error_fallbacks=0,
+            n_missing=0,
+            unscoreable=registered,
+        )
+
     pairs, missing = _paired(entries, predictions)
 
     n_fallback = sum(1 for _, p in pairs if is_error_fallback(p))
-    if exclude_error_fallbacks:
-        pairs = [(e, p) for e, p in pairs if not is_error_fallback(p)]
+    n_unevaluated = sum(1 for _, p in pairs if is_unevaluated(p))
+    if exclude_non_decisions:
+        had_pairs = bool(pairs)
+        pairs = [(e, p) for e, p in pairs if not is_not_a_decision(p)]
+        if had_pairs and not pairs:
+            decided_nothing = (
+                f"every prediction was excluded as a non-decision "
+                f"({n_unevaluated} unevaluated, {n_fallback} error fallbacks): this run "
+                "decided nothing and its AURC would be 0.0, the score of a perfect "
+                "selective predictor. Re-run the tool, or exclude it from the comparison."
+            )
+            if strict:
+                raise ValueError(decided_nothing)
+            return RiskCoverageCurve(
+                points=[],
+                aurc=0.0,
+                coverage_range=(0.0, 0.0),
+                n_scored=0,
+                n_error_fallbacks=n_fallback,
+                n_missing=missing,
+                n_unevaluated=n_unevaluated,
+                unscoreable=decided_nothing,
+            )
 
     if not pairs:
-        return RiskCoverageCurve([], 0.0, (0.0, 0.0), 0, n_fallback, missing)
+        return RiskCoverageCurve(
+            points=[],
+            aurc=0.0,
+            coverage_range=(0.0, 0.0),
+            n_scored=0,
+            n_error_fallbacks=n_fallback,
+            n_missing=missing,
+            n_unevaluated=n_unevaluated,
+        )
 
     scored = sorted(pairs, key=lambda ep: rejection_score(ep[1]), reverse=True)
 
@@ -195,6 +370,7 @@ def risk_coverage_curve(
         n_scored=len(scored),
         n_error_fallbacks=n_fallback,
         n_missing=missing,
+        n_unevaluated=n_unevaluated,
     )
 
 
@@ -319,6 +495,9 @@ class CalibrationReport:
     per_tier_bins: dict[int, list[ReliabilityBin]] = field(default_factory=dict)
     n_flagged: int = 0
     n_error_fallbacks: int = 0
+    n_unevaluated: int = 0
+    #: Set when the report must not be read as a measurement, with the reason.
+    unscoreable: str | None = None
 
 
 def calibration_report(
@@ -326,7 +505,9 @@ def calibration_report(
     predictions: dict[str, Prediction] | list[Prediction],
     *,
     n_bins: int = 10,
-    exclude_error_fallbacks: bool = True,
+    exclude_non_decisions: bool = True,
+    run_name: str | None = None,
+    strict: bool = True,
 ) -> CalibrationReport:
     """Reliability and Brier decomposition, overall and where a decision costs something.
 
@@ -339,10 +520,24 @@ def calibration_report(
     included in every tier's calibration, since a tool's false-positive
     behaviour is part of its calibration at any difficulty.
     """
+    registered = not_a_measurement(run_name)
+    if registered:
+        if strict:
+            raise ValueError(f"{run_name} is not a measurement: {registered}")
+        empty = brier_decomposition([], n_bins)
+        return CalibrationReport(
+            overall=empty,
+            overall_bins=[],
+            flagged=empty,
+            flagged_bins=[],
+            unscoreable=registered,
+        )
+
     pairs_all, _ = _paired(entries, predictions)
     n_fallback = sum(1 for _, p in pairs_all if is_error_fallback(p))
-    if exclude_error_fallbacks:
-        pairs_all = [(e, p) for e, p in pairs_all if not is_error_fallback(p)]
+    n_unevaluated = sum(1 for _, p in pairs_all if is_unevaluated(p))
+    if exclude_non_decisions:
+        pairs_all = [(e, p) for e, p in pairs_all if not is_not_a_decision(p)]
 
     scored = [(e, p) for e, p in pairs_all if p.label != "UNCERTAIN"]
 
@@ -368,6 +563,7 @@ def calibration_report(
         per_tier_bins=per_tier_bins,
         n_flagged=len(flagged),
         n_error_fallbacks=n_fallback,
+        n_unevaluated=n_unevaluated,
     )
 
 
@@ -382,11 +578,17 @@ def abstention_breakdown(
     preds = list(predictions.values()) if isinstance(predictions, dict) else list(predictions)
     uncertain = [p for p in preds if p.label == "UNCERTAIN"]
     fallbacks = sum(1 for p in uncertain if is_error_fallback(p))
+    # Counted over all predictions, not the UNCERTAIN ones: an unevaluated entry
+    # keeps label VALID by design, so it never appears in this population and a
+    # reader would otherwise see an abstention rate of zero on a run that never
+    # happened.
+    unevaluated = sum(1 for p in preds if is_unevaluated(p))
     return {
         "n_predictions": len(preds),
         "n_uncertain": len(uncertain),
         "n_error_fallbacks": fallbacks,
         "n_genuine_abstentions": len(uncertain) - fallbacks,
+        "n_unevaluated": unevaluated,
     }
 
 
@@ -418,6 +620,8 @@ def format_reliability_diagram(bins: list[ReliabilityBin], width: int = 40) -> s
 
 def format_risk_coverage(curve: RiskCoverageCurve, n_rows: int = 10) -> str:
     """Render a risk-coverage curve as a small table, sampled evenly."""
+    if curve.unscoreable:
+        return f"(not a measurement: {curve.unscoreable})"
     if not curve.points:
         return "(no scored predictions)"
     step = max(1, len(curve.points) // n_rows)
@@ -433,6 +637,7 @@ def format_risk_coverage(curve: RiskCoverageCurve, n_rows: int = 10) -> str:
             if curve.n_error_fallbacks
             else ""
         )
+        + (f", {curve.n_unevaluated} never evaluated" if curve.n_unevaluated else "")
         + (f", {curve.n_missing} missing" if curve.n_missing else "")
         + ")",
         f"{'coverage':>9}  {'risk':>7}  {'covered':>8}  {'errors':>7}",
@@ -444,6 +649,7 @@ def format_risk_coverage(curve: RiskCoverageCurve, n_rows: int = 10) -> str:
 
 __all__ = [
     "ERROR_FALLBACK_MARKER",
+    "NOT_A_MEASUREMENT",
     "BrierDecomposition",
     "CalibrationReport",
     "ReliabilityBin",
@@ -456,7 +662,11 @@ __all__ = [
     "format_reliability_diagram",
     "format_risk_coverage",
     "is_error_fallback",
+    "is_not_a_decision",
+    "is_unevaluated",
+    "not_a_measurement",
     "p_hallucinated",
     "rejection_score",
     "risk_coverage_curve",
+    "run_made_no_decisions",
 ]

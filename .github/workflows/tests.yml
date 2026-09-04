@@ -54,6 +54,15 @@ jobs:
         #
         # --version was still v1.0 after the data moved to data/v1.2, so the
         # guard was resolving split files under a directory the rename removed.
+        #
+        # The same invocation now also checks the derived tables under tables/,
+        # which had no guard at all: they are arithmetic over these result JSONs,
+        # so a re-run leaves them describing numbers that no longer exist.
+        # base_rate_precision.csv reported a doi_only false-positive rate of
+        # 0.2788 against the 0.0417 its source run now records. Tables are checked
+        # against recorded input hashes where a generator writes them and against
+        # the runs their tool column names otherwise; KNOWN_STALE_TABLES carries
+        # the known debt and may only shrink, like KNOWN_STALE above.
         run: python scripts/check_results_freshness.py --results-dir data/v1.2/baseline_results --data-dir data --version v1.2
 
       - name: Run tests

@@ -121,6 +121,14 @@ def _is_null_run(data: dict) -> bool:
     CLI was missing: the wrapper returns all-VALID for every entry and the
     harness scores it like any other result. Four such files shipped as the
     pre-screening ablations for bibtexupdater and harc.
+
+    **The conjunction is load-bearing, not belt-and-braces.** ``mean_api_calls``
+    of 0.0 is uninformative rather than diagnostic for every HaRC row, because
+    that wrapper never records API calls at all:
+    ``harc_with_s2key_dev_public.json`` reports 0.0 while being a real
+    evaluation at full coverage with DR 0.209. Requiring a zero detection rate
+    AND a zero false-positive rate alongside it is the only thing standing
+    between this guard and a genuine result.
     """
     return (
         data.get("detection_rate") == 0.0
@@ -128,6 +136,20 @@ def _is_null_run(data: dict) -> bool:
         and (data.get("mean_api_calls") or 0.0) == 0.0
         and (data.get("num_entries") or 0) > 0
     )
+
+
+#: Baselines whose null shape is the point rather than a failure. ``always_valid``
+#: predicts VALID for every entry and queries nothing, so it produces DR 0.0,
+#: FPR 0.0 and zero API calls BY DESIGN -- it is the degenerate floor the other
+#: baselines are measured against, and excluding it would delete the reference
+#: point that makes the rest interpretable.
+#:
+#: This is why the shape below is a quarantine gate and not a classifier: it says
+#: "a null-shaped result may not sit among real ones", and the fix is to move it
+#: or re-run it, never to reclassify it silently. Distinguishing a tool that
+#: evaluated everything and found nothing from one that evaluated nothing needs a
+#: recorded flag, not a signature.
+DEGENERATE_BASELINES = frozenset({"always_valid", "doi_presence_heuristic"})
 
 
 def test_no_result_outside_failed_runs_is_a_null_run():
@@ -142,8 +164,12 @@ def test_no_result_outside_failed_runs_is_a_null_run():
             data = json.loads(path.read_text())
         except json.JSONDecodeError:
             continue
-        if isinstance(data, dict) and _is_null_run(data):
-            offenders.append(str(path.relative_to(_REPO_ROOT)))
+        if not isinstance(data, dict) or not _is_null_run(data):
+            continue
+        tool = str(data.get("tool_name") or path.stem)
+        if any(name in tool for name in DEGENERATE_BASELINES):
+            continue  # null by design, not by failure
+        offenders.append(str(path.relative_to(_REPO_ROOT)))
     assert searched > 0, "no released results scanned — the guard would pass vacuously"
     assert not offenders, (
         f"null run(s) sitting among real results: {offenders}. DR=0, FPR=0 and no API "

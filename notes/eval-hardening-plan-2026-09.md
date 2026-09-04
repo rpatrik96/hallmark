@@ -1,5 +1,11 @@
 # Plan: eval hardening and bibtexupdater robustness (September 2026)
 
+> **Superseded as a status document.** This is the plan as written on the
+> morning of 2026-09-04, kept because it records what was believed before the
+> work was done and several of its claims turned out wrong. For what was
+> actually found, fixed, and left open, see
+> [`eval-hardening-2026-09-04.md`](eval-hardening-2026-09-04.md).
+
 Inputs: two peer sessions that ran HALLMARK's own cascade over 5,043 real
 references from 267 NeurIPS-workshop submissions, plus a code audit of the
 evaluation layer and the tool. Everything marked **verified** below was checked
