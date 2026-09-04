@@ -46,10 +46,12 @@ DEFAULT_PREVALENCES: tuple[float, ...] = (0.001, 0.005, 0.01, 0.05, 0.20, 0.625)
 #: submissions, using HALLMARK's own cascade with an agentic Stage 2. Stage 1
 #: located a matching record for every reference it ruled on. After
 #: re-adjudication and hand audit, 11 accusations stood and none was a work that
-#: does not exist: 3 were corrupt OpenAlex index records (correct DOI, correct
-#: author list, wrong title), 2 were false positives refuted against an
-#: independent index, 2 were genuine metadata errors on real works, and 2 were
-#: unverifiable by construction (author "Anonymous", under review).
+#: does not exist: 3 corrupt OpenAlex index records (correct DOI, correct author
+#: list, wrong title), 3 real papers whose DOIs were never registered, 2 real
+#: works in humanities venues the indexes do not cover, 2 unverifiable by
+#: construction (author "Anonymous", under review), and 1 whose existence was
+#: proved by the rebuttal naming it in its own title, read as absence.
+#: Stage-1 figures are final at bibtex-updater 1.10.3 and will not be refreshed.
 WILD_CORPUS_NOTE = (
     "wild corpus: 5,043 real references, zero fabricated works found; "
     "observed prevalence indistinguishable from zero"

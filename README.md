@@ -482,13 +482,20 @@ numbers already in `data/v1.2/baseline_results/`.
 We ran HALLMARK's own `cascade_db_diagnosis` with an agentic Stage 2 over 5,043
 deduplicated references from 267 real NeurIPS-workshop submissions. Stage 1
 located a matching record for every reference it ruled on, and **not one
-fabricated work was found in 5,043 references.** Eleven accusations survived
-re-adjudication and hand audit: three were corrupt OpenAlex index records
-carrying the correct DOI and correct author list under a wrong title, two were
-false positives refuted against an independent index, two were genuine metadata
-errors on real works, and two were unverifiable by construction (author
-`Anonymous`, under review). None was a citation to something that does not
-exist.
+fabricated work was found in 5,043 references.** Of those, 3,244 were confirmed
+outright, 920 differed from the indexed record only in the venue string, 187
+carried some other metadata difference, 431 were flagged and 261 abstained.
+
+Eleven accusations survived re-adjudication and hand audit, and none was a
+citation to something that does not exist:
+
+| n | what it actually was |
+|---|---|
+| 3 | corrupt OpenAlex index records — correct DOI, correct author list, wrong title |
+| 3 | real papers whose DOIs were never registered |
+| 2 | real works in humanities venues the indexes do not cover |
+| 2 | unverifiable by construction (author `Anonymous`, under review) |
+| 1 | a work whose existence was proved by the rebuttal that names it in its own title, read as evidence of absence |
 
 So on real bibliographies the instrument's main output is false positives, and
 the flag list is dominated by citation-style artefacts and tool bugs rather than
