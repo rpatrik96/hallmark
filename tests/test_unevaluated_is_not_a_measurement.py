@@ -96,3 +96,52 @@ class TestPartialResultsSurvive:
         ]
         assert run_evaluated_nothing(preds) is False
         assert len(preds) == 12
+
+
+def _base() -> dict:
+    """Minimal required fields for an EvaluationResult."""
+    return dict(
+        tool_name="t",
+        split_name="s",
+        num_entries=10,
+        num_hallucinated=5,
+        num_valid=5,
+        detection_rate=0.0,
+        false_positive_rate=0.0,
+        f1_hallucination=0.0,
+        tier_weighted_f1=0.0,
+    )
+
+
+class TestRunLevelTriState:
+    """``num_evaluated`` distinguishes three states; the entry flag only two.
+
+    ``Prediction.evaluated`` defaults True, so a prediction deserialised from a
+    file written before this change reads as evaluated. That is a real limit and
+    it is why historical nulls must be excluded by name rather than detected.
+
+    At run level the distinction survives, because ``num_evaluated`` defaults to
+    None rather than to a number: None means the run predates the field, 0 means
+    the run ran and evaluated nothing. A reproducer reading a results JSON can
+    tell those apart, which is the level where it matters.
+    """
+
+    def test_a_result_predating_the_field_reads_as_none(self):
+        from hallmark.dataset.schema import EvaluationResult
+
+        assert EvaluationResult(**_base()).num_evaluated is None
+
+    def test_a_null_run_reads_as_zero_not_none(self):
+        from hallmark.dataset.schema import EvaluationResult
+
+        assert EvaluationResult(**_base(), num_evaluated=0).num_evaluated == 0
+
+    def test_the_entry_flag_cannot_make_that_distinction(self):
+        from hallmark.dataset.schema import Prediction
+
+        p = Prediction(bibtex_key="k", label="VALID")
+        historical = {k: v for k, v in p.to_dict().items() if k != "evaluated"}
+        assert Prediction(**historical).evaluated is True, (
+            "documented limitation: absence of the key reads as evaluated, so "
+            "historical results must be excluded by name, never detected"
+        )

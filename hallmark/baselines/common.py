@@ -90,6 +90,12 @@ def run_with_prescreening(
                     label="VALID",
                     confidence=0.5,
                     reason=backfill_reason,
+                    # The tool returned nothing for this entry -- it was not in
+                    # the output, or its batch never completed. The label is a
+                    # placeholder so downstream keeps working; the flag is what
+                    # stops it being counted as the tool having checked and
+                    # cleared the entry.
+                    evaluated=False,
                 )
             )
 
