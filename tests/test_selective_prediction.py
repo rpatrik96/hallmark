@@ -9,10 +9,13 @@ later refactor is most likely to quietly undo.
 
 from __future__ import annotations
 
+import pathlib
+
 import pytest
 
 from hallmark.dataset.schema import BenchmarkEntry, Prediction
 from hallmark.evaluation.selective import (
+    NOT_A_MEASUREMENT,
     abstention_breakdown,
     brier_decomposition,
     calibration_report,
@@ -21,6 +24,7 @@ from hallmark.evaluation.selective import (
     format_risk_coverage,
     is_error_fallback,
     is_unevaluated,
+    not_a_measurement,
     p_hallucinated,
     rejection_score,
     risk_coverage_curve,
@@ -337,3 +341,61 @@ class TestUnevaluatedIsNotADecision:
         preds = {"a": pred("a", "HALLUCINATED", 0.9), "b": unrun("b")}
         out = format_risk_coverage(risk_coverage_curve(entries, preds))
         assert "1 never evaluated" in out
+
+
+class TestRunsThatAreNotMeasurements:
+    """Named runs the flag cannot catch, because they predate it.
+
+    A prediction set written before ``Prediction.evaluated`` reads as fully
+    evaluated, so the four quarantined pre-screening ablations would score as
+    real arms. The register is the honest option until they are re-run;
+    inferring the null signature is not, and ``harc_with_s2key_dev_public``
+    is why: it reports ``mean_api_calls`` 0.0 and is a real evaluation.
+    """
+
+    def test_lookup_tolerates_a_filename(self):
+        name = "harc_no_prescreening_dev_public"
+        assert not_a_measurement(name) == not_a_measurement(f"{name}.json")
+        assert not_a_measurement("bibtexupdater_dev_public") is None
+        assert not_a_measurement(None) is None
+
+    def test_a_real_run_is_not_registered(self):
+        """The one with half the null signature and a real result."""
+        assert not_a_measurement("harc_with_s2key_dev_public") is None
+
+    def test_scoring_a_registered_run_raises(self):
+        entries = [entry("a", "HALLUCINATED")]
+        preds = {"a": pred("a", "VALID", 0.5)}
+        with pytest.raises(ValueError, match="not a measurement"):
+            risk_coverage_curve(entries, preds, run_name="harc_no_prescreening_dev_public")
+        with pytest.raises(ValueError, match="not a measurement"):
+            calibration_report(entries, preds, run_name="harc_no_prescreening_dev_public.json")
+
+    def test_batch_callers_get_it_marked_instead(self):
+        """One dead arm must not take a whole comparison down."""
+        entries = [entry("a", "HALLUCINATED")]
+        preds = {"a": pred("a", "VALID", 0.5)}
+        curve = risk_coverage_curve(
+            entries, preds, run_name="harc_no_prescreening_dev_public", strict=False
+        )
+        assert curve.unscoreable
+        assert curve.points == []
+        assert "not a measurement" in format_risk_coverage(curve)
+
+    def test_a_run_that_decided_nothing_can_also_be_marked_rather_than_raised(self):
+        entries = [entry("a"), entry("b")]
+        preds = {"a": unrun("a"), "b": unrun("b")}
+        curve = risk_coverage_curve(entries, preds, strict=False)
+        assert curve.unscoreable and curve.n_unevaluated == 2
+
+    def test_register_names_only_quarantined_runs(self):
+        """Shrink-only: a re-run arm comes back to the results dir, and then the
+        entry is a false record rather than a caveat."""
+        results_dir = pathlib.Path(__file__).resolve().parent.parent / "data/v1.2/baseline_results"
+        if not results_dir.is_dir():
+            pytest.skip("real baseline_results dir not present")
+        back = sorted(n for n in NOT_A_MEASUREMENT if (results_dir / f"{n}.json").exists())
+        assert not back, (
+            f"registered as not a measurement but present among the released results: {back}. "
+            "If they were re-run, remove them from NOT_A_MEASUREMENT."
+        )
