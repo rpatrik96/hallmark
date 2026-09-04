@@ -28,6 +28,16 @@ still applies to it.
 The split scored by a result is taken from its ``split_name`` field, falling
 back to the ``<tool>_<split>.json`` filename suffix.
 
+Derived tables are the layer above, and had no guard at all until
+``check_table_freshness`` was added here: the CSVs under ``tables/`` are
+arithmetic over these result JSONs, so a re-run leaves them describing numbers
+that no longer exist. ``tables/base_rate_precision.csv`` shipped a doi_only
+false-positive rate of 0.2788 against the 0.0417 its source run now reports, and
+its precision column -- the one number a deployed user experiences directly --
+was computed from it. The mechanism lives in
+:mod:`hallmark.evaluation.table_provenance`; this script is where CI calls it,
+so both layers fail in one place.
+
 Used as a library (``check_freshness``) by the pytest guard and as a CLI in CI:
 
     python scripts/check_results_freshness.py \
@@ -52,12 +62,14 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from hallmark.dataset.loader import DEFAULT_DATA_DIR, SPLIT_PATHS, load_split
+from hallmark.evaluation.table_provenance import TableReport, check_tables
 from hallmark.evaluation.validate import compute_sha256
 
 logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
 logger = logging.getLogger(__name__)
 
 DEFAULT_RESULTS_DIR = Path("data/v1.2/baseline_results")
+DEFAULT_TABLES_DIR = Path("tables")
 
 #: Results known to be stale, with the reason. CI fails on anything stale that is
 #: NOT listed here, so a new regression is caught immediately while a known debt
@@ -72,6 +84,33 @@ KNOWN_STALE: dict[str, str] = {
         "a Semantic Scholar key to re-run."
     ),
 }
+
+
+#: Generated tables known to be stale, with the reason. Same contract as
+#: KNOWN_STALE above and the same ratchet: a table leaves this dict when it is
+#: regenerated, never by editing the reason.
+KNOWN_STALE_TABLES: dict[str, str] = {
+    "base_rate_precision.csv": (
+        "its six doi_only_test_public rows predate the transient-HTTP-202 fix: DR 0.3873 "
+        "and FPR 0.2788 against the current run's 0.1908 and 0.0417, with precision and "
+        "flags_per_true_finding derived from them. Regenerate with "
+        "scripts/compute_base_rate_precision.py once the doi_only re-run is on the branch "
+        "that carries it."
+    ),
+}
+
+
+@dataclass
+class TableFreshnessResult:
+    """Aggregate freshness verdict across the generated tables."""
+
+    passed: bool
+    reports: list[TableReport] = field(default_factory=list)
+    errors: list[str] = field(default_factory=list)
+
+    @property
+    def stale_tables(self) -> list[str]:
+        return [r.table for r in self.reports if r.is_stale]
 
 
 @dataclass
@@ -251,9 +290,73 @@ def check_freshness(
     return FreshnessResult(passed=passed, reports=reports, errors=result_errors)
 
 
+def check_table_freshness(
+    tables_dir: str | Path = DEFAULT_TABLES_DIR,
+    results_dir: str | Path = DEFAULT_RESULTS_DIR,
+    *,
+    repo_root: str | Path | None = None,
+) -> TableFreshnessResult:
+    """Check that every generated table still agrees with the results it came from.
+
+    Args:
+        tables_dir: Directory of generated tables.
+        results_dir: Directory of the result JSONs they derive from.
+        repo_root: Root that recorded provenance paths are relative to.
+
+    Returns:
+        :class:`TableFreshnessResult`. ``passed`` is True only when nothing is
+        stale outside :data:`KNOWN_STALE_TABLES` and no exemption has gone
+        obsolete.
+    """
+    tables_dir = Path(tables_dir)
+    if not tables_dir.is_dir():
+        return TableFreshnessResult(
+            passed=False, errors=[f"Tables directory not found: {tables_dir}"]
+        )
+
+    reports = check_tables(tables_dir, results_dir, repo_root=repo_root)
+    errors: list[str] = []
+    for name in KNOWN_STALE_TABLES:
+        if any(r.table == name and not r.is_stale for r in reports):
+            errors.append(
+                f"{name}: listed in KNOWN_STALE_TABLES but is now fresh — "
+                "remove it from the register"
+            )
+    unexpected = [r for r in reports if r.is_stale and r.table not in KNOWN_STALE_TABLES]
+    return TableFreshnessResult(
+        passed=not errors and not unexpected, reports=reports, errors=errors
+    )
+
+
+def _report_tables(result: TableFreshnessResult) -> None:
+    """Log the table verdicts in the same vocabulary as the result verdicts."""
+    for report in result.reports:
+        if report.is_stale:
+            logger.error("STALE table %s:", report.table)
+            for reason in report.reasons:
+                logger.error("    - %s", reason)
+        elif report.unverifiable:
+            logger.warning("unverifiable table %s: %s", report.table, "; ".join(report.reasons))
+        else:
+            logger.info("fresh table %s", report.table)
+    for err in result.errors:
+        logger.error("ERROR: %s", err)
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--results-dir", type=Path, default=DEFAULT_RESULTS_DIR)
+    parser.add_argument(
+        "--tables-dir",
+        type=Path,
+        default=DEFAULT_TABLES_DIR,
+        help="Directory of generated tables to check against the results (default: tables/).",
+    )
+    parser.add_argument(
+        "--skip-tables",
+        action="store_true",
+        help="Check result JSONs only, leaving derived tables unchecked.",
+    )
     parser.add_argument("--version", default="v1.2")
     parser.add_argument("--data-dir", type=str, default=None)
     parser.add_argument(
@@ -268,6 +371,7 @@ def main() -> None:
         version=args.version,
         data_dir=args.data_dir,
     )
+    tables = None if args.skip_tables else check_table_freshness(args.tables_dir, args.results_dir)
 
     for report in result.reports:
         if report.is_stale:
@@ -287,8 +391,11 @@ def main() -> None:
     for err in result.errors:
         logger.error("ERROR: %s", err)
 
+    if tables is not None:
+        _report_tables(tables)
+
     unverifiable = [r.result_file for r in result.reports if r.unverifiable]
-    if result.passed:
+    if result.passed and (tables is None or tables.passed):
         known = [f for f in result.stale_files if f in KNOWN_STALE]
         verified = len(result.reports) - len(unverifiable)
         if known:
@@ -306,6 +413,23 @@ def main() -> None:
             verified,
             len(unverifiable),
         )
+        if tables is not None:
+            known_tables = [t for t in tables.stale_tables if t in KNOWN_STALE_TABLES]
+            unchecked = [r.table for r in tables.reports if r.unverifiable]
+            if known_tables:
+                logger.warning(
+                    "%d table(s) stale but registered in KNOWN_STALE_TABLES, pending "
+                    "regeneration: %s",
+                    len(known_tables),
+                    ", ".join(known_tables),
+                )
+            logger.info(
+                "Tables: %d of %d checked against their inputs, %d unverifiable "
+                "(no recorded provenance — the generator has not called record_table yet).",
+                len(tables.reports) - len(unchecked),
+                len(tables.reports),
+                len(unchecked),
+            )
         sys.exit(0)
 
     stale = result.stale_files
@@ -320,6 +444,14 @@ def main() -> None:
         len(unexpected),
         " + errors" if result.errors else "",
     )
+    if tables is not None and not tables.passed:
+        unexpected_tables = [t for t in tables.stale_tables if t not in KNOWN_STALE_TABLES]
+        logger.error(
+            "Table freshness FAILED: %d unexpected stale table(s)%s%s.",
+            len(unexpected_tables),
+            f" ({', '.join(unexpected_tables)})" if unexpected_tables else "",
+            " + errors" if tables.errors else "",
+        )
     if args.warn_only:
         logger.warning("--warn-only set: exiting 0 despite staleness.")
         sys.exit(0)

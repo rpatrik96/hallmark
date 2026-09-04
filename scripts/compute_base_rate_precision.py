@@ -33,6 +33,8 @@ import csv
 import json
 from pathlib import Path
 
+from hallmark.evaluation.table_provenance import record_table
+
 REPO_ROOT = Path(__file__).resolve().parent.parent
 TABLES_DIR = REPO_ROOT / "tables"
 OUTPUT_CSV = TABLES_DIR / "base_rate_precision.csv"
@@ -146,6 +148,16 @@ def main() -> int:
         writer = csv.DictWriter(fh, fieldnames=list(rows[0].keys()))
         writer.writeheader()
         writer.writerows(rows)
+
+    # Record which runs this table was computed from, so the freshness guard can
+    # tell later that it still describes them. Without it a re-run leaves the
+    # table saying a tool flags seven times more than it does, and nothing says so.
+    record_table(
+        args.output,
+        [args.results_dir / f"{name}.json" for name in sorted(results)],
+        generator="scripts/compute_base_rate_precision.py",
+        repo_root=REPO_ROOT,
+    )
 
     header = "  ".join(f"{p * 100:>7.1f}%" for p in DEFAULT_PREVALENCES)
     print(f"Precision at assumed prevalence ({args.split})")
