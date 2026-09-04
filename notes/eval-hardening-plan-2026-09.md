@@ -498,3 +498,65 @@ data rather than curated incidents.
   `scripts/ingest_walters_wilder.py`, untracked and not ignored, so the ingest is
   not reproducible by a third party. It is CC BY 4.0; commit it with attribution
   or document the download URL.
+
+---
+
+## Status — 2026-09-04
+
+Committed as `6b1abd8`: all four Tier 0 metric fixes plus the provenance fields,
+with 11 regression tests in `tests/test_metric_correctness_regressions.py`. Nine
+of the eleven fail against the previous code; the other two are sanity guards on
+behaviour that was already right. Suite is 1,116 passing, ruff and mypy clean.
+
+Two corrections to what is written above, both found while implementing.
+
+`split_name` is present in 46 of 47 reference results — the earlier claim that it
+was missing came from reading the key `split` rather than `split_name`. Only
+`tool_version` and a run timestamp were genuinely absent, and both are now on
+`EvaluationResult` alongside `split_sha256`.
+
+The released results are also not as detached from the shipped data as feared.
+`llm_openrouter_deepseek_r1_dev_public.json` and the v3 file both record
+n=1119, 606 hallucinated, 513 valid, matching `data/v1.0/dev_public.jsonl`
+exactly, and both reproduce to three decimals when recomputed from the shipped
+predictions. The divergence is between `results/` and
+`data/v1.0/baseline_results/`, not between the released directory and the data.
+`results/llm_openrouter_claude_sonnet_4_6_dev_public_predictions.jsonl` is a
+different run from the one behind the released Sonnet numbers (recomputing gives
+DR 0.916 against the released 0.781), so the two directories hold different runs
+under the same names.
+
+### What the fixes move, measured
+
+Detection rate, FPR and F1 are unchanged — verified by recomputing DeepSeek-R1
+and DeepSeek-V3 on `dev_public` and matching the released values to three
+decimals. Coverage now falls below 1.0 wherever a tool abstained (0.984 and
+0.981 on the two runs that have UNCERTAIN predictions), which is the intended
+change.
+
+Per-type metrics move a great deal, and the direction needs a decision. With the
+valid entries borrowed into each type's denominator, DeepSeek-R1's per-type F1
+falls from a 0.844–1.000 band to 0.129–0.318, and every type now reports the
+tool's overall FPR of 0.623 rather than 0.000. The new numbers are correct, but
+with roughly 30–120 hallucinated entries per type against 513 valid ones,
+precision is dominated by the shared false-positive count, so per-type F1 now
+largely tracks how common a type is rather than how well the tool handles it.
+
+That is an argument for reporting per-type **detection rate with its Wilson
+interval** as the primary per-type number — `per_type_metrics(compute_ci=True)`
+already computes it — and treating the corrected F1 and FPR as secondary, or
+dropping those two columns entirely. Reporting FPR 0.000 and a deterministic
+`2·DR/(1+DR)` was never an option; which of the two replacements to publish is.
+
+### Next, in order
+
+1. Add `tool_version`, `split_sha256` and `run_timestamp` to the writers that
+   emit reference results, and make `validate-results --strict` require them.
+2. Replace the mtime arm of `check_results_freshness.py` with the recorded split
+   hash, then drop `--warn-only` from `.github/workflows/tests.yml:48` and the
+   `xfail` at `tests/test_results_freshness.py:280`.
+3. Reconcile `results/` against `data/v1.0/baseline_results/` and retire one.
+4. Regenerate the reference results, the README table and the site from one run.
+5. Base-rate/precision table and the wild-corpus case study (Tier 1.1, Tier 4).
+6. bibtexupdater: venue abstention, ISSN identity, and the `preprint_only`
+   calibration polarity (Tier 3, items 1 and 3).
