@@ -451,6 +451,66 @@ See also:
 - [GPTZero Hallucination Detector](https://gptzero.me/hallucination-detector) — commercial API for citation verification
 
 
+## What these numbers mean on a real bibliography
+
+`test_public` is 62.5% hallucinated by construction, and that is the operating
+point every number above is measured at. Detection rate and false-positive rate
+are properties of a detector and do not move with prevalence, but **precision
+does** — and precision is what a user actually experiences, because it is the
+share of the flags handed to them that are real. A tool can therefore post an
+honest 99% detection rate at a 16% false-positive rate and still hand a user
+mostly false accusations.
+
+Holding each tool's measured DR and FPR fixed and sweeping the assumed
+prevalence (`python scripts/compute_base_rate_precision.py`, full table in
+[`tables/base_rate_precision.csv`](tables/base_rate_precision.csv)):
+
+| assumed prevalence | cascade precision | flags read per true finding |
+|---|---|---|
+| 0.1% | 0.6% | 162 |
+| 1% | 5.9% | 17 |
+| 5% | 24.6% | 4.1 |
+| 20% | 60.8% | 1.6 |
+| **62.5%** (this benchmark) | **91.2%** | **1.1** |
+
+The benchmark's own prevalence is the only point on that curve where the
+instrument looks good, and no arithmetic here is new — it is Bayes' rule over
+numbers already in `data/v1.2/baseline_results/`.
+
+### The wild base rate is not 62.5%
+
+We ran HALLMARK's own `cascade_db_diagnosis` with an agentic Stage 2 over 5,043
+deduplicated references from 267 real NeurIPS-workshop submissions. Stage 1
+located a matching record for every reference it ruled on, and **not one
+fabricated work was found in 5,043 references.** Eleven accusations survived
+re-adjudication and hand audit: three were corrupt OpenAlex index records
+carrying the correct DOI and correct author list under a wrong title, two were
+false positives refuted against an independent index, two were genuine metadata
+errors on real works, and two were unverifiable by construction (author
+`Anonymous`, under review). None was a citation to something that does not
+exist.
+
+So on real bibliographies the instrument's main output is false positives, and
+the flag list is dominated by citation-style artefacts and tool bugs rather than
+fabrication. That is worth stating plainly rather than leaving for a reader to
+derive: at a wild prevalence indistinguishable from zero, the left-hand column
+of the table above is the column that applies.
+
+Two consequences for how these baselines should be read. **Report precision at
+the prevalence you expect, not the benchmark's**, and prefer a tool that
+abstains over one that guesses — a citation flagged as fabricated is a serious
+accusation against a named author, and at these base rates most such flags are
+wrong. **The gap between "this work does not exist" and "this entry describes a
+real work incorrectly" carries most of the real signal**, and the current
+taxonomy folds the second into the first (see
+[issue #36](https://github.com/rpatrik96/hallmark/issues/36)); on the wild
+corpus, 63% of flags were real works described wrongly, 47% from venue and
+preprint status alone.
+
+This analysis is joint work with the InterpScience submission-screening effort,
+which contributed the 5,043-reference corpus and its adjudications.
+
+
 ## Python API
 
 ```python
