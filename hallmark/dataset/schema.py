@@ -467,6 +467,11 @@ class Prediction:
     predicted_hallucination_type: str | None = None
     # Cascade stage that produced the prediction; None for non-cascade baselines.
     cascade_stage: Literal["stage1_db", "stage2_diagnosis", "prescreening"] | None = None
+    # False when the tool never actually ran for this entry -- missing binary,
+    # timed-out subprocess, dead source. Such a prediction still carries a label
+    # so nothing downstream breaks, but it is not a measurement and must not be
+    # scored as one. Defaults True so every existing caller is unaffected.
+    evaluated: bool = True
 
     def __post_init__(self) -> None:
         _VALID_LABELS = {"VALID", "HALLUCINATED", "UNCERTAIN"}
@@ -562,6 +567,10 @@ class EvaluationResult:
     auroc: float | None = None  # Area Under ROC Curve
     auprc: float | None = None  # Area Under Precision-Recall Curve
     num_uncertain: int = 0  # Count of UNCERTAIN predictions
+    # How many of num_entries the tool actually evaluated. Fewer means some
+    # predictions were manufactured because the tool was unavailable; zero means
+    # the run measured nothing and its rates are artefacts of that, not results.
+    num_evaluated: int | None = None
 
     # Tier 3 hard subset metric (Hardt benchmark science)
     tier3_f1: float = 0.0  # F1 on Tier 3 (hard) hallucinations only
