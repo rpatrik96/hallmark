@@ -41,10 +41,34 @@ def check_doi(doi: str, timeout: float = 10.0) -> tuple[bool | None, str]:
             base_delay=1.0,
             exceptions=(httpx.TimeoutException, httpx.ConnectError),
         )
+        # Only doi.org answering 404/410 itself is evidence the DOI is not
+        # registered. Everything else that is not a 200 is indeterminate, and
+        # this used to return False for all of it -- scoring the citation as
+        # fabricated at confidence 0.75.
+        #
+        # It is not a corner case. A sample of 150 VALID entries carrying a DOI
+        # returned HTTP 202 for 56 of them and 403 for one, all IEEE and ACM
+        # landing pages applying bot mitigation after doi.org redirected
+        # successfully. So the measured false-positive rate was substantially a
+        # measurement of a publisher's bot policy on the day the run happened.
+        #
+        # ``prescreening.check_doi_resolves`` already draws these lines; this is
+        # the same logic, and the two agreeing is what makes a DOI check
+        # comparable across the pipeline.
         if resp.status_code == 200:
             return True, f"DOI resolves -> {resp.url}"
-        else:
-            return False, f"DOI returned HTTP {resp.status_code}"
+        if resp.status_code in (404, 410):
+            if resp.history:
+                # The 404 came from the redirect target, not from doi.org: the
+                # DOI is registered and the landing page is broken or blocks us.
+                return None, (
+                    f"DOI resolved at doi.org but redirect target returned "
+                    f"HTTP {resp.status_code} (indeterminate)"
+                )
+            return False, f"DOI returns HTTP {resp.status_code} at doi.org"
+        # 202/403/429/5xx and friends: bot blocks, rate limits and server
+        # errors are transient, never evidence of fabrication.
+        return None, f"DOI returned HTTP {resp.status_code} (indeterminate)"
     except (httpx.TimeoutException, httpx.ConnectError) as e:
         return None, f"Network error (unresolved): {e}"
 
@@ -96,13 +120,17 @@ def run_doi_only(
         elapsed = time.time() - start
 
         if resolves is None:
-            # Indeterminate: network error — treat as VALID with low confidence
+            # Indeterminate: a network error, a transient HTTP status (202, 403,
+            # 429, 5xx), or a 404 from the redirect target rather than from
+            # doi.org. None of these is evidence about the citation, so the
+            # baseline declines to flag. Conservative VALID at 0.5 keeps the
+            # existing convention that this baseline never abstains outright.
             predictions.append(
                 Prediction(
                     bibtex_key=entry.bibtex_key,
                     label="VALID",
                     confidence=0.5,
-                    reason=f"network_error | {detail}",
+                    reason=f"indeterminate | {detail}",
                     subtest_results={"doi_resolves": None},
                     api_sources_queried=["doi.org"],
                     wall_clock_seconds=elapsed,
