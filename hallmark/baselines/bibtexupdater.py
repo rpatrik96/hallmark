@@ -318,12 +318,29 @@ def resolve_bibtex_check_bin() -> str | None:
     return shutil.which("bibtex-check")
 
 
+_VERSION_PROBE = (
+    "import importlib.metadata as md, bibtex_updater as m;"
+    "print(getattr(m, '__version__', '?'));"
+    "print(md.version('bibtex-updater'));"
+    "print(m.__file__)"
+)
+
+
 def bibtex_check_version(binary: str | None = None) -> str | None:
     """Version of the bibtex_updater package backing *binary*.
 
     There is no ``--version`` flag, so ask the interpreter in the binary's own
-    environment to import the package and report ``__version__``. Returns None
-    rather than raising: provenance must never break an evaluation.
+    environment to import the package and report itself.
+
+    It reports BOTH ``__version__`` and the packaging metadata, because for an
+    editable install they disagree: the dist-info is frozen at whatever was
+    installed when the editable link was made, while ``__version__`` tracks the
+    source. The editable build on this machine answers 0.9.2 and 1.3.1.dev18
+    from the same interpreter at the same moment, so no single number identifies
+    it -- and the disagreement is itself the signal that a build is editable and
+    therefore moves under you. When they agree, only one is reported.
+
+    Returns None rather than raising: provenance must never break an evaluation.
     """
     binary = binary or resolve_bibtex_check_bin()
     if not binary:
@@ -335,14 +352,24 @@ def bibtex_check_version(binary: str | None = None) -> str | None:
         return None
     try:
         out = subprocess.run(
-            [str(python), "-c", "import bibtex_updater as m; print(m.__version__)"],
+            [str(python), "-c", _VERSION_PROBE],
             capture_output=True,
             text=True,
             timeout=30,
         )
     except (OSError, subprocess.SubprocessError):
         return None
-    return out.stdout.strip() or None
+    lines = [ln.strip() for ln in out.stdout.splitlines() if ln.strip()]
+    if not lines:
+        return None
+    source_version = lines[0]
+    metadata_version = lines[1] if len(lines) > 1 else None
+    if metadata_version and metadata_version != source_version:
+        return (
+            f"{source_version} (dist-info says {metadata_version}; "
+            "they disagree, so this is an editable install)"
+        )
+    return source_version
 
 
 def run_bibtex_check(
