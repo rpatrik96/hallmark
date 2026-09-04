@@ -8,13 +8,6 @@
       "num_entries": 1119,
       "f1_hallucination": 0.9086687306501547
     },
-    "harc_dev_public.json": {
-      "sha256": "0ffd87e4bf301839912b3464cb033b3eff4b994fbf64ce8e2acb058e31cf1636",
-      "baseline": "harc",
-      "split": "dev_public",
-      "num_entries": 521,
-      "f1_hallucination": 0.26829268292682923
-    },
     "llm_agentic_btu_openai_dev_public.json": {
       "sha256": "c3545fea4b9bb6001146fa135e15989781e4fe757b08689a8eb11a2dc82ad407",
       "baseline": "llm_agentic_btu_openai",

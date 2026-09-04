@@ -27,6 +27,20 @@ _SUPERSEDED = _RESULTS / "superseded_pre_relabel"
 #: describe different runs, whatever their names say.
 _METRIC_KEYS = ("detection_rate", "false_positive_rate", "f1_hallucination", "num_entries")
 
+#: Results deliberately withdrawn from the released set, with the reason. An
+#: archived file whose name no longer exists among the released results is
+#: normally an accident -- a result retired without a replacement -- so a
+#: deliberate withdrawal has to be written down here to be distinguishable from
+#: one. Adding a name is a claim that the release is better without it.
+WITHDRAWN: dict[str, str] = {
+    "harc_dev_public.json": (
+        "2026-09-04: scored 521 of 1,119 entries, matching no split, and reported "
+        "FPR 0.000 with no coverage field — a truncated run, not a result. "
+        "harc_with_s2key_dev_public.json is the valid HaRC evaluation "
+        "(n=1,119, coverage 1.0, DR 0.209, FPR 0.045)."
+    ),
+}
+
 
 def _baseline_result_dirs() -> list[Path]:
     return sorted(p for p in _REPO_ROOT.glob("data/*/baseline_results") if p.is_dir())
@@ -70,10 +84,25 @@ def test_superseded_files_are_not_also_canonical():
     # they were archived. What must not happen is the reverse: an archived file
     # being the only copy of a name, which would mean a released result was
     # retired by accident.
-    orphans = sorted(p.name for p in _SUPERSEDED.glob("*.json") if p.name not in canonical)
+    orphans = sorted(
+        p.name
+        for p in _SUPERSEDED.glob("*.json")
+        if p.name not in canonical and p.name not in WITHDRAWN
+    )
     assert not orphans, (
         f"archived result(s) with no canonical counterpart: {orphans}. These were "
-        "retired without a replacement; restore them or record why the name is gone."
+        "retired without a replacement. Restore them, or add the name to WITHDRAWN "
+        "with the reason the release is better without it."
+    )
+
+
+def test_withdrawn_entries_are_actually_gone():
+    """A withdrawal that never happened is a false record — worse than none."""
+    canonical = _canonical_names()
+    still_present = sorted(name for name in WITHDRAWN if name in canonical)
+    assert not still_present, (
+        f"listed as withdrawn but still in the released set: {still_present}. "
+        "Either remove the file or drop it from WITHDRAWN."
     )
 
 
@@ -83,6 +112,44 @@ def test_archive_documents_itself():
     readme = _SUPERSEDED / "README.md"
     assert readme.is_file(), "an archive of superseded results must say what it is"
     assert "canonical" in readme.read_text().lower()
+
+
+def _is_null_run(data: dict) -> bool:
+    """A run that detected nothing, flagged nothing and made no API call.
+
+    That is the signature of ``fallback_predictions`` firing because an external
+    CLI was missing: the wrapper returns all-VALID for every entry and the
+    harness scores it like any other result. Four such files shipped as the
+    pre-screening ablations for bibtexupdater and harc.
+    """
+    return (
+        data.get("detection_rate") == 0.0
+        and data.get("false_positive_rate") == 0.0
+        and (data.get("mean_api_calls") or 0.0) == 0.0
+        and (data.get("num_entries") or 0) > 0
+    )
+
+
+def test_no_result_outside_failed_runs_is_a_null_run():
+    """A failed run must be quarantined, not left where it reads as a measurement."""
+    offenders: list[str] = []
+    searched = 0
+    for path in _REPO_ROOT.glob("data/*/baseline_results/*.json"):
+        if path.name == "manifest.json":
+            continue
+        searched += 1
+        try:
+            data = json.loads(path.read_text())
+        except json.JSONDecodeError:
+            continue
+        if isinstance(data, dict) and _is_null_run(data):
+            offenders.append(str(path.relative_to(_REPO_ROOT)))
+    assert searched > 0, "no released results scanned — the guard would pass vacuously"
+    assert not offenders, (
+        f"null run(s) sitting among real results: {offenders}. DR=0, FPR=0 and no API "
+        "calls over a full split means the wrapper fell back to all-VALID because its "
+        "CLI was missing. Move them to results/failed_runs/ or re-run them."
+    )
 
 
 @pytest.mark.parametrize("results_dir", _baseline_result_dirs(), ids=lambda p: p.parent.name)
