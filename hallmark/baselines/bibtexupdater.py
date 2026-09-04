@@ -40,6 +40,7 @@ from __future__ import annotations
 import json
 import logging
 import os
+import re
 import shutil
 import subprocess
 import tempfile
@@ -53,6 +54,17 @@ from hallmark.baselines.common import entries_to_bib, fallback_predictions, run_
 from hallmark.dataset.schema import BlindEntry, Prediction
 
 logger = logging.getLogger(__name__)
+
+
+class SourceOutageError(RuntimeError):
+    """bibtex-check reported that its sources went dark during the run.
+
+    Raised rather than returned so the run cannot be silently scored. The tool
+    prints "Treat this run as incomplete and discard its could-not-verify
+    verdicts"; before this existed, the wrapper logged that and scored the run
+    anyway.
+    """
+
 
 # Map bibtex-check status to HALLMARK label.
 # Statuses come from bibtex-updater's FactCheckStatus enum.
@@ -315,6 +327,60 @@ BIBTEX_CHECK_BIN_ENV = "HALLMARK_BIBTEX_CHECK_BIN"
 #: Pacing is therefore part of the run condition and belongs on the same
 #: footing as the binary: settable, and recorded in the log.
 BIBTEX_CHECK_RATE_ENV = "HALLMARK_BIBTEX_CHECK_RATE_LIMIT"
+
+#: bibtex-check's exit code for "sources went dark during this run".
+#:
+#: Its own words, printed alongside it: "Treat this run as incomplete and
+#: discard its could-not-verify verdicts." The wrapper used to log that at ERROR
+#: and then parse the output and return predictions anyway, so a run the tool
+#: had disowned became a scored result. On 2026-09-04, with dblp.org
+#: unreachable, that produced bibtexupdater_dev_public.json at DR 0.8185 /
+#: FPR 0.0312 / coverage 1.0000 from a run where 25.5% of entries never got a
+#: complete set of source lookups.
+#:
+#: A source that never answered is not evidence a reference is absent, so those
+#: entries' abstentions carry no information -- and nothing downstream could
+#: tell them from real ones.
+EXIT_SOURCE_OUTAGE = 5
+
+#: Set to "1" to score a run bibtex-check reported as a source outage anyway.
+#: Deliberately awkward: the numbers are not comparable to a healthy run.
+ALLOW_OUTAGE_ENV = "HALLMARK_ALLOW_SOURCE_OUTAGE"
+
+#: "285 of 1119 entries (25.5%) had at least one source lookup that did not
+#: complete: dblp (275), openalex (26)"
+_OUTAGE_RE = re.compile(
+    r"(\d+) of (\d+) entries \(([\d.]+)%\) had at least one source lookup "
+    r"that did not complete:\s*([^\n.]*)"
+)
+
+
+def parse_source_condition(output: str) -> dict[str, object] | None:
+    """Extract bibtex-check's own source-availability report, if it made one.
+
+    Availability moves outcomes, so it belongs in the result beside the numbers
+    rather than only in a log a reader never sees.
+    """
+    # The final summary line wins: bibtex-check may report progressively.
+    matches = list(_OUTAGE_RE.finditer(output))
+    if not matches:
+        return None
+    match = matches[-1]
+    per_source: dict[str, int] = {}
+    for chunk in match.group(4).split(","):
+        chunk = chunk.strip()
+        if "(" in chunk and chunk.endswith(")"):
+            name, _, count = chunk.partition("(")
+            try:
+                per_source[name.strip()] = int(count.rstrip(")"))
+            except ValueError:
+                continue
+    return {
+        "entries_with_incomplete_lookups": int(match.group(1)),
+        "entries_total": int(match.group(2)),
+        "incomplete_fraction": float(match.group(3)) / 100.0,
+        "per_source_failures": per_source,
+    }
 
 
 def resolve_bibtex_check_rate_limit(default: int) -> int:
@@ -706,7 +772,35 @@ def _run_bibtex_check_subprocess(
                 text=True,
                 timeout=timeout,
             )
-            if result.returncode not in (0, 2, 4):
+            if result.returncode == EXIT_SOURCE_OUTAGE:
+                condition = parse_source_condition(result.stdout + result.stderr)
+                detail = ""
+                if condition:
+                    detail = (
+                        f" {condition['entries_with_incomplete_lookups']} of "
+                        f"{condition['entries_total']} entries "
+                        f"({condition['incomplete_fraction']:.1%}) had an incomplete "
+                        f"lookup: {condition['per_source_failures']}."
+                    )
+                if os.environ.get(ALLOW_OUTAGE_ENV) == "1":
+                    logger.error(
+                        "bibtex-check reported a SOURCE OUTAGE (exit %d).%s "
+                        "Scoring it anyway because %s=1 -- these numbers are NOT "
+                        "comparable to a healthy run.",
+                        EXIT_SOURCE_OUTAGE,
+                        detail,
+                        ALLOW_OUTAGE_ENV,
+                    )
+                else:
+                    raise SourceOutageError(
+                        f"bibtex-check reported a source outage (exit "
+                        f"{EXIT_SOURCE_OUTAGE}) and asked for the run to be "
+                        f"discarded.{detail} A source that never answered is not "
+                        "evidence a reference is absent, so this run cannot be "
+                        "scored. Re-run when the sources are reachable, or set "
+                        f"{ALLOW_OUTAGE_ENV}=1 to score it regardless."
+                    )
+            elif result.returncode not in (0, 2, 4):
                 logger.error(f"bibtex-check failed (exit {result.returncode}): {result.stderr}")
         except FileNotFoundError:
             logger.error("bibtex-check not found. Install with: pipx install bibtex-updater")

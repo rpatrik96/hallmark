@@ -540,6 +540,24 @@ def _stamp_provenance(result: EvaluationResult, args: argparse.Namespace) -> Non
 
     result.run_timestamp = datetime.now(timezone.utc).isoformat()
 
+    # Which external build answered. The field existed and nothing filled it, so
+    # the first ablation run after adding it still wrote tool_version: None --
+    # for the very tool whose PATH-resolved version motivated the field.
+    baseline = getattr(args, "baseline", None) or ""
+    if "bibtexupdater" in baseline or "cascade" in baseline or "btu" in baseline:
+        try:
+            from hallmark.baselines.bibtexupdater import (
+                bibtex_check_version,
+                resolve_bibtex_check_bin,
+            )
+
+            binary = resolve_bibtex_check_bin()
+            version = bibtex_check_version(binary)
+            if version:
+                result.tool_version = f"bibtex-updater {version}"
+        except (ImportError, OSError) as exc:  # pragma: no cover - best effort
+            logging.debug("Could not probe bibtex-check version: %s", exc)
+
     split = getattr(args, "split", None)
     if not split:
         return
