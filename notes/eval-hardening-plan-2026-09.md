@@ -560,3 +560,24 @@ dropping those two columns entirely. Reporting FPR 0.000 and a deterministic
 5. Base-rate/precision table and the wild-corpus case study (Tier 1.1, Tier 4).
 6. bibtexupdater: venue abstention, ISSN identity, and the `preprint_only`
    calibration polarity (Tier 3, items 1 and 3).
+
+### The ratchet measures a different population in CI than locally (issue #40)
+
+`scripts/verify_subtests.py:54` puts `test_hidden` in `DEFAULT_SPLITS`, and
+`.gitignore:42` ignores `data/hidden/`, so the split exists only on a machine
+holding the full dataset. Scanning the CI-visible splits gives 2,572 entries and
+exactly 99 mismatches; including the hidden split gives 3,026 and 211.
+`MAX_MISMATCHES = 99` is precisely the CI-visible count, so the repo's one real
+data-integrity ratchet passes in CI by construction while 112 sub-test
+ground-truth mismatches in the hidden split are invisible to every CI run — in
+the split whose labels no external contributor can inspect.
+
+This is the same shape as the freshness guard and the `[Error fallback]`
+records: the mechanism exists, it reports, and the report reaches nobody. The
+CI log for the run on this branch prints `ERROR: Freshness check FAILED: 46
+stale file(s)` and the job passes, because `.github/workflows/tests.yml:48`
+carries `--warn-only`. That invocation also passes `--results-dir
+data/v1.2/baseline_results` with `--version v1.0`: the results path was updated
+in the v1.0 → v1.2 rename and the version flag was not, so the guard resolves
+split files under a directory the rename removed. Fixing the flag is a
+one-token change and belongs with the hash-based rework, not before it.
