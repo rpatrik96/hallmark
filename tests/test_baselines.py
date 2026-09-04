@@ -51,10 +51,35 @@ class TestDOIOnly:
     def test_doi_not_found(self, mock_head):
         mock_resp = MagicMock()
         mock_resp.status_code = 404
+        # doi.org answered the 404 itself -- no redirect happened. That is the
+        # only shape that shows the DOI is unregistered.
+        mock_resp.history = []
         mock_head.return_value = mock_resp
 
         resolves, _detail = check_doi("10.9999/fake")
         assert resolves is False
+
+    @patch("hallmark.baselines.doi_only.httpx.head")
+    def test_doi_404_from_redirect_target_is_indeterminate(self, mock_head):
+        """doi.org redirected, so the DOI is registered; the landing page is broken."""
+        mock_resp = MagicMock()
+        mock_resp.status_code = 404
+        mock_resp.history = [MagicMock(status_code=302)]
+        mock_head.return_value = mock_resp
+
+        resolves, _detail = check_doi("10.1234/registered-but-broken")
+        assert resolves is None
+
+    @patch("hallmark.baselines.doi_only.httpx.head")
+    def test_bot_mitigation_status_is_indeterminate(self, mock_head):
+        """IEEE returns 202 after a successful redirect for a real DOI."""
+        mock_resp = MagicMock()
+        mock_resp.status_code = 202
+        mock_resp.history = []
+        mock_head.return_value = mock_resp
+
+        resolves, _detail = check_doi("10.1109/CVPR.2020.00001")
+        assert resolves is None
 
     def test_empty_doi(self):
         resolves, _detail = check_doi("")

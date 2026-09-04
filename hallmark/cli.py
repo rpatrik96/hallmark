@@ -525,6 +525,54 @@ def _stratified_sample(entries: list[BenchmarkEntry], n: int) -> list[BenchmarkE
     return combined
 
 
+def _stamp_provenance(result: EvaluationResult, args: argparse.Namespace) -> None:
+    """Record which data revision and when, on the result itself.
+
+    Without this a result cannot be tied to the split that produced it, which is
+    how the freshness guard came to compare file mtimes -- a signal git does not
+    preserve, so it read checkout order on every clone. Hashing the split file
+    and storing the digest beside the numbers is the check it was reaching for.
+
+    Best effort: a missing or unreadable split file leaves the fields unset
+    rather than failing an evaluation that has already been computed.
+    """
+    from datetime import datetime, timezone
+
+    result.run_timestamp = datetime.now(timezone.utc).isoformat()
+
+    # Which external build answered. The field existed and nothing filled it, so
+    # the first ablation run after adding it still wrote tool_version: None --
+    # for the very tool whose PATH-resolved version motivated the field.
+    baseline = getattr(args, "baseline", None) or ""
+    if "bibtexupdater" in baseline or "cascade" in baseline or "btu" in baseline:
+        try:
+            from hallmark.baselines.bibtexupdater import (
+                bibtex_check_version,
+                resolve_bibtex_check_bin,
+            )
+
+            binary = resolve_bibtex_check_bin()
+            version = bibtex_check_version(binary)
+            if version:
+                result.tool_version = f"bibtex-updater {version}"
+        except (ImportError, OSError) as exc:  # pragma: no cover - best effort
+            logging.debug("Could not probe bibtex-check version: %s", exc)
+
+    split = getattr(args, "split", None)
+    if not split:
+        return
+    try:
+        from hallmark.dataset.loader import DEFAULT_DATA_DIR, SPLIT_PATHS
+        from hallmark.evaluation.validate import compute_sha256
+
+        data_root = Path(args.data_dir) if getattr(args, "data_dir", None) else DEFAULT_DATA_DIR
+        split_file = data_root / getattr(args, "version", "v1.2") / SPLIT_PATHS[split]
+        if split_file.exists():
+            result.split_sha256 = compute_sha256(split_file)
+    except (KeyError, OSError) as exc:  # pragma: no cover - provenance is best effort
+        logging.debug("Could not hash split file for provenance: %s", exc)
+
+
 def _cmd_evaluate(args: argparse.Namespace) -> int:
     """Run evaluation command."""
     try:
@@ -675,6 +723,10 @@ def _cmd_evaluate(args: argparse.Namespace) -> int:
             strict=args.strict,
             eval_mode=eval_mode,
         )
+
+    _stamp_provenance(result, args)
+    if aggressive_result is not None:
+        _stamp_provenance(aggressive_result, args)
 
     if result.coverage < 1.0:
         logging.warning(

@@ -13,6 +13,7 @@ bibtexparser>=2.0.  It must be installed in an isolated environment
 from __future__ import annotations
 
 import logging
+import os
 import re
 import shutil
 import subprocess
@@ -158,6 +159,15 @@ def run_harc(
     Returns:
         List of Predictions.
     """
+    # Fall back to the environment for the Semantic Scholar key, matching
+    # bibtexupdater.py. Without this the registry passed no api_key while the
+    # co-designed tool read S2_API_KEY for itself, so a default side-by-side run
+    # on a machine with the key handed one tool authenticated access and its
+    # competitor the unauthenticated pool -- and HaRC was then excluded from the
+    # main table for the throttling that asymmetry produced.
+    if api_key is None:
+        api_key = os.environ.get("S2_API_KEY")
+
     harcx_bin = shutil.which("harcx")
     if harcx_bin is None:
         logger.error(
@@ -196,7 +206,15 @@ def _run_harc_batches(
     batch_timeout: float,
     total_timeout: float,
 ) -> list[Prediction]:
-    """Run harcx in batches and return raw predictions (no pre-screening)."""
+    """Run harcx in batches and return raw predictions (no pre-screening).
+
+    Returns only the entries harcx actually checked, so a run whose batches all
+    timed out returns an empty list. That is honest at this level and is NOT
+    marked ``evaluated=False``: this function has no basis for a claim about
+    entries it never saw. The all-VALID set that a caller would otherwise score
+    is manufactured one level up, in ``run_with_prescreening``, and that is where
+    the backfill carries the flag.
+    """
     start = time.time()
     all_flagged: dict[str, list[str]] = {}
     all_checked: set[str] = set()
@@ -241,6 +259,34 @@ def _run_harc_batches(
         logger.warning(
             f"HaRC completed {checked_count}/{len(entries)} entries "
             f"before timeout ({timed_out_batches} batch(es) timed out)"
+        )
+
+    # A run that checked NOTHING is not a measurement, and must not be able to
+    # look like one. Every unchecked entry is backfilled downstream, so a total
+    # hang emerges as an all-VALID prediction set scoring DR 0.0 / FPR 0.0 with
+    # zero API calls -- indistinguishable from a tool that ran fine and flagged
+    # nothing. Four such files shipped as pre-screening ablations.
+    #
+    # The cause is not always a missing binary. harcx queries Google Scholar via
+    # ``scholarly``, which Scholar blocks aggressively and the library retries
+    # rather than failing, so a single entry can exceed 150s. At batch_size 20
+    # every batch then exceeds batch_timeout, every batch contributes an empty
+    # ``checked`` set, and the run lands at zero having made real HTTP requests
+    # during pre-screening -- which is why the failure reads as a clean result.
+    if entries and checked_count == 0:
+        # Every entry will be backfilled, and every backfill now carries
+        # evaluated=False, so the run reports num_evaluated 0 and the metrics
+        # layer refuses to read it as a measurement. Log loudly and return: the
+        # predictions are still wanted by callers that want to see the shape of
+        # the failure, and refusing outright would also discard a partial run.
+        logger.error(
+            "HaRC checked 0 of %d entries (%d batch(es) timed out). Every "
+            "prediction is a backfill, so detection rate and false positive "
+            "rate would be artefacts of the tool not running. Reduce "
+            "--batch-size, raise batch_timeout, or record HaRC as not evaluable "
+            "on this machine.",
+            len(entries),
+            timed_out_batches,
         )
 
     # Map to predictions
