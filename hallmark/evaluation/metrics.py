@@ -456,21 +456,29 @@ def per_type_metrics(
             "count": len(type_e),
             "num_valid": 0 if h_type == "valid" else len(valid_entries),
         }
-        if compute_ci:
-            z = 1.96  # 95% CI
-            n = cm.tp + cm.fn  # hallucinated entries for this type
-            p = cm.detection_rate
-            if n > 0:
-                denom = 1 + z**2 / n
-                centre = (p + z**2 / (2 * n)) / denom
-                half = z * (p * (1 - p) / n + z**2 / (4 * n**2)) ** 0.5 / denom
-                ci_lower = max(0.0, centre - half)
-                ci_upper = min(1.0, centre + half)
-            else:
-                ci_lower = 0.0
-                ci_upper = 0.0
-            metrics["dr_ci_lower"] = ci_lower
-            metrics["dr_ci_upper"] = ci_upper
+        # The Wilson interval on detection rate is emitted unconditionally. It is
+        # closed-form arithmetic with no bootstrap behind it, so it costs
+        # nothing, and per-type DR with its interval is the primary per-type
+        # number: with roughly 30-120 hallucinated entries per type against
+        # several hundred valid ones, per-type precision is dominated by the
+        # tool's shared false-positive count, so per-type F1 tracks how common a
+        # type is more than how well the tool handles it. Report DR and its
+        # interval first; treat f1 and false_positive_rate as secondary.
+        # ``compute_ci`` still gates the expensive bootstrap intervals elsewhere.
+        z = 1.96  # 95% CI
+        n = cm.tp + cm.fn  # hallucinated entries for this type
+        p = cm.detection_rate
+        if n > 0:
+            denom = 1 + z**2 / n
+            centre = (p + z**2 / (2 * n)) / denom
+            half = z * (p * (1 - p) / n + z**2 / (4 * n**2)) ** 0.5 / denom
+            ci_lower = max(0.0, centre - half)
+            ci_upper = min(1.0, centre + half)
+        else:
+            ci_lower = 0.0
+            ci_upper = 0.0
+        metrics["dr_ci_lower"] = ci_lower
+        metrics["dr_ci_upper"] = ci_upper
         result[h_type] = metrics
     return result
 

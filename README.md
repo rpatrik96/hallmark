@@ -347,7 +347,22 @@ predictions = run_title_oracle(blind_test, reference_pool=dev_entries)
 
 ## Main Results (dev_public, 1,119 entries)
 
-Twelve full-coverage tools evaluated on `dev_public`. All numbers reproduce Table 1 of the paper. **Bold** = best among independent (non-co-designed) full-coverage tools. ΔFPR is the cross-split shift `test_public − dev_public`; `—` means no `test_public` evaluation.
+Twelve tools evaluated on `dev_public`. All numbers reproduce Table 1 of the paper. **Bold** = best among independent (non-co-designed) tools. ΔFPR is the cross-split shift `test_public − dev_public`; `—` means no `test_public` evaluation.
+
+> **Coverage caveat.** These tools are not all full-coverage. A tool that returns
+> `UNCERTAIN` is excluded from the confusion matrix, so every metric in this
+> table is computed over the entries a tool actually answered, and that
+> denominator differs by row. Some `UNCERTAIN` records are not model abstentions
+> at all but API failures written into the prediction file after a run hit
+> consecutive errors: on `test_public`, all 180 of DeepSeek-R1's are of this
+> kind, so its metrics there cover 651 of 831 entries. **Its ΔFPR of −0.310, the
+> largest cross-split shift in the table, is therefore a comparison between a
+> dev figure over 1,101 answered entries and a test figure over 651, and should
+> not be read as a robustness result.** Affected splits are `dev_public` (124
+> records), `test_public` (183) and the cross-domain splits; `stress_test` and
+> `hidden` contain none. `EvaluationResult.coverage` now reports the answered
+> fraction rather than 1.0, but the numbers in this table predate that fix and
+> have not yet been recomputed — see `notes/eval-hardening-plan-2026-09.md`.
 
 | Tool | DR ↑ | FPR ↓ | F1 ↑ | MCC ↑ | TW-F1 ↑ | ECE ↓ | ΔFPR ↓ |
 |------|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
