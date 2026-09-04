@@ -65,10 +65,6 @@ DEFAULT_RESULTS_DIR = Path("data/v1.2/baseline_results")
 #: Ratchet DOWN only: a name leaves this dict when the result is regenerated, and
 #: adding one is a decision to ship a number scored against data that has moved.
 KNOWN_STALE: dict[str, str] = {
-    "doi_only_dev_public.json": (
-        "scored 1,068 of the current 1,119 entries (555 of 606 hallucinated) -- a "
-        "coverage gap, not a relabel. Re-run: doi_only is a live baseline and cheap."
-    ),
     "harc_with_s2key_dev_public.json": (
         "scored against the pre-relabel ground truth (633 hallucinated / 486 valid "
         "against the current 606 / 513). Full coverage at n=1,119, but its DR 0.209 "

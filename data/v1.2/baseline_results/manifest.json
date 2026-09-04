@@ -79,18 +79,20 @@
       "f1_hallucination": 0.9571263035921205
     },
     "doi_only_dev_public.json": {
-      "sha256": "07b735f2e4aeed45c88e54c1669abcf05f2defd7bf918e38501ce476338bd7f5",
+      "sha256": "6580622f7c22e40bf24bf660c4cb375b2e1d3ec45bff716c2cbc1e9f1504397e",
       "baseline": "doi_only",
       "split": "dev_public",
-      "num_entries": 1068,
-      "f1_hallucination": 0.3729662077596996
+      "num_entries": 1119,
+      "f1_hallucination": 0.34736842105263155,
+      "split_sha256": "0f75d390f95a086aaf39b627369af2bd03a5eb87cd3bf4cea5d5025e203bb09e"
     },
     "doi_only_test_public.json": {
-      "sha256": "01b17dca247bdd80613355482f31f5853ad0013711af27f41e45fb3537f2a631",
+      "sha256": "716ed587dc829f3b549ad5e846310a4705626758c80b432e42218d4aad274fda",
       "baseline": "doi_only",
       "split": "test_public",
       "num_entries": 831,
-      "f1_hallucination": 0.4981412639405204
+      "f1_hallucination": 0.3137876386687797,
+      "split_sha256": "0637ffc80747c36f3e010cd613f16481dcb916f944874122b2e2d3f872429973"
     },
     "harc_with_s2key_dev_public.json": {
       "sha256": "79d7a33050e82e3609a1418641c189bcfe98c5c06b3f14270c9a08d62c4968a6",
