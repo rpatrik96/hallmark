@@ -295,7 +295,7 @@ def _verify_entries(
     checkpoint_dir: Path | None = None,
     max_consecutive_failures: int = 3,
     prompt_fn: Callable[[BlindEntry], str] | None = None,
-    retry_failed: bool = False,
+    retry_failed: bool = True,
 ) -> list[Prediction]:
     """Shared verification loop for all LLM providers.
 
@@ -313,7 +313,10 @@ def _verify_entries(
             string. When provided, overrides the default VERIFICATION_PROMPT.
         retry_failed: When loading a checkpoint, treat previous
             ``[Error fallback]`` predictions as incomplete so they get
-            re-attempted. Useful after a transient network outage.
+            re-attempted. Defaults to True: an API error is a transient
+            infrastructure event, and resuming a run should retry it rather
+            than inherit it as a settled verdict. Pass False only to inspect a
+            checkpoint without spending calls.
     """
     checkpoint_path: Path | None = None
     completed: dict[str, Prediction] = {}
@@ -374,22 +377,31 @@ def _verify_entries(
                 predictions.append(pred)
                 if checkpoint_path is not None:
                     _append_checkpoint(checkpoint_path, pred)
-                # Fill remaining entries with fallback predictions
+                # Return what was actually attempted. The remaining entries get
+                # NO record at all.
+                #
+                # This used to write an UNCERTAIN "[Error fallback]" prediction
+                # for every un-attempted entry, which put an infrastructure
+                # event into the result file as a verdict about the citation.
+                # UNCERTAIN then counted toward coverage, so a run that died on
+                # a billing error reported metrics over the fraction it reached
+                # at coverage 1.0 -- one committed run answered 68 of 500
+                # entries that way. A sweep of the repo found 9,652 such
+                # records. A missing entry is honest and visibly incomplete; an
+                # abstention is a claim the model never made.
                 processed_keys = {p.bibtex_key for p in predictions}
-                remaining = [e for e in entries if e.bibtex_key not in processed_keys]
-                for rem_entry in remaining:
-                    if rem_entry.bibtex_key in completed:
-                        continue
-                    fallback = Prediction(
-                        bibtex_key=rem_entry.bibtex_key,
-                        label="UNCERTAIN",
-                        confidence=0.5,
-                        reason=f"[Error fallback] Skipped after {max_consecutive_failures} consecutive API failures",
-                        api_sources_queried=[f"{source_prefix}/{model}"],
+                skipped = sum(
+                    1
+                    for e in entries
+                    if e.bibtex_key not in processed_keys and e.bibtex_key not in completed
+                )
+                if skipped:
+                    logger.error(
+                        "%s: %d entries left unattempted and UNRECORDED. Coverage will "
+                        "report the shortfall; re-run to complete them.",
+                        source_prefix,
+                        skipped,
                     )
-                    predictions.append(fallback)
-                    if checkpoint_path is not None:
-                        _append_checkpoint(checkpoint_path, fallback)
                 return predictions
 
         pred.wall_clock_seconds = time.time() - start
@@ -484,7 +496,9 @@ def _verify_with_openai_compatible(
 
         entry_prompt_fn = _no_think_prompt
 
-    retry_failed = bool(kwargs.pop("retry_failed", False))
+    # Default True, matching _verify_entries: a resumed run retries transient
+    # API errors rather than inheriting them as settled verdicts.
+    retry_failed = bool(kwargs.pop("retry_failed", True))
 
     return _verify_entries(
         entries,
@@ -560,7 +574,7 @@ def verify_with_anthropic(
     log_dir: Path | None = None,
     checkpoint_dir: Path | None = None,
     cutoff_aware: bool = False,
-    retry_failed: bool = False,
+    retry_failed: bool = True,
     **kwargs: Any,
 ) -> list[Prediction]:
     """Verify entries using Anthropic API.
