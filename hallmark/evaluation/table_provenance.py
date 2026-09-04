@@ -237,11 +237,13 @@ def check_tables(
     provenance = read_provenance(tables_dir)
     hash_cache: dict[str, str] = {}
     reports: list[TableReport] = []
+    seen: set[str] = set()
 
     for table_path in sorted(tables_dir.iterdir()):
         if table_path.name == PROVENANCE_FILE or table_path.suffix not in {".csv", ".tex"}:
             continue
 
+        seen.add(table_path.name)
         report = TableReport(table=table_path.name)
         record = provenance.get(table_path.name)
         if isinstance(record, dict):
@@ -257,5 +259,22 @@ def check_tables(
                 else "no recorded provenance and no tool column — nothing to check it against"
             )
         reports.append(report)
+
+    # A record for a table that is no longer there. Renaming an output leaves
+    # one behind -- this file gained an orphan within minutes of shipping -- and
+    # it is worth saying so, because the alternative reading is that a table was
+    # deleted and nobody noticed. Reported, never fatal: the missing table is
+    # not itself evidence of a wrong number anywhere.
+    for name in sorted(set(provenance) - seen):
+        reports.append(
+            TableReport(
+                table=name,
+                unverifiable=True,
+                reasons=[
+                    "recorded in provenance.json but no such table exists — remove the entry, "
+                    "or regenerate the table"
+                ],
+            )
+        )
 
     return reports

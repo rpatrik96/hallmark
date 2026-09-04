@@ -344,3 +344,18 @@ def test_the_real_run_actually_compares_something():
     assert any(r.value_checked or r.provenance_checked for r in res.reports), (
         "no table was checked against its inputs: the guard is passing vacuously"
     )
+
+
+def test_a_provenance_entry_for_a_vanished_table_is_reported(tmp_path):
+    """Renaming a generator's output leaves the old record behind."""
+    source = tmp_path / "results" / "eval.json"
+    source.parent.mkdir(parents=True)
+    source.write_text("{}")
+    table = _write_table(tmp_path / "tables", "old_name.csv", [{"model": "x", "dr": "0.5"}])
+    record_table(table, [source], generator="scripts/agg.py", repo_root=tmp_path)
+    table.unlink()
+
+    reports = check_tables(tmp_path / "tables", tmp_path / "results", repo_root=tmp_path)
+    orphan = _report(reports, "old_name.csv")
+    assert orphan.unverifiable and not orphan.is_stale
+    assert "no such table exists" in "; ".join(orphan.reasons)
