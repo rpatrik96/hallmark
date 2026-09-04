@@ -145,8 +145,15 @@ A peer measured the actual mechanism: harcx queries Google Scholar through
 `scholarly`, Scholar blocks it, the library retries rather than failing, and at
 batch size 20 every batch exceeds its timeout and contributes an empty `checked`
 set — while pre-screening's DOI requests still happen, which is exactly why the
-failure reads as a clean result. harcx is on `PATH` now, keyed and pinned, and
-still cannot complete one entry.
+failure reads as a clean result.
+
+harcx is on `PATH` now, keyed and pinned, and still cannot produce a verdict —
+in two distinct ways, worth keeping separate because they would be cited
+differently. Under `-q --threshold 0.75`, the invocation `harc.py` actually uses,
+a **single-entry `.bib` did not complete in 150 seconds**. Without `-q` the same
+entry returns in seconds but **emits no verdict line at all**, exit 0. The first
+is the hang that produces the nulls; the second is a separate parsing-surface
+failure that would produce an empty flag set even if the hang were fixed.
 
 **A transient HTTP status was scored as a fabricated citation.** `doi_only` and
 `subtests` treated any non-200 as proof a DOI does not exist; `prescreening` had
