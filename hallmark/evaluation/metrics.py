@@ -136,6 +136,29 @@ class ConfusionMatrix:
         return (f1_hall + f1_valid) / 2
 
 
+def evaluated_count(predictions: list) -> int:
+    """How many predictions came from the tool actually running.
+
+    A prediction with ``evaluated=False`` was manufactured because the tool was
+    unavailable -- a missing binary, a timed-out subprocess, a dead source. It
+    carries a label so nothing breaks, but it is not evidence about the entry.
+    """
+    return sum(1 for p in predictions if getattr(p, "evaluated", True))
+
+
+def run_evaluated_nothing(predictions: list) -> bool:
+    """True when a non-empty prediction set contains no real evaluation.
+
+    This is the null-run signature: detection rate 0.0 and false positive rate
+    0.0 produced by a tool that never ran. An EMPTY set is not this -- having
+    nothing to evaluate is a different situation from having evaluated nothing,
+    and conflating them would reintroduce the bug one level further out.
+    """
+    if not predictions:
+        return False
+    return evaluated_count(predictions) == 0
+
+
 def build_confusion_matrix(
     entries: list[BenchmarkEntry],
     predictions: dict[str, Prediction] | list[Prediction],
@@ -2341,10 +2364,37 @@ def evaluate(
     type_conf = type_confusion_matrix(entries, predictions)
     cascade_stats = cascade_breakdown(predictions)
 
+    pred_list: list[Prediction] = list(predictions)
+    n_evaluated = evaluated_count(pred_list)
+    if run_evaluated_nothing(pred_list):
+        # Every prediction was manufactured because the tool never ran. The
+        # rates below are all 0.0 and they are artefacts of that, not findings.
+        # Saying so here is the difference between a null run being noticed and
+        # a null run being published.
+        logger.error(
+            "%s on %s evaluated 0 of %d entries: every prediction is a fallback, "
+            "so detection rate and false positive rate are artefacts of the tool "
+            "not running, not measurements. Check the tool is installed, its "
+            "subprocess is not timing out, and its sources are answering.",
+            tool_name,
+            split_name,
+            len(entries),
+        )
+    elif n_evaluated < len(pred_list):
+        logger.warning(
+            "%s on %s evaluated %d of %d predictions; the remainder are fallbacks "
+            "and are not evidence about those entries.",
+            tool_name,
+            split_name,
+            n_evaluated,
+            len(pred_list),
+        )
+
     return EvaluationResult(
         tool_name=tool_name,
         split_name=split_name,
         num_entries=len(entries),
+        num_evaluated=n_evaluated,
         num_hallucinated=num_hallucinated,
         num_valid=num_valid,
         detection_rate=cm.detection_rate,
