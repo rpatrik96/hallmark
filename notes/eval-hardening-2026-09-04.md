@@ -252,6 +252,10 @@ caught by someone else or by re-measuring.
 - Wrote my harc tests at `_run_harc_batches`, the level I was editing, when the
   damage lands one level up in `run_with_prescreening`. They would have passed
   while the defect survived. Caught by the session porting them.
+- Proposed that the four-mode surface leak was a venue-presence sampling
+  artefact. It is not: conditioning the negatives the same way leaves the
+  detection rate unmoved. The measurement behind the hypothesis was right and
+  the inference from it was wrong.
 - Nearly reported nine `hybrid_fabrication` entries as mislabelled, having
   compared titles by substring containment — which a *modified* title trivially
   satisfies. Checking authors, as the type definition requires, showed all nine
@@ -292,6 +296,32 @@ Its population is sound: all 74 entries are generated (53 adversarial, 19
 perturbation, 2 LLM), none resolved from an index, and all 35 of the resolvable
 DOIs are consistent with the type — 26 to a clearly different paper, 9 to a
 similar title with zero author overlap. The exposure is entirely prospective.
+
+### The shortcut control, and a hypothesis of mine that was wrong
+
+A classifier using only surface features — field presence, string lengths,
+author count, entry type, year, no lookups and no semantics — separates the four
+real-paper modes from VALID entries at **DR 0.468 on dev and 0.388 on test**,
+against a majority baseline of 0.000. So a meaningful share of the cascade's
+1.000 on those modes could be read off the entry without verifying anything.
+Real leakage, and worth reporting as a benchmark limitation — but it is not
+1.000, so the cascade's score is not purely the model reading the generator.
+
+`venue_chars` carries 0.38 of the feature importance, which is a strange thing
+for a raw string length to do, so I checked what it was. Median venue length is
+identical at 4 across every group, but **VALID entries are 4.3% venueless and
+the four modes are 0–2%** — a sampling artefact rather than a property of
+citations, since all four modes need a venue to manipulate and an entry lacking
+one can never be selected into them.
+
+**That hypothesis is wrong, and it was the cheap-fix one.** Conditioning the
+negative class the same way the positives are conditioned moves nothing:
+dev 513 → 491 negatives leaves DR at 0.468, test 312 → 299 takes it from 0.388
+to 0.403. Disconfirmed by the session that owns the control and reproduced here.
+
+The difference matters for what the paper says. "We sampled badly" is fixable in
+the next release; "the perturbation itself is detectable" is a design question
+about the four modes. It is the second.
 
 **Ruled: report the ablation, defer the relabel.** The instability goes in the
 paper as a stated result rather than being settled by relabelling five splits.
