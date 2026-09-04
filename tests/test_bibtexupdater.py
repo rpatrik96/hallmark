@@ -165,7 +165,11 @@ class TestParseJsonlOutput:
             }
         ]
         (pred,) = _parse(tmp_path, records)
-        assert pred.label == "VALID"
+        # UNCERTAIN, not VALID: the lookup never completed, so the entry is
+        # unanswered rather than cleared. Writing it as a committed VALID is
+        # what made ``coverage`` read 1.0 on runs full of abstentions
+        # (tests/test_abstention_is_not_a_verdict.py).
+        assert pred.label == "UNCERTAIN"
         assert pred.confidence == pytest.approx(0.45)
         # Reason explains the abstention while keeping the leading raw-status
         # segment that run_bibtex_check_with_status parses for the cascade.
@@ -191,8 +195,8 @@ class TestParseJsonlOutput:
         assert pred.confidence == pytest.approx(0.65)  # 1 - p_valid
 
     def test_coverage_incomplete_informational_for_other_statuses(self, tmp_path: Path) -> None:
-        """coverage_incomplete only rewrites not_found; api_error keeps its
-        conservative-VALID mapping with p_valid-derived confidence."""
+        """coverage_incomplete only rewrites not_found; api_error is already an
+        abstention by status and keeps its p_valid-derived confidence."""
         records: list[dict[str, Any]] = [
             {
                 "key": "e",
@@ -206,9 +210,11 @@ class TestParseJsonlOutput:
             }
         ]
         (pred,) = _parse(tmp_path, records)
-        assert pred.label == "VALID"
+        # ``coverage_incomplete`` still rewrites nothing here -- api_error is an
+        # abstention on its own account, by status, and is reported as one.
+        assert pred.label == "UNCERTAIN"
         assert pred.confidence == pytest.approx(0.5)
-        assert "abstention" not in pred.reason
+        assert "throttling" not in pred.reason
 
 
 class TestTransportStatusMapping:
@@ -235,7 +241,9 @@ class TestTransportStatusMapping:
             }
         ]
         (pred,) = _parse(tmp_path, records)
-        assert pred.label == "VALID"
+        # The point of this test is that a transport failure is never evidence
+        # of fabrication. UNCERTAIN says that more precisely than VALID did.
+        assert pred.label == "UNCERTAIN"
         assert pred.label != "HALLUCINATED"
 
     def test_unknown_future_status_never_parses_to_hallucinated(self, tmp_path: Path) -> None:

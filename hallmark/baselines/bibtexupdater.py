@@ -114,6 +114,44 @@ STATUS_TO_LABEL: dict[str, str] = {
     "skipped": "VALID",  # Conservative
 }
 
+#: Statuses whose ``VALID`` above is an **abstention**, not a verdict.
+#:
+#: ``STATUS_TO_LABEL`` collapses two different things onto ``VALID``: entries the
+#: tool checked and cleared (``verified``, ``url_verified``, ...) and entries it
+#: declined to judge because no source answered. Scoring the second group as a
+#: committed VALID is the documented conservative convention, but recording it as
+#: one is a reporting bug: ``EvaluationResult.num_uncertain`` came out 0 and
+#: ``coverage`` 1.0 on a run with 147 ``unconfirmed`` records, so the released
+#: JSON reported full coverage for a tool that answered 87% of the split.
+#:
+#: ``not_found`` is deliberately absent. bibtex-check sets ``abstained: true`` on
+#: it, but that flag means "could not affirmatively verify against a source",
+#: which for ``not_found`` coincides with the detection: of the 52 such records on
+#: ``dev_public``, 51 sit on HALLUCINATED entries. They are verdicts, and the
+#: mapping to HALLUCINATED is right. The same applies to ``partial_match``.
+ABSTENTION_STATUSES: frozenset[str] = frozenset(
+    {
+        "unconfirmed",
+        "api_error",
+        "network_error",
+        "coverage_incomplete",
+        "skipped",
+        "strict_warn_preprint_year",
+        "strict_warn_cnv",
+    }
+)
+
+#: Set to ``1`` to restore the pre-fix mapping, where an abstention is written as
+#: a committed VALID. Reproduces the published ``bibtex-updater`` rows exactly;
+#: it does not make them right.
+ABSTENTION_AS_VALID_ENV = "HALLMARK_BTU_ABSTENTION_AS_VALID"
+
+
+def abstentions_are_committed_valid() -> bool:
+    """True when the legacy mapping is requested via the environment."""
+    return os.environ.get(ABSTENTION_AS_VALID_ENV) == "1"
+
+
 # Map bibtex-check status to confidence
 STATUS_TO_CONFIDENCE: dict[str, float] = {
     "verified": 0.95,
@@ -900,6 +938,16 @@ def _parse_jsonl_output(
             if incomplete_not_found:
                 label = "VALID"
 
+            # An abstention is not a verdict. Emitting it as UNCERTAIN is what
+            # makes ``coverage`` and ``num_uncertain`` describe the run; under
+            # the conservative protocol these entries leave the confusion matrix
+            # rather than counting as committed VALID, so the DR/FPR/F1 triple
+            # becomes the selective one. Set HALLMARK_BTU_ABSTENTION_AS_VALID=1
+            # to reproduce a published row under the old convention.
+            is_abstention = status in ABSTENTION_STATUSES or incomplete_not_found
+            if is_abstention and not abstentions_are_committed_valid():
+                label = "UNCERTAIN"
+
             p_valid = record.get("p_valid")
             if incomplete_not_found:
                 confidence = 0.45
@@ -926,6 +974,11 @@ def _parse_jsonl_output(
                     confidence = raw_confidence
 
             reason_parts = [f"Status: {status}"]
+            if is_abstention:
+                reason_parts.append(
+                    "Abstention: no source answered, so this is not a verdict"
+                    + ("" if label == "UNCERTAIN" else " (scored as committed VALID)")
+                )
             if incomplete_not_found:
                 reason_parts.append(
                     "Lookup incomplete due to source errors/throttling — "
