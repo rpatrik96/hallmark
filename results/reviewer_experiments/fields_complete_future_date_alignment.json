@@ -1,0 +1,662 @@
+{
+  "description": "Aligned fields_complete with check_fields_complete for hallucination_type=future_date. The taxonomy expectation contradicted the checker that computes this sub-test.",
+  "count": 82,
+  "fixes": [
+    {
+      "key": "cd588085bf52",
+      "split": "dev_public",
+      "hallucination_type": "future_date",
+      "subtest": "fields_complete",
+      "before": false,
+      "after": true
+    },
+    {
+      "key": "f59db5e0b438",
+      "split": "dev_public",
+      "hallucination_type": "future_date",
+      "subtest": "fields_complete",
+      "before": false,
+      "after": true
+    },
+    {
+      "key": "e00a665213b1",
+      "split": "dev_public",
+      "hallucination_type": "future_date",
+      "subtest": "fields_complete",
+      "before": false,
+      "after": true
+    },
+    {
+      "key": "c6a41e340bbe",
+      "split": "dev_public",
+      "hallucination_type": "future_date",
+      "subtest": "fields_complete",
+      "before": false,
+      "after": true
+    },
+    {
+      "key": "e2644111524d",
+      "split": "dev_public",
+      "hallucination_type": "future_date",
+      "subtest": "fields_complete",
+      "before": false,
+      "after": true
+    },
+    {
+      "key": "dbc82b3e244e",
+      "split": "dev_public",
+      "hallucination_type": "future_date",
+      "subtest": "fields_complete",
+      "before": false,
+      "after": true
+    },
+    {
+      "key": "a9ed8e0f2e8b",
+      "split": "dev_public",
+      "hallucination_type": "future_date",
+      "subtest": "fields_complete",
+      "before": false,
+      "after": true
+    },
+    {
+      "key": "bc9f7e25cb78",
+      "split": "dev_public",
+      "hallucination_type": "future_date",
+      "subtest": "fields_complete",
+      "before": false,
+      "after": true
+    },
+    {
+      "key": "cade77661889",
+      "split": "dev_public",
+      "hallucination_type": "future_date",
+      "subtest": "fields_complete",
+      "before": false,
+      "after": true
+    },
+    {
+      "key": "e0104600f48f",
+      "split": "dev_public",
+      "hallucination_type": "future_date",
+      "subtest": "fields_complete",
+      "before": false,
+      "after": true
+    },
+    {
+      "key": "a30232aff331",
+      "split": "dev_public",
+      "hallucination_type": "future_date",
+      "subtest": "fields_complete",
+      "before": false,
+      "after": true
+    },
+    {
+      "key": "de5a197b225f",
+      "split": "dev_public",
+      "hallucination_type": "future_date",
+      "subtest": "fields_complete",
+      "before": false,
+      "after": true
+    },
+    {
+      "key": "f4409e06f870",
+      "split": "dev_public",
+      "hallucination_type": "future_date",
+      "subtest": "fields_complete",
+      "before": false,
+      "after": true
+    },
+    {
+      "key": "c77e15688bec",
+      "split": "dev_public",
+      "hallucination_type": "future_date",
+      "subtest": "fields_complete",
+      "before": false,
+      "after": true
+    },
+    {
+      "key": "ade129d40251",
+      "split": "dev_public",
+      "hallucination_type": "future_date",
+      "subtest": "fields_complete",
+      "before": false,
+      "after": true
+    },
+    {
+      "key": "bcd7ebdad1c6",
+      "split": "dev_public",
+      "hallucination_type": "future_date",
+      "subtest": "fields_complete",
+      "before": false,
+      "after": true
+    },
+    {
+      "key": "f73bc95ca2e3",
+      "split": "dev_public",
+      "hallucination_type": "future_date",
+      "subtest": "fields_complete",
+      "before": false,
+      "after": true
+    },
+    {
+      "key": "cc27515ebe5c",
+      "split": "dev_public",
+      "hallucination_type": "future_date",
+      "subtest": "fields_complete",
+      "before": false,
+      "after": true
+    },
+    {
+      "key": "d7ba9c5449e9",
+      "split": "dev_public",
+      "hallucination_type": "future_date",
+      "subtest": "fields_complete",
+      "before": false,
+      "after": true
+    },
+    {
+      "key": "f77e6d044a01",
+      "split": "dev_public",
+      "hallucination_type": "future_date",
+      "subtest": "fields_complete",
+      "before": false,
+      "after": true
+    },
+    {
+      "key": "e6f2029e276e",
+      "split": "dev_public",
+      "hallucination_type": "future_date",
+      "subtest": "fields_complete",
+      "before": false,
+      "after": true
+    },
+    {
+      "key": "b81db378c3b2",
+      "split": "dev_public",
+      "hallucination_type": "future_date",
+      "subtest": "fields_complete",
+      "before": false,
+      "after": true
+    },
+    {
+      "key": "ff5ddd3be1c6",
+      "split": "dev_public",
+      "hallucination_type": "future_date",
+      "subtest": "fields_complete",
+      "before": false,
+      "after": true
+    },
+    {
+      "key": "ad71cd65fa4f",
+      "split": "dev_public",
+      "hallucination_type": "future_date",
+      "subtest": "fields_complete",
+      "before": false,
+      "after": true
+    },
+    {
+      "key": "d81e69036f45",
+      "split": "dev_public",
+      "hallucination_type": "future_date",
+      "subtest": "fields_complete",
+      "before": false,
+      "after": true
+    },
+    {
+      "key": "dea5afac9e05",
+      "split": "dev_public",
+      "hallucination_type": "future_date",
+      "subtest": "fields_complete",
+      "before": false,
+      "after": true
+    },
+    {
+      "key": "bb9fc680c843",
+      "split": "dev_public",
+      "hallucination_type": "future_date",
+      "subtest": "fields_complete",
+      "before": false,
+      "after": true
+    },
+    {
+      "key": "aa49c228428a",
+      "split": "dev_public",
+      "hallucination_type": "future_date",
+      "subtest": "fields_complete",
+      "before": false,
+      "after": true
+    },
+    {
+      "key": "d6051d376304",
+      "split": "dev_public",
+      "hallucination_type": "future_date",
+      "subtest": "fields_complete",
+      "before": false,
+      "after": true
+    },
+    {
+      "key": "a80e0803bdbf",
+      "split": "test_public",
+      "hallucination_type": "future_date",
+      "subtest": "fields_complete",
+      "before": false,
+      "after": true
+    },
+    {
+      "key": "eb48886dfab0",
+      "split": "test_public",
+      "hallucination_type": "future_date",
+      "subtest": "fields_complete",
+      "before": false,
+      "after": true
+    },
+    {
+      "key": "c0315260b3eb",
+      "split": "test_public",
+      "hallucination_type": "future_date",
+      "subtest": "fields_complete",
+      "before": false,
+      "after": true
+    },
+    {
+      "key": "cc62d71412cf",
+      "split": "test_public",
+      "hallucination_type": "future_date",
+      "subtest": "fields_complete",
+      "before": false,
+      "after": true
+    },
+    {
+      "key": "a22d78255087",
+      "split": "test_public",
+      "hallucination_type": "future_date",
+      "subtest": "fields_complete",
+      "before": false,
+      "after": true
+    },
+    {
+      "key": "d57b669904d2",
+      "split": "test_public",
+      "hallucination_type": "future_date",
+      "subtest": "fields_complete",
+      "before": false,
+      "after": true
+    },
+    {
+      "key": "bc7c38050a7d",
+      "split": "test_public",
+      "hallucination_type": "future_date",
+      "subtest": "fields_complete",
+      "before": false,
+      "after": true
+    },
+    {
+      "key": "e6749733b365",
+      "split": "test_public",
+      "hallucination_type": "future_date",
+      "subtest": "fields_complete",
+      "before": false,
+      "after": true
+    },
+    {
+      "key": "b41aab7afd10",
+      "split": "test_public",
+      "hallucination_type": "future_date",
+      "subtest": "fields_complete",
+      "before": false,
+      "after": true
+    },
+    {
+      "key": "a3b6cfcda14b",
+      "split": "test_public",
+      "hallucination_type": "future_date",
+      "subtest": "fields_complete",
+      "before": false,
+      "after": true
+    },
+    {
+      "key": "eeb7644ec16e",
+      "split": "test_public",
+      "hallucination_type": "future_date",
+      "subtest": "fields_complete",
+      "before": false,
+      "after": true
+    },
+    {
+      "key": "a5a0f35fa18a",
+      "split": "test_public",
+      "hallucination_type": "future_date",
+      "subtest": "fields_complete",
+      "before": false,
+      "after": true
+    },
+    {
+      "key": "a4a79198d7e0",
+      "split": "test_public",
+      "hallucination_type": "future_date",
+      "subtest": "fields_complete",
+      "before": false,
+      "after": true
+    },
+    {
+      "key": "f8e796590cb7",
+      "split": "test_public",
+      "hallucination_type": "future_date",
+      "subtest": "fields_complete",
+      "before": false,
+      "after": true
+    },
+    {
+      "key": "efbda82965cc",
+      "split": "test_public",
+      "hallucination_type": "future_date",
+      "subtest": "fields_complete",
+      "before": false,
+      "after": true
+    },
+    {
+      "key": "d45b54a46ba3",
+      "split": "test_public",
+      "hallucination_type": "future_date",
+      "subtest": "fields_complete",
+      "before": false,
+      "after": true
+    },
+    {
+      "key": "bb1f96f75b28",
+      "split": "test_public",
+      "hallucination_type": "future_date",
+      "subtest": "fields_complete",
+      "before": false,
+      "after": true
+    },
+    {
+      "key": "d0f7607f19f7",
+      "split": "test_public",
+      "hallucination_type": "future_date",
+      "subtest": "fields_complete",
+      "before": false,
+      "after": true
+    },
+    {
+      "key": "e36a503f42a8",
+      "split": "test_public",
+      "hallucination_type": "future_date",
+      "subtest": "fields_complete",
+      "before": false,
+      "after": true
+    },
+    {
+      "key": "bfb18b239245",
+      "split": "test_public",
+      "hallucination_type": "future_date",
+      "subtest": "fields_complete",
+      "before": false,
+      "after": true
+    },
+    {
+      "key": "f9b7f96e0253",
+      "split": "test_public",
+      "hallucination_type": "future_date",
+      "subtest": "fields_complete",
+      "before": false,
+      "after": true
+    },
+    {
+      "key": "f67bb53b8941",
+      "split": "test_public",
+      "hallucination_type": "future_date",
+      "subtest": "fields_complete",
+      "before": false,
+      "after": true
+    },
+    {
+      "key": "b5f6667cbb72",
+      "split": "test_public",
+      "hallucination_type": "future_date",
+      "subtest": "fields_complete",
+      "before": false,
+      "after": true
+    },
+    {
+      "key": "f460a8ad866f",
+      "split": "test_public",
+      "hallucination_type": "future_date",
+      "subtest": "fields_complete",
+      "before": false,
+      "after": true
+    },
+    {
+      "key": "cdfd26f26fd8",
+      "split": "test_public",
+      "hallucination_type": "future_date",
+      "subtest": "fields_complete",
+      "before": false,
+      "after": true
+    },
+    {
+      "key": "f06e39dcbf3a",
+      "split": "test_public",
+      "hallucination_type": "future_date",
+      "subtest": "fields_complete",
+      "before": false,
+      "after": true
+    },
+    {
+      "key": "d300f360fe60",
+      "split": "test_public",
+      "hallucination_type": "future_date",
+      "subtest": "fields_complete",
+      "before": false,
+      "after": true
+    },
+    {
+      "key": "afe546ed0f11",
+      "split": "test_public",
+      "hallucination_type": "future_date",
+      "subtest": "fields_complete",
+      "before": false,
+      "after": true
+    },
+    {
+      "key": "hallmark_xd_0006",
+      "split": "test_crossdomain",
+      "hallucination_type": "future_date",
+      "subtest": "fields_complete",
+      "before": false,
+      "after": true
+    },
+    {
+      "key": "hallmark_xd_0022",
+      "split": "test_crossdomain",
+      "hallucination_type": "future_date",
+      "subtest": "fields_complete",
+      "before": false,
+      "after": true
+    },
+    {
+      "key": "hallmark_xd_0045",
+      "split": "test_crossdomain",
+      "hallucination_type": "future_date",
+      "subtest": "fields_complete",
+      "before": false,
+      "after": true
+    },
+    {
+      "key": "hallmark_xd_0053",
+      "split": "test_crossdomain",
+      "hallucination_type": "future_date",
+      "subtest": "fields_complete",
+      "before": false,
+      "after": true
+    },
+    {
+      "key": "hallmark_xd_0079",
+      "split": "test_crossdomain",
+      "hallucination_type": "future_date",
+      "subtest": "fields_complete",
+      "before": false,
+      "after": true
+    },
+    {
+      "key": "hallmark_xd_0087",
+      "split": "test_crossdomain",
+      "hallucination_type": "future_date",
+      "subtest": "fields_complete",
+      "before": false,
+      "after": true
+    },
+    {
+      "key": "hallmark_xd_0167",
+      "split": "test_crossdomain",
+      "hallucination_type": "future_date",
+      "subtest": "fields_complete",
+      "before": false,
+      "after": true
+    },
+    {
+      "key": "hallmark_xd_0184",
+      "split": "test_crossdomain",
+      "hallucination_type": "future_date",
+      "subtest": "fields_complete",
+      "before": false,
+      "after": true
+    },
+    {
+      "key": "hallmark_xd_0188",
+      "split": "test_crossdomain",
+      "hallucination_type": "future_date",
+      "subtest": "fields_complete",
+      "before": false,
+      "after": true
+    },
+    {
+      "key": "hallmark_xd_0190",
+      "split": "test_crossdomain",
+      "hallucination_type": "future_date",
+      "subtest": "fields_complete",
+      "before": false,
+      "after": true
+    },
+    {
+      "key": "hallmark_xd_0193",
+      "split": "test_crossdomain",
+      "hallucination_type": "future_date",
+      "subtest": "fields_complete",
+      "before": false,
+      "after": true
+    },
+    {
+      "key": "hallmark_xd_0205",
+      "split": "test_crossdomain",
+      "hallucination_type": "future_date",
+      "subtest": "fields_complete",
+      "before": false,
+      "after": true
+    },
+    {
+      "key": "hallmark_xd_0208",
+      "split": "test_crossdomain",
+      "hallucination_type": "future_date",
+      "subtest": "fields_complete",
+      "before": false,
+      "after": true
+    },
+    {
+      "key": "hallmark_xd_0212",
+      "split": "test_crossdomain",
+      "hallucination_type": "future_date",
+      "subtest": "fields_complete",
+      "before": false,
+      "after": true
+    },
+    {
+      "key": "hallmark_xd_0218",
+      "split": "test_crossdomain",
+      "hallucination_type": "future_date",
+      "subtest": "fields_complete",
+      "before": false,
+      "after": true
+    },
+    {
+      "key": "hallmark_xd_0224",
+      "split": "test_crossdomain",
+      "hallucination_type": "future_date",
+      "subtest": "fields_complete",
+      "before": false,
+      "after": true
+    },
+    {
+      "key": "hallmark_xd_0234",
+      "split": "test_crossdomain",
+      "hallucination_type": "future_date",
+      "subtest": "fields_complete",
+      "before": false,
+      "after": true
+    },
+    {
+      "key": "hallmark_xd_0249",
+      "split": "test_crossdomain",
+      "hallucination_type": "future_date",
+      "subtest": "fields_complete",
+      "before": false,
+      "after": true
+    },
+    {
+      "key": "hallmark_xd_0273",
+      "split": "test_crossdomain",
+      "hallucination_type": "future_date",
+      "subtest": "fields_complete",
+      "before": false,
+      "after": true
+    },
+    {
+      "key": "hallmark_xd_0301",
+      "split": "test_crossdomain",
+      "hallucination_type": "future_date",
+      "subtest": "fields_complete",
+      "before": false,
+      "after": true
+    },
+    {
+      "key": "hallmark_xd_0347",
+      "split": "test_crossdomain",
+      "hallucination_type": "future_date",
+      "subtest": "fields_complete",
+      "before": false,
+      "after": true
+    },
+    {
+      "key": "hallmark_xd_0365",
+      "split": "test_crossdomain",
+      "hallucination_type": "future_date",
+      "subtest": "fields_complete",
+      "before": false,
+      "after": true
+    },
+    {
+      "key": "hallmark_xd_0379",
+      "split": "test_crossdomain",
+      "hallucination_type": "future_date",
+      "subtest": "fields_complete",
+      "before": false,
+      "after": true
+    },
+    {
+      "key": "hallmark_xd_0433",
+      "split": "test_crossdomain",
+      "hallucination_type": "future_date",
+      "subtest": "fields_complete",
+      "before": false,
+      "after": true
+    },
+    {
+      "key": "hallmark_xd_0451",
+      "split": "test_crossdomain",
+      "hallucination_type": "future_date",
+      "subtest": "fields_complete",
+      "before": false,
+      "after": true
+    }
+  ]
+}

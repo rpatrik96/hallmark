@@ -118,7 +118,14 @@ EXPECTED_SUBTESTS: dict[HallucinationType, dict[str, bool | None]] = {
         "title_exists": True,
         "authors_match": True,
         "venue_correct": True,
-        "fields_complete": False,
+        # True, not False: a future-dated entry is complete, it is just wrong
+        # about the year. ``check_fields_complete`` tests for missing required
+        # fields plus a 4-digit year and a well-formed DOI, and "2032" is a
+        # perfectly well-formed 4-digit year. The old False contradicted the
+        # checker that computes this sub-test: across every split the checker
+        # passes 96 of 99 future_date entries. future_date is the only type
+        # whose fields_complete expectation disagreed with the checker.
+        "fields_complete": True,
         "cross_db_agreement": False,
     },
     HallucinationType.CHIMERIC_TITLE: {
