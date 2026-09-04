@@ -406,6 +406,18 @@ def per_type_metrics(
 ) -> dict[str, dict[str, float]]:
     """Compute metrics broken down by hallucination type.
 
+    VALID entries are included in EVERY type's FPR denominator, mirroring
+    :func:`per_tier_metrics`. Grouping strictly by ``hallucination_type`` puts
+    only hallucinated entries in a type's group, which forces precision to 1.0
+    and FPR to 0.0 and collapses F1 to the deterministic ``2*DR/(1+DR)``. The
+    ``"valid"`` group keeps its own semantics: it has no hallucinated entries,
+    so its detection rate and F1 are 0.0 by definition and its FPR is the
+    tool's overall FPR.
+
+    For each hallucination type the confusion matrix is built from:
+    - hallucinated entries of that type (for detection rate / recall)
+    - ALL valid entries (for FPR and precision)
+
     Args:
         entries: Benchmark entries.
         predictions: Tool's predictions — either a dict keyed by bibtex_key
@@ -415,12 +427,16 @@ def per_type_metrics(
             for hallucinated types (n > 0); valid entries get 0.0/0.0.
 
     Returns:
-        Dict mapping hallucination type to metrics dict. When ``compute_ci``
-        is True, each inner dict also contains ``dr_ci_lower`` and
-        ``dr_ci_upper``.
+        Dict mapping hallucination type to metrics dict. ``count`` is the
+        number of hallucinated entries of that type (for ``"valid"``, the
+        number of valid entries) and excludes the borrowed valid entries.
+        ``num_valid`` records how many valid entries entered the FPR
+        denominator. When ``compute_ci`` is True, each inner dict also
+        contains ``dr_ci_lower`` and ``dr_ci_upper``.
     """
     if isinstance(predictions, list):
         predictions = {p.bibtex_key: p for p in predictions}
+    valid_entries = [e for e in entries if e.label == "VALID"]
     type_entries: dict[str, list[BenchmarkEntry]] = defaultdict(list)
     for entry in entries:
         h_type = entry.hallucination_type or "valid"
@@ -428,12 +444,17 @@ def per_type_metrics(
 
     result = {}
     for h_type, type_e in sorted(type_entries.items()):
-        cm = build_confusion_matrix(type_e, predictions)
+        # Borrow all valid entries so FPR and precision have a real denominator.
+        # The "valid" group already *is* the valid entries — do not double them.
+        scored_e = type_e if h_type == "valid" else type_e + valid_entries
+        cm = build_confusion_matrix(scored_e, predictions)
         metrics: dict[str, float] = {
             "detection_rate": cm.detection_rate,
             "false_positive_rate": cm.false_positive_rate,
             "f1": cm.f1,
+            "precision": cm.precision,
             "count": len(type_e),
+            "num_valid": 0 if h_type == "valid" else len(valid_entries),
         }
         if compute_ci:
             z = 1.96  # 95% CI
@@ -1218,17 +1239,23 @@ def paired_bootstrap_test(
             metric_b_boot = metric_fn(resampled_entries, resampled_preds_b)
             bootstrap_diffs.append(metric_a_boot - metric_b_boot)
 
-    # One-sided p-value: fraction of bootstrap samples where delta <= 0.
-    # Note: this implementation is conservative — it counts bootstrap diffs
-    # against the raw null (delta <= 0) rather than the null-centered approach
-    # (d - observed_diff <= 0). The null-centered method would be unbiased
-    # (matching the permutation-test philosophy), but the conservative approach
-    # is acceptable for a benchmark leaderboard where we prefer to under-report
-    # significance rather than over-report it. This is a deliberate design choice.
-    p_value_one_sided = (
-        float(np.mean([d <= 0 for d in bootstrap_diffs])) if bootstrap_diffs else 1.0
-    )
-    p_value = min(1.0, 2.0 * p_value_one_sided) if two_sided else p_value_one_sided
+    # Percentile-bootstrap (CI-inversion) p-value.
+    #
+    # The one-sided value is the mass of the bootstrap distribution on the wrong
+    # side of zero for the *observed* direction. The two-sided value must take
+    # the smaller tail: doubling the ``d <= 0`` mass alone is only correct when A
+    # is the better tool, and returns 1.0 whenever A is worse, however large the
+    # gap. Since callers enumerate pairs in sorted-name order, that made roughly
+    # half of every pairwise comparison non-significant by construction.
+    if bootstrap_diffs:
+        p_le = float(np.mean([d <= 0 for d in bootstrap_diffs]))
+        p_ge = float(np.mean([d >= 0 for d in bootstrap_diffs]))
+    else:
+        p_le = 1.0
+        p_ge = 1.0
+
+    p_value_one_sided = p_le
+    p_value = min(1.0, 2.0 * min(p_le, p_ge)) if two_sided else p_value_one_sided
 
     # Cohen's h effect size
     if 0.0 <= metric_a <= 1.0 and 0.0 <= metric_b <= 1.0:
@@ -2167,14 +2194,28 @@ def evaluate(
 
     # F-7: Use intersection of entry_keys and pred_keys so that extra predictions
     # (keys not in entries) do not push coverage above 1.0.
-    coverage = len(entry_keys & pred_keys) / len(entries) if entries else 1.0
+    #
+    # ``response_coverage`` is the old meaning — did the tool return a record at
+    # all — and it is what strict mode checks, because a missing prediction and
+    # an abstention are different failures.
+    response_coverage = len(entry_keys & pred_keys) / len(entries) if entries else 1.0
 
-    if strict and coverage < 1.0:
+    if strict and response_coverage < 1.0:
         missing = len(entries) - len(entry_keys & pred_keys)
         raise ValueError(
-            f"Strict mode: coverage is {coverage:.1%} (expected 100%). "
+            f"Strict mode: coverage is {response_coverage:.1%} (expected 100%). "
             f"Missing predictions for {missing} entries."
         )
+
+    # ``coverage`` is selective-prediction coverage: the fraction of entries the
+    # tool actually ANSWERED. UNCERTAIN predictions are excluded from the
+    # confusion matrix, ECE, AUROC and AUPRC, so counting them as covered let a
+    # tool report metrics computed on its easy subset at full coverage — one
+    # committed run answers 68 of 500 entries and reported coverage 1.0. With
+    # this definition ``coverage_adjusted_f1`` penalises abstention as
+    # ``EvaluationResult.coverage_adjusted_f1`` has always documented.
+    answered_keys = {key for key in (entry_keys & pred_keys) if pred_map[key].label != "UNCERTAIN"}
+    coverage = len(answered_keys) / len(entries) if entries else 1.0
 
     cm = build_confusion_matrix(entries, pred_map)
 
@@ -2321,6 +2362,7 @@ def evaluate(
         ece_ci=ece_ci,
         mcc_ci=mcc_ci,
         coverage=coverage,
+        response_coverage=response_coverage,
         coverage_adjusted_f1=coverage_adjusted_f1,
         tier3_f1=tier3_f1,
         type_accuracy=type_acc,
@@ -2344,11 +2386,17 @@ def per_tier_rankings(
     Args:
         entries: benchmark entries
         tool_predictions: {tool_name: [predictions]}
-        metric: key in per-tier dict ("detection_rate", "f1", "fpr")
+        metric: key in per-tier dict ("detection_rate", "f1", "precision",
+            "false_positive_rate"). ``"fpr"`` is accepted as an alias —
+            ``per_tier_metrics`` emits ``false_positive_rate``, so the bare
+            ``"fpr"`` used to fall through to the 0.0 default for every tool.
 
     Returns:
-        dict mapping tier (1, 2, 3) -> [(tool_name, metric_value)] sorted best-first
+        dict mapping tier (1, 2, 3) -> [(tool_name, metric_value)] sorted
+        best-first. For false-positive rate, best-first means ascending.
     """
+    key = "false_positive_rate" if metric == "fpr" else metric
+    lower_is_better = key == "false_positive_rate"
     results: dict[int, list[tuple[str, float]]] = {}
     for tier in (1, 2, 3):
         tier_scores: list[tuple[str, float]] = []
@@ -2356,9 +2404,9 @@ def per_tier_rankings(
             pred_map = {p.bibtex_key: p for p in preds}
             tm = per_tier_metrics(entries, pred_map)
             tier_data = tm.get(tier, {})
-            score = tier_data.get(metric, 0.0)
+            score = tier_data.get(key, 0.0)
             tier_scores.append((tool_name, score))
-        tier_scores.sort(key=lambda x: -x[1])
+        tier_scores.sort(key=lambda x: x[1] if lower_is_better else -x[1])
         results[tier] = tier_scores
     return results
 
