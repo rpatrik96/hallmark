@@ -251,7 +251,19 @@ class TestSubtestConsistencyGate:
         )
 
     def test_exemptions_are_still_needed(self, report):
-        """An exemption that no longer fires is a stale excuse — drop it."""
+        """An exemption that no longer fires is a stale excuse — drop it.
+
+        Skipped without the hidden split, and that is the point rather than a
+        convenience: the only entries currently exercising the
+        ``future_date``/``fields_complete`` exemption are in ``test_hidden``,
+        because the public splits assign ``False`` there and so agree with the
+        (wrong) taxonomy. Asserting staleness over a population that cannot
+        contain the cause would report a live exemption as dead — the same
+        population-dependent mistake this gate was split apart to stop making.
+        """
+        if not (_REPO_ROOT / vs.DEFAULT_SPLITS["test_hidden"]).exists():
+            pytest.skip("hidden split not present — exemption staleness not checkable")
+
         seen = {
             (str(m.hallucination_type), str(m.subtest))
             for m in report.mismatches
