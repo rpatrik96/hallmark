@@ -25,7 +25,12 @@ from __future__ import annotations
 
 import json
 import subprocess
+import sys
 from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+
+from hallmark.dataset.blinding import BLIND_EXCLUDED_FIELDS, blind_record
 
 REPO = Path(__file__).resolve().parent.parent
 DATA = REPO / "data" / "v1.2"
@@ -100,12 +105,14 @@ def main() -> None:
                 counts["real_world_hallucinated"] += 1
 
             blinded.append(
-                {
-                    "bibtex_key": key,
-                    "bibtex_type": e["bibtex_type"],
-                    "fields": e["fields"],
-                    "raw_bibtex": e.get("raw_bibtex"),
-                }
+                blind_record(
+                    {
+                        "bibtex_key": key,
+                        "bibtex_type": e["bibtex_type"],
+                        "fields": e["fields"],
+                        "raw_bibtex": e.get("raw_bibtex"),
+                    }
+                )
             )
             gold.append(
                 {
@@ -154,6 +161,7 @@ def main() -> None:
             "source",
             "generation_method",
             "difficulty_tier",
+            *sorted(BLIND_EXCLUDED_FIELDS),
         ],
     }
     (OUT / "substrate_manifest.json").write_text(json.dumps(manifest, indent=2))

@@ -564,7 +564,7 @@
     box.appendChild(table);
     var note = document.getElementById("leaderboard-note");
     note.textContent = (D.split_notes[RS.split] || "") +
-      " Coverage = share of entries the verifier commits to (non-abstained). Bold = best among ranked verifiers.";
+      " Coverage = share of entries the verifier judged instead of answering UNCERTAIN. Bold = best among the ranked verifiers.";
   }
 
   function renderScatter() {
@@ -957,7 +957,7 @@
     var rows = exFiltered();
     rows.slice(0, EX.shown).forEach(function (e) { list.appendChild(exampleCard(e)); });
     document.getElementById("examples-count").textContent =
-      rows.length + " of " + D.examples.length + " sampled entries match (corpus: " + D.corpus_note + ")";
+      rows.length + " of " + D.examples.length + " entries match. These are a " + D.corpus_note + ".";
     var more = document.getElementById("examples-more");
     more.style.display = rows.length > EX.shown ? "" : "none";
   }

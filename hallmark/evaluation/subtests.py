@@ -207,7 +207,7 @@ def check_fields_complete(
     fields: dict[str, str],
 ) -> SubTestResult:
     """Check if required BibTeX fields are present and well-formed."""
-    required_fields = _required_fields_for_type(bibtex_type)
+    required_fields = _required_fields_for_type(bibtex_type, fields)
     missing = [f for f in required_fields if not fields.get(f)]
     malformed = []
 
@@ -357,15 +357,58 @@ def _extract_last_names(author_string: str) -> set[str]:
     return names
 
 
-def _required_fields_for_type(bibtex_type: str) -> list[str]:
-    """Return required fields for a given BibTeX entry type."""
-    required = {
-        "article": ["author", "title", "journal", "year"],
-        "inproceedings": ["author", "title", "booktitle", "year"],
-        "book": ["author", "title", "publisher", "year"],
-        "misc": ["author", "title", "year"],
-        "phdthesis": ["author", "title", "school", "year"],
-        "mastersthesis": ["author", "title", "school", "year"],
-        "techreport": ["author", "title", "institution", "year"],
-    }
-    return required.get(bibtex_type.lower(), ["author", "title", "year"])
+# Required-field specification per BibTeX entry type, following standard BibTeX.
+# Exposed as a module constant so the benchmark docs, the paper, and the tests all
+# cite one source of truth: the sub-test is type-aware, and an optional field for
+# one entry type is never charged against another.
+REQUIRED_FIELDS_BY_TYPE: dict[str, list[str]] = {
+    "article": ["author", "title", "journal", "year"],
+    "inproceedings": ["author", "title", "booktitle", "year"],
+    "incollection": ["author", "title", "booktitle", "year"],
+    "book": ["author", "title", "publisher", "year"],
+    "inbook": ["author", "title", "publisher", "year"],
+    "misc": ["author", "title", "year"],
+    "phdthesis": ["author", "title", "school", "year"],
+    "mastersthesis": ["author", "title", "school", "year"],
+    "techreport": ["author", "title", "institution", "year"],
+    "unpublished": ["author", "title", "year"],
+}
+
+# Fallback for entry types outside the spec above.
+DEFAULT_REQUIRED_FIELDS: list[str] = ["author", "title", "year"]
+
+_ARXIV_DOI_PREFIX = "10.48550/arxiv"
+
+
+def _is_arxiv_preprint(fields: dict[str, str]) -> bool:
+    """Does this entry identify itself as an arXiv preprint?
+
+    An arXiv preprint has no journal, so an ``@article`` typed one would otherwise
+    fail ``fields_complete`` for a field it cannot have. Practitioners type arXiv
+    preprints as both ``@misc`` and ``@article``, and BibTeX styles accept either,
+    so we detect the arXiv identifier rather than dictating the entry type.
+    """
+    lowered = {k.lower(): (v or "") for k, v in fields.items()}
+    if lowered.get("eprint") or lowered.get("archiveprefix"):
+        return True
+    if _ARXIV_DOI_PREFIX in lowered.get("doi", "").strip().lower():
+        return True
+    return any(
+        "arxiv" in lowered.get(key, "").lower()
+        for key in ("journal", "booktitle", "note", "howpublished")
+    )
+
+
+def _required_fields_for_type(
+    bibtex_type: str,
+    fields: dict[str, str] | None = None,
+) -> list[str]:
+    """Return required fields for a given BibTeX entry type.
+
+    When ``fields`` is supplied, the spec drops ``journal`` for an ``@article``
+    that identifies itself as an arXiv preprint (see :func:`_is_arxiv_preprint`).
+    """
+    required = list(REQUIRED_FIELDS_BY_TYPE.get(bibtex_type.lower(), DEFAULT_REQUIRED_FIELDS))
+    if fields and bibtex_type.lower() == "article" and _is_arxiv_preprint(fields):
+        required = [f for f in required if f != "journal"]
+    return required

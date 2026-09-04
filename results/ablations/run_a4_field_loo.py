@@ -10,14 +10,18 @@ Dynamic complement to the static W6 format-tell audit. Two questions:
       DR / FPR shift. This localizes *which* field anchors a VALID verdict
       (FPR climbs when the dropped field was the model's main "this is real"
       evidence) vs a HALLUCINATED verdict.
+  (c) URL blinding: the benchmark withholds `url` at dispatch, so `with_url`
+      adds it back on top of the `full` rendering and measures what blinding
+      costs. Only the entries that store a url differ between the two, so read
+      the delta against `n_entries_with_url`, not against n.
 
 Design:
   * Sample: n=150 drawn deterministically (seed 42) from data/v1.2/dev_public.jsonl,
     stratified to preserve the split's HALL:VALID ratio.
-  * Conditions (7): full, structured, loo_{title,author,venue,year,doi}.
+  * Conditions (8): full, structured, loo_{title,author,venue,year,doi}, with_url.
   * Models: deepseek/deepseek-v3.2 (cheap anchor) + google/gemini-2.5-flash
     (OpenRouter confirmation model). Both non-thinking, temp=0, seed=42.
-  * 150 x 7 x 2 = 2100 calls; checkpointed/resumable per (model, condition).
+  * 150 x 8 x 2 = 2400 calls; checkpointed/resumable per (model, condition).
 
 Reuses the pilot scaffolding (results/ablations/run_ablation4_input_format.py):
 same prompt-head/tail split so only the *input rendering* changes between
@@ -69,7 +73,16 @@ ANCHOR = "deepseek-v3.2"
 SEED = 42
 DEFAULT_N = 150
 
-CONDITIONS = ["full", "structured", "loo_title", "loo_author", "loo_venue", "loo_year", "loo_doi"]
+CONDITIONS = [
+    "full",
+    "structured",
+    "loo_title",
+    "loo_author",
+    "loo_venue",
+    "loo_year",
+    "loo_doi",
+    "with_url",
+]
 DROPPED_FIELD_LABEL = {
     "loo_title": "title",
     "loo_author": "authors",
@@ -77,6 +90,13 @@ DROPPED_FIELD_LABEL = {
     "loo_year": "year",
     "loo_doi": "doi",
 }
+
+# `with_url` runs the other way round from the loo_* conditions: it *adds* the
+# `url` the benchmark withholds at dispatch, on top of the `full` rendering, to
+# measure what URL blinding costs a verifier. Its comparison baseline is `full`,
+# not `structured`. The URL is injected here and nowhere else — BlindEntry
+# strips the blind-list on construction, so this is the only way to render one.
+URL_FIELD = "url"
 
 VENUE_FIELDS = ("booktitle", "journal")
 
@@ -111,13 +131,36 @@ def _structured_input(entry: BlindEntry, drop: tuple[str, ...]) -> str:
     return "\n".join(lines)
 
 
-def make_prompt_fn(condition: str) -> Callable[[BlindEntry], str]:
+def _bibtex_with_url(entry: BlindEntry, url: str | None) -> str:
+    """Render `full`'s BibTeX block with the withheld ``url`` put back."""
+    fields = dict(entry.fields)
+    if url:
+        fields[URL_FIELD] = url
+    lines = [f"@{entry.bibtex_type}{{{entry.bibtex_key},"]
+    for key, value in sorted(fields.items()):
+        lines.append(f"  {key} = {{{value}}},")
+    lines.append("}")
+    return "\n".join(lines)
+
+
+def make_prompt_fn(
+    condition: str, url_by_key: dict[str, str] | None = None
+) -> Callable[[BlindEntry], str]:
     if condition == "full":
 
         def _full_fn(entry: BlindEntry) -> str:
             return VERIFICATION_PROMPT.format(bibtex=entry.to_bibtex())
 
         return _full_fn
+
+    if condition == "with_url":
+        urls = url_by_key or {}
+
+        def _url_fn(entry: BlindEntry) -> str:
+            bibtex = _bibtex_with_url(entry, urls.get(entry.bibtex_key))
+            return VERIFICATION_PROMPT.format(bibtex=bibtex)
+
+        return _url_fn
 
     drop = LOO_DROP[condition]
 
@@ -166,6 +209,9 @@ def run_model(
     model_dir.mkdir(parents=True, exist_ok=True)
     print(f"\n=== model={model_key} ({model_id}) | n={n} ({n_hall} HALL / {n - n_hall} VALID) ===")
 
+    # Only `with_url` sees these, and only through its own prompt_fn.
+    url_by_key = {e.bibtex_key: e.fields[URL_FIELD] for e in entries if e.fields.get(URL_FIELD)}
+
     summary: dict[str, dict] = {}
     for cond in CONDITIONS:
         ckpt = model_dir / f"ckpt_{cond}"
@@ -176,7 +222,7 @@ def run_model(
             base_url=BASE_URL,
             source_prefix=f"a4_{cond}",
             checkpoint_dir=ckpt,
-            prompt_fn=make_prompt_fn(cond),
+            prompt_fn=make_prompt_fn(cond, url_by_key),
             temperature=0.0,
         )
         res = evaluate(entries, preds, tool_name=f"{model_key}-{cond}", split_name="a4_dev150")
@@ -193,6 +239,9 @@ def run_model(
         }
         if LOO_DROP.get(cond):
             rec["n_drop_affected"] = _n_affected(entries, LOO_DROP[cond])
+        if cond == "with_url":
+            # Only entries that store a url differ from `full` at all.
+            rec["n_drop_affected"] = len(url_by_key)
         summary[cond] = rec
         fpr = res.false_positive_rate
         fpr_s = f"{fpr:.3f}" if fpr is not None else "NA"
@@ -229,6 +278,14 @@ def run_model(
             "dDR": summary["structured"]["detection_rate"] - summary["full"]["detection_rate"],
             "dFPR": (
                 (summary["structured"]["false_positive_rate"] or 0.0)
+                - (summary["full"]["false_positive_rate"] or 0.0)
+            ),
+        },
+        "url_delta_vs_full": {
+            "n_entries_with_url": summary["with_url"].get("n_drop_affected"),
+            "dDR": summary["with_url"]["detection_rate"] - summary["full"]["detection_rate"],
+            "dFPR": (
+                (summary["with_url"]["false_positive_rate"] or 0.0)
                 - (summary["full"]["false_positive_rate"] or 0.0)
             ),
         },
