@@ -1,8 +1,34 @@
 {
+  "base_rate_precision.csv": {
+    "generator": "scripts/compute_base_rate_precision.py",
+    "inputs": {
+      "data/v1.2/baseline_results/bibtexupdater_test_public.json": "d31eca7871bc1b6f2f0f13e734f7478f0ae00dcf45b879aaf2679075c484d9cc",
+      "data/v1.2/baseline_results/cascade_db_diagnosis_aggressive_test_public.json": "f8c2b0cdc4a311a741c9528880de28fea8759cd3dd4bfd1ca715851c3f2595c5",
+      "data/v1.2/baseline_results/cascade_db_diagnosis_evalmode_aggressive_test_public.json": "f8c2b0cdc4a311a741c9528880de28fea8759cd3dd4bfd1ca715851c3f2595c5",
+      "data/v1.2/baseline_results/cascade_db_diagnosis_test_public.json": "0b8e28af6ceaa9b327d17bea79a9fd5c7d59d596c7eff966dfcd076485241d77",
+      "data/v1.2/baseline_results/doi_only_test_public.json": "716ed587dc829f3b549ad5e846310a4705626758c80b432e42218d4aad274fda",
+      "data/v1.2/baseline_results/llm_agentic_btu_openai_test_public.json": "f8001545cd20f90ea06bd9a13590c74d5e32491a0a573c59fa249de2edc92f20",
+      "data/v1.2/baseline_results/llm_agentic_btu_sonnet_4_6_test_public.json": "0963a85c4f81f985824784389e3b8a890d3d6aabaa992070d42acdb115ad875c",
+      "data/v1.2/baseline_results/llm_agentic_openai_test_public.json": "72c88ccfbfb11e51a2e84307649b31da6d8ff9695871412b9cea7e4349bacc93",
+      "data/v1.2/baseline_results/llm_openai_gpt54_test_public.json": "083db8e3aee44cb76dd63a2b9fa6977c5f2a8cfdbcb267c02b4dc3e5415faba8",
+      "data/v1.2/baseline_results/llm_openai_test_public.json": "2f9d90370a88ea219f15f644a26cd1eecfbaeedf973c8bd2b75feeaecd0d38fa",
+      "data/v1.2/baseline_results/llm_openrouter_claude_opus_4_7_test_public.json": "76ac6ee463bc94091e93125333b8ff8f3ae98461d6ff7f31b7667be599ce0b45",
+      "data/v1.2/baseline_results/llm_openrouter_claude_sonnet_4_6_test_public.json": "e6c1f49975d71787d5dcefb213a0c9e7dcb50f6a350577f062d77f14a8a1f0ec",
+      "data/v1.2/baseline_results/llm_openrouter_deepseek_r1_test_public.json": "1be5ff175483727ffd35644f394b0fe556dc958acddf0e6a2af95ead9689ab6d",
+      "data/v1.2/baseline_results/llm_openrouter_deepseek_v3_test_public.json": "67f12ffeb2fcc28fe6b6fc2154ffadab6f71d89be8520a80f11c71822cf2378f",
+      "data/v1.2/baseline_results/llm_openrouter_gemini_flash_test_public.json": "92e214dddaf601a17da430d2dbe2d4e4f5fedaa6741f9cdcbadf55c09073ee75",
+      "data/v1.2/baseline_results/llm_openrouter_gemini_pro_test_public.json": "28f783bb26239d324305d51912eebf015fc5dbdb68a4bc591e2d5e1ec5d80515",
+      "data/v1.2/baseline_results/llm_openrouter_llama_4_maverick_test_public.json": "3747f84716fb0c78ccf573f0acee9db083f3823192b4d0a76460c2364bb85bf4",
+      "data/v1.2/baseline_results/llm_openrouter_mistral_test_public.json": "2f71622e7f10c85a8c150e70e722c4dbcf67279c6e2070151f5883221ebdf417",
+      "data/v1.2/baseline_results/llm_openrouter_qwen_max_test_public.json": "d056b6dec811bbd02114a993bd033fe023ce493f42ce3b60ced096d34c3917e2",
+      "data/v1.2/baseline_results/llm_openrouter_qwen_test_public.json": "8fbe6f79acba8de6618131ec2c3819ab7391e0eb8ecebf34ae3ef60c1f052f81",
+      "data/v1.2/baseline_results/llm_tool_augmented_test_public.json": "7d7733e0363906790592d11a953af83590024f0c54d7b56e290680dfa6a3e836"
+    }
+  },
   "taxonomy_fold_ablation_dev_public.csv": {
     "generator": "scripts/ablate_taxonomy_fold.py",
     "inputs": {
-      "data/v1.2/baseline_results/bibtexupdater_dev_public.json": "ffc80199709b72e5afb6e4b8d45476b3746ccde8f9825c43b59b7ab5191aed8b",
+      "data/v1.2/baseline_results/bibtexupdater_dev_public.json": "09778d2a41631733c3ab9c42cc612754efbe0dd32c957896463db7179bde0715",
       "data/v1.2/baseline_results/cascade_db_diagnosis_aggressive_dev_public.json": "0f54d388799fbf499937679ba7e8b779d2fe8e3b05646e7f3933b966b16f3a3a",
       "data/v1.2/baseline_results/cascade_db_diagnosis_dev_public.json": "5df803dde0d7fe80413072132677630b09761e9d313370611712ae0a7851747c",
       "data/v1.2/baseline_results/cascade_db_diagnosis_evalmode_aggressive_dev_public.json": "0f54d388799fbf499937679ba7e8b779d2fe8e3b05646e7f3933b966b16f3a3a",
@@ -27,7 +53,7 @@
   "taxonomy_fold_ablation_dev_public_hybrid_fabrication.csv": {
     "generator": "scripts/ablate_taxonomy_fold.py",
     "inputs": {
-      "data/v1.2/baseline_results/bibtexupdater_dev_public.json": "ffc80199709b72e5afb6e4b8d45476b3746ccde8f9825c43b59b7ab5191aed8b",
+      "data/v1.2/baseline_results/bibtexupdater_dev_public.json": "09778d2a41631733c3ab9c42cc612754efbe0dd32c957896463db7179bde0715",
       "data/v1.2/baseline_results/cascade_db_diagnosis_aggressive_dev_public.json": "0f54d388799fbf499937679ba7e8b779d2fe8e3b05646e7f3933b966b16f3a3a",
       "data/v1.2/baseline_results/cascade_db_diagnosis_dev_public.json": "5df803dde0d7fe80413072132677630b09761e9d313370611712ae0a7851747c",
       "data/v1.2/baseline_results/cascade_db_diagnosis_evalmode_aggressive_dev_public.json": "0f54d388799fbf499937679ba7e8b779d2fe8e3b05646e7f3933b966b16f3a3a",
@@ -60,7 +86,7 @@
   "taxonomy_fold_ablation_test_public.csv": {
     "generator": "scripts/ablate_taxonomy_fold.py",
     "inputs": {
-      "data/v1.2/baseline_results/bibtexupdater_test_public.json": "6cd2f9acc540179a88f8b94875433ff313a9f33b3ecf97247b5e7209ff55b82f",
+      "data/v1.2/baseline_results/bibtexupdater_test_public.json": "d31eca7871bc1b6f2f0f13e734f7478f0ae00dcf45b879aaf2679075c484d9cc",
       "data/v1.2/baseline_results/cascade_db_diagnosis_aggressive_test_public.json": "f8c2b0cdc4a311a741c9528880de28fea8759cd3dd4bfd1ca715851c3f2595c5",
       "data/v1.2/baseline_results/cascade_db_diagnosis_evalmode_aggressive_test_public.json": "f8c2b0cdc4a311a741c9528880de28fea8759cd3dd4bfd1ca715851c3f2595c5",
       "data/v1.2/baseline_results/cascade_db_diagnosis_test_public.json": "0b8e28af6ceaa9b327d17bea79a9fd5c7d59d596c7eff966dfcd076485241d77",
@@ -86,7 +112,7 @@
   "taxonomy_fold_ablation_test_public_hybrid_fabrication.csv": {
     "generator": "scripts/ablate_taxonomy_fold.py",
     "inputs": {
-      "data/v1.2/baseline_results/bibtexupdater_test_public.json": "6cd2f9acc540179a88f8b94875433ff313a9f33b3ecf97247b5e7209ff55b82f",
+      "data/v1.2/baseline_results/bibtexupdater_test_public.json": "d31eca7871bc1b6f2f0f13e734f7478f0ae00dcf45b879aaf2679075c484d9cc",
       "data/v1.2/baseline_results/cascade_db_diagnosis_aggressive_test_public.json": "f8c2b0cdc4a311a741c9528880de28fea8759cd3dd4bfd1ca715851c3f2595c5",
       "data/v1.2/baseline_results/cascade_db_diagnosis_evalmode_aggressive_test_public.json": "f8c2b0cdc4a311a741c9528880de28fea8759cd3dd4bfd1ca715851c3f2595c5",
       "data/v1.2/baseline_results/cascade_db_diagnosis_test_public.json": "0b8e28af6ceaa9b327d17bea79a9fd5c7d59d596c7eff966dfcd076485241d77",
