@@ -121,6 +121,14 @@ def _is_null_run(data: dict) -> bool:
     CLI was missing: the wrapper returns all-VALID for every entry and the
     harness scores it like any other result. Four such files shipped as the
     pre-screening ablations for bibtexupdater and harc.
+
+    **The conjunction is load-bearing, not belt-and-braces.** ``mean_api_calls``
+    of 0.0 is uninformative rather than diagnostic for every HaRC row, because
+    that wrapper never records API calls at all:
+    ``harc_with_s2key_dev_public.json`` reports 0.0 while being a real
+    evaluation at full coverage with DR 0.209. Requiring a zero detection rate
+    AND a zero false-positive rate alongside it is the only thing standing
+    between this guard and a genuine result.
     """
     return (
         data.get("detection_rate") == 0.0

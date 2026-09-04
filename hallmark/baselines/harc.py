@@ -206,7 +206,15 @@ def _run_harc_batches(
     batch_timeout: float,
     total_timeout: float,
 ) -> list[Prediction]:
-    """Run harcx in batches and return raw predictions (no pre-screening)."""
+    """Run harcx in batches and return raw predictions (no pre-screening).
+
+    Returns only the entries harcx actually checked, so a run whose batches all
+    timed out returns an empty list. That is honest at this level and is NOT
+    marked ``evaluated=False``: this function has no basis for a claim about
+    entries it never saw. The all-VALID set that a caller would otherwise score
+    is manufactured one level up, in ``run_with_prescreening``, and that is where
+    the backfill carries the flag.
+    """
     start = time.time()
     all_flagged: dict[str, list[str]] = {}
     all_checked: set[str] = set()
@@ -266,13 +274,19 @@ def _run_harc_batches(
     # ``checked`` set, and the run lands at zero having made real HTTP requests
     # during pre-screening -- which is why the failure reads as a clean result.
     if entries and checked_count == 0:
-        raise RuntimeError(
-            f"HaRC checked 0 of {len(entries)} entries "
-            f"({timed_out_batches} batch(es) timed out). Refusing to return "
-            "predictions: every entry would be backfilled, and the result would "
-            "score as DR 0.0 / FPR 0.0 -- a hang wearing the shape of a "
-            "measurement. Reduce --batch-size, raise batch_timeout, or record "
-            "HaRC as not evaluable on this machine."
+        # Every entry will be backfilled, and every backfill now carries
+        # evaluated=False, so the run reports num_evaluated 0 and the metrics
+        # layer refuses to read it as a measurement. Log loudly and return: the
+        # predictions are still wanted by callers that want to see the shape of
+        # the failure, and refusing outright would also discard a partial run.
+        logger.error(
+            "HaRC checked 0 of %d entries (%d batch(es) timed out). Every "
+            "prediction is a backfill, so detection rate and false positive "
+            "rate would be artefacts of the tool not running. Reduce "
+            "--batch-size, raise batch_timeout, or record HaRC as not evaluable "
+            "on this machine.",
+            len(entries),
+            timed_out_batches,
         )
 
     # Map to predictions

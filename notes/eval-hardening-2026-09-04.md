@@ -249,6 +249,52 @@ caught by someone else or by re-measuring.
   satellite-marker branch rather than the one under test.
 - Wrote an exemption-staleness test that was itself population-dependent — the
   exact defect the gate was split apart to stop making. CI caught it.
+- Wrote my harc tests at `_run_harc_batches`, the level I was editing, when the
+  damage lands one level up in `run_with_prescreening`. They would have passed
+  while the defect survived. Caught by the session porting them.
+- Nearly reported nine `hybrid_fabrication` entries as mislabelled, having
+  compared titles by substring containment — which a *modified* title trivially
+  satisfies. Checking authors, as the type definition requires, showed all nine
+  correct. A looser test would have produced a false accusation against the
+  benchmark's own labels.
+
+## The taxonomy result (issue #36)
+
+Measured after the fixes above, and it is the largest single finding of the day.
+Scoring every tool three ways — as shipped, with the four real-paper modes
+(`wrong_venue`, `preprint_as_published`, `partial_author_list`,
+`arxiv_version_mismatch`) removed from the scored set, and with them as negatives
+— **the ranking is not stable and the top changes identity.** On `test_public`
+14 of 21 tools move under the first fold and 17 of 21 under the second;
+`dev_public` agrees. `cascade_db_diagnosis` leads as shipped at MCC 0.897;
+`bibtexupdater` takes first when they are scored as false accusations.
+
+The mechanism, verified independently from the committed `per_type_metrics`:
+those four modes are **26.8% of the positive class** on `test_public` (139 of
+519) and **27.0% of the leading cascade's detections** (139 of 514), every one of
+which it converts — DR 1.000. The spread across tools is the part worth keeping:
+bibtexupdater 20.0%, Sonnet 4.6 23.2%, `doi_only` 9.1%, median DR 0.755 across 21
+tools. A tool's rank depends heavily on how much of its credit comes from
+flagging real papers described wrongly, and nothing in the reporting shows it.
+
+`stress_test` is worse: 75 of its 122 entries (61.5%) are real-paper modes, and
+**100% of the cascade's misses on that split are on them** — `merged_citation`
+sits at DR 1.000 across all 46 entries. So a stress-test detection rate is mostly
+a measure of catching correct citations described imprecisely.
+
+`hybrid_fabrication` does **not** fold with them, and folding it alone moves
+nothing (Kendall tau 1.000, no tool changes position). The distinction is that
+the other four mean the work exists and the entry describes it inaccurately,
+while this one means the entry claims one work and the DOI resolves to another —
+a fabrication if the index is right, a correct citation if the index is corrupt.
+
+Its population is sound: all 74 entries are generated (53 adversarial, 19
+perturbation, 2 LLM), none resolved from an index, and all 35 of the resolvable
+DOIs are consistent with the type — 26 to a clearly different paper, 9 to a
+similar title with zero author overlap. The exposure is entirely prospective.
+
+**Ruled: report the ablation, defer the relabel.** The instability goes in the
+paper as a stated result rather than being settled by relabelling five splits.
 
 ## Open
 
