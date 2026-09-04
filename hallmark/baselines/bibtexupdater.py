@@ -305,6 +305,35 @@ def assess_batch_health(
 #:   HALLMARK_BIBTEX_CHECK_BIN=~/.local/pipx/venvs/bibtex-updater/bin/bibtex-check
 BIBTEX_CHECK_BIN_ENV = "HALLMARK_BIBTEX_CHECK_BIN"
 
+#: Environment variable overriding the per-service request rate.
+#:
+#: The wrapper drives ``--rate-limit 120`` where bibtex-check's own documented
+#: baseline is 45 (scale 1.0), so a HALLMARK run paces roughly 2.7x harder than
+#: the tool assumes. Under load that shows up as source lookups that never
+#: complete, which bibtex-check correctly refuses to turn into verdicts -- and
+#: an evaluation whose sources went dark measures availability, not the tool.
+#: Pacing is therefore part of the run condition and belongs on the same
+#: footing as the binary: settable, and recorded in the log.
+BIBTEX_CHECK_RATE_ENV = "HALLMARK_BIBTEX_CHECK_RATE_LIMIT"
+
+
+def resolve_bibtex_check_rate_limit(default: int) -> int:
+    """Per-service request rate for this run, from the environment or *default*."""
+    raw = os.environ.get(BIBTEX_CHECK_RATE_ENV)
+    if not raw:
+        return default
+    try:
+        value = int(raw)
+    except ValueError:
+        logger.error("%s is not an integer: %r -- using %d", BIBTEX_CHECK_RATE_ENV, raw, default)
+        return default
+    if value <= 0:
+        logger.error(
+            "%s must be positive, got %d -- using %d", BIBTEX_CHECK_RATE_ENV, value, default
+        )
+        return default
+    return value
+
 
 def resolve_bibtex_check_bin() -> str | None:
     """Absolute path of the ``bibtex-check`` build this run will use."""
@@ -637,6 +666,7 @@ def _run_bibtex_check_subprocess(
 
         # Build command with performance optimizations
         binary = resolve_bibtex_check_bin() or "bibtex-check"
+        rate_limit = resolve_bibtex_check_rate_limit(rate_limit)
         # Say which build is answering. Without this the run is silent about the
         # single fact that decides whether its numbers are comparable to any
         # other run's, and PATH may be resolving an editable install.
@@ -648,6 +678,7 @@ def _run_bibtex_check_subprocess(
             if os.environ.get(BIBTEX_CHECK_BIN_ENV)
             else f" [unpinned; set {BIBTEX_CHECK_BIN_ENV} to pin]",
         )
+        logger.info("bibtex-check rate limit: %d req/min per service", rate_limit)
         cmd = [
             binary,
             str(bib_path),
