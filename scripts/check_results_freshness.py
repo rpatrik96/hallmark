@@ -89,15 +89,7 @@ KNOWN_STALE: dict[str, str] = {
 #: Generated tables known to be stale, with the reason. Same contract as
 #: KNOWN_STALE above and the same ratchet: a table leaves this dict when it is
 #: regenerated, never by editing the reason.
-KNOWN_STALE_TABLES: dict[str, str] = {
-    "base_rate_precision.csv": (
-        "its six doi_only_test_public rows predate the transient-HTTP-202 fix: DR 0.3873 "
-        "and FPR 0.2788 against the current run's 0.1908 and 0.0417, with precision and "
-        "flags_per_true_finding derived from them. Regenerate with "
-        "scripts/compute_base_rate_precision.py once the doi_only re-run is on the branch "
-        "that carries it."
-    ),
-}
+KNOWN_STALE_TABLES: dict[str, str] = {}
 
 
 @dataclass
