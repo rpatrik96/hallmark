@@ -69,10 +69,22 @@ def features(rec: dict) -> dict[str, float]:
     }
 
 
-def load(split: str) -> tuple[np.ndarray, np.ndarray, list[str]]:
+def _has_venue(rec: dict) -> bool:
+    f = {k.lower(): str(v) for k, v in (rec.get("fields") or {}).items()}
+    return bool((f.get("journal", "") + f.get("booktitle", "")).strip())
+
+
+def load(split: str, matched_negatives: bool = False) -> tuple[np.ndarray, np.ndarray, list[str]]:
     with open(ROOT / f"data/v1.2/{split}.jsonl") as fh:
         rows = [json.loads(line) for line in fh]
     keep = [r for r in rows if r["label"] == "VALID" or r.get("hallucination_type") in FOUR]
+    if matched_negatives:
+        # All four modes manipulate a venue, so an entry without one can never be
+        # sampled into them. "Has a venue at all" is therefore evidence of being
+        # a positive -- an artefact of which entries were eligible, not of the
+        # perturbation applied. Conditioning the negatives the same way removes
+        # it, and whatever detection rate survives is the perturbation itself.
+        keep = [r for r in keep if r["label"] != "VALID" or _has_venue(r)]
     y = np.array([1 if r["label"] == "HALLUCINATED" else 0 for r in keep])
     feats = [features(r) for r in keep]
     names = sorted(feats[0])
@@ -101,6 +113,7 @@ def main() -> int:
             print(f"{split}: not present, skipped")
             continue
         X, y, names = load(split)
+        Xm, ym, _ = load(split, matched_negatives=True)
         cv = StratifiedKFold(n_splits=5, shuffle=True, random_state=0)
         print(f"--- {split}: {int(y.sum())} four-mode positives, {int((y == 0).sum())} valid ---")
         for label, model in (
@@ -113,6 +126,14 @@ def main() -> int:
         ):
             pred = cross_val_predict(model, X, y, cv=cv)
             print(f"  {label:24s} DR {detection_rate(y, pred):.3f}   FPR {fpr(y, pred):.3f}")
+
+        # Same model, negatives conditioned on having a venue.
+        pred_m = cross_val_predict(GradientBoostingClassifier(random_state=0), Xm, ym, cv=cv)
+        print(
+            f"  {'gradient boosting (venue-matched negatives)':24s} "
+            f"DR {detection_rate(ym, pred_m):.3f}   FPR {fpr(ym, pred_m):.3f}"
+            f"   [negatives {int((y == 0).sum())} -> {int((ym == 0).sum())}]"
+        )
 
         gb = GradientBoostingClassifier(random_state=0).fit(X, y)
         top = sorted(zip(names, gb.feature_importances_, strict=True), key=lambda t: -t[1])[:6]
