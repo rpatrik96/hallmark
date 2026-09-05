@@ -171,3 +171,71 @@ def test_the_guard_is_not_vacuous():
     assert "unconfirmed" in ABSTENTION_STATUSES
     assert "not_found" not in ABSTENTION_STATUSES
     assert "partial_match" not in ABSTENTION_STATUSES
+
+
+# --- Each abstention says why it abstained; strict_warn_cnv keeps its origin ------
+
+
+def _preds(tmp_path: Path, records: list[dict]) -> dict[str, object]:
+    preds = _parse_jsonl_output(_write(tmp_path, records), 10.0, len(records))
+    return {p.bibtex_key: p for p in preds}
+
+
+def test_strict_warn_cnv_from_a_not_found_stays_a_detection(tmp_path):
+    """Under --strict-warn-cnv bibtex-check relabels NOT_FOUND and UNCONFIRMED to
+    one status. The record keeps p_valid, 0.35 for a not_found origin and 0.5
+    for unconfirmed, so the detection need not be surrendered."""
+    preds = _preds(
+        tmp_path,
+        [{"key": "a", "status": "strict_warn_cnv", "abstained": False, "p_valid": 0.35}],
+    )
+    assert preds["a"].label == "HALLUCINATED"
+    assert "not_found" in preds["a"].reason
+
+
+def test_strict_warn_cnv_from_an_unconfirmed_is_an_abstention(tmp_path):
+    preds = _preds(
+        tmp_path,
+        [{"key": "a", "status": "strict_warn_cnv", "abstained": False, "p_valid": 0.5}],
+    )
+    assert preds["a"].label == "UNCERTAIN"
+
+
+def test_strict_warn_cnv_reached_during_an_outage_is_an_abstention(tmp_path):
+    """A not_found origin does not survive coverage_incomplete, exactly as a
+    plain not_found does not."""
+    preds = _preds(
+        tmp_path,
+        [
+            {
+                "key": "a",
+                "status": "strict_warn_cnv",
+                "p_valid": 0.35,
+                "coverage_incomplete": True,
+            }
+        ],
+    )
+    assert preds["a"].label == "UNCERTAIN"
+
+
+@pytest.mark.parametrize(
+    "status,phrase",
+    [
+        ("unconfirmed", "could not be confirmed"),
+        ("skipped", "entry type"),
+        ("strict_warn_preprint_year", "preprint"),
+        ("api_error", "lookup failed"),
+        ("network_error", "lookup failed"),
+        ("coverage_incomplete", "did not complete"),
+    ],
+)
+def test_each_abstention_reason_names_its_own_cause(tmp_path, status, phrase):
+    """'No source answered' described only the outage statuses. bibtex-check's
+    unconfirmed means a record was found and a claimed field could not be
+    confirmed; skipped means the entry type is not verified at all; the strict
+    preprint-year warning is a decision left to the user."""
+    preds = _preds(tmp_path, [{"key": "a", "status": status, "p_valid": 0.5}])
+    assert preds["a"].label == "UNCERTAIN"
+    assert phrase in preds["a"].reason.lower(), preds["a"].reason
+    if status in ("unconfirmed", "skipped", "strict_warn_preprint_year"):
+        assert "no source answered" not in preds["a"].reason.lower()
