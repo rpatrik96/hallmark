@@ -224,6 +224,9 @@ def _aggressive_fallback(pred: Prediction) -> Prediction:
         source=pred.source,
         predicted_hallucination_type="plausible_fabrication",
         cascade_stage=pred.cascade_stage,
+        # A promoted fallback is still a fallback: without this an all-fallback
+        # run becomes detection rate 1.0 with every entry marked evaluated.
+        evaluated=pred.evaluated,
     )
 
 

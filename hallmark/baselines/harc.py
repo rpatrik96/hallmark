@@ -274,9 +274,10 @@ def _run_harc_batches(
     # ``checked`` set, and the run lands at zero having made real HTTP requests
     # during pre-screening -- which is why the failure reads as a clean result.
     if entries and checked_count == 0:
-        # Every entry will be backfilled, and every backfill now carries
-        # evaluated=False, so the run reports num_evaluated 0 and the metrics
-        # layer refuses to read it as a measurement. Log loudly and return: the
+        # Every entry will be backfilled, and every backfill carries
+        # evaluated=False, so the run reports num_evaluated 0, evaluate() logs
+        # it at ERROR, and `hallmark evaluate --output` refuses to write it
+        # unless --allow-null-run is passed. Log loudly and return: the
         # predictions are still wanted by callers that want to see the shape of
         # the failure, and refusing outright would also discard a partial run.
         logger.error(

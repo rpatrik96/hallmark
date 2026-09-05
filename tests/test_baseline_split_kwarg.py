@@ -91,3 +91,74 @@ def test_baseline_runner_tolerates_split_kwarg(name: str) -> None:
         "'split' kwarg that registry.run_baseline forwards. Add '**_kw: object' "
         "to its signature (see run_doi_only) or pop 'split' in the wrapper."
     )
+
+
+# --- Every wrapper, not only the ones that import a ``run_*`` function ---------
+
+
+def _forwarding_targets() -> dict[str, list[tuple[str, str]]]:
+    """Map each ``_run_*`` wrapper to the imported callables it forwards ``**kw`` into.
+
+    The map above follows only aliases named ``run_*``, which is how three
+    wrappers -- ``random``, ``venue_oracle``, ``ensemble`` -- delegated ``**kw``
+    into functions with no ``split`` parameter and stayed green: they import
+    ``random_baseline``, ``venue_oracle_baseline`` and ``ensemble_predict``.
+    """
+    tree = ast.parse(pathlib.Path(R.__file__).read_text())
+    out: dict[str, list[tuple[str, str]]] = {}
+    for node in ast.walk(tree):
+        if not (isinstance(node, ast.FunctionDef) and node.name.startswith("_run")):
+            continue
+        if _wrapper_consumes_split(node):
+            continue
+        imported = {
+            alias.asname or alias.name: (sub.module, alias.name)
+            for sub in ast.walk(node)
+            if isinstance(sub, ast.ImportFrom) and sub.module
+            for alias in sub.names
+        }
+        for call in ast.walk(node):
+            if not isinstance(call, ast.Call):
+                continue
+            forwards = any(k.arg is None for k in call.keywords)  # ``**kw`` splat
+            if not forwards or not isinstance(call.func, ast.Name):
+                continue
+            if call.func.id in imported:
+                out.setdefault(node.name, []).append(imported[call.func.id])
+    return out
+
+
+_FORWARDING = _forwarding_targets()
+
+
+def test_the_forwarding_map_is_not_empty() -> None:
+    assert _FORWARDING, "no wrapper forwards **kw to an imported callable -- the AST walk broke"
+
+
+@pytest.mark.parametrize("wrapper", sorted(_FORWARDING))
+def test_every_forwarded_callable_tolerates_split(wrapper: str) -> None:
+    for module_name, fn_name in _FORWARDING[wrapper]:
+        fn = getattr(importlib.import_module(module_name), fn_name)
+        assert _accepts_split(fn, None), (
+            f"{wrapper} forwards **kw (which carries 'split') into "
+            f"{module_name}.{fn_name}{inspect.signature(fn)}, which rejects it. "
+            "Pop 'split' in the wrapper or accept **_kw in the callee."
+        )
+
+
+@pytest.mark.parametrize("name", ["random", "venue_oracle", "always_valid", "always_hallucinated"])
+def test_offline_baselines_run_with_split_set(name: str) -> None:
+    """The dispatch path the CLI always takes, on baselines that need no network."""
+    from hallmark.dataset.schema import BenchmarkEntry
+
+    entries = [
+        BenchmarkEntry(
+            bibtex_key=f"e{i}",
+            bibtex_type="article",
+            fields={"title": f"T{i}", "year": "2020"},
+            label="VALID",
+        )
+        for i in range(3)
+    ]
+    preds = R.run_baseline(name, entries, split="dev_public")
+    assert len(preds) == 3

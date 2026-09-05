@@ -393,6 +393,21 @@ _OUTAGE_RE = re.compile(
 )
 
 
+#: The source-availability report of the most recent bibtex-check run in this
+#: process, or None when it reported none. Set by ``_run_bibtex_check_subprocess``
+#: on every run -- exit 0 included, since bibtex-check prints the same summary
+#: below its 10% threshold -- and copied onto the EvaluationResult by the CLI's
+#: provenance stamp. Before this the report was parsed only to format one log
+#: line, so a run scored under HALLMARK_ALLOW_SOURCE_OUTAGE=1 carried no record
+#: of which sources were dark.
+_last_source_condition: dict[str, object] | None = None
+
+
+def last_source_condition() -> dict[str, object] | None:
+    """The source-availability report of the last bibtex-check run, if any."""
+    return _last_source_condition
+
+
 def parse_source_condition(output: str) -> dict[str, object] | None:
     """Extract bibtex-check's own source-availability report, if it made one.
 
@@ -756,6 +771,8 @@ def _run_bibtex_check_subprocess(
     academic_only: bool = True,
 ) -> list[Prediction]:
     """Run bibtex-check subprocess and return raw predictions (no pre-screening)."""
+    global _last_source_condition
+    _last_source_condition = None
     start_time = time.time()
 
     # Use a directory we control to avoid cleanup race on timeout
@@ -810,8 +827,9 @@ def _run_bibtex_check_subprocess(
                 text=True,
                 timeout=timeout,
             )
+            condition = parse_source_condition(result.stdout + result.stderr)
+            _last_source_condition = condition
             if result.returncode == EXIT_SOURCE_OUTAGE:
-                condition = parse_source_condition(result.stdout + result.stderr)
                 detail = ""
                 if condition:
                     detail = (

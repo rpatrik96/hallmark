@@ -149,6 +149,9 @@ def run_baseline_both_variants(
                     confidence=0.5,
                     reason="Entry not in tool output",
                     source="tool",
+                    # Same manufactured placeholder as run_with_prescreening's
+                    # backfill, and the path that produced the four null ablations.
+                    evaluated=False,
                 )
             )
 
