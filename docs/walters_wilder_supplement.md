@@ -77,7 +77,9 @@ All 341 pass `hallmark.contribution.validate_entry.validate_batch`. Built by
 
 ## 4. bibtexupdater evaluation
 
-`bibtex-check` (bibtex-updater 1.4.0), `--academic-only`, via the HALLMARK
+`bibtex-check` (bibtex-updater 1.4.0 — the current release when this supplement
+was run in 2026-07; the main dev/test tables were produced earlier with 1.2.0, see
+README), `--academic-only`, via the HALLMARK
 wrapper (`hallmark/baselines/bibtexupdater.py`) and `hallmark.evaluation.evaluate`.
 Full coverage 341/341 (the run took ~4 h of wall-clock under sustained Semantic
 Scholar / OpenAlex rate-limiting — the documented shared-IP throttling). Reference

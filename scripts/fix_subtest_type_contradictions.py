@@ -14,19 +14,20 @@ sources agree on ``False``: ``EXPECTED_SUBTESTS``, the semantics of the type,
 and every entry of that type in the public splits (which carry zero mismatches
 of this direction).
 
-Deliberately NOT repaired
--------------------------
-``future_date`` / ``fields_complete``. ``EXPECTED_SUBTESTS`` says ``False``, but
-running the real checker settles it the other way: ``check_fields_complete``
-tests for missing required fields plus a 4-digit year and a well-formed DOI, and
-a future-dated entry has all its fields with a perfectly well-formed year. Run
-against every ``future_date`` entry, the checker returns ``True`` for 14 of 15
-in the hidden split (which assign ``True``) and for 29 of 30 in ``dev_public``
-(which assign ``False``). So the hidden data is right, the taxonomy entry is
-wrong, and it is the public splits that carry 29 contradictions of the checker.
-Repairing the hidden entries to match the taxonomy would corrupt correct data.
-Fixing that properly means changing ``EXPECTED_SUBTESTS`` and re-labelling
-public released entries, which is a bigger decision than this script.
+Deliberately NOT repaired here
+-----------------------------
+``future_date`` / ``fields_complete``. When this script was written,
+``EXPECTED_SUBTESTS`` said ``False`` for that pair while the real checker
+(``check_fields_complete``: required fields present, 4-digit year, well-formed
+DOI) returned ``True`` for every well-formed future-dated entry, so the hidden
+split, which assigned ``True``, was right and the taxonomy entry was wrong.
+Repairing the hidden entries to match the taxonomy would have corrupted correct
+data, so the pair was excluded from :data:`CONTRADICTIONS`. The taxonomy has
+since been fixed (``EXPECTED_SUBTESTS[FUTURE_DATE]["fields_complete"]`` is now
+``True``) and 82 public labels were aligned with the checker's per-entry
+verdict; see ``results/reviewer_experiments/fields_complete_future_date_alignment.json``.
+The pair stays out of this script because its repair went the other way (public
+splits, ``False -> True``) and is already done.
 
 Usage
 -----
