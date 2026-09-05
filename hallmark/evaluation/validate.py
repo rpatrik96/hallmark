@@ -155,6 +155,25 @@ def validate_reference_results(
                         f"doesn't match metadata total={expected_total} "
                         f"for split {split_name}"
                     )
+                # A count short by exactly the canaries is only fine if the
+                # canaries are what is missing. The canary is the split's only
+                # VALID entry, so a short result that still reports a VALID
+                # entry dropped a hallucinated one instead -- which the count
+                # allowance alone cannot see, and which made it a one-entry
+                # tolerance in practice.
+                canaries = CANARY_ENTRIES.get(split_name, 0)
+                if (
+                    expected_total is not None
+                    and canaries
+                    and result.num_entries == expected_total - canaries
+                    and result.num_valid != 0
+                ):
+                    errors.append(
+                        f"{filename}: num_entries={result.num_entries} omits {canaries} "
+                        f"entry(ies) from split {split_name} but num_valid="
+                        f"{result.num_valid}; the omitted entry is not the VALID canary, "
+                        "so a scored entry was dropped"
+                    )
 
         # Strict: reject F1=0.0 as likely failed run
         if strict and result.f1_hallucination == 0.0:
