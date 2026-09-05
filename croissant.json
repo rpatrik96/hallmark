@@ -77,65 +77,65 @@
     {
       "@type": "cr:FileObject",
       "@id": "dev-public-file",
-      "name": "dev_public.parquet",
+      "name": "dev_public.jsonl",
       "description": "Development split with ground-truth labels for model development and hyperparameter tuning.",
-      "contentUrl": "https://huggingface.co/datasets/hallmark-neurips2026/HALLMARK/resolve/main/data/dev_public.parquet",
-      "encodingFormat": "application/x-parquet",
-      "sha256": "16cf8f28b28606515fadb7ddef489a1bd88ddf9414345b2b46da8e96f52bab4b"
+      "contentUrl": "https://raw.githubusercontent.com/rpatrik96/hallmark/main/data/v1.2/dev_public.jsonl",
+      "encodingFormat": "application/jsonlines",
+      "sha256": "0f75d390f95a086aaf39b627369af2bd03a5eb87cd3bf4cea5d5025e203bb09e"
     },
     {
       "@type": "cr:FileObject",
       "@id": "test-public-file",
-      "name": "test_public.parquet",
+      "name": "test_public.jsonl",
       "description": "Public test split with ground-truth labels for evaluation and ablation studies.",
-      "contentUrl": "https://huggingface.co/datasets/hallmark-neurips2026/HALLMARK/resolve/main/data/test_public.parquet",
-      "encodingFormat": "application/x-parquet",
-      "sha256": "2f8c6d6c009c1ea6c37f53c4e0abb97c484e0c9a1fe098f06d0c457c7e6e1201"
+      "contentUrl": "https://raw.githubusercontent.com/rpatrik96/hallmark/main/data/v1.2/test_public.jsonl",
+      "encodingFormat": "application/jsonlines",
+      "sha256": "0637ffc80747c36f3e010cd613f16481dcb916f944874122b2e2d3f872429973"
     },
     {
       "@type": "cr:FileObject",
       "@id": "stress-test-file",
-      "name": "stress_test.parquet",
+      "name": "stress_test.jsonl",
       "description": "Stress-test split focusing on theoretically-motivated hallucination types (merged_citation, partial_author_list, arxiv_version_mismatch) evaluated separately from the main benchmark.",
-      "contentUrl": "https://huggingface.co/datasets/hallmark-neurips2026/HALLMARK/resolve/main/data/stress_test.parquet",
-      "encodingFormat": "application/x-parquet",
-      "sha256": "cb273ad0a04d19320ceed78fee259728179e4886caf2accec660b93f33eab2db"
+      "contentUrl": "https://raw.githubusercontent.com/rpatrik96/hallmark/main/data/v1.2/stress_test.jsonl",
+      "encodingFormat": "application/jsonlines",
+      "sha256": "af3a11606948fea8edccbbd5c512e6efd69c1f9056032d446f01c66950da07d3"
     },
     {
       "@type": "cr:FileObject",
       "@id": "dev-public-blind-file",
-      "name": "dev_public_blind.parquet",
+      "name": "dev_public_blind.jsonl",
       "description": "Blinded version of the development split (no ground-truth labels) for baseline runners.",
-      "contentUrl": "https://huggingface.co/datasets/hallmark-neurips2026/HALLMARK/resolve/main/blind/dev_public_blind.parquet",
-      "encodingFormat": "application/x-parquet",
-      "sha256": "b1b4f41ce89a2d43fb67ae961f22070b2e33b88a961c0d68994fe1b363ad9026"
+      "contentUrl": "https://raw.githubusercontent.com/rpatrik96/hallmark/main/data/v1.2/dev_public_blind.jsonl",
+      "encodingFormat": "application/jsonlines",
+      "sha256": "46b9a23a1e1a7564c52ac490a492090fdc8d87f15bfea4c62bc49f8fd9ce42b7"
     },
     {
       "@type": "cr:FileObject",
       "@id": "test-public-blind-file",
-      "name": "test_public_blind.parquet",
+      "name": "test_public_blind.jsonl",
       "description": "Blinded version of the public test split (no ground-truth labels) for baseline runners.",
-      "contentUrl": "https://huggingface.co/datasets/hallmark-neurips2026/HALLMARK/resolve/main/blind/test_public_blind.parquet",
-      "encodingFormat": "application/x-parquet",
-      "sha256": "8c5c5104afbef57daa5d018c61fa979ee9eb9d740d9ea119f6bed15c21c47d5d"
+      "contentUrl": "https://raw.githubusercontent.com/rpatrik96/hallmark/main/data/v1.2/test_public_blind.jsonl",
+      "encodingFormat": "application/jsonlines",
+      "sha256": "0461cef293e6f2a1e1448b6fa56de72c0efd18a240cdf426377616afc00649bd"
     },
     {
       "@type": "cr:FileObject",
       "@id": "stress-test-blind-file",
-      "name": "stress_test_blind.parquet",
+      "name": "stress_test_blind.jsonl",
       "description": "Blinded version of the stress-test split (no ground-truth labels) for baseline runners.",
-      "contentUrl": "https://huggingface.co/datasets/hallmark-neurips2026/HALLMARK/resolve/main/blind/stress_test_blind.parquet",
-      "encodingFormat": "application/x-parquet",
-      "sha256": "3a1e0fdc263fe4c55ca1cc2526b0024eb270bcd6d02d4cc9cd9f8e908c0f9a3e"
+      "contentUrl": "https://raw.githubusercontent.com/rpatrik96/hallmark/main/data/v1.2/stress_test_blind.jsonl",
+      "encodingFormat": "application/jsonlines",
+      "sha256": "cf6f829b2ad99c6badd9eb513214e2d811e6b0fe3218a64263aeecb690ea49e3"
     },
     {
       "@type": "cr:FileObject",
       "@id": "metadata-file",
       "name": "metadata.json",
       "description": "Dataset metadata including split statistics, type distributions, and generation method breakdowns.",
-      "contentUrl": "https://huggingface.co/datasets/hallmark-neurips2026/HALLMARK/resolve/main/metadata.json",
+      "contentUrl": "https://raw.githubusercontent.com/rpatrik96/hallmark/main/data/v1.2/metadata.json",
       "encodingFormat": "application/json",
-      "sha256": "caf4f5597846b4cbca404fb44e2c1550db69ae062288a78f7028f95bd7a3e065"
+      "sha256": "ea4f34bc80e844823b9604d880b0b4a7dec63cb1c193014969f6d7fe972751a0"
     }
   ],
   "recordSet": [
@@ -143,7 +143,7 @@
       "@type": "cr:RecordSet",
       "@id": "benchmark-entries",
       "name": "BenchmarkEntry",
-      "description": "Each record is an atomic benchmark entry representing a BibTeX citation to be verified. Entries are either VALID (scraped from real proceedings) or HALLUCINATED (synthetically generated with specific corruption patterns). Each entry includes 6 sub-test ground-truth labels. Note: nested dict columns 'fields' (BibTeX field map) and 'subtests' (per-entry sub-test labels) ship in the parquet files but are not declared as Croissant fields here; consult the dataset documentation for their schema.",
+      "description": "Each record is an atomic benchmark entry representing a BibTeX citation to be verified. Entries are either VALID (scraped from real proceedings) or HALLUCINATED (synthetically generated with specific corruption patterns). Each entry includes 6 sub-test ground-truth labels. Note: nested dict columns 'fields' (BibTeX field map) and 'subtests' (per-entry sub-test labels) are present in the JSONL records but are not declared as Croissant fields here; consult the dataset documentation for their schema.",
       "key": "bibtex_key",
       "field": [
         {
@@ -347,7 +347,7 @@
       "@type": "cr:RecordSet",
       "@id": "blind-entries",
       "name": "BlindEntry",
-      "description": "Privacy-preserving view of benchmark entries for baseline runners. Contains only the fields needed for verification -- ground-truth labels, difficulty tiers, and generation metadata are excluded to prevent baselines from accessing oracle information. Note: nested dict columns 'fields' (BibTeX field map) and 'subtests' (per-entry sub-test labels) ship in the parquet files but are not declared as Croissant fields here; consult the dataset documentation for their schema.",
+      "description": "Privacy-preserving view of benchmark entries for baseline runners. Contains only the fields needed for verification -- ground-truth labels, difficulty tiers, and generation metadata are excluded to prevent baselines from accessing oracle information. Note: nested dict columns 'fields' (BibTeX field map) and 'subtests' (per-entry sub-test labels) are present in the JSONL records but are not declared as Croissant fields here; consult the dataset documentation for their schema.",
       "key": "bibtex_key",
       "field": [
         {
