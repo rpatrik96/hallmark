@@ -7,7 +7,10 @@ abstentions. The wrapper wrote every abstention as a committed VALID, so the
 field that was supposed to record them recorded nothing. The paper's Coverage
 column says otherwise, and the artifact a reader can recompute was the wrong one.
 
-**Only those two fields change.** The DR/FPR/F1 triple stays exactly as released,
+**Only those two fields and the one derived from them change.**
+``coverage_adjusted_f1`` is ``f1_hallucination * coverage`` by definition
+(``metrics.py``) and moves with coverage; left at ``f1 * 1.0`` it contradicted
+the file's own coverage. The DR/FPR/F1 triple stays exactly as released,
 which is the paper's documented convention: abstentions score as committed-VALID
 in the triple, and Coverage reports the fraction the tool committed to. Two
 reasons not to re-score the triple here:
@@ -92,8 +95,10 @@ def main() -> int:
     coverage = answered / len(entries)
 
     print(f"{args.split}: {len(entries)} entries, {len(predictions)} records")
+    cov_adj_f1 = released["f1_hallucination"] * coverage
     print(f"  coverage        {released['coverage']}  ->  {coverage:.4f}")
     print(f"  num_uncertain   {released['num_uncertain']}  ->  {abstentions}")
+    print(f"  cov-adjusted F1 {released['coverage_adjusted_f1']:.4f}  ->  {cov_adj_f1:.4f}")
     print("  DR/FPR/F1       unchanged (committed-VALID convention, as released)")
 
     if not args.apply:
@@ -102,11 +107,15 @@ def main() -> int:
 
     released["coverage"] = round(coverage, 4)
     released["num_uncertain"] = abstentions
+    released["coverage_adjusted_f1"] = released["f1_hallucination"] * released["coverage"]
     released.setdefault("_provenance", {})["coverage_corrected"] = (
         f"coverage and num_uncertain recounted from {args.raw.as_posix()} under "
-        "ABSTENTION_STATUSES; the DR/FPR/F1 triple is unchanged and still scores "
-        "abstentions as committed-VALID, which is the convention the paper reports. "
-        "See scripts/rescore_btu_from_raw.py."
+        "ABSTENTION_STATUSES, and coverage_adjusted_f1 recomputed as f1_hallucination x "
+        "coverage per its definition in metrics.py. The DR/FPR/F1 triple is unchanged "
+        "and still scores abstentions as committed-VALID, which is the convention the "
+        "paper reports; under that convention coverage_adjusted_f1 counts abstention "
+        "twice (once as a committed miss inside F1, once through coverage) and is a "
+        "lower bound, not a third scoring. See scripts/rescore_btu_from_raw.py."
     )
     target.write_text(json.dumps(released, indent=2, ensure_ascii=False) + "\n")
     print(f"\nwrote {target}")

@@ -78,3 +78,25 @@ def test_the_triple_still_uses_the_committed_convention():
     assert result["detection_rate"] == pytest.approx(0.8647, abs=5e-4)
     assert result["false_positive_rate"] == pytest.approx(0.0916, abs=5e-4)
     assert result["f1_hallucination"] == pytest.approx(0.8904, abs=5e-4)
+
+
+@pytest.mark.parametrize("split", sorted(EXPECTED_ABSTENTIONS))
+def test_coverage_adjusted_f1_matches_its_definition(split: str):
+    """``coverage_adjusted_f1`` is ``f1_hallucination * coverage`` (metrics.py).
+
+    The coverage correction rewrote ``coverage`` and left this field at the old
+    ``f1 * 1.0``, so the file contradicted its own definition and the leaderboard
+    showed bibtex-updater un-penalised on the one column whose purpose is to
+    penalise abstention. Under the committed-VALID triple this double-counts
+    abstention; that is documented in the provenance string, not hidden in the
+    number.
+    """
+    path = RESULTS / f"bibtexupdater_{split}.json"
+    if not path.is_file():
+        pytest.skip(f"{path.name} not present")
+    result = json.loads(path.read_text())
+    expected = result["f1_hallucination"] * result["coverage"]
+    assert result["coverage_adjusted_f1"] == pytest.approx(expected, abs=5e-4), (
+        f"{path.name}: coverage_adjusted_f1 {result['coverage_adjusted_f1']:.4f} but "
+        f"f1 {result['f1_hallucination']:.4f} x coverage {result['coverage']} = {expected:.4f}"
+    )
