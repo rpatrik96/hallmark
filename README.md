@@ -76,8 +76,13 @@ The `[baselines]` extra installs only the LLM SDKs (`openai`, `anthropic`). Exte
 # HaRC
 pipx install harcx
 
-# bibtex-updater (released HALLMARK numbers use tag v1.2.0)
-pipx install "bibtex-updater==1.2.0"
+# bibtex-updater. The wrapper targets >=1.11.0, which separates fields the
+# checker refuted (`mismatched_fields`) from fields it declined to compare
+# (`unconfirmed_fields`); older releases still parse, minus that distinction.
+pipx install "bibtex-updater>=1.11.0"
+# To reproduce released numbers, pin the release that produced them:
+#   dev/test tables            -> 1.2.0  (scripts/regen_btu_v1_2_0.py, 2026-05-31)
+#   Walters & Wilder supplement -> 1.4.0  (docs/walters_wilder_supplement.md, 2026-07)
 
 # verify-citations
 pipx install verify-citations

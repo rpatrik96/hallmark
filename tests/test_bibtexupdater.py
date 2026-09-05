@@ -217,6 +217,105 @@ class TestParseJsonlOutput:
         assert "throttling" not in pred.reason
 
 
+class TestFieldRendering:
+    """``mismatched_fields`` vs ``unconfirmed_fields`` in ``reason`` (issue #37).
+
+    Through bibtex-updater 1.10.3 a field the checker declined to compare was
+    reported under ``mismatched_fields``; 1.11.0 narrows that key to real
+    contradictions and moves abstentions to the additive ``unconfirmed_fields``.
+    The label is derived from ``status`` alone, so only ``reason`` changes, and
+    the two kinds of finding must read differently to a human auditing it.
+    """
+
+    def test_both_keys_present_render_distinctly(self, tmp_path: Path) -> None:
+        records: list[dict[str, Any]] = [
+            {
+                "key": "k",
+                "status": "unconfirmed",
+                "p_valid": 0.5,
+                "mismatched_fields": ["year"],
+                "unconfirmed_fields": ["venue"],
+            }
+        ]
+        (pred,) = _parse(tmp_path, records)
+        assert pred.reason.startswith("Status: unconfirmed")
+        assert "Mismatched: ['year']" in pred.reason
+        assert "Unconfirmed (not compared): ['venue']" in pred.reason
+        # The contradiction is listed before the abstention.
+        assert pred.reason.index("Mismatched:") < pred.reason.index("Unconfirmed (not compared):")
+
+    def test_pre_1_11_record_without_unconfirmed_key(self, tmp_path: Path) -> None:
+        """Older releases have no ``unconfirmed_fields``; the reason reads
+        exactly as before."""
+        records: list[dict[str, Any]] = [
+            {
+                "key": "k",
+                "status": "venue_mismatch",
+                "confidence": 0.8,
+                "mismatched_fields": ["venue"],
+            }
+        ]
+        (pred,) = _parse(tmp_path, records)
+        assert pred.label == "HALLUCINATED"
+        assert pred.reason == "Status: venue_mismatch; Mismatched: ['venue']"
+        assert "Unconfirmed" not in pred.reason
+
+    def test_only_unconfirmed_present_is_not_called_a_mismatch(self, tmp_path: Path) -> None:
+        """The 1.11.0 case the issue is about: a venue abstention must no
+        longer be rendered as ``Mismatched: ['venue']``."""
+        records: list[dict[str, Any]] = [
+            {
+                "key": "k",
+                "status": "unconfirmed",
+                "p_valid": 0.5,
+                "mismatched_fields": [],
+                "unconfirmed_fields": ["venue"],
+            }
+        ]
+        (pred,) = _parse(tmp_path, records)
+        assert "Mismatched" not in pred.reason
+        assert "Unconfirmed (not compared): ['venue']" in pred.reason
+
+    def test_both_keys_empty_add_nothing(self, tmp_path: Path) -> None:
+        records: list[dict[str, Any]] = [
+            {
+                "key": "k",
+                "status": "verified",
+                "p_valid": 0.94,
+                "mismatched_fields": [],
+                "unconfirmed_fields": [],
+            }
+        ]
+        (pred,) = _parse(tmp_path, records)
+        assert pred.reason == "Status: verified"
+
+    def test_null_field_lists_are_tolerated(self, tmp_path: Path) -> None:
+        records: list[dict[str, Any]] = [
+            {
+                "key": "k",
+                "status": "verified",
+                "mismatched_fields": None,
+                "unconfirmed_fields": None,
+            }
+        ]
+        (pred,) = _parse(tmp_path, records)
+        assert pred.reason == "Status: verified"
+
+    def test_label_is_unaffected_by_field_lists(self, tmp_path: Path) -> None:
+        """Scope check from the issue: the label comes from ``status`` only."""
+        records: list[dict[str, Any]] = [
+            {
+                "key": "k",
+                "status": "verified",
+                "p_valid": 0.9,
+                "mismatched_fields": ["venue"],
+                "unconfirmed_fields": ["year"],
+            }
+        ]
+        (pred,) = _parse(tmp_path, records)
+        assert pred.label == "VALID"
+
+
 class TestTransportStatusMapping:
     """A failed lookup is an abstention, never evidence of fabrication."""
 

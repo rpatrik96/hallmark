@@ -25,6 +25,16 @@ as before (the precomputed reference results are unaffected):
 - ``p_valid`` (float in [0, 1]): explicit P(entry as cited is genuine) — the
   value to threshold on.  When present it replaces the older realness
   inversion heuristic for deriving ``Prediction.confidence``.
+- ``unconfirmed_fields`` (bibtex-updater >= 1.11.0): fields the checker
+  deliberately declined to compare (NON_COMPARABLE / PARTIAL).  Through 1.10.3
+  these were folded into ``mismatched_fields``, so an abstention on ``venue``
+  read as a venue the checker had refuted — on a 5,043-reference corpus 956 of
+  1,024 venue-only entries were abstentions, not contradictions.  1.11.0 narrows
+  ``mismatched_fields`` to real contradictions and moves abstentions to this
+  additive key.  The wrapper renders the two distinctly in ``reason``
+  (``Mismatched: [...]`` vs ``Unconfirmed (not compared): [...]``); labels are
+  derived from ``status`` alone and are unaffected.  On older releases the key
+  is simply absent and ``reason`` reads exactly as before.
 
 Every invocation is scored by a batch-level sanity check (``assess_batch_health``)
 before the results are handed back.  ``not_found`` is evidence of fabrication only
@@ -915,7 +925,8 @@ def parse_jsonl_to_raw(jsonl_path: Path) -> dict[str, dict]:
 
     Returns:
         Mapping from bibtex_key to the full raw record dict containing status,
-        mismatched_fields, api_sources, confidence, errors, etc.
+        mismatched_fields, unconfirmed_fields (>= 1.11.0), api_sources,
+        confidence, errors, etc.
     """
     records: dict[str, dict] = {}
     with open(jsonl_path) as f:
@@ -957,7 +968,10 @@ def _parse_jsonl_output(
             key = record.get("key", "")
             status = record.get("status", "skipped")
             raw_confidence = record.get("confidence", STATUS_TO_CONFIDENCE.get(status, 0.5))
-            mismatched = record.get("mismatched_fields", [])
+            mismatched = record.get("mismatched_fields") or []
+            # >= 1.11.0 only; absent on older releases, where abstained fields
+            # were folded into ``mismatched_fields``.
+            unconfirmed = record.get("unconfirmed_fields") or []
             api_sources = record.get("api_sources", [])
             errors = record.get("errors", [])
             p_valid = record.get("p_valid")
@@ -1039,8 +1053,14 @@ def _parse_jsonl_output(
                     "Lookup incomplete due to source errors/throttling — "
                     "abstention, not evidence of fabrication"
                 )
+            # A contradiction and an abstention must not read the same way to
+            # someone auditing the output: ``mismatched_fields`` is what the
+            # checker refuted, ``unconfirmed_fields`` is what it declined to
+            # compare (issue #37).
             if mismatched:
                 reason_parts.append(f"Mismatched: {mismatched}")
+            if unconfirmed:
+                reason_parts.append(f"Unconfirmed (not compared): {unconfirmed}")
             if errors:
                 reason_parts.append(f"Errors: {errors}")
 
