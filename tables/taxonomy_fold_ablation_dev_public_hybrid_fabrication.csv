@@ -2,7 +2,6 @@ tool,split,real_mode_dr,as_shipped_dr,as_shipped_fpr,as_shipped_f1,as_shipped_mc
 bibtexupdater_dev_public,dev_public,1.0000,0.8647,0.0916,0.8904,0.7706,0.8586,0.0916,0.8853,0.7656,0.8586,0.1354,0.8653,0.7229
 cascade_db_diagnosis_aggressive_dev_public,dev_public,1.0000,0.9967,0.1481,0.9393,0.8659,0.9966,0.1481,0.9368,0.8637,0.9966,0.1892,0.9175,0.8262
 cascade_db_diagnosis_dev_public,dev_public,1.0000,0.9951,0.1072,0.9542,0.8989,0.9949,0.1072,0.9522,0.8971,0.9949,0.1503,0.9322,0.8575
-cascade_db_diagnosis_evalmode_aggressive_dev_public,dev_public,1.0000,0.9967,0.1481,0.9393,0.8659,0.9966,0.1481,0.9368,0.8637,0.9966,0.1892,0.9175,0.8262
 doi_only_dev_public,dev_public,0.1538,0.2178,0.0429,0.3474,0.2530,0.2207,0.0429,0.3507,0.2579,0.2207,0.0482,0.3488,0.2501
 harc_with_s2key_dev_public,dev_public,0.0889,0.2085,0.0453,0.3355,0.2349,0.2177,0.0453,0.3469,0.2476,0.2177,0.0490,0.3450,0.2446
 llm_agentic_btu_openai_dev_public,dev_public,1.0000,0.9802,0.4698,0.8244,0.5844,0.9793,0.4698,0.8179,0.5798,0.9793,0.4954,0.8028,0.5557
