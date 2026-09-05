@@ -4,7 +4,6 @@
     "inputs": {
       "data/v1.2/baseline_results/bibtexupdater_test_public.json": "132b4d2fa383b8c2f359bb62e5c9ce6ab1f3f14ce233b88edb25293d9870e517",
       "data/v1.2/baseline_results/cascade_db_diagnosis_aggressive_test_public.json": "f8c2b0cdc4a311a741c9528880de28fea8759cd3dd4bfd1ca715851c3f2595c5",
-      "data/v1.2/baseline_results/cascade_db_diagnosis_evalmode_aggressive_test_public.json": "f8c2b0cdc4a311a741c9528880de28fea8759cd3dd4bfd1ca715851c3f2595c5",
       "data/v1.2/baseline_results/cascade_db_diagnosis_test_public.json": "0b8e28af6ceaa9b327d17bea79a9fd5c7d59d596c7eff966dfcd076485241d77",
       "data/v1.2/baseline_results/doi_only_test_public.json": "716ed587dc829f3b549ad5e846310a4705626758c80b432e42218d4aad274fda",
       "data/v1.2/baseline_results/llm_agentic_btu_openai_test_public.json": "f8001545cd20f90ea06bd9a13590c74d5e32491a0a573c59fa249de2edc92f20",

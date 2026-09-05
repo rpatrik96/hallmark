@@ -43,27 +43,6 @@
       "num_entries": 1119,
       "f1_hallucination": 0.946550048590865
     },
-    "cascade_db_diagnosis_evalmode_aggressive_dev_public.json": {
-      "sha256": "0f54d388799fbf499937679ba7e8b779d2fe8e3b05646e7f3933b966b16f3a3a",
-      "baseline": "cascade_db_diagnosis",
-      "split": "dev_public",
-      "num_entries": 1119,
-      "f1_hallucination": 0.9393468118195957
-    },
-    "cascade_db_diagnosis_evalmode_aggressive_stress_test.json": {
-      "sha256": "8e12d13b07e0dd37a8ce0bc9bd1dfe09b8075df0f957a32567be4f527290a4ed",
-      "baseline": "cascade_db_diagnosis",
-      "split": "stress_test",
-      "num_entries": 121,
-      "f1_hallucination": 0.9789029535864979
-    },
-    "cascade_db_diagnosis_evalmode_aggressive_test_public.json": {
-      "sha256": "f8c2b0cdc4a311a741c9528880de28fea8759cd3dd4bfd1ca715851c3f2595c5",
-      "baseline": "cascade_db_diagnosis",
-      "split": "test_public",
-      "num_entries": 831,
-      "f1_hallucination": 0.9501845018450185
-    },
     "cascade_db_diagnosis_stress_test.json": {
       "sha256": "623222b43e505060ddd7fcf5c209c7961f77395bccc177d0fc09f41f5adfa21c",
       "baseline": "cascade_db_diagnosis",
