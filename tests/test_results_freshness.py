@@ -342,3 +342,66 @@ def test_known_stale_register_only_shrinks():
     assert not obsolete, (
         f"listed in KNOWN_STALE but no longer stale: {obsolete}. Remove them from the register."
     )
+
+
+# --- Tests: stale by per-type counts ------------------------------------------
+
+
+def test_stale_when_per_type_counts_sum_past_the_split(tmp_path):
+    """Per-type counts that sum to more positives than the split has are a
+    different run's per-type block under patched headline counts.
+
+    Two released dev_public results carry per-type counts summing to 633 (the
+    pre-relabel split) while declaring num_hallucinated 606. The headline
+    counts were patched; the per-type block was not; the count check saw the
+    patched numbers and passed them.
+    """
+    data_dir, _split_file, results_dir = _build_env(tmp_path, n_hall=10, n_valid=10)
+    result_file = results_dir / "mytool_dev_public.json"
+    _write_result(
+        result_file, tool="mytool", split="dev_public", n_entries=20, n_hall=10, n_valid=10
+    )
+    payload = json.loads(result_file.read_text())
+    payload["per_type_metrics"] = {
+        "fabricated_doi": {"count": 8, "detection_rate": 0.5},
+        "wrong_venue": {"count": 4, "detection_rate": 0.5},
+        "valid": {"count": 10},
+    }
+    result_file.write_text(json.dumps(payload))
+
+    res = crf.check_freshness(results_dir, version="v1.2", data_dir=data_dir)
+    assert res.stale_files == ["mytool_dev_public.json"]
+    assert any("per_type" in r for r in res.reports[0].reasons), res.reports[0].reasons
+
+
+def test_per_type_counts_that_match_are_fresh(tmp_path):
+    data_dir, _split_file, results_dir = _build_env(tmp_path, n_hall=10, n_valid=10)
+    result_file = results_dir / "mytool_dev_public.json"
+    _write_result(
+        result_file, tool="mytool", split="dev_public", n_entries=20, n_hall=10, n_valid=10
+    )
+    payload = json.loads(result_file.read_text())
+    payload["per_type_metrics"] = {
+        "fabricated_doi": {"count": 6, "detection_rate": 0.5},
+        "wrong_venue": {"count": 4, "detection_rate": 0.5},
+        "valid": {"count": 10},
+    }
+    result_file.write_text(json.dumps(payload))
+    res = crf.check_freshness(results_dir, version="v1.2", data_dir=data_dir)
+    assert res.passed and res.stale_files == []
+
+
+@pytest.mark.skipif(not _REAL_RESULTS_DIR.is_dir(), reason="real results dir not present")
+def test_the_two_patched_claude_dev_results_are_caught_and_registered():
+    """Pins the finding: per-type over 633 positives, headline 606, and they are
+    in KNOWN_STALE so the guard stays green without forgetting them."""
+    res = crf.check_freshness(_REAL_RESULTS_DIR, version="v1.2", data_dir=_REAL_DATA_DIR)
+    by_name = {r.result_file: r for r in res.reports}
+    for name in (
+        "llm_openrouter_claude_opus_4_7_dev_public.json",
+        "llm_openrouter_claude_sonnet_4_6_dev_public.json",
+    ):
+        assert by_name[name].is_stale, f"{name} not flagged"
+        assert any("per_type" in reason for reason in by_name[name].reasons)
+        assert name in crf.KNOWN_STALE, f"{name} flagged but not registered"
+    assert res.passed, res.errors
