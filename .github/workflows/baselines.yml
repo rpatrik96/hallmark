@@ -40,8 +40,13 @@ jobs:
             precomputed: false
           - baseline: bibtexupdater
             precomputed: true    # rate-limited — use pre-computed results
-          - baseline: harc
-            precomputed: true    # rate-limited — use pre-computed results
+          # harc is out of the matrix until it has a current pre-computed result.
+          # harc_dev_public.json was withdrawn on 2026-09-04 (a truncated run),
+          # and harc_with_s2key_dev_public.json is registered known-stale in
+          # scripts/check_results_freshness.py. Until then the leg copied a file
+          # that did not exist and reported success -- run 33948051695 -- which
+          # the #50 gate cannot see, because the job's conclusion was honest
+          # about a step that had been told to swallow its own failure.
           - baseline: verify_citations
             max_entries: 50      # API-dependent — stratified sample
             precomputed: false
@@ -91,8 +96,14 @@ jobs:
             --metadata data/v1.2/metadata.json \
             --strict
           mkdir -p results
-          cp data/v1.2/baseline_results/${{ matrix.baseline }}_${{ inputs.split || 'dev_public' }}.json \
-            results/ 2>/dev/null || echo "No pre-computed result for ${{ matrix.baseline }} on ${{ inputs.split || 'dev_public' }}"
+          # A precomputed leg with nothing to copy has evaluated nothing; it must
+          # not report success. The previous `|| echo` made exactly that green.
+          src="data/v1.2/baseline_results/${{ matrix.baseline }}_${{ inputs.split || 'dev_public' }}.json"
+          if [ ! -f "$src" ]; then
+            echo "::error::no pre-computed result at $src -- this leg has nothing to evaluate"
+            exit 1
+          fi
+          cp "$src" results/
 
       - name: Upload results
         uses: actions/upload-artifact@v4
