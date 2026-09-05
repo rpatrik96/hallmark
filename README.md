@@ -258,11 +258,10 @@ How much of a tool's credit comes from these modes varies widely, and no
 published column shows it. On `test_public` they are 27.0% of the cascade's 514
 detections, 23.2% of Sonnet 4.6's, 20.0% of `bibtexupdater`'s and 9.1% of
 `doi_only`'s. Detection rate on the four ranges from 0.065 (`doi_only`) to 1.000
-(the cascade), median 0.740 across 20 tools. The counts exclude one
-byte-identical duplicate result file per split (`cascade_db_diagnosis_evalmode_aggressive_*`
-is a copy of `cascade_db_diagnosis_aggressive_*`) and, on `dev_public`, the Opus 4.7
-result, whose per-type block predates the relabel and does not reproduce its
-published MCC; it is registered known-stale in `scripts/check_results_freshness.py`.
+(the cascade), median 0.740 across 20 tools. The `dev_public` count excludes
+the Opus 4.7 result, whose per-type block predates the relabel and does not
+reproduce its published MCC; it is registered known-stale in
+`scripts/check_results_freshness.py`.
 
 Two controls bound what this means. Folding `hybrid_fabrication` alone leaves
 the folded-out ranking unchanged on both public splits — tau 1.000, no tool

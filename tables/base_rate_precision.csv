@@ -11,12 +11,6 @@ cascade_db_diagnosis_aggressive_test_public,test_public,0.9923,0.1603,0.0100,0.0
 cascade_db_diagnosis_aggressive_test_public,test_public,0.9923,0.1603,0.0500,0.2458,4.1
 cascade_db_diagnosis_aggressive_test_public,test_public,0.9923,0.1603,0.2000,0.6075,1.6
 cascade_db_diagnosis_aggressive_test_public,test_public,0.9923,0.1603,0.6250,0.9117,1.1
-cascade_db_diagnosis_evalmode_aggressive_test_public,test_public,0.9923,0.1603,0.0010,0.0062,162.3
-cascade_db_diagnosis_evalmode_aggressive_test_public,test_public,0.9923,0.1603,0.0050,0.0302,33.1
-cascade_db_diagnosis_evalmode_aggressive_test_public,test_public,0.9923,0.1603,0.0100,0.0589,17.0
-cascade_db_diagnosis_evalmode_aggressive_test_public,test_public,0.9923,0.1603,0.0500,0.2458,4.1
-cascade_db_diagnosis_evalmode_aggressive_test_public,test_public,0.9923,0.1603,0.2000,0.6075,1.6
-cascade_db_diagnosis_evalmode_aggressive_test_public,test_public,0.9923,0.1603,0.6250,0.9117,1.1
 cascade_db_diagnosis_test_public,test_public,0.9904,0.1119,0.0010,0.0088,113.8
 cascade_db_diagnosis_test_public,test_public,0.9904,0.1119,0.0050,0.0426,23.5
 cascade_db_diagnosis_test_public,test_public,0.9904,0.1119,0.0100,0.0821,12.2
