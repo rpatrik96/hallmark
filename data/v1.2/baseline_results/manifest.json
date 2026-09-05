@@ -2,14 +2,14 @@
   "version": "1.0",
   "files": {
     "bibtexupdater_dev_public.json": {
-      "sha256": "ffc80199709b72e5afb6e4b8d45476b3746ccde8f9825c43b59b7ab5191aed8b",
+      "sha256": "09778d2a41631733c3ab9c42cc612754efbe0dd32c957896463db7179bde0715",
       "baseline": "bibtexupdater",
       "split": "dev_public",
       "num_entries": 1119,
       "f1_hallucination": 0.8903993203058623
     },
     "bibtexupdater_test_public.json": {
-      "sha256": "6cd2f9acc540179a88f8b94875433ff313a9f33b3ecf97247b5e7209ff55b82f",
+      "sha256": "d31eca7871bc1b6f2f0f13e734f7478f0ae00dcf45b879aaf2679075c484d9cc",
       "baseline": "bibtexupdater",
       "split": "test_public",
       "num_entries": 831,

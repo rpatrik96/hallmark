@@ -17,7 +17,7 @@
   "ece": 0.3991794010533843,
   "auroc": 0.6741792648584556,
   "auprc": 0.8189893946307215,
-  "num_uncertain": 0,
+  "num_uncertain": 101,
   "tier3_f1": 0.8456790123456791,
   "detection_rate_ci": null,
   "f1_hallucination_ci": null,
@@ -144,7 +144,7 @@
       "count": 34
     }
   },
-  "coverage": 1.0,
+  "coverage": 0.8761,
   "coverage_adjusted_f1": 0.900990099009901,
   "type_accuracy": {
     "overall": NaN,
@@ -483,7 +483,8 @@
     "kind": "btu_standalone",
     "splits": [
       "test_public"
-    ]
+    ],
+    "coverage_corrected": "coverage and num_uncertain recounted from results/relabel_delta/btu_v1_2_0/test_public/btu_raw.jsonl under ABSTENTION_STATUSES; the DR/FPR/F1 triple is unchanged and still scores abstentions as committed-VALID, which is the convention the paper reports. See scripts/rescore_btu_from_raw.py."
   },
   "_btu_status_histogram": {
     "arxiv_id_mismatch": 14,
