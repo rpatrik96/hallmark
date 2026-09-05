@@ -84,6 +84,12 @@ four arms take, or a decision to drop DBLP from the source set and report the
 result as an OpenAlex/CrossRef/Semantic Scholar/arXiv condition — which is a
 different measurement from the published rows, and would have to say so.
 
+The run's artifacts -- both scored arms, all six logs, and `source_conditions.txt`
+-- are at
+`~/.claude/projects/-Users-patrik-reizinger-Documents-GitHub-hallmark/prescreening-ablation-2026-09-05/`.
+They are not committed: they were produced against a pinned pre-fix worktree and
+are a record of the attempt, not a result to cite.
+
 One caveat on the two surviving arms: they were produced from a worktree pinned
 before the abstention fix, so they carry `coverage: 1.0` and `num_uncertain: 0`
 for a tool that abstains. Anything derived from them needs the coverage
