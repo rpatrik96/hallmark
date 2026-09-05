@@ -18,6 +18,10 @@ build/
 venv/
 env/
 
+# API keys — never commit
+.env
+.env.*
+
 # IDE
 .idea/
 .vscode/
@@ -112,6 +116,9 @@ results/checkpoints/**/CLAUDE.md
 # Prediction checkpoints (regeneratable from committed eval JSONs)
 results/checkpoints/
 
+# GEPA prompt-optimization run artifacts (logs hold raw prompts; run/ holds pickles)
+results/gepa_haiku/**/logs/
+results/gepa_haiku/**/run/
 # Agentic tool HTTP caches — regenerable, and requests-cache expires every entry
 # after 30 days (_http_cache.py:39), so a committed cache silently stops pinning
 # anything after a month. The per-entry *_preds.jsonl files are what reproduce the

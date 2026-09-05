@@ -458,6 +458,33 @@ def _register_builtins() -> None:
             )
         )
 
+    # --- LLM: HuggingFace router (Qwen3 dense parameter-count sweep) ---
+    from hallmark.baselines.llm_verifier import HF_MODELS
+
+    for friendly_name, model_id in HF_MODELS.items():
+        baseline_name = f"llm_hf_{friendly_name.replace('-', '_')}"
+
+        def _make_hf_runner(mid: str) -> Callable[..., list[Prediction]]:
+            def _run(entries: list[BlindEntry], **kw: Any) -> list[Prediction]:
+                from hallmark.baselines.llm_verifier import verify_with_huggingface
+
+                return verify_with_huggingface(entries, model=mid, **kw)
+
+            return _run
+
+        register(
+            BaselineInfo(
+                name=baseline_name,
+                description=f"HuggingFace router citation verification ({model_id})",
+                runner=_make_hf_runner(model_id),
+                pip_packages=["openai"],
+                requires_api_key=True,
+                is_free=False,
+                env_var="HF_TOKEN",
+                confidence_type="probabilistic",
+            )
+        )
+
     # --- LLM: Cutoff-aware prompt ablation ---------------------------------
     # These variants append the CUTOFF_AWARE_ADDENDUM to the default prompt,
     # explicitly telling the model to route post-cutoff citations to UNCERTAIN

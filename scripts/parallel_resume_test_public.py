@@ -1,8 +1,14 @@
 """Resume an interrupted hallmark evaluate run in parallel.
 
-Picks up an existing checkpoint dir, reads predictions already there, and
-fans out remaining entries across N concurrent threads to OpenRouter using
-the same verification prompt the main baseline uses.
+Picks up an existing checkpoint dir, reads predictions already there, and fans
+out remaining entries across N concurrent threads to the selected provider
+(--provider openrouter|huggingface).
+
+Prompt building and response parsing are IMPORTED from
+hallmark.baselines.llm_verifier rather than reimplemented here, so this path
+cannot drift from the sequential one. An earlier revision kept local copies and
+they did drift: the copy never extracted predicted_hallucination_type, and it
+had no <think>-block stripping, so Qwen3 replies fell to the lossy salvage path.
 
 # Rate-limit design notes
 # ========================
@@ -36,6 +42,14 @@ Usage:
         --max-entries 3 \\
         --workers 2
 
+    # HuggingFace router (Qwen3 dense sweep) — needs HF_TOKEN
+    uv run python scripts/parallel_resume_test_public.py \\
+        --provider huggingface \\
+        --checkpoint-dir results/checkpoints/llm_hf_qwen3_4b_test_public \\
+        --model Qwen/Qwen3-4B:featherless-ai \\
+        --jsonl-name huggingface_qwen3-4b.jsonl \\
+        --workers 4
+
 After completion, run `hallmark evaluate --predictions <jsonl>` to compute
 the eval.json from the assembled predictions.
 
@@ -56,7 +70,6 @@ import argparse
 import json
 import logging
 import os
-import re
 import sys
 import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
@@ -67,11 +80,25 @@ import openai
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
+from hallmark.baselines.llm_verifier import (  # noqa: E402
+    _NO_THINK_MODELS,
+    _NO_THINK_SUFFIX,
+    HF_ROUTER_BASE_URL,
+    _build_verification_prompt,
+    _parse_llm_response,
+)
+from hallmark.dataset.schema import BlindEntry  # noqa: E402
+
+# Provider routing: (base_url, env var holding the key, api_sources_queried prefix).
+# Keep every provider-specific value here so adding one is a single-line change.
+PROVIDERS: dict[str, tuple[str, str, str]] = {
+    "openrouter": ("https://openrouter.ai/api/v1", "OPENROUTER_API_KEY", "openrouter"),
+    "huggingface": (HF_ROUTER_BASE_URL, "HF_TOKEN", "huggingface"),
+}
 from hallmark.baselines.checkpoint_guard import (  # noqa: E402
     GuardedCheckpointWriter,
     PoisonedBatchError,
 )
-from hallmark.baselines.llm_verifier import VERIFICATION_PROMPT  # noqa: E402
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(
@@ -86,87 +113,26 @@ def load_jsonl(path: Path) -> list[dict]:
     return [json.loads(line) for line in path.read_text().splitlines() if line.strip()]
 
 
-def entry_to_bibtex(entry: dict) -> str:
-    """Reconstruct a BibTeX string from the schema's `fields` dict."""
-    btype = entry.get("bibtex_type", "article")
-    key = entry["bibtex_key"]
-    flds = entry["fields"]
-    body = ",\n  ".join(f"{k} = {{{v}}}" for k, v in sorted(flds.items()))
-    return f"@{btype}{{{key},\n  {body}\n}}"
+def build_prompt(entry: dict, model: str) -> str:
+    """Build the verification prompt for one entry.
 
+    Delegates to the baseline's own prompt builder rather than reconstructing
+    the BibTeX locally, so the parallel and sequential paths cannot drift.
 
-def parse_response(content: str, bibtex_key: str) -> tuple[str, float, str]:
-    """Parse LLM JSON response into (label, confidence, reason).
-
-    Mirrors the logic in hallmark.baselines.llm_verifier._parse_llm_response
-    so predictions are consistent with the sequential run:
-    1. Try bare JSON.
-    2. Try each fenced code block.
-    3. Regex-salvage label+confidence from truncated output.
-    4. Return UNCERTAIN fallback.
+    Qwen3 defaults to thinking ON and burns the completion-token budget before
+    emitting the JSON verdict; models in _NO_THINK_MODELS get Qwen3's own
+    ``/no_think`` soft switch, exactly as the baseline does.
     """
-    if not content or not content.strip():
-        return "UNCERTAIN", 0.5, "[Error fallback] Empty response"
-
-    original = content
-
-    def _try_parse(text: str) -> dict | None:
-        text = text.strip()
-        try:
-            data = json.loads(text)
-            if isinstance(data, dict) and "label" in data:
-                return data
-        except (json.JSONDecodeError, ValueError):
-            pass
-        return None
-
-    # Try bare JSON first (no fences)
-    data: dict | None = None
-    if "```" not in content:
-        data = _try_parse(content)
-    else:
-        blocks = content.split("```")
-        for i in range(1, len(blocks), 2):
-            block = blocks[i]
-            if block.lower().startswith("json"):
-                block = block[4:]
-            data = _try_parse(block)
-            if data is not None:
-                break
-
-    if data is None:
-        # Salvage path: extract label/confidence via regex from truncated output
-        label_match = re.search(
-            r'"label"\s*:\s*"(VALID|HALLUCINATED|UNCERTAIN)"',
-            original,
-            re.IGNORECASE,
-        )
-        conf_match = re.search(r'"confidence"\s*:\s*([0-9]*\.?[0-9]+)', original)
-        if label_match is not None:
-            salvaged_label = label_match.group(1).upper()
-            if salvaged_label not in {"VALID", "HALLUCINATED", "UNCERTAIN"}:
-                salvaged_label = "UNCERTAIN"
-            salvaged_conf = float(conf_match.group(1)) if conf_match else 0.5
-            salvaged_conf = max(0.0, min(1.0, salvaged_conf))
-            return (
-                salvaged_label,
-                salvaged_conf,
-                "[Salvaged] label/confidence extracted from truncated JSON",
-            )
-
-        logger.warning("Failed to parse LLM response for %s", bibtex_key)
-        return "UNCERTAIN", 0.5, f"[Error fallback] Parse error: {original[:100]}"
-
-    try:
-        label = data.get("label", "UNCERTAIN").upper()
-        if label not in {"VALID", "HALLUCINATED", "UNCERTAIN"}:
-            label = "UNCERTAIN"
-        confidence = float(data.get("confidence", 0.5))
-        confidence = max(0.0, min(1.0, confidence))
-        reason = str(data.get("reason", ""))
-        return label, confidence, reason
-    except (ValueError, TypeError) as e:
-        return "UNCERTAIN", 0.5, f"[Error fallback] Parse error: {e}"
+    blind = BlindEntry(
+        bibtex_key=entry["bibtex_key"],
+        bibtex_type=entry.get("bibtex_type", "article"),
+        fields=entry["fields"],
+        raw_bibtex=entry.get("raw_bibtex", ""),
+    )
+    prompt = _build_verification_prompt(blind)
+    if model in _NO_THINK_MODELS:
+        prompt = f"{prompt}\n\n{_NO_THINK_SUFFIX}"
+    return prompt
 
 
 def call_one(
@@ -178,6 +144,7 @@ def call_one(
     max_completion_tokens: int = 1024,
     temperature: float = 0.0,
     seed: int = 42,
+    source_prefix: str = "openrouter",
 ) -> dict:
     """Make one verification call with per-request timeout and exponential backoff.
 
@@ -194,8 +161,7 @@ def call_one(
                                   errors are usually transient)
     4xx (auth, quota, malformed request) bails immediately.
     """
-    bibtex = entry_to_bibtex(entry)
-    prompt = VERIFICATION_PROMPT.format(bibtex=bibtex)
+    prompt = build_prompt(entry, model)
 
     start = time.time()
     last_err: Exception | None = None
@@ -210,16 +176,17 @@ def call_one(
                 timeout=timeout,  # per-request timeout — critical to prevent hangs
             )
             content = resp.choices[0].message.content or ""
-            label, conf, reason = parse_response(content, entry["bibtex_key"])
+            pred = _parse_llm_response(content, entry["bibtex_key"])
             elapsed = time.time() - start
             return {
                 "bibtex_key": entry["bibtex_key"],
-                "label": label,
-                "confidence": conf,
-                "reason": reason,
+                "label": pred.label,
+                "confidence": pred.confidence,
+                "reason": pred.reason,
+                "predicted_hallucination_type": pred.predicted_hallucination_type,
                 "wall_clock_seconds": elapsed,
                 "api_calls": 1,
-                "api_sources_queried": [f"openrouter/{model}"],
+                "api_sources_queried": [f"{source_prefix}/{model}"],
             }
         except (
             openai.RateLimitError,
@@ -277,6 +244,11 @@ def call_one(
         "label": "UNCERTAIN",
         "confidence": 0.5,
         "reason": f"[Error fallback] API error: {last_err}",
+        # Present on the failure path too, so every checkpoint row has the same
+        # shape and readers can index it unconditionally. Note this is NOT how a
+        # failure is detected — null is also the required value for a successful
+        # VALID verdict; --retry-failed keys on the reason prefix instead.
+        "predicted_hallucination_type": None,
         "wall_clock_seconds": elapsed,
         "api_calls": max_retries,
         "api_sources_queried": [],
@@ -294,9 +266,22 @@ def main() -> None:
         help="Directory containing (or to create) the JSONL checkpoint.",
     )
     parser.add_argument(
+        "--provider",
+        choices=sorted(PROVIDERS),
+        default="openrouter",
+        help=(
+            "Inference provider. 'openrouter' (default) uses OPENROUTER_API_KEY; "
+            "'huggingface' uses HF_TOKEN and the HF Inference Providers router, "
+            "which is where the Qwen3 dense sweep runs."
+        ),
+    )
+    parser.add_argument(
         "--model",
         required=True,
-        help="OpenRouter model id (e.g., deepseek/deepseek-r1).",
+        help=(
+            "Provider model id — e.g. 'deepseek/deepseek-r1' for openrouter, "
+            "'Qwen/Qwen3-4B:featherless-ai' for huggingface."
+        ),
     )
     parser.add_argument(
         "--jsonl-name",
@@ -339,6 +324,16 @@ def main() -> None:
         help="Sampling seed for determinism parity with the main verifier (default 42).",
     )
     parser.add_argument(
+        "--retry-failed",
+        action="store_true",
+        help=(
+            "Re-attempt entries whose only checkpoint row is an '[Error fallback]' "
+            "(API outage, depleted credits). Without this they count as done and "
+            "are skipped forever. Successful retries append a new row, which wins "
+            "on load since predictions dedupe by bibtex_key, last-one-wins."
+        ),
+    )
+    parser.add_argument(
         "--dry-run",
         action="store_true",
         help="Print resume plan (done/remaining/total) and exit without API calls.",
@@ -361,14 +356,15 @@ def main() -> None:
         args.workers = 2
         args.max_entries = 5 if args.max_entries is None else min(args.max_entries, 5)
 
-    api_key = os.environ.get("OPENROUTER_API_KEY")
+    base_url, env_var, source_prefix = PROVIDERS[args.provider]
+    api_key = os.environ.get(env_var)
     if not api_key and not args.dry_run:
-        raise SystemExit("OPENROUTER_API_KEY not set")
+        raise SystemExit(f"{env_var} not set (required for --provider {args.provider})")
 
     # Create client once; timeout is set at client level as default and also
     # passed per-call to catch hangs even if the SDK default changes.
     client = openai.OpenAI(
-        base_url="https://openrouter.ai/api/v1",
+        base_url=base_url,
         api_key=api_key or "dry-run",
         timeout=args.timeout,
         max_retries=0,  # We handle retries manually to log backoffs
@@ -378,9 +374,18 @@ def main() -> None:
     args.checkpoint_dir.mkdir(parents=True, exist_ok=True)
 
     # Resume: build set of already-completed bibtex_keys
+    # An entry counts as done if it has any non-failed row. With --retry-failed,
+    # "[Error fallback]" rows do NOT count, so a run killed mid-sweep (outage,
+    # depleted credits) can be resumed rather than leaving those keys looking
+    # complete forever. Mirrors _load_checkpoint(skip_failed=) in llm_verifier.
     done_keys: set[str] = set()
     existing = load_jsonl(jsonl_path)
+    n_failed = 0
     for r in existing:
+        if str(r.get("reason", "")).startswith("[Error fallback]"):
+            n_failed += 1
+            if args.retry_failed:
+                continue
         done_keys.add(r["bibtex_key"])
     n_done = len(done_keys)
 
@@ -394,7 +399,12 @@ def main() -> None:
         print(f"Found {n_done} existing predictions; remaining {n_remaining} of {n_total}")
         print(f"  data-file:      {args.data_file}")
         print(f"  checkpoint:     {jsonl_path}")
+        print(
+            f"  failed rows:    {n_failed} ({'retrying' if args.retry_failed else 'counted as done'})"
+        )
+        print(f"  provider:       {args.provider} ({base_url})")
         print(f"  model:          {args.model}")
+        print(f"  /no_think:      {args.model in _NO_THINK_MODELS}")
         print(f"  workers:        {args.workers}")
         print(f"  timeout:        {args.timeout}s")
         if args.max_entries:
@@ -437,6 +447,7 @@ def main() -> None:
                 args.max_completion_tokens,
                 args.temperature,
                 args.seed,
+                source_prefix,
             ): e
             for e in remaining
         }
