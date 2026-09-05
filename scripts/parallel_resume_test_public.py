@@ -52,6 +52,16 @@ Usage:
 
 After completion, run `hallmark evaluate --predictions <jsonl>` to compute
 the eval.json from the assembled predictions.
+
+Checkpoint guard
+================
+Records are written through ``GuardedCheckpointWriter``: a record that carries no
+verdict (an ``[Error fallback]`` reason) never enters the checkpoint, so its key
+is absent on the next run and gets retried instead of being trusted forever.  It
+is parked in a ``<jsonl>.rejected-<timestamp>.jsonl`` sidecar.  Once the failed
+share of the run crosses the batch-health threshold the run is refused outright
+and exits non-zero, on the reasoning that a share that high is a transport outage
+rather than a property of the bibliography.
 """
 
 from __future__ import annotations
@@ -61,7 +71,6 @@ import json
 import logging
 import os
 import sys
-import threading
 import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
@@ -86,6 +95,10 @@ PROVIDERS: dict[str, tuple[str, str, str]] = {
     "openrouter": ("https://openrouter.ai/api/v1", "OPENROUTER_API_KEY", "openrouter"),
     "huggingface": (HF_ROUTER_BASE_URL, "HF_TOKEN", "huggingface"),
 }
+from hallmark.baselines.checkpoint_guard import (  # noqa: E402
+    GuardedCheckpointWriter,
+    PoisonedBatchError,
+)
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(
@@ -278,7 +291,7 @@ def main() -> None:
     parser.add_argument(
         "--data-file",
         type=Path,
-        default=ROOT / "data" / "v1.0" / "test_public.jsonl",
+        default=ROOT / "data" / "v1.2" / "test_public.jsonl",
         help="Benchmark JSONL file to evaluate (default: test_public).",
     )
     parser.add_argument("--workers", type=int, default=8, help="Concurrent API threads.")
@@ -415,11 +428,14 @@ def main() -> None:
         logger.info("Nothing to do.")
         return
 
-    lock = threading.Lock()
     completed = 0
     run_start = time.time()
+    poisoned: PoisonedBatchError | None = None
 
-    with jsonl_path.open("a") as f, ThreadPoolExecutor(max_workers=args.workers) as ex:
+    with (
+        GuardedCheckpointWriter(jsonl_path) as writer,
+        ThreadPoolExecutor(max_workers=args.workers) as ex,
+    ):
         futures = {
             ex.submit(
                 call_one,
@@ -451,9 +467,17 @@ def main() -> None:
                     "api_sources_queried": [],
                 }
 
-            with lock:
-                f.write(json.dumps(rec) + "\n")
-                f.flush()
+            try:
+                writer.add(rec)
+            except PoisonedBatchError as exc:
+                # Stop paying for calls that cannot produce evidence. Only usable
+                # verdicts reached the checkpoint, so every refused key is
+                # retried by the next run.
+                poisoned = exc
+                logger.error("%s", exc)
+                for pending in futures:
+                    pending.cancel()
+                break
 
             completed += 1
             if completed % 10 == 0:
@@ -468,7 +492,10 @@ def main() -> None:
                     eta_min,
                 )
 
-    logger.info("Done. Wrote %d new predictions to %s", completed, jsonl_path)
+    if poisoned is not None:
+        raise SystemExit(f"{poisoned}\nRefused records: {writer.rejected_path}")
+
+    logger.info("Done. Wrote %d new predictions to %s", writer.written, jsonl_path)
 
 
 if __name__ == "__main__":

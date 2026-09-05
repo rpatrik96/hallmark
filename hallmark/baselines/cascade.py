@@ -5,7 +5,11 @@ Stage 1: ``bibtexupdater`` (CrossRef / DBLP / Semantic Scholar lookup).
 - Definite mismatch statuses (``doi_not_found``, ``venue_mismatch``, etc.) →
   emit HALLUCINATED with a status-derived ``predicted_hallucination_type``.
 - Ambiguous statuses (``not_found``, ``partial_match``, ``api_error``,
-  ``skipped``, ``missing``) → defer to Stage 2.
+  ``network_error``, ``coverage_incomplete``, ``skipped``, ``missing``) → defer
+  to Stage 2.
+- An unmapped status also defers to Stage 2.  This is deliberate, not incidental:
+  a status the wrapper has never seen carries no evidence either way, and the only
+  safe direction to fail is towards a second opinion.
 
 Stage 2: a configurable LLM diagnoser (default ``llm_agentic_anthropic``) is
 asked to decide VALID vs HALLUCINATED and, when HALLUCINATED, to classify the
@@ -15,7 +19,16 @@ Aggressive mode: any entry that remains UNCERTAIN after Stage 2 is forced to
 HALLUCINATED with type ``plausible_fabrication`` and confidence 0.55. This
 implements the "treat DB lookups as gold standard" stance — at the cost of
 inflated FPR on legitimately-but-not-yet-indexed entries, which the dual-mode
-evaluation surfaces as the DB-indexing-lag tax.
+evaluation surfaces as the DB-indexing-lag tax.  The promotion is suppressed on a
+batch whose Stage 1 produced no database evidence: during an outage there is no
+gold standard to treat as one, and promoting the residue would manufacture mass
+fabrication verdicts out of failed requests.
+
+Stage 1 statuses are also scored as a batch: ``run_cascade_with_health`` returns
+the ``BatchHealth`` record for the bibtex-check invocation so a caller can refuse
+to checkpoint a run whose Stage 1 produced no database evidence at all.  That is
+the shape a transport outage takes, and without the check the cascade forwards
+the whole batch to an expensive Stage 2 that has nothing to work from.
 """
 
 from __future__ import annotations
@@ -24,7 +37,11 @@ import logging
 from pathlib import Path
 from typing import Any
 
-from hallmark.baselines.bibtexupdater import run_bibtex_check_with_status
+from hallmark.baselines.bibtexupdater import (
+    BatchHealth,
+    assess_batch_health,
+    run_bibtex_check_with_status,
+)
 from hallmark.dataset.schema import BlindEntry, Prediction
 
 logger = logging.getLogger(__name__)
@@ -52,7 +69,8 @@ STATUS_TO_TYPE: dict[str, str] = {
     # Post-1.2.0 positive-evidence statuses — decided problems, never Stage 2
     "nonexistent_venue": "nonexistent_venue",  # venue unknown to DBLP/OpenAlex registries
     "unpublished_at_claimed_venue": "preprint_as_published",  # real paper, not at cited venue
-    # not_found / unconfirmed / partial_match / api_error / skipped / missing → Stage 2
+    # not_found / unconfirmed / partial_match / api_error / network_error /
+    # coverage_incomplete / skipped / missing → Stage 2 (see ROUTE_TO_STAGE2)
 }
 
 # Statuses that Stage 1 treats as definitive VALID.
@@ -67,19 +85,30 @@ STAGE1_VERIFIED: set[str] = {
 
 # Statuses routed to Stage 2 for diagnosis.
 ROUTE_TO_STAGE2: set[str] = {
-    # ``not_found`` covers both clean exhaustive misses and coverage-incomplete
-    # lookups (post-1.2.0 ``coverage_incomplete`` — sources errored / were
-    # throttled); both shapes are uncertain and defer to Stage 2.
+    # ``not_found`` is meant to be an exhaustive miss — every source consulted
+    # completed and returned nothing — but the cascade never treats it as
+    # evidence of fabrication on its own, because older tool builds also emit it
+    # for lookups that failed in transit. Uncertain either way: defer to Stage 2.
     "not_found",
     "partial_match",
     "api_error",
     "skipped",
     "missing",
+    # Transport and coverage failures: the lookup never completed, so the entry
+    # carries no evidence in either direction.  These must never reach
+    # ``STATUS_TO_TYPE`` — a failed request is not a fabricated reference.
+    "network_error",
+    "coverage_incomplete",
     # bibtex-updater >=1.2.0 abstention statuses (could-not-verify)
     "unconfirmed",
     "strict_warn_preprint_year",
     "strict_warn_cnv",
 }
+
+
+# Unmapped statuses seen in this process, so a drifted tool vocabulary is
+# reported once rather than once per entry.
+_WARNED_UNMAPPED_STATUSES: set[str] = set()
 
 
 def _stage1_predict(
@@ -141,9 +170,25 @@ def _stage1_predict(
     if status in ROUTE_TO_STAGE2:
         return None
 
-    logger.debug(
-        "cascade: unmapped status %r for %s — routing to Stage 2", status, raw_pred.bibtex_key
-    )
+    # Deliberate open-world default: a status the wrapper has never seen is
+    # routed to Stage 2 rather than mapped to a verdict here.  Failing towards a
+    # second opinion is the only safe direction — the alternative is inventing
+    # evidence from an unknown string.  An unmapped status also means the tool's
+    # vocabulary has drifted ahead of ``STATUS_TO_TYPE`` / ``ROUTE_TO_STAGE2``,
+    # so the first sighting is a WARNING; the rest stay at DEBUG so a whole batch
+    # of them cannot drown out the batch-health warning.
+    if status not in _WARNED_UNMAPPED_STATUSES:
+        _WARNED_UNMAPPED_STATUSES.add(status)
+        logger.warning(
+            "cascade: unmapped bibtex-check status %r (first seen on %s) — routing "
+            "to Stage 2, never HALLUCINATED; add it to the status maps",
+            status,
+            raw_pred.bibtex_key,
+        )
+    else:
+        logger.debug(
+            "cascade: unmapped status %r for %s — routing to Stage 2", status, raw_pred.bibtex_key
+        )
     return None
 
 
@@ -157,6 +202,10 @@ def _aggressive_fallback(pred: Prediction) -> Prediction:
     The aggressive policy is "if no DB or diagnoser confidently asserted real,
     treat as fabricated"; we type the residual as ``plausible_fabrication``
     since that is the catch-all for "looks plausible but unverifiable".
+
+    The function itself is unchanged and unconditional; whether it runs at all is
+    decided in ``run_cascade_with_health``, which skips the promotion entirely on
+    a batch flagged by ``BatchHealth.suspected_transport_failure``.
     """
     if pred.label == "HALLUCINATED":
         return pred
@@ -175,6 +224,9 @@ def _aggressive_fallback(pred: Prediction) -> Prediction:
         source=pred.source,
         predicted_hallucination_type="plausible_fabrication",
         cascade_stage=pred.cascade_stage,
+        # A promoted fallback is still a fallback: without this an all-fallback
+        # run becomes detection rate 1.0 with every entry marked evaluated.
+        evaluated=pred.evaluated,
     )
 
 
@@ -186,6 +238,30 @@ def run_cascade(
     stage2_kwargs: dict[str, Any] | None = None,
     **stage1_kwargs: Any,
 ) -> list[Prediction]:
+    """Run the DB-first cascade and return predictions only.
+
+    Thin wrapper over ``run_cascade_with_health`` for callers that do not persist
+    results; see that function for the arguments and for the batch-health signal
+    a checkpointing caller needs.
+    """
+    predictions, _ = run_cascade_with_health(
+        entries,
+        stage2_baseline=stage2_baseline,
+        aggressive=aggressive,
+        stage2_kwargs=stage2_kwargs,
+        **stage1_kwargs,
+    )
+    return predictions
+
+
+def run_cascade_with_health(
+    entries: list[BlindEntry],
+    *,
+    stage2_baseline: str = "llm_agentic_anthropic",
+    aggressive: bool = False,
+    stage2_kwargs: dict[str, Any] | None = None,
+    **stage1_kwargs: Any,
+) -> tuple[list[Prediction], BatchHealth]:
     """Run the DB-first cascade with hallucination-mode diagnosis.
 
     Args:
@@ -196,12 +272,43 @@ def run_cascade(
         aggressive: if True, any entry still UNCERTAIN/low-confidence VALID
             after Stage 2 is forced to HALLUCINATED@0.55 with type
             ``plausible_fabrication``. This implements the "DB-as-gold-standard"
-            stance from the reviewer feedback.
+            stance from the reviewer feedback. The promotion is skipped when
+            ``health.suspected_transport_failure`` is set, since a batch with no
+            database evidence has no gold standard to stand on.
         stage2_kwargs: kwargs forwarded to the Stage 2 baseline runner.
         **stage1_kwargs: forwarded to ``run_bibtex_check_with_status``.
+
+    Returns:
+        A 2-tuple ``(predictions, health)``. ``health`` scores the Stage 1 status
+        map: when ``health.suspected_transport_failure`` is True the Stage 1
+        lookups produced no database evidence, every Stage 2 verdict in the batch
+        rests on nothing, and the caller must not checkpoint the results.
+
+    Note on the published results
+    -----------------------------
+    The aggressive-mode numbers in the paper were produced before this guard
+    existed, and they are not recomputed by it: they are frozen files in
+    ``data/v1.2/baseline_results/`` that CI validates by checksum rather than
+    re-running.  The guard cannot alter them.  It is also inert on a healthy
+    batch by construction: ``suspected_transport_failure`` is False whenever the
+    no-evidence share stays under the threshold, and the no-evidence statuses are
+    a subset of what defers to Stage 2, so the frozen conservative runs'
+    ``cascade_breakdown_stats`` bound the share from above.  For dev_public
+    (266/1119 = 23.8% deferred) and test_public (222/831 = 26.7%) the bound is
+    below the 30% threshold, so those splits' aggressive numbers cannot change on
+    a re-run.
+
+    stress_test defers 53/121 = 43.8%, which is an upper bound only: deferrals
+    also include ``unconfirmed``, ``partial_match``, ``skipped`` and ``missing``,
+    none of which count toward the no-evidence share.  The raw status dump needed
+    to compute the actual share is not in the repo:
+    ``bibtexupdater_raw_dev_public.jsonl`` is an unfetched git-lfs pointer and
+    there is no stress_test raw dump at all.  A future re-run of the aggressive
+    stress_test split is therefore the one place this guard could in principle
+    produce different numbers; the frozen file is untouched regardless.
     """
     if not entries:
-        return []
+        return [], assess_batch_health([])
 
     # The harness injects ``checkpoint_dir`` for baselines that support
     # per-entry resume. Stage 1 (bibtex-check subprocess) has no checkpoint
@@ -216,6 +323,18 @@ def run_cascade(
 
     stage1_preds, status_map = run_bibtex_check_with_status(entries, **stage1_kwargs)
     pred_by_key = {p.bibtex_key: p for p in stage1_preds}
+
+    # Computed from the status map rather than inside the wrapper so the signal
+    # survives whichever Stage 1 path produced it.
+    health = assess_batch_health(status_map.values())
+    if health.suspected_transport_failure:
+        logger.warning(
+            "cascade Stage 1 produced no database evidence for %d/%d entries — "
+            "every Stage 2 verdict in this batch rests on nothing. Do not "
+            "checkpoint these results.",
+            health.no_evidence,
+            health.total,
+        )
 
     final: dict[str, Prediction] = {}
     deferred: list[BlindEntry] = []
@@ -269,11 +388,27 @@ def run_cascade(
             )
 
     if aggressive:
-        for key, pred in list(final.items()):
-            if pred.cascade_stage in {"stage2_diagnosis"}:
-                final[key] = _aggressive_fallback(pred)
+        if health.suspected_transport_failure:
+            # "DB-as-gold-standard" needs a DB. With no database evidence behind
+            # the batch, promoting the residue to HALLUCINATED would turn an
+            # outage into mass fabrication verdicts, so the entries stay as
+            # Stage 2 returned them. Inert on a healthy batch: the flag is False
+            # for every run that is not degraded, so aggressive mode there is
+            # byte-identical to what it was before this guard existed.
+            logger.warning(
+                "cascade: aggressive promotion suppressed — Stage 1 produced no "
+                "database evidence for %d/%d entries, so there is no gold standard "
+                "to treat as one. Stage 2 verdicts are returned unpromoted; do not "
+                "checkpoint this batch.",
+                health.no_evidence,
+                health.total,
+            )
+        else:
+            for key, pred in list(final.items()):
+                if pred.cascade_stage in {"stage2_diagnosis"}:
+                    final[key] = _aggressive_fallback(pred)
 
-    return [final[entry.bibtex_key] for entry in entries]
+    return [final[entry.bibtex_key] for entry in entries], health
 
 
 def _run_stage2(

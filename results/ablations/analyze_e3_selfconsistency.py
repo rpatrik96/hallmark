@@ -25,7 +25,7 @@ from hallmark.evaluation.metrics import evaluate
 
 REPO = Path("/Users/patrik.reizinger/Documents/GitHub/hallmark")
 E3 = REPO / "results/reviewer_experiments/e3_variance"
-DEVLABELS = REPO / "data/v1.0/dev_public.jsonl"
+DEVLABELS = REPO / "data/v1.2/dev_public.jsonl"
 
 
 def _load_run(run: int) -> dict[str, Prediction]:

@@ -1,0 +1,146 @@
+{
+  "tool_name": "bibtexupdater_no_prescreening",
+  "split_name": "dev_public",
+  "num_entries": 1079,
+  "num_hallucinated": 593,
+  "num_valid": 486,
+  "detection_rate": 0.0,
+  "false_positive_rate": 0.0,
+  "f1_hallucination": 0.0,
+  "tier_weighted_f1": 0.0,
+  "detect_at_k": {},
+  "temporal_robustness": null,
+  "cost_efficiency": 0.875056549245468,
+  "mean_api_calls": 0.0,
+  "ece": 0.049582947173308634,
+  "auroc": 0.5,
+  "auprc": 0.5495829471733086,
+  "num_uncertain": 0,
+  "detection_rate_ci": null,
+  "f1_hallucination_ci": null,
+  "tier_weighted_f1_ci": null,
+  "fpr_ci": null,
+  "ece_ci": null,
+  "per_tier_metrics": {
+    "0": {
+      "detection_rate": 0.0,
+      "false_positive_rate": 0.0,
+      "f1": 0.0,
+      "precision": 0.0,
+      "count": 486
+    },
+    "1": {
+      "detection_rate": 0.0,
+      "false_positive_rate": 0.0,
+      "f1": 0.0,
+      "precision": 0.0,
+      "count": 158
+    },
+    "2": {
+      "detection_rate": 0.0,
+      "false_positive_rate": 0.0,
+      "f1": 0.0,
+      "precision": 0.0,
+      "count": 275
+    },
+    "3": {
+      "detection_rate": 0.0,
+      "false_positive_rate": 0.0,
+      "f1": 0.0,
+      "precision": 0.0,
+      "count": 160
+    }
+  },
+  "per_type_metrics": {
+    "arxiv_version_mismatch": {
+      "detection_rate": 0.0,
+      "false_positive_rate": 0.0,
+      "f1": 0.0,
+      "count": 30
+    },
+    "chimeric_title": {
+      "detection_rate": 0.0,
+      "false_positive_rate": 0.0,
+      "f1": 0.0,
+      "count": 35
+    },
+    "fabricated_doi": {
+      "detection_rate": 0.0,
+      "false_positive_rate": 0.0,
+      "f1": 0.0,
+      "count": 61
+    },
+    "future_date": {
+      "detection_rate": 0.0,
+      "false_positive_rate": 0.0,
+      "f1": 0.0,
+      "count": 31
+    },
+    "hybrid_fabrication": {
+      "detection_rate": 0.0,
+      "false_positive_rate": 0.0,
+      "f1": 0.0,
+      "count": 46
+    },
+    "merged_citation": {
+      "detection_rate": 0.0,
+      "false_positive_rate": 0.0,
+      "f1": 0.0,
+      "count": 30
+    },
+    "near_miss_title": {
+      "detection_rate": 0.0,
+      "false_positive_rate": 0.0,
+      "f1": 0.0,
+      "count": 35
+    },
+    "nonexistent_venue": {
+      "detection_rate": 0.0,
+      "false_positive_rate": 0.0,
+      "f1": 0.0,
+      "count": 32
+    },
+    "partial_author_list": {
+      "detection_rate": 0.0,
+      "false_positive_rate": 0.0,
+      "f1": 0.0,
+      "count": 30
+    },
+    "placeholder_authors": {
+      "detection_rate": 0.0,
+      "false_positive_rate": 0.0,
+      "f1": 0.0,
+      "count": 34
+    },
+    "plausible_fabrication": {
+      "detection_rate": 0.0,
+      "false_positive_rate": 0.0,
+      "f1": 0.0,
+      "count": 95
+    },
+    "preprint_as_published": {
+      "detection_rate": 0.0,
+      "false_positive_rate": 0.0,
+      "f1": 0.0,
+      "count": 31
+    },
+    "swapped_authors": {
+      "detection_rate": 0.0,
+      "false_positive_rate": 0.0,
+      "f1": 0.0,
+      "count": 68
+    },
+    "valid": {
+      "detection_rate": 0.0,
+      "false_positive_rate": 0.0,
+      "f1": 0.0,
+      "count": 486
+    },
+    "wrong_venue": {
+      "detection_rate": 0.0,
+      "false_positive_rate": 0.0,
+      "f1": 0.0,
+      "count": 35
+    }
+  }
+}

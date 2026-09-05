@@ -103,8 +103,18 @@ def main(argv: list[str] | None = None) -> int:
         help="Path to predictions JSONL file (alternative to --baseline)",
     )
     eval_parser.add_argument("--output", type=str, help="Path to write evaluation results JSON")
+    eval_parser.add_argument(
+        "--allow-null-run",
+        action="store_true",
+        default=False,
+        help=(
+            "Write the result even when the tool evaluated none of the entries. "
+            "By default such a run is refused: its detection rate and false-positive "
+            "rate are artefacts of the tool not running, not measurements."
+        ),
+    )
     eval_parser.add_argument("--data-dir", type=str, help="Override data directory")
-    eval_parser.add_argument("--version", default="v1.0", help="Dataset version")
+    eval_parser.add_argument("--version", default="v1.2", help="Dataset version")
     eval_parser.add_argument(
         "--max-entries",
         type=int,
@@ -292,7 +302,7 @@ def main(argv: list[str] | None = None) -> int:
         choices=_SPLIT_CHOICES,
     )
     stats_parser.add_argument("--data-dir", type=str, help="Override data directory")
-    stats_parser.add_argument("--version", default="v1.0", help="Dataset version")
+    stats_parser.add_argument("--version", default="v1.2", help="Dataset version")
 
     # --- leaderboard ---
     lb_parser = subparsers.add_parser("leaderboard", help="Show leaderboard for a split")
@@ -394,7 +404,7 @@ def main(argv: list[str] | None = None) -> int:
         help="Filter entries by label",
     )
     inspect_parser.add_argument("--data-dir", type=str, help="Override data directory")
-    inspect_parser.add_argument("--version", default="v1.0", help="Dataset version")
+    inspect_parser.add_argument("--version", default="v1.2", help="Dataset version")
 
     # --- validate-results ---
     val_parser = subparsers.add_parser(
@@ -403,7 +413,7 @@ def main(argv: list[str] | None = None) -> int:
     val_parser.add_argument(
         "--results-dir",
         type=str,
-        default="data/v1.0/baseline_results",
+        default="data/v1.2/baseline_results",
         help="Directory containing manifest.json and result files",
     )
     val_parser.add_argument(
@@ -439,7 +449,7 @@ def main(argv: list[str] | None = None) -> int:
         help="Exit with code 1 if any misclassifications are found",
     )
     diag_parser.add_argument("--data-dir", type=str, help="Override data directory")
-    diag_parser.add_argument("--version", default="v1.0", help="Dataset version")
+    diag_parser.add_argument("--version", default="v1.2", help="Dataset version")
 
     # --- validate-predictions ---
     vp_parser = subparsers.add_parser(
@@ -453,7 +463,7 @@ def main(argv: list[str] | None = None) -> int:
         help="Benchmark split to validate bibtex_keys against (optional)",
     )
     vp_parser.add_argument("--data-dir", type=str, help="Override data directory")
-    vp_parser.add_argument("--version", default="v1.0", help="Dataset version")
+    vp_parser.add_argument("--version", default="v1.2", help="Dataset version")
 
     # --- history-append ---
     hist_parser = subparsers.add_parser(
@@ -523,6 +533,60 @@ def _stratified_sample(entries: list[BenchmarkEntry], n: int) -> list[BenchmarkE
     combined = sampled_hall + sampled_valid
     rng.shuffle(combined)
     return combined
+
+
+def _stamp_provenance(result: EvaluationResult, args: argparse.Namespace) -> None:
+    """Record which data revision and when, on the result itself.
+
+    Without this a result cannot be tied to the split that produced it, which is
+    how the freshness guard came to compare file mtimes -- a signal git does not
+    preserve, so it read checkout order on every clone. Hashing the split file
+    and storing the digest beside the numbers is the check it was reaching for.
+
+    Best effort: a missing or unreadable split file leaves the fields unset
+    rather than failing an evaluation that has already been computed.
+    """
+    from datetime import datetime, timezone
+
+    result.run_timestamp = datetime.now(timezone.utc).isoformat()
+
+    # Which external build answered. The field existed and nothing filled it, so
+    # the first ablation run after adding it still wrote tool_version: None --
+    # for the very tool whose PATH-resolved version motivated the field.
+    baseline = getattr(args, "baseline", None) or ""
+    if "bibtexupdater" in baseline or "cascade" in baseline or "btu" in baseline:
+        try:
+            from hallmark.baselines.bibtexupdater import (
+                bibtex_check_version,
+                resolve_bibtex_check_bin,
+            )
+
+            binary = resolve_bibtex_check_bin()
+            version = bibtex_check_version(binary)
+            if version:
+                result.tool_version = f"bibtex-updater {version}"
+        except (ImportError, OSError) as exc:  # pragma: no cover - best effort
+            logging.debug("Could not probe bibtex-check version: %s", exc)
+        try:
+            from hallmark.baselines.bibtexupdater import last_source_condition
+
+            result.source_condition = last_source_condition()
+        except ImportError as exc:  # pragma: no cover - best effort
+            logging.debug("Could not read the source condition: %s", exc)
+
+    split = getattr(args, "split", None)
+    if not split:
+        return
+    try:
+        from hallmark.dataset.loader import DEFAULT_DATA_DIR, SPLIT_PATHS
+        from hallmark.evaluation.validate import compute_sha256
+
+        data_root = Path(args.data_dir) if getattr(args, "data_dir", None) else DEFAULT_DATA_DIR
+        split_file = data_root / getattr(args, "version", "v1.2") / SPLIT_PATHS[split]
+        if split_file.exists():
+            result.split_sha256 = compute_sha256(split_file)
+    except (KeyError, OSError) as exc:  # pragma: no cover - provenance is best effort
+        logging.debug("Could not hash split file for provenance: %s", exc)
 
 
 def _cmd_evaluate(args: argparse.Namespace) -> int:
@@ -675,6 +739,10 @@ def _cmd_evaluate(args: argparse.Namespace) -> int:
             strict=args.strict,
             eval_mode=eval_mode,
         )
+
+    _stamp_provenance(result, args)
+    if aggressive_result is not None:
+        _stamp_provenance(aggressive_result, args)
 
     if result.coverage < 1.0:
         logging.warning(
@@ -895,6 +963,18 @@ def _cmd_evaluate(args: argparse.Namespace) -> int:
 
         _save_predictions(predictions, args.save_predictions)
         logging.info(f"Predictions written to {args.save_predictions}")
+
+    # A run that evaluated nothing is not a measurement. evaluate() has already
+    # said so at ERROR; refusing here is what stops it becoming a results file
+    # that the leaderboard ranks and the history log records.
+    if result.num_evaluated == 0 and result.num_entries > 0 and not args.allow_null_run:
+        print(
+            f"error: {result.tool_name} evaluated 0 of {result.num_entries} entries on "
+            f"{result.split_name}; every prediction is a fallback, so this is not a "
+            "measurement and will not be written. Pass --allow-null-run to write it anyway.",
+            file=sys.stderr,
+        )
+        return 1
 
     # Save results
     if args.output:

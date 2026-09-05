@@ -1,0 +1,280 @@
+{
+    "version": "1.2.3",
+    "build_date": "2026-05-30",
+    "release_date": "2026-08-31",
+    "release_notes": "v1.2.3 contains two ground-truth corrections. (1) doi_resolves: 110 entries (dev_public 48, test_public 41, test_crossdomain 21) recorded a failed DOI resolution while carrying no `doi` field; the schema reserves False for a check that ran and failed and None for not-applicable, so they now carry None. Only subtests.doi_resolves changed on these entries. (2) type/tier (merged earlier as PR #31, documented here): 4 real_world entries whose source evidence shows no title or author match were retyped from placeholder_authors/fabricated_doi/preprint_as_published (tiers 1-2) to plausible_fabrication (tier 3); their sub-tests already matched the plausible_fabrication truth table. Labels and split membership are unchanged from v1.2.2; tier_distribution/type_distribution below reflect the corrected values. No detection metric is affected by (1); (2) moves 4 of 1246 hallucinated entries across tier buckets. v1.2.2 replaces the remaining 196 stale explanation strings in the raw generation pool llm_generated.jsonl (not part of any released split); every other file is byte-identical to v1.2.1. v1.2.1 replaces 133 stale explanation strings in dev_public/test_public (generation-pipeline re-classifier output that could contradict the released fields); labels, types, tiers, sub-tests, and split membership are byte-identical to v1.2.0. v1.2.0 adds evaluation-only extension artifacts (recency-matched cross-domain split, Walters-Wilder ChatGPT-citation supplement results, canonical 448-entry temporal supplement); core split contents are byte-identical to v1.1.1 (post-relabel).",
+    "relabel": {
+        "description": "Released corpus is post-relabel: a systematic ground-truth audit corrected entries where real papers were wrongly flagged HALLUCINATED (arXiv-DataCite-DOI root cause and faithful truncated author lists). Split counts below reflect the corrected labels.",
+        "script": "scripts/relabel_ground_truth.py",
+        "commits": [
+            "32fe9d6 (#9): corrected 32 mislabeled entries across dev+test",
+            "1475a2f (#10): systematic ground-truth relabel + benchmark hardening"
+        ],
+        "flip_log": "results/reviewer_experiments/relabel_flips.json"
+    },
+    "explanation_fix": {
+        "description": "Corrected 133 stale [Re-classified] explanation strings (97 HALLUCINATED rewritten against CrossRef/arXiv records, 36 VALID set to the ground-truth audit relabel_reason). Only the explanation field changed.",
+        "script": "scripts/fix_stale_explanations.py",
+        "fix_log": "results/reviewer_experiments/explanation_fixes_v121.json"
+    },
+    "explanation_fix_pool": {
+        "description": "v1.2.2: corrected the remaining 196 stale [Re-classified] explanation strings in the raw generation pool llm_generated.jsonl (drafted and adversarially verified against CrossRef/arXiv/DBLP records). The pool is pipeline provenance, not part of any released split; labels are unchanged. 58 entries whose metadata fully matches a real publication (perturbations that produced a correct citation; none appear in any released split) carry flag_label=true in the fix log.",
+        "script": "scripts/fix_stale_explanations.py --pool",
+        "fix_log": "results/reviewer_experiments/explanation_fixes_v122_pool.json"
+    },
+    "doi_resolves_fix": {
+        "description": "v1.2.3: set subtests.doi_resolves=None on 110 released-split entries that recorded False while having no doi field. Three code paths caused it (tier2.py generators, real_world annotation, scrape_crossdomain.py); all fixed in PR #32, plus a structural check in scripts/verify_subtests.py. Entries whose doi_resolves is False with a real DOI present are unchanged. 123 matching entries in non-split pool files are not yet corrected.",
+        "script": "scripts/fix_doi_resolves_na.py",
+        "fix_log": "results/reviewer_experiments/doi_resolves_fixes_v123.json",
+        "entries_changed": 110,
+        "by_split": {
+            "dev_public": 48,
+            "test_public": 41,
+            "test_crossdomain": 21
+        }
+    },
+    "type_tier_fix": {
+        "description": "v1.2.3 (data merged earlier via PR #31): 4 real_world entries retyped to plausible_fabrication (tier 3) because their source evidence (GPTZero verification CSV / HalluCitation study) records no title or author match, contradicting types that presume the cited paper exists. Sub-tests were already consistent with plausible_fabrication and are unchanged.",
+        "fix_log": "results/reviewer_experiments/type_tier_fixes.json",
+        "entries_changed": 4,
+        "by_split": {
+            "dev_public": 2,
+            "test_public": 2
+        }
+    },
+    "seed": 8042,
+    "total_entries": 2526,
+    "splits": {
+        "dev_public": {
+            "file": "dev_public.jsonl",
+            "total": 1119,
+            "valid": 513,
+            "hallucinated": 606,
+            "tier_distribution": {
+                "1": 148,
+                "2": 279,
+                "3": 179
+            },
+            "type_distribution": {
+                "arxiv_version_mismatch": 49,
+                "chimeric_title": 47,
+                "fabricated_doi": 38,
+                "future_date": 30,
+                "hybrid_fabrication": 26,
+                "merged_citation": 30,
+                "near_miss_title": 52,
+                "nonexistent_venue": 39,
+                "partial_author_list": 32,
+                "placeholder_authors": 41,
+                "plausible_fabrication": 78,
+                "preprint_as_published": 30,
+                "swapped_authors": 67,
+                "wrong_venue": 47
+            },
+            "generation_methods": {
+                "adversarial": 60,
+                "llm_generated": 113,
+                "perturbation": 414,
+                "real_world": 46,
+                "scraped": 486
+            },
+            "count": 1119
+        },
+        "test_public": {
+            "file": "test_public.jsonl",
+            "total": 831,
+            "generation_methods": {
+                "adversarial": 59,
+                "llm_generated": 90,
+                "perturbation": 361,
+                "real_world": 34,
+                "scraped": 287
+            },
+            "count": 831,
+            "valid": 312,
+            "hallucinated": 519,
+            "type_distribution": {
+                "arxiv_version_mismatch": 45,
+                "chimeric_title": 23,
+                "fabricated_doi": 29,
+                "future_date": 29,
+                "hybrid_fabrication": 29,
+                "merged_citation": 29,
+                "near_miss_title": 40,
+                "nonexistent_venue": 37,
+                "partial_author_list": 31,
+                "placeholder_authors": 33,
+                "plausible_fabrication": 68,
+                "preprint_as_published": 29,
+                "swapped_authors": 63,
+                "wrong_venue": 34
+            },
+            "tier_distribution": {
+                "1": 128,
+                "2": 238,
+                "3": 153
+            }
+        },
+        "stress_test": {
+            "file": "stress_test.jsonl",
+            "total": 122,
+            "valid": 1,
+            "hallucinated": 121,
+            "tier_distribution": {
+                "2": 85,
+                "3": 36
+            },
+            "type_distribution": {
+                "arxiv_version_mismatch": 36,
+                "merged_citation": 46,
+                "partial_author_list": 39
+            },
+            "generation_methods": {
+                "canary": 1,
+                "perturbation": 121
+            },
+            "count": 122
+        },
+        "test_hidden": {
+            "file": "test_hidden.jsonl",
+            "total": 454,
+            "generation_methods": {
+                "adversarial": 6,
+                "canary": 1,
+                "llm_generated": 77,
+                "perturbation": 142,
+                "real_world": 28,
+                "scraped": 200
+            },
+            "valid": 210,
+            "hallucinated": 244
+        }
+    },
+    "v1_1_extensions": {
+        "date_added": "2026-05-07",
+        "rationale": "Cross-domain test split (bioRxiv + PubMed + CS-non-ML DBLP venues) to evaluate detector generalization beyond ML conferences. Eval-only; v1.0 splits are byte-stable and unchanged.",
+        "splits": {
+            "test_crossdomain": {
+                "file": "test_crossdomain.jsonl",
+                "total": 500,
+                "valid": 200,
+                "hallucinated": 300,
+                "tier_distribution": {
+                    "1": 80,
+                    "2": 140,
+                    "3": 80
+                },
+                "type_distribution": {
+                    "valid": 200,
+                    "arxiv_version_mismatch": 27,
+                    "chimeric_title": 17,
+                    "fabricated_doi": 14,
+                    "future_date": 25,
+                    "hybrid_fabrication": 19,
+                    "merged_citation": 18,
+                    "near_miss_title": 23,
+                    "nonexistent_venue": 16,
+                    "partial_author_list": 23,
+                    "placeholder_authors": 25,
+                    "plausible_fabrication": 30,
+                    "preprint_as_published": 21,
+                    "swapped_authors": 20,
+                    "wrong_venue": 22
+                },
+                "source_distribution": {
+                    "biorxiv": 143,
+                    "dblp_cs_non_ml": 201,
+                    "pubmed": 156
+                },
+                "generation_methods": {
+                    "perturbation": 300,
+                    "scraped": 200
+                },
+                "subcorpora": {
+                    "biorxiv": "bioRxiv preprints (life sciences)",
+                    "pubmed": "PubMed-indexed peer-reviewed papers (medical/clinical)",
+                    "dblp_cs_non_ml": "DBLP CS-non-ML venues (IR, DB, graphics, systems, security, SE, theory)"
+                }
+            }
+        },
+        "data_sources": {
+            "biorxiv_withdrawn_incidents": {
+                "file": "biorxiv_withdrawn_incidents.jsonl",
+                "total": 310,
+                "source_distribution": {
+                    "biorxiv_withdrawn": 215,
+                    "medrxiv_withdrawn": 95
+                },
+                "year_distribution": {
+                    "2023": 115,
+                    "2024": 107,
+                    "2025": 88
+                },
+                "hallucination_type": {
+                    "plausible_fabrication": 310
+                },
+                "rationale": "Real-world withdrawn preprints from bioRxiv and medRxiv (2023-2025). Each entry has a real DOI that resolves, a real title, and real authors — but the paper has been formally withdrawn and citing it is a real-world failure mode that no perturbation generator produces. Used as a reusable data source (analogous to real_world_incidents.jsonl); downstream split builders may sample from it.",
+                "method": "BioRxivClient.find_withdrawn_papers_parallel scans the date range and filters records whose abstract begins with \"Withdrawal Statement\", \"[Withdrawn]\", or contains \"has been withdrawn\". 8-worker parallel pagination; ~10 min for the full 2023-2025 scan."
+            },
+            "walters_wilder_chatgpt_citations": {
+                "file": "supplement_chatgpt_citations.jsonl",
+                "date_added": "2026-07-10",
+                "total": 341,
+                "valid": 172,
+                "hallucinated": 169,
+                "type_distribution": {
+                    "plausible_fabrication": 139,
+                    "near_miss_title": 13,
+                    "swapped_authors": 12,
+                    "wrong_venue": 5
+                },
+                "tier_distribution": {
+                    "2": 17,
+                    "3": 152
+                },
+                "generation_methods": {
+                    "llm_generated": 341
+                },
+                "supported_type": "article",
+                "source": "Walters & Wilder (2023), Scientific Reports 13:14045, doi:10.1038/s41598-023-41032-5 (CC BY 4.0), Supplementary Appendix 3",
+                "rationale": "Eval-only supplement of authentic ChatGPT-3.5/GPT-4 journal-article citations, hand-coded by the original authors for fabrication and substantive metadata errors. Complements the ML-conference-centric v1.0 splits along two axes: (1) authentic LLM-generated hallucinations rather than perturbations, and (2) multidisciplinary subject matter (humanities/social/natural sciences). Only the supported publication type (journal articles) is kept; books/chapters/websites in the source are out of scope for DOI/CrossRef/DBLP/OpenAlex-based verifiers. Field mismatches on real works are mapped to the matching HALLMARK type (near_miss_title/author_mismatch/wrong_venue) rather than left VALID; real articles whose only error is a non-future year or a wrong volume/page are excluded (no matching taxonomy type). Builder: scripts/ingest_walters_wilder.py.",
+                "eval_only": true
+            }
+        },
+        "upstream_updates": {
+            "temporal_supplement_merge": {
+                "file": "results/temporal_supplement/temporal_supplement_2024_2025.jsonl",
+                "date": "2026-05-08",
+                "before": {
+                    "total": 448,
+                    "valid": 300,
+                    "hallucinated": 148
+                },
+                "after": {
+                    "total": 858,
+                    "valid": 440,
+                    "hallucinated": 418,
+                    "type_distribution": {
+                        "valid": 440,
+                        "future_date": 44,
+                        "nonexistent_venue": 28,
+                        "fabricated_doi": 20,
+                        "placeholder_authors": 36,
+                        "preprint_as_published": 21,
+                        "hybrid_fabrication": 33,
+                        "wrong_venue": 26,
+                        "partial_author_list": 30,
+                        "swapped_authors": 27,
+                        "chimeric_title": 23,
+                        "merged_citation": 22,
+                        "near_miss_title": 30,
+                        "plausible_fabrication": 33,
+                        "arxiv_version_mismatch": 45
+                    }
+                },
+                "rationale": "Merged a 450-entry independent re-scrape of NeurIPS/ICML/ICLR/AAAI/CVPR/EMNLP/ACL 2024-2025 into the existing temporal_supplement to fill type-coverage gaps (swapped_authors went from 3 to 27, merged_citation from 1 to 22). Existing entries kept verbatim so pre-computed eval JSONs in results/temporal_supplement/llm_*_temporal_*.json remain valid for that subset; new entries need fresh evals when budget allows.",
+                "merge_script": "scripts/merge_temporal_supplement.py"
+            }
+        }
+    }
+}

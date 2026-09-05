@@ -19,6 +19,11 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0  # needed for hatch-vcs
+          # The raw-versus-aggregate guard (tests/test_released_raw_matches_its_aggregate.py)
+          # skips on an unfetched LFS pointer, and without this it skipped in every
+          # CI run -- run 33948126186 shows `s.` on all four Python versions -- so the
+          # guard that #54 added was inert exactly where it was meant to run.
+          lfs: true
 
       - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v5
@@ -40,12 +45,30 @@ jobs:
         continue-on-error: true
 
       - name: Check results freshness
-        # Guard against stale baseline result artifacts (task #2): every
-        # aggregate result JSON must be newer than, and count-consistent with,
-        # the split it scores. `--warn-only` reports without failing while the
-        # released results are pending regeneration; drop the flag to make this
-        # a hard gate once results are regenerated.
-        run: python scripts/check_results_freshness.py --results-dir data/v1.0/baseline_results --data-dir data --version v1.0 --warn-only
+        # Every aggregate result JSON must record the split revision it scored
+        # (split_sha256) and agree with that split's current entry counts.
+        #
+        # This is a hard gate. It was `--warn-only` because the check compared
+        # file mtimes, which git does not preserve, so on a fresh clone it read
+        # checkout order and called all 46 results stale -- and a guard that is
+        # always red gets silenced. It now hashes the split file, and results
+        # predating that field are reported as unverifiable rather than stale.
+        # Two genuinely stale results are registered in KNOWN_STALE in the
+        # script, so CI fails on new staleness while the known debt stays
+        # visible; that register may only shrink.
+        #
+        # --version was still v1.0 after the data moved to data/v1.2, so the
+        # guard was resolving split files under a directory the rename removed.
+        #
+        # The same invocation now also checks the derived tables under tables/,
+        # which had no guard at all: they are arithmetic over these result JSONs,
+        # so a re-run leaves them describing numbers that no longer exist.
+        # base_rate_precision.csv reported a doi_only false-positive rate of
+        # 0.2788 against the 0.0417 its source run now records. Tables are checked
+        # against recorded input hashes where a generator writes them and against
+        # the runs their tool column names otherwise; KNOWN_STALE_TABLES carries
+        # the known debt and may only shrink, like KNOWN_STALE above.
+        run: python scripts/check_results_freshness.py --results-dir data/v1.2/baseline_results --data-dir data --version v1.2
 
       - name: Run tests
         run: pytest --tb=short -q --cov=hallmark --cov-report=term-missing

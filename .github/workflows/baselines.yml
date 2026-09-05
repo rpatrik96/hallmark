@@ -18,19 +18,35 @@ jobs:
   baseline:
     name: Evaluate ${{ matrix.baseline }}
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    # 15 was not enough: the doi_only live run resolves all 1,119 dev_public
+    # DOIs serially against doi.org and was cancelled at 15m17s on run
+    # 33915448052, mid-evaluation. It reported as `cancelled` rather than
+    # `failure`, which is the reading a matrix `timeout-minutes` gives a job
+    # that ran out of budget rather than one that broke.
+    timeout-minutes: 30
+    # Kept so one throttled baseline does not abort the others -- these hit
+    # Semantic Scholar and CrossRef from a shared runner IP and a 429 is
+    # routine. The cost is that the workflow's own conclusion stops meaning
+    # anything: on 2026-08-31 run 33390676403 reported SUCCESS with all four
+    # jobs failed, and nobody looked for months. The `gate` job at the bottom
+    # restores the signal without giving up the isolation.
     continue-on-error: true
     strategy:
       fail-fast: false
       matrix:
         include:
           - baseline: doi_only
-            max_entries: 0       # fast — evaluate all
+            max_entries: 0       # evaluate all; ~20 min against doi.org
             precomputed: false
           - baseline: bibtexupdater
             precomputed: true    # rate-limited — use pre-computed results
-          - baseline: harc
-            precomputed: true    # rate-limited — use pre-computed results
+          # harc is out of the matrix until it has a current pre-computed result.
+          # harc_dev_public.json was withdrawn on 2026-09-04 (a truncated run),
+          # and harc_with_s2key_dev_public.json is registered known-stale in
+          # scripts/check_results_freshness.py. Until then the leg copied a file
+          # that did not exist and reported success -- run 33948051695 -- which
+          # the #50 gate cannot see, because the job's conclusion was honest
+          # about a step that had been told to swallow its own failure.
           - baseline: verify_citations
             max_entries: 50      # API-dependent — stratified sample
             precomputed: false
@@ -76,12 +92,18 @@ jobs:
         if: matrix.precomputed == true
         run: |
           python -m hallmark.cli validate-results \
-            --results-dir data/v1.0/baseline_results \
-            --metadata data/v1.0/metadata.json \
+            --results-dir data/v1.2/baseline_results \
+            --metadata data/v1.2/metadata.json \
             --strict
           mkdir -p results
-          cp data/v1.0/baseline_results/${{ matrix.baseline }}_${{ inputs.split || 'dev_public' }}.json \
-            results/ 2>/dev/null || echo "No pre-computed result for ${{ matrix.baseline }} on ${{ inputs.split || 'dev_public' }}"
+          # A precomputed leg with nothing to copy has evaluated nothing; it must
+          # not report success. The previous `|| echo` made exactly that green.
+          src="data/v1.2/baseline_results/${{ matrix.baseline }}_${{ inputs.split || 'dev_public' }}.json"
+          if [ ! -f "$src" ]; then
+            echo "::error::no pre-computed result at $src -- this leg has nothing to evaluate"
+            exit 1
+          fi
+          cp "$src" results/
 
       - name: Upload results
         uses: actions/upload-artifact@v4
@@ -147,3 +169,37 @@ jobs:
           name: combined-results
           path: results/
           if-no-files-found: warn
+
+  gate:
+    name: Fail if any baseline failed
+    runs-on: ubuntu-latest
+    needs: [baseline, aggregate]
+    if: always()
+    steps:
+      # `continue-on-error` on the matrix means `needs.baseline.result` is
+      # 'success' even when every job inside it failed; the honest signal is
+      # `outcome`, which the matrix does not expose to a dependent job. So read
+      # the run's own jobs through the API and fail on any conclusion that is
+      # not success or skipped. This is the check that would have caught the
+      # four TypeError failures on 2026-08-31 the same morning.
+      - name: Check every job in this run
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          gh api --paginate \
+            "repos/${{ github.repository }}/actions/runs/${{ github.run_id }}/jobs" \
+            --jq '.jobs[] | select(.name != "Fail if any baseline failed") |
+                  [.name, .conclusion] | @tsv' > jobs.tsv
+          cat jobs.tsv
+          if ! [ -s jobs.tsv ]; then
+            echo "::error::no jobs reported for this run -- refusing to pass blind"
+            exit 1
+          fi
+          failed=$(awk -F'\t' '$2 != "success" && $2 != "skipped"' jobs.tsv || true)
+          if [ -n "$failed" ]; then
+            echo "::error::baseline jobs failed:"
+            echo "$failed"
+            exit 1
+          fi
+          echo "all jobs succeeded"

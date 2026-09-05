@@ -42,7 +42,7 @@ from hallmark.evaluation.metrics import (  # noqa: E402
 )
 
 OUT = REPO / "results/relabel_delta"
-BR = REPO / "data/v1.0/baseline_results"
+BR = REPO / "data/v1.2/baseline_results"
 N_BOOT = 10_000
 SEED = 42
 
@@ -95,7 +95,7 @@ SUMMARY_REASON = (
 def load_new_entries(split: str) -> list[BenchmarkEntry]:
     ents = [
         BenchmarkEntry.from_json(line)
-        for line in (REPO / f"data/v1.0/{split}.jsonl").read_text().splitlines()
+        for line in (REPO / f"data/v1.2/{split}.jsonl").read_text().splitlines()
         if line.strip()
     ]
     return [e for e in ents if not is_canary_entry(e)]

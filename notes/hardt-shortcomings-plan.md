@@ -79,7 +79,7 @@ HALLMARK uses synthetic hallucinations. Do tool rankings generalize to real cita
 **Type distribution target (realistic, not uniform):**
 - plausible_fabrication: ~40, near_miss_title: ~20, swapped_authors: ~20, wrong_venue: ~15, chimeric_title: ~15, placeholder_authors: ~15, fabricated_doi: ~10, preprint_as_published: ~10, others: ~5-10 each
 
-**Format**: Standard `BenchmarkEntry` with `generation_method="real_world"`, stored in `data/v1.0/external_validation.jsonl`
+**Format**: Standard `BenchmarkEntry` with `generation_method="real_world"`, stored in `data/v1.2/external_validation.jsonl`
 
 **Script**: `scripts/curate_external_validation.py` with per-source functions, validation via `validate_entry()`, deduplication.
 

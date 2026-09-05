@@ -26,9 +26,9 @@ REPO = Path("/Users/patrik.reizinger/Documents/GitHub/hallmark")
 OLD_REV = "7a52362"  # pre-relabel state the published aggregates were built against
 
 DATA = {
-    "dev_public": REPO / "data/v1.0/dev_public.jsonl",
-    "test_public": REPO / "data/v1.0/test_public.jsonl",
-    "stress_test": REPO / "data/v1.0/stress_test.jsonl",
+    "dev_public": REPO / "data/v1.2/dev_public.jsonl",
+    "test_public": REPO / "data/v1.2/test_public.jsonl",
+    "stress_test": REPO / "data/v1.2/stress_test.jsonl",
 }
 
 

@@ -50,5 +50,5 @@
     "has_booktitle"
   ],
   "method": "Variant B (headline): StandardScaler + StratifiedKFold(5, shuffle, seed=42); LogisticRegression(max_iter=1000, seed=42); accuracy scoring.",
-  "labels_source": "data/v1.0/dev_public.jsonl (v1.1.1 relabeled, dev 513 valid / 606 hall)"
+  "labels_source": "data/v1.2/dev_public.jsonl (v1.1.1 relabeled, dev 513 valid / 606 hall)"
 }

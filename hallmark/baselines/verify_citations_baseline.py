@@ -72,6 +72,7 @@ def run_verify_citations(
     entries: list[BlindEntry],
     timeout: float = 600.0,
     skip_prescreening: bool = False,
+    **_kw: object,
 ) -> list[Prediction]:
     """Run verify-citations on a list of entries and return predictions.
 
@@ -85,6 +86,8 @@ def run_verify_citations(
         entries: Benchmark entries to verify.
         timeout: Timeout in seconds (default: 600).
         skip_prescreening: Skip pre-screening checks (default: False).
+        **_kw: Ignored. ``run_baseline`` forwards dispatch-level arguments such
+            as ``split`` to every runner; this baseline does not use them.
     """
 
     def _run_tool(tool_entries: list[BlindEntry]) -> list[Prediction]:

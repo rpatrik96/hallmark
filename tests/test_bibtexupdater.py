@@ -7,6 +7,12 @@ pre-1.2.0 records, 1.2.0 realness records (``confidence_score`` /
 following the pattern of ``TestParseJsonlToRaw`` in
 ``test_llm_tool_augmented.py``.
 
+Also covers the batch-level sanity check (``assess_batch_health``), added after a
+2026-09-02 wifi outage made bibtex-check return ``not_found`` for 2,500
+consecutive references: every source lookup failed DNS resolution, and nothing in
+HALLMARK noticed that a whole batch had arrived with no database evidence behind
+it.
+
 These tests live in their own module (not ``test_baselines.py``) because that
 module is skipped entirely when the optional ``openai`` dependency is absent.
 """
@@ -14,17 +20,23 @@ module is skipped entirely when the optional ``openai`` dependency is absent.
 from __future__ import annotations
 
 import json
+import logging
 from pathlib import Path
 from typing import Any
 
 import pytest
 
 from hallmark.baselines.bibtexupdater import (
+    MIN_BATCH_FOR_HEALTH_CHECK,
+    NOT_FOUND_SHARE_THRESHOLD,
     STATUS_TO_CONFIDENCE,
     STATUS_TO_LABEL,
     _parse_jsonl_output,
+    assess_batch_health,
+    run_bibtex_check_with_health,
+    run_bibtex_check_with_status,
 )
-from hallmark.dataset.schema import Prediction
+from hallmark.dataset.schema import BlindEntry, Prediction
 
 
 def _parse(tmp_path: Path, records: list[dict[str, Any]]) -> list[Prediction]:
@@ -153,7 +165,11 @@ class TestParseJsonlOutput:
             }
         ]
         (pred,) = _parse(tmp_path, records)
-        assert pred.label == "VALID"
+        # UNCERTAIN, not VALID: the lookup never completed, so the entry is
+        # unanswered rather than cleared. Writing it as a committed VALID is
+        # what made ``coverage`` read 1.0 on runs full of abstentions
+        # (tests/test_abstention_is_not_a_verdict.py).
+        assert pred.label == "UNCERTAIN"
         assert pred.confidence == pytest.approx(0.45)
         # Reason explains the abstention while keeping the leading raw-status
         # segment that run_bibtex_check_with_status parses for the cascade.
@@ -179,8 +195,8 @@ class TestParseJsonlOutput:
         assert pred.confidence == pytest.approx(0.65)  # 1 - p_valid
 
     def test_coverage_incomplete_informational_for_other_statuses(self, tmp_path: Path) -> None:
-        """coverage_incomplete only rewrites not_found; api_error keeps its
-        conservative-VALID mapping with p_valid-derived confidence."""
+        """coverage_incomplete only rewrites not_found; api_error is already an
+        abstention by status and keeps its p_valid-derived confidence."""
         records: list[dict[str, Any]] = [
             {
                 "key": "e",
@@ -194,6 +210,209 @@ class TestParseJsonlOutput:
             }
         ]
         (pred,) = _parse(tmp_path, records)
-        assert pred.label == "VALID"
+        # ``coverage_incomplete`` still rewrites nothing here -- api_error is an
+        # abstention on its own account, by status, and is reported as one.
+        assert pred.label == "UNCERTAIN"
         assert pred.confidence == pytest.approx(0.5)
-        assert "abstention" not in pred.reason
+        assert "throttling" not in pred.reason
+
+
+class TestTransportStatusMapping:
+    """A failed lookup is an abstention, never evidence of fabrication."""
+
+    def test_network_error_is_a_conservative_valid(self) -> None:
+        assert STATUS_TO_LABEL["network_error"] == "VALID"
+        assert STATUS_TO_CONFIDENCE["network_error"] == 0.30
+
+    def test_coverage_incomplete_status_is_a_conservative_valid(self) -> None:
+        assert STATUS_TO_LABEL["coverage_incomplete"] == "VALID"
+        assert STATUS_TO_CONFIDENCE["coverage_incomplete"] == 0.45
+
+    def test_network_error_record_never_parses_to_hallucinated(self, tmp_path: Path) -> None:
+        """The status the upgraded tool emits for a DNS/connection failure."""
+        records: list[dict[str, Any]] = [
+            {
+                "key": "n",
+                "status": "network_error",
+                "confidence": 0.0,
+                "mismatched_fields": [],
+                "api_sources": [],
+                "errors": ["crossref: [Errno 8] nodename nor servname provided"],
+            }
+        ]
+        (pred,) = _parse(tmp_path, records)
+        # The point of this test is that a transport failure is never evidence
+        # of fabrication. UNCERTAIN says that more precisely than VALID did.
+        assert pred.label == "UNCERTAIN"
+        assert pred.label != "HALLUCINATED"
+
+    def test_unknown_future_status_never_parses_to_hallucinated(self, tmp_path: Path) -> None:
+        """Whatever the sibling tool names its new transport status, an unmapped
+        status falls through to conservative VALID rather than a fabrication
+        verdict."""
+        records: list[dict[str, Any]] = [
+            {
+                "key": "u",
+                "status": "transport_failure_some_future_name",
+                "confidence": 0.0,
+                "mismatched_fields": [],
+                "api_sources": [],
+                "errors": ["dns failure"],
+            }
+        ]
+        (pred,) = _parse(tmp_path, records)
+        assert pred.label == "VALID"
+
+
+class TestAssessBatchHealth:
+    """The 2026-09-02 incident: 85-98% ``not_found`` with no database behind it."""
+
+    def test_poisoned_batch_trips_the_detector(self) -> None:
+        statuses = ["not_found"] * 95 + ["verified"] * 5
+        health = assess_batch_health(statuses)
+        assert health.suspected_transport_failure
+        assert health.not_found == 95
+        assert health.no_evidence_share == pytest.approx(0.95)
+
+    def test_healthy_batch_does_not_trip_the_detector(self) -> None:
+        """Healthy runs: ~52% verified, 1-3% not_found."""
+        statuses = ["verified"] * 52 + ["not_found"] * 3 + ["unconfirmed"] * 45
+        health = assess_batch_health(statuses)
+        assert not health.suspected_transport_failure
+        assert health.not_found_share == pytest.approx(0.03)
+
+    def test_all_network_error_batch_trips_the_detector(self) -> None:
+        """Same outage seen through the upgraded tool's own status."""
+        health = assess_batch_health(["network_error"] * 100)
+        assert health.suspected_transport_failure
+        assert health.transport_error == 100
+        assert health.not_found == 0
+
+    def test_coverage_incomplete_status_counts_as_no_evidence(self) -> None:
+        health = assess_batch_health(["coverage_incomplete"] * 100)
+        assert health.suspected_transport_failure
+        assert health.coverage_incomplete == 100
+
+    def test_mixed_failure_shapes_accumulate(self) -> None:
+        """A partially-upgraded pipeline splits the same outage across statuses;
+        neither share alone crosses the threshold, together they do."""
+        statuses = ["not_found"] * 20 + ["network_error"] * 20 + ["verified"] * 60
+        health = assess_batch_health(statuses)
+        assert health.not_found_share == pytest.approx(0.20)
+        assert health.transport_error_share == pytest.approx(0.20)
+        assert health.suspected_transport_failure
+
+    def test_small_batch_is_not_judged(self) -> None:
+        """Below the minimum batch size the share is noise, not signal."""
+        statuses = ["not_found"] * (MIN_BATCH_FOR_HEALTH_CHECK - 1)
+        health = assess_batch_health(statuses)
+        assert not health.suspected_transport_failure
+        assert health.no_evidence_share == pytest.approx(1.0)
+
+    def test_empty_batch_is_safe(self) -> None:
+        health = assess_batch_health([])
+        assert not health.suspected_transport_failure
+        assert health.no_evidence_share == 0.0
+
+    def test_threshold_boundary_is_exclusive(self) -> None:
+        statuses = ["not_found"] * 30 + ["verified"] * 70
+        health = assess_batch_health(statuses)
+        assert health.no_evidence_share == pytest.approx(NOT_FOUND_SHARE_THRESHOLD)
+        assert not health.suspected_transport_failure
+
+    def test_missing_sentinel_is_not_counted(self) -> None:
+        """A timeout is already reported by the subprocess runner; it is a
+        different failure and must not be read as a transport outage."""
+        health = assess_batch_health(["missing"] * 100)
+        assert not health.suspected_transport_failure
+
+    def test_warning_message_blames_the_lookup_path_not_the_bibliography(
+        self,
+    ) -> None:
+        health = assess_batch_health(["not_found"] * 98 + ["verified"] * 2)
+        message = health.warning_message()
+        assert "98/100" in message
+        assert "98.0%" in message
+        assert "do not" in message.lower()
+        assert "checkpoint" in message
+        assert "invented papers" in message
+
+
+def _blind(key: str) -> BlindEntry:
+    return BlindEntry(
+        bibtex_key=key,
+        bibtex_type="article",
+        fields={"title": "T", "author": "A", "year": "2024"},
+        raw_bibtex=f"@article{{{key}, title={{T}}}}",
+    )
+
+
+def _fake_subprocess(status: str) -> Any:
+    def _run(entries: list[BlindEntry], **_kw: Any) -> list[Prediction]:
+        return [
+            Prediction(
+                bibtex_key=e.bibtex_key,
+                label=STATUS_TO_LABEL.get(status, "VALID"),  # type: ignore[arg-type]
+                confidence=STATUS_TO_CONFIDENCE.get(status, 0.5),
+                reason=f"Status: {status}",
+            )
+            for e in entries
+        ]
+
+    return _run
+
+
+class TestBatchHealthPlumbing:
+    """The signal reaches the caller, not only the log."""
+
+    def test_poisoned_run_logs_a_warning(
+        self, monkeypatch: pytest.MonkeyPatch, caplog: pytest.LogCaptureFixture
+    ) -> None:
+        monkeypatch.setattr(
+            "hallmark.baselines.bibtexupdater._run_bibtex_check_subprocess",
+            _fake_subprocess("not_found"),
+        )
+        entries = [_blind(f"k{i}") for i in range(40)]
+        with caplog.at_level(logging.WARNING, logger="hallmark.baselines.bibtexupdater"):
+            _, status_map = run_bibtex_check_with_status(entries, skip_prescreening=True)
+        assert set(status_map.values()) == {"not_found"}
+        assert any("do not" in r.message.lower() for r in caplog.records)
+        assert any("40/40" in r.message for r in caplog.records)
+
+    def test_healthy_run_logs_no_warning(
+        self, monkeypatch: pytest.MonkeyPatch, caplog: pytest.LogCaptureFixture
+    ) -> None:
+        monkeypatch.setattr(
+            "hallmark.baselines.bibtexupdater._run_bibtex_check_subprocess",
+            _fake_subprocess("verified"),
+        )
+        entries = [_blind(f"k{i}") for i in range(40)]
+        with caplog.at_level(logging.WARNING, logger="hallmark.baselines.bibtexupdater"):
+            run_bibtex_check_with_status(entries, skip_prescreening=True)
+        assert not [r for r in caplog.records if "checkpoint" in r.message]
+
+    def test_with_health_returns_the_flag_a_caller_gates_on(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        monkeypatch.setattr(
+            "hallmark.baselines.bibtexupdater._run_bibtex_check_subprocess",
+            _fake_subprocess("network_error"),
+        )
+        entries = [_blind(f"k{i}") for i in range(40)]
+        predictions, status_map, health = run_bibtex_check_with_health(
+            entries, skip_prescreening=True
+        )
+        assert len(predictions) == 40
+        assert set(status_map.values()) == {"network_error"}
+        assert health.suspected_transport_failure
+        assert health.transport_error == 40
+        assert all(p.label != "HALLUCINATED" for p in predictions)
+
+    def test_with_health_is_quiet_on_a_healthy_batch(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        monkeypatch.setattr(
+            "hallmark.baselines.bibtexupdater._run_bibtex_check_subprocess",
+            _fake_subprocess("verified"),
+        )
+        entries = [_blind(f"k{i}") for i in range(40)]
+        _, _, health = run_bibtex_check_with_health(entries, skip_prescreening=True)
+        assert not health.suspected_transport_failure

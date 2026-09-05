@@ -6,7 +6,7 @@ Deliverables:
   C) tables/cross_split_per_tier.tex                     — booktabs LaTeX table
 
 Dev-public sources:
-  - claude_opus_4_7 : data/v1.0/baseline_results/llm_openrouter_claude_opus_4_7_dev_public.json
+  - claude_opus_4_7 : data/v1.2/baseline_results/llm_openrouter_claude_opus_4_7_dev_public.json
   - others          : evaluate from results/llm_openrouter_*_dev_public_predictions.jsonl
                       or results/new_models/*.jsonl (qwen_max, llama_4_maverick)
 
@@ -23,6 +23,8 @@ import os
 import subprocess
 import sys
 from pathlib import Path
+
+from hallmark.evaluation.table_provenance import record_table
 
 # ---------------------------------------------------------------------------
 # Configuration
@@ -95,7 +97,7 @@ MODELS: list[dict] = [
         / "results/checkpoints/llm_openrouter_claude_opus_4_7_test_public/eval.json",
         "dev_predictions": None,
         "dev_eval_json": REPO
-        / "data/v1.0/baseline_results/llm_openrouter_claude_opus_4_7_dev_public.json",
+        / "data/v1.2/baseline_results/llm_openrouter_claude_opus_4_7_dev_public.json",
     },
 ]
 
@@ -277,6 +279,23 @@ def main() -> None:
     tex_path = OUT_TABLES / "cross_split_per_tier.tex"
     _write_latex(rows, tex_path)
     print(f"Wrote {tex_path.relative_to(REPO)}")
+
+    # Both deliverables come from the same eval JSONs and prediction files, so
+    # both record them: a per-tier table has no tool column for the freshness
+    # guard to check against, and recorded provenance is all it has.
+    sources = [
+        path
+        for model in MODELS
+        for key in ("test_eval_json", "dev_eval_json", "test_predictions", "dev_predictions")
+        if (path := model[key]) is not None and Path(path).exists()
+    ]
+    for table in (csv_path, tex_path):
+        record_table(
+            table,
+            sources,
+            generator="scripts/aggregate_test_public_breakdowns.py",
+            repo_root=REPO,
+        )
 
     # --- Summary: largest ΔFPR rows ---
     sorted_by_dfpr = sorted(rows, key=lambda r: abs(r["delta_fpr"]), reverse=True)

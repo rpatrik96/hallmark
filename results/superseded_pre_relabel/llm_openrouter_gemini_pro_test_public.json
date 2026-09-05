@@ -1,0 +1,149 @@
+{
+  "tool_name": "llm_openrouter_gemini_pro",
+  "split_name": "test_public",
+  "num_entries": 831,
+  "num_hallucinated": 544,
+  "num_valid": 287,
+  "detection_rate": 0.43673469387755104,
+  "false_positive_rate": 0.06439393939393939,
+  "f1_hallucination": 0.593619972260749,
+  "tier_weighted_f1": 0.5824175824175823,
+  "mcc": 0.3852864568934928,
+  "macro_f1": 0.6106600496627761,
+  "union_recall_at_k": {},
+  "temporal_robustness": null,
+  "cost_efficiency": 0.07409321968524328,
+  "mean_api_calls": 1.0,
+  "ece": 0.3818037135278514,
+  "auroc": 0.713732993197279,
+  "auprc": 0.7907131546832609,
+  "num_uncertain": 77,
+  "tier3_f1": 0.5822784810126582,
+  "detection_rate_ci": null,
+  "f1_hallucination_ci": null,
+  "tier_weighted_f1_ci": null,
+  "fpr_ci": null,
+  "ece_ci": null,
+  "mcc_ci": null,
+  "tier3_f1_ci": null,
+  "per_tier_metrics": {
+    "1": {
+      "detection_rate": 0.6293103448275862,
+      "false_positive_rate": 0.06439393939393939,
+      "f1": 0.7087378640776699,
+      "precision": 0.8111111111111111,
+      "num_hallucinated": 132,
+      "num_valid": 287
+    },
+    "2": {
+      "detection_rate": 0.32286995515695066,
+      "false_positive_rate": 0.06439393939393939,
+      "f1": 0.4615384615384615,
+      "precision": 0.8089887640449438,
+      "num_hallucinated": 243,
+      "num_valid": 287
+    },
+    "3": {
+      "detection_rate": 0.45695364238410596,
+      "false_positive_rate": 0.06439393939393939,
+      "f1": 0.5822784810126582,
+      "precision": 0.8023255813953488,
+      "num_hallucinated": 169,
+      "num_valid": 287
+    }
+  },
+  "per_type_metrics": {
+    "arxiv_version_mismatch": {
+      "detection_rate": 0.28,
+      "false_positive_rate": 0.0,
+      "f1": 0.43750000000000006,
+      "count": 28
+    },
+    "chimeric_title": {
+      "detection_rate": 0.6,
+      "false_positive_rate": 0.0,
+      "f1": 0.7499999999999999,
+      "count": 24
+    },
+    "fabricated_doi": {
+      "detection_rate": 0.44,
+      "false_positive_rate": 0.0,
+      "f1": 0.6111111111111112,
+      "count": 29
+    },
+    "future_date": {
+      "detection_rate": 0.9130434782608695,
+      "false_positive_rate": 0.0,
+      "f1": 0.9545454545454545,
+      "count": 29
+    },
+    "hybrid_fabrication": {
+      "detection_rate": 0.6,
+      "false_positive_rate": 0.0,
+      "f1": 0.7499999999999999,
+      "count": 40
+    },
+    "merged_citation": {
+      "detection_rate": 0.48148148148148145,
+      "false_positive_rate": 0.0,
+      "f1": 0.65,
+      "count": 29
+    },
+    "near_miss_title": {
+      "detection_rate": 0.29411764705882354,
+      "false_positive_rate": 0.0,
+      "f1": 0.45454545454545453,
+      "count": 38
+    },
+    "nonexistent_venue": {
+      "detection_rate": 0.5428571428571428,
+      "false_positive_rate": 0.0,
+      "f1": 0.7037037037037037,
+      "count": 38
+    },
+    "partial_author_list": {
+      "detection_rate": 0.03571428571428571,
+      "false_positive_rate": 0.0,
+      "f1": 0.0689655172413793,
+      "count": 29
+    },
+    "placeholder_authors": {
+      "detection_rate": 0.6666666666666666,
+      "false_positive_rate": 0.0,
+      "f1": 0.8,
+      "count": 36
+    },
+    "plausible_fabrication": {
+      "detection_rate": 0.5652173913043478,
+      "false_positive_rate": 0.0,
+      "f1": 0.7222222222222222,
+      "count": 103
+    },
+    "preprint_as_published": {
+      "detection_rate": 0.3076923076923077,
+      "false_positive_rate": 0.0,
+      "f1": 0.47058823529411764,
+      "count": 29
+    },
+    "swapped_authors": {
+      "detection_rate": 0.1509433962264151,
+      "false_positive_rate": 0.0,
+      "f1": 0.26229508196721313,
+      "count": 56
+    },
+    "valid": {
+      "detection_rate": 0.0,
+      "false_positive_rate": 0.06439393939393939,
+      "f1": 0.0,
+      "count": 287
+    },
+    "wrong_venue": {
+      "detection_rate": 0.2647058823529412,
+      "false_positive_rate": 0.0,
+      "f1": 0.4186046511627907,
+      "count": 36
+    }
+  },
+  "coverage": 1.0,
+  "coverage_adjusted_f1": 0.593619972260749
+}

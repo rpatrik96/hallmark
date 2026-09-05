@@ -20,8 +20,10 @@ import os
 import random
 from pathlib import Path
 
+from hallmark.evaluation.table_provenance import record_table
+
 REPO_ROOT = Path(__file__).resolve().parent.parent
-RESULTS_FILE = REPO_ROOT / "data" / "v1.0" / "baseline_results" / "bibtexupdater_dev_public.json"
+RESULTS_FILE = REPO_ROOT / "data" / "v1.2" / "baseline_results" / "bibtexupdater_dev_public.json"
 TABLES_DIR = REPO_ROOT / "tables"
 OUTPUT_CSV = TABLES_DIR / "codesign_bound.csv"
 
@@ -177,6 +179,13 @@ def main() -> None:
         writer = csv.DictWriter(f, fieldnames=fieldnames)
         writer.writeheader()
         writer.writerows(rows)
+
+    record_table(
+        OUTPUT_CSV,
+        [RESULTS_FILE],
+        generator="scripts/compute_codesign_bound.py",
+        repo_root=REPO_ROOT,
+    )
 
     print(f"\nSaved: {OUTPUT_CSV}")
 

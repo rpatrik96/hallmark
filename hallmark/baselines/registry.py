@@ -803,6 +803,7 @@ def _register_builtins() -> None:
     def _run_random(entries: list[BlindEntry], **kw: Any) -> list[Prediction]:
         from hallmark.baselines.degenerate import random_baseline
 
+        kw.pop("split", None)  # dispatch-level; the baseline does not use it
         return random_baseline(entries, **kw)
 
     register(
@@ -846,6 +847,7 @@ def _register_builtins() -> None:
     def _run_venue_oracle(entries: list[BlindEntry], **kw: Any) -> list[Prediction]:
         from hallmark.baselines.degenerate import venue_oracle_baseline
 
+        kw.pop("split", None)  # dispatch-level; the baseline does not use it
         return venue_oracle_baseline(entries, **kw)
 
     register(
@@ -862,6 +864,7 @@ def _register_builtins() -> None:
 
     # --- Ensemble ---
     def _run_ensemble(entries: list[BlindEntry], **kw: Any) -> list[Prediction]:
+        from hallmark.baselines.bibtexupdater import SourceOutageError
         from hallmark.baselines.ensemble import ensemble_predict
 
         # Default: combine doi_only + bibtexupdater
@@ -875,6 +878,11 @@ def _register_builtins() -> None:
                     dep_info = _REGISTRY[dep_name]
                     dep_kwargs = dict(dep_info.runner_kwargs)
                     strategy_preds[dep_name] = dep_info.runner(entries, **dep_kwargs)
+                except SourceOutageError:
+                    # The component disowned its run. Dropping it here would
+                    # score doi_only alone under the ensemble's name -- which
+                    # is what happened with DBLP down on 2026-09-05.
+                    raise
                 except Exception as e:
                     logger.warning(f"Ensemble: skipping {dep_name}: {e}")
 
@@ -882,6 +890,7 @@ def _register_builtins() -> None:
             logger.error("Ensemble: no component baselines available")
             return fallback_predictions(entries, reason="Ensemble: no components")
 
+        kw.pop("split", None)  # dispatch-level; the ensemble does not use it
         return ensemble_predict(entries, strategy_preds, **kw)
 
     register(

@@ -17,7 +17,7 @@ from pathlib import Path
 
 
 def main() -> int:
-    data_dir = Path(__file__).parent.parent / "data" / "v1.0"
+    data_dir = Path(__file__).parent.parent / "data" / "v1.2"
 
     # Step 1: Load mislabeled entries from llm_generated.jsonl
     llm_path = data_dir / "llm_generated.jsonl"

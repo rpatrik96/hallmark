@@ -1,0 +1,3 @@
+tool,split,real_mode_dr,as_shipped_dr,as_shipped_fpr,as_shipped_f1,as_shipped_mcc,folded_out_dr,folded_out_fpr,folded_out_f1,folded_out_mcc,as_false_positives_dr,as_false_positives_fpr,as_false_positives_f1,as_false_positives_mcc
+cascade_db_diagnosis_aggressive_stress_test,stress_test,0.9333,0.9587,0.0000,0.9789,0.0000,1.0000,0.0000,1.0000,0.0000,1.0000,0.9333,0.5679,0.1626
+cascade_db_diagnosis_stress_test,stress_test,0.9242,0.9530,0.0000,0.9759,0.0000,1.0000,0.0000,1.0000,0.0000,1.0000,0.9242,0.5703,0.1739

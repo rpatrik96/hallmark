@@ -5,7 +5,7 @@ Usage:
     python scripts/scrape_proceedings.py --venues NeurIPS ICML ICLR \
         --years 2020 2021 2022 2023 2024 2025 \
         --max-per-venue-year 50 \
-        --output data/v1.0/valid_entries.jsonl
+        --output data/v1.2/valid_entries.jsonl
 """
 
 from __future__ import annotations

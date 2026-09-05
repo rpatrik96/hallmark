@@ -75,7 +75,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--version",
         type=str,
-        default="v1.0",
+        default="v1.2",
         help="Dataset version (default: v1.0)",
     )
     parser.add_argument(

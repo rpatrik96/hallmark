@@ -118,7 +118,14 @@ EXPECTED_SUBTESTS: dict[HallucinationType, dict[str, bool | None]] = {
         "title_exists": True,
         "authors_match": True,
         "venue_correct": True,
-        "fields_complete": False,
+        # True, not False: a future-dated entry is complete, it is just wrong
+        # about the year. ``check_fields_complete`` tests for missing required
+        # fields plus a 4-digit year and a well-formed DOI, and "2032" is a
+        # perfectly well-formed 4-digit year. The old False contradicted the
+        # checker that computes this sub-test: across every split the checker
+        # passes 96 of 99 future_date entries. future_date is the only type
+        # whose fields_complete expectation disagreed with the checker.
+        "fields_complete": True,
         "cross_db_agreement": False,
     },
     HallucinationType.CHIMERIC_TITLE: {
@@ -218,7 +225,25 @@ STRESS_TEST_TYPES: set[HallucinationType] = {
 MAIN_TYPES: set[HallucinationType] = set(HallucinationType) - STRESS_TEST_TYPES
 
 
-# Standard sub-test names
+# Standard sub-test names.
+#
+# Scoping rule (three-valued, entry-relative)
+# -------------------------------------------
+# Every sub-test is evaluated **against the fields actually present in this
+# entry**, never against the citation as a whole:
+#
+#   True   the check was performed and passed
+#   False  the check was performed and FAILED
+#   None   the check is not applicable — the field it inspects is absent
+#
+# So ``doi_resolves`` answers "did *this entry's* ``doi`` field resolve?", not
+# "does this reference have any resolvable identifier?". An entry with no
+# ``doi`` field is ``None`` (nothing to resolve), never ``False``. The same
+# holds for every other sub-test: absence of the inspected field is ``None``.
+#
+# Rationale: baselines only ever see ``BlindEntry.fields``, so a ``False`` on a
+# field that is not there asks a tool to detect something it cannot observe.
+# Enforced by the structural check in ``scripts/verify_subtests.py``.
 SUBTEST_NAMES = [
     "doi_resolves",
     "title_exists",
@@ -442,6 +467,11 @@ class Prediction:
     predicted_hallucination_type: str | None = None
     # Cascade stage that produced the prediction; None for non-cascade baselines.
     cascade_stage: Literal["stage1_db", "stage2_diagnosis", "prescreening"] | None = None
+    # False when the tool never actually ran for this entry -- missing binary,
+    # timed-out subprocess, dead source. Such a prediction still carries a label
+    # so nothing downstream breaks, but it is not a measurement and must not be
+    # scored as one. Defaults True so every existing caller is unaffected.
+    evaluated: bool = True
 
     def __post_init__(self) -> None:
         _VALID_LABELS = {"VALID", "HALLUCINATED", "UNCERTAIN"}
@@ -513,6 +543,22 @@ class EvaluationResult:
     # F1 weighted by difficulty tier. Only recall is tier-weighted; FPs carry uniform weight 1.0.
     tier_weighted_f1: float
 
+    # Provenance. Without these a result cannot be tied to the tool build or the
+    # data revision that produced it, which is how three different bibtex-updater
+    # versions came to be named as "the" version behind the released numbers.
+    # ``split_sha256`` is the hash of the split file scored, and is the sound
+    # replacement for the mtime comparison in check_results_freshness.py: git
+    # does not preserve mtimes, so on any fresh clone that check reads checkout
+    # order rather than staleness.
+    tool_version: str | None = None
+    # bibtex-check's own source-availability report for the run that produced
+    # this result, when it made one: entries with an incomplete lookup, the
+    # total, the fraction, and per-source failure counts. Availability moves
+    # outcomes, so it belongs beside the numbers rather than only in a log.
+    source_condition: dict[str, object] | None = None
+    split_sha256: str | None = None
+    run_timestamp: str | None = None
+
     # Prevalence-invariant metrics
     mcc: float | None = None  # Matthews Correlation Coefficient
     macro_f1: float | None = None  # Macro-averaged F1 across both classes
@@ -526,6 +572,10 @@ class EvaluationResult:
     auroc: float | None = None  # Area Under ROC Curve
     auprc: float | None = None  # Area Under Precision-Recall Curve
     num_uncertain: int = 0  # Count of UNCERTAIN predictions
+    # How many of num_entries the tool actually evaluated. Fewer means some
+    # predictions were manufactured because the tool was unavailable; zero means
+    # the run measured nothing and its rates are artefacts of that, not results.
+    num_evaluated: int | None = None
 
     # Tier 3 hard subset metric (Hardt benchmark science)
     tier3_f1: float = 0.0  # F1 on Tier 3 (hard) hallucinations only
@@ -546,7 +596,15 @@ class EvaluationResult:
     per_type_metrics: dict[str, dict[str, float]] = field(default_factory=dict)
 
     # Coverage metrics
-    coverage: float = 1.0  # fraction of entries with predictions
+    # ``coverage`` is SELECTIVE-PREDICTION coverage: the fraction of entries the
+    # tool answered, i.e. returned a non-UNCERTAIN prediction for. UNCERTAIN is
+    # excluded from the confusion matrix, ECE and AUROC, so it must not count as
+    # covered — otherwise a tool that abstains on the hard entries reports its
+    # easy-subset metrics at full coverage.
+    coverage: float = 1.0
+    # ``response_coverage`` is the weaker "did the tool return a record at all"
+    # fraction, and is what strict mode checks for missing predictions.
+    response_coverage: float = 1.0
     coverage_adjusted_f1: float = 0.0  # F1 * coverage, penalizes selective abstention
 
     # Type-level diagnosis metrics (populated when predicted_hallucination_type is set)
@@ -613,6 +671,7 @@ class EvaluationResult:
             "ece": self.ece,
             "mcc": self.mcc,
             "coverage": self.coverage,
+            "response_coverage": self.response_coverage,
             "coverage_adjusted_f1": self.coverage_adjusted_f1,
             "tier3_f1": self.tier3_f1,
         }

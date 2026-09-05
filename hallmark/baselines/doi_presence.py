@@ -10,7 +10,7 @@ from __future__ import annotations
 from hallmark.dataset.schema import BlindEntry, Prediction
 
 
-def run_doi_presence_heuristic(entries: list[BlindEntry]) -> list[Prediction]:
+def run_doi_presence_heuristic(entries: list[BlindEntry], **_kw: object) -> list[Prediction]:
     """Run DOI-presence heuristic on all entries.
 
     This baseline uses a simple rule:
@@ -19,6 +19,8 @@ def run_doi_presence_heuristic(entries: list[BlindEntry]) -> list[Prediction]:
 
     Args:
         entries: Benchmark entries to evaluate.
+        **_kw: Ignored. ``run_baseline`` forwards dispatch-level arguments such
+            as ``split`` to every runner; this baseline does not use them.
 
     Returns:
         List of predictions, one per entry.

@@ -270,7 +270,7 @@ class TestBlindSplitFiles:
     def test_dev_blind_file(self):
         from pathlib import Path
 
-        path = Path(__file__).parent.parent / "data" / "v1.0" / "dev_public_blind.jsonl"
+        path = Path(__file__).parent.parent / "data" / "v1.2" / "dev_public_blind.jsonl"
         if not path.exists():
             pytest.skip("dev_public_blind.jsonl not generated yet")
         self._check_blind_file(path)
@@ -278,7 +278,7 @@ class TestBlindSplitFiles:
     def test_test_blind_file(self):
         from pathlib import Path
 
-        path = Path(__file__).parent.parent / "data" / "v1.0" / "test_public_blind.jsonl"
+        path = Path(__file__).parent.parent / "data" / "v1.2" / "test_public_blind.jsonl"
         if not path.exists():
             pytest.skip("test_public_blind.jsonl not generated yet")
         self._check_blind_file(path)
@@ -286,7 +286,7 @@ class TestBlindSplitFiles:
     def test_stress_test_blind_file(self):
         from pathlib import Path
 
-        path = Path(__file__).parent.parent / "data" / "v1.0" / "stress_test_blind.jsonl"
+        path = Path(__file__).parent.parent / "data" / "v1.2" / "stress_test_blind.jsonl"
         if not path.exists():
             pytest.skip("stress_test_blind.jsonl not generated yet")
         self._check_blind_file(path)
