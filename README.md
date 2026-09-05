@@ -247,8 +247,8 @@ them as negatives so flagging one is a false accusation:
 
 | split | folded out of the scored set | scored as false positives |
 |---|---|---|
-| `test_public` | Kendall tau 0.886, 14 of 21 tools change rank | tau 0.829, 17 of 21 change |
-| `dev_public` | tau 0.905, 15 of 20 change | tau 0.811, 17 of 20 change |
+| `test_public` | Kendall tau 0.884, 13 of 20 tools change rank | tau 0.821, 16 of 20 change |
+| `dev_public` | tau 0.906, 14 of 19 change | tau 0.801, 16 of 19 change |
 
 The top of the table changes identity: `cascade_db_diagnosis` leads as shipped at
 MCC 0.897 on `test_public`, and `bibtexupdater` takes first place under
@@ -258,11 +258,17 @@ How much of a tool's credit comes from these modes varies widely, and no
 published column shows it. On `test_public` they are 27.0% of the cascade's 514
 detections, 23.2% of Sonnet 4.6's, 20.0% of `bibtexupdater`'s and 9.1% of
 `doi_only`'s. Detection rate on the four ranges from 0.065 (`doi_only`) to 1.000
-(the cascade), median 0.755 across 21 tools.
+(the cascade), median 0.740 across 20 tools. The counts exclude one
+byte-identical duplicate result file per split (`cascade_db_diagnosis_evalmode_aggressive_*`
+is a copy of `cascade_db_diagnosis_aggressive_*`) and, on `dev_public`, the Opus 4.7
+result, whose per-type block predates the relabel and does not reproduce its
+published MCC; it is registered known-stale in `scripts/check_results_freshness.py`.
 
-Two controls bound what this means. Folding `hybrid_fabrication` alone moves
-nothing — tau 1.000 with no tool changing position on either public split — so
-the instability belongs to the four modes rather than to folding a mode class,
+Two controls bound what this means. Folding `hybrid_fabrication` alone leaves
+the folded-out ranking unchanged on both public splits — tau 1.000, no tool
+changing position — and moves six tools under as-false-positives (tau 0.968 and
+0.965), so the instability belongs to the four modes rather than to folding a
+mode class,
 though at 4.3% and 5.6% of positives that null carries less weight than the
 effect it contrasts with. And the cascade's 1.000 is not an artefact of how the
 entries were generated: a gradient-boosted classifier over surface features
@@ -271,9 +277,9 @@ and 0.388 on `test_public` against false-positive rates of 0.045 and 0.096. Some
 separability is there, and it is far short of what the cascade achieves.
 
 `stress_test` inherits the same property by construction. It holds three modes,
-two of which are on this list: 75 of its 121 scored entries, 62%. It carries no
-VALID entries, so its false-positive rate is undefined and its MCC is 0.0 by
-degeneracy rather than by measurement, and every one of the cascade's misses
+two of which are on this list: 75 of its 121 scored entries, 62%. Its one VALID
+entry is a contamination canary excluded from scoring, so its false-positive
+rate is undefined and its MCC is 0.0 by degeneracy rather than by measurement, and every one of the cascade's misses
 there is on the two real-paper modes — folding them takes it from 0.953 to 1.000.
 
 **No labels change in this release.** Separating the two questions means

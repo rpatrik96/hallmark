@@ -38,8 +38,10 @@ from __future__ import annotations
 
 import argparse
 import csv
+import hashlib
 import json
 import math
+import os
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -178,6 +180,11 @@ def _reconstruction_error(payload: dict, shipped: Confusion) -> list[str]:
     return problems
 
 
+def _rel(path: Path) -> str:
+    """Repo-relative when inside the repo, else as given (tests write to tmp)."""
+    return os.path.relpath(path, REPO_ROOT) if path.is_relative_to(REPO_ROOT) else str(path)
+
+
 def _kendall_tau(a: list[str], b: list[str]) -> float:
     """Rank correlation between two orderings of the same tools."""
     pos_a = {name: i for i, name in enumerate(a)}
@@ -225,8 +232,17 @@ def main() -> int:
     real_mode_drs: dict[str, float] = {}
     dropped: dict[str, str] = {}
     used_inputs: list[Path] = []
+    # One result under two names is one tool. cascade_db_diagnosis_aggressive_*
+    # and cascade_db_diagnosis_evalmode_aggressive_* are byte-identical on every
+    # split; scored twice they inflated every "N of M tools" count.
+    seen_digests: dict[str, str] = {}
 
     for path in results:
+        digest = hashlib.sha256(path.read_bytes()).hexdigest()
+        if digest in seen_digests:
+            dropped[path.stem] = f"byte-identical to {seen_digests[digest]}"
+            continue
+        seen_digests[digest] = path.stem
         try:
             payload = json.loads(path.read_text())
         except (OSError, json.JSONDecodeError) as exc:
@@ -316,7 +332,7 @@ def main() -> int:
         )
 
     if not has_negatives:
-        print(f"\nWrote {args.output.relative_to(REPO_ROOT)}")
+        print(f"\nWrote {_rel(args.output)}")
         return 0
 
     print("\nRanking agreement with as_shipped (Kendall tau over MCC):")
@@ -330,7 +346,7 @@ def main() -> int:
         print(f"  {scoring:<20} tau={tau:+.4f}  tools changing position: {moved}/{len(scored)}")
         print(f"    top 5: {', '.join(order[scoring][:5])}")
 
-    print(f"\nWrote {args.output.relative_to(REPO_ROOT)}")
+    print(f"\nWrote {_rel(args.output)}")
     return 0
 
 

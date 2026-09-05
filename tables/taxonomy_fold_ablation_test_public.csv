@@ -1,7 +1,6 @@
 tool,split,real_mode_dr,as_shipped_dr,as_shipped_fpr,as_shipped_f1,as_shipped_mcc,folded_out_dr,folded_out_fpr,folded_out_f1,folded_out_mcc,as_false_positives_dr,as_false_positives_fpr,as_false_positives_f1,as_false_positives_mcc
 bibtexupdater_test_public,test_public,0.6547,0.8767,0.1154,0.9010,0.7498,0.9579,0.1154,0.9333,0.8488,0.9579,0.2816,0.8358,0.6852
 cascade_db_diagnosis_aggressive_test_public,test_public,1.0000,0.9923,0.1603,0.9502,0.8637,0.9895,0.1603,0.9330,0.8482,0.9895,0.4191,0.7958,0.6091
-cascade_db_diagnosis_evalmode_aggressive_test_public,test_public,1.0000,0.9923,0.1603,0.9502,0.8637,0.9895,0.1603,0.9330,0.8482,0.9895,0.4191,0.7958,0.6091
 cascade_db_diagnosis_test_public,test_public,1.0000,0.9897,0.1122,0.9622,0.8972,0.9860,0.1122,0.9489,0.8847,0.9860,0.3858,0.8069,0.6313
 doi_only_test_public,test_public,0.0647,0.1908,0.0417,0.3138,0.2114,0.2368,0.0417,0.3727,0.2728,0.2368,0.0488,0.3659,0.2744
 llm_agentic_btu_openai_test_public,test_public,0.9209,0.9595,0.3558,0.8830,0.6608,0.9737,0.3558,0.8595,0.6679,0.9737,0.5299,0.7482,0.4996

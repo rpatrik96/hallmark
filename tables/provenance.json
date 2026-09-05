@@ -2,7 +2,7 @@
   "base_rate_precision.csv": {
     "generator": "scripts/compute_base_rate_precision.py",
     "inputs": {
-      "data/v1.2/baseline_results/bibtexupdater_test_public.json": "d31eca7871bc1b6f2f0f13e734f7478f0ae00dcf45b879aaf2679075c484d9cc",
+      "data/v1.2/baseline_results/bibtexupdater_test_public.json": "132b4d2fa383b8c2f359bb62e5c9ce6ab1f3f14ce233b88edb25293d9870e517",
       "data/v1.2/baseline_results/cascade_db_diagnosis_aggressive_test_public.json": "f8c2b0cdc4a311a741c9528880de28fea8759cd3dd4bfd1ca715851c3f2595c5",
       "data/v1.2/baseline_results/cascade_db_diagnosis_evalmode_aggressive_test_public.json": "f8c2b0cdc4a311a741c9528880de28fea8759cd3dd4bfd1ca715851c3f2595c5",
       "data/v1.2/baseline_results/cascade_db_diagnosis_test_public.json": "0b8e28af6ceaa9b327d17bea79a9fd5c7d59d596c7eff966dfcd076485241d77",
@@ -28,10 +28,9 @@
   "taxonomy_fold_ablation_dev_public.csv": {
     "generator": "scripts/ablate_taxonomy_fold.py",
     "inputs": {
-      "data/v1.2/baseline_results/bibtexupdater_dev_public.json": "09778d2a41631733c3ab9c42cc612754efbe0dd32c957896463db7179bde0715",
+      "data/v1.2/baseline_results/bibtexupdater_dev_public.json": "ffd86c74d466d1477cf358d571f02c9ed4c4df6dc7df605ad8b8a7a596dbba39",
       "data/v1.2/baseline_results/cascade_db_diagnosis_aggressive_dev_public.json": "0f54d388799fbf499937679ba7e8b779d2fe8e3b05646e7f3933b966b16f3a3a",
       "data/v1.2/baseline_results/cascade_db_diagnosis_dev_public.json": "5df803dde0d7fe80413072132677630b09761e9d313370611712ae0a7851747c",
-      "data/v1.2/baseline_results/cascade_db_diagnosis_evalmode_aggressive_dev_public.json": "0f54d388799fbf499937679ba7e8b779d2fe8e3b05646e7f3933b966b16f3a3a",
       "data/v1.2/baseline_results/doi_only_dev_public.json": "6580622f7c22e40bf24bf660c4cb375b2e1d3ec45bff716c2cbc1e9f1504397e",
       "data/v1.2/baseline_results/harc_with_s2key_dev_public.json": "79d7a33050e82e3609a1418641c189bcfe98c5c06b3f14270c9a08d62c4968a6",
       "data/v1.2/baseline_results/llm_agentic_btu_openai_dev_public.json": "c3545fea4b9bb6001146fa135e15989781e4fe757b08689a8eb11a2dc82ad407",
@@ -53,10 +52,9 @@
   "taxonomy_fold_ablation_dev_public_hybrid_fabrication.csv": {
     "generator": "scripts/ablate_taxonomy_fold.py",
     "inputs": {
-      "data/v1.2/baseline_results/bibtexupdater_dev_public.json": "09778d2a41631733c3ab9c42cc612754efbe0dd32c957896463db7179bde0715",
+      "data/v1.2/baseline_results/bibtexupdater_dev_public.json": "ffd86c74d466d1477cf358d571f02c9ed4c4df6dc7df605ad8b8a7a596dbba39",
       "data/v1.2/baseline_results/cascade_db_diagnosis_aggressive_dev_public.json": "0f54d388799fbf499937679ba7e8b779d2fe8e3b05646e7f3933b966b16f3a3a",
       "data/v1.2/baseline_results/cascade_db_diagnosis_dev_public.json": "5df803dde0d7fe80413072132677630b09761e9d313370611712ae0a7851747c",
-      "data/v1.2/baseline_results/cascade_db_diagnosis_evalmode_aggressive_dev_public.json": "0f54d388799fbf499937679ba7e8b779d2fe8e3b05646e7f3933b966b16f3a3a",
       "data/v1.2/baseline_results/doi_only_dev_public.json": "6580622f7c22e40bf24bf660c4cb375b2e1d3ec45bff716c2cbc1e9f1504397e",
       "data/v1.2/baseline_results/harc_with_s2key_dev_public.json": "79d7a33050e82e3609a1418641c189bcfe98c5c06b3f14270c9a08d62c4968a6",
       "data/v1.2/baseline_results/llm_agentic_btu_openai_dev_public.json": "c3545fea4b9bb6001146fa135e15989781e4fe757b08689a8eb11a2dc82ad407",
@@ -79,16 +77,14 @@
     "generator": "scripts/ablate_taxonomy_fold.py",
     "inputs": {
       "data/v1.2/baseline_results/cascade_db_diagnosis_aggressive_stress_test.json": "8e12d13b07e0dd37a8ce0bc9bd1dfe09b8075df0f957a32567be4f527290a4ed",
-      "data/v1.2/baseline_results/cascade_db_diagnosis_evalmode_aggressive_stress_test.json": "8e12d13b07e0dd37a8ce0bc9bd1dfe09b8075df0f957a32567be4f527290a4ed",
       "data/v1.2/baseline_results/cascade_db_diagnosis_stress_test.json": "623222b43e505060ddd7fcf5c209c7961f77395bccc177d0fc09f41f5adfa21c"
     }
   },
   "taxonomy_fold_ablation_test_public.csv": {
     "generator": "scripts/ablate_taxonomy_fold.py",
     "inputs": {
-      "data/v1.2/baseline_results/bibtexupdater_test_public.json": "d31eca7871bc1b6f2f0f13e734f7478f0ae00dcf45b879aaf2679075c484d9cc",
+      "data/v1.2/baseline_results/bibtexupdater_test_public.json": "132b4d2fa383b8c2f359bb62e5c9ce6ab1f3f14ce233b88edb25293d9870e517",
       "data/v1.2/baseline_results/cascade_db_diagnosis_aggressive_test_public.json": "f8c2b0cdc4a311a741c9528880de28fea8759cd3dd4bfd1ca715851c3f2595c5",
-      "data/v1.2/baseline_results/cascade_db_diagnosis_evalmode_aggressive_test_public.json": "f8c2b0cdc4a311a741c9528880de28fea8759cd3dd4bfd1ca715851c3f2595c5",
       "data/v1.2/baseline_results/cascade_db_diagnosis_test_public.json": "0b8e28af6ceaa9b327d17bea79a9fd5c7d59d596c7eff966dfcd076485241d77",
       "data/v1.2/baseline_results/doi_only_test_public.json": "716ed587dc829f3b549ad5e846310a4705626758c80b432e42218d4aad274fda",
       "data/v1.2/baseline_results/llm_agentic_btu_openai_test_public.json": "f8001545cd20f90ea06bd9a13590c74d5e32491a0a573c59fa249de2edc92f20",
@@ -112,9 +108,8 @@
   "taxonomy_fold_ablation_test_public_hybrid_fabrication.csv": {
     "generator": "scripts/ablate_taxonomy_fold.py",
     "inputs": {
-      "data/v1.2/baseline_results/bibtexupdater_test_public.json": "d31eca7871bc1b6f2f0f13e734f7478f0ae00dcf45b879aaf2679075c484d9cc",
+      "data/v1.2/baseline_results/bibtexupdater_test_public.json": "132b4d2fa383b8c2f359bb62e5c9ce6ab1f3f14ce233b88edb25293d9870e517",
       "data/v1.2/baseline_results/cascade_db_diagnosis_aggressive_test_public.json": "f8c2b0cdc4a311a741c9528880de28fea8759cd3dd4bfd1ca715851c3f2595c5",
-      "data/v1.2/baseline_results/cascade_db_diagnosis_evalmode_aggressive_test_public.json": "f8c2b0cdc4a311a741c9528880de28fea8759cd3dd4bfd1ca715851c3f2595c5",
       "data/v1.2/baseline_results/cascade_db_diagnosis_test_public.json": "0b8e28af6ceaa9b327d17bea79a9fd5c7d59d596c7eff966dfcd076485241d77",
       "data/v1.2/baseline_results/doi_only_test_public.json": "716ed587dc829f3b549ad5e846310a4705626758c80b432e42218d4aad274fda",
       "data/v1.2/baseline_results/llm_agentic_btu_openai_test_public.json": "f8001545cd20f90ea06bd9a13590c74d5e32491a0a573c59fa249de2edc92f20",

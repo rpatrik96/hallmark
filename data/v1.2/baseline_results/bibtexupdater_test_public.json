@@ -145,7 +145,7 @@
     }
   },
   "coverage": 0.8761,
-  "coverage_adjusted_f1": 0.900990099009901,
+  "coverage_adjusted_f1": 0.7893574257425743,
   "type_accuracy": {
     "overall": NaN,
     "main_types_only": NaN,
@@ -484,7 +484,7 @@
     "splits": [
       "test_public"
     ],
-    "coverage_corrected": "coverage and num_uncertain recounted from results/relabel_delta/btu_v1_2_0/test_public/btu_raw.jsonl under ABSTENTION_STATUSES; the DR/FPR/F1 triple is unchanged and still scores abstentions as committed-VALID, which is the convention the paper reports. See scripts/rescore_btu_from_raw.py."
+    "coverage_corrected": "coverage and num_uncertain recounted from results/relabel_delta/btu_v1_2_0/test_public/btu_raw.jsonl under ABSTENTION_STATUSES, and coverage_adjusted_f1 recomputed as f1_hallucination x coverage per its definition in metrics.py. The DR/FPR/F1 triple is unchanged and still scores abstentions as committed-VALID, which is the convention the paper reports; under that convention coverage_adjusted_f1 counts abstention twice (once as a committed miss inside F1, once through coverage) and is a lower bound, not a third scoring. See scripts/rescore_btu_from_raw.py."
   },
   "_btu_status_histogram": {
     "arxiv_id_mismatch": 14,
