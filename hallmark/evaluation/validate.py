@@ -35,6 +35,34 @@ def compute_sha256(path: Path) -> str:
     return h.hexdigest()
 
 
+#: Splits carrying an entry that a result may legitimately not score, and how
+#: many. ``stress_test`` holds 121 hallucinated entries plus a single VALID
+#: contamination canary; with one valid entry the false-positive rate is not a
+#: measurement, so the cascade rows are scored on the 121 and say so in the
+#: paper. The validator had no way to express that, and failed three released
+#: results on it -- which meant the whole ``baselines.yml`` matrix went red the
+#: first time its conclusion was allowed to mean anything.
+#:
+#: Deliberately not a tolerance. An off-by-one allowance would also pass a run
+#: that silently dropped an entry; this permits exactly the documented count.
+CANARY_ENTRIES: dict[str, int] = {"stress_test": 1}
+
+
+def _allowed_entry_counts(split_name: str, expected_total: int | None) -> set[int]:
+    """Entry counts a result may report for *split_name*.
+
+    The split total always, plus the total minus that split's canary entries
+    where a split has any.
+    """
+    if expected_total is None:
+        return set()
+    allowed = {expected_total}
+    canaries = CANARY_ENTRIES.get(split_name)
+    if canaries:
+        allowed.add(expected_total - canaries)
+    return allowed
+
+
 def validate_reference_results(
     results_dir: str | Path,
     metadata_path: str | Path | None = None,
@@ -120,7 +148,8 @@ def validate_reference_results(
             split_name = result.split_name
             if split_name in metadata_splits:
                 expected_total = metadata_splits[split_name].get("total")
-                if expected_total is not None and result.num_entries != expected_total:
+                allowed = _allowed_entry_counts(split_name, expected_total)
+                if expected_total is not None and result.num_entries not in allowed:
                     errors.append(
                         f"{filename}: num_entries={result.num_entries} "
                         f"doesn't match metadata total={expected_total} "

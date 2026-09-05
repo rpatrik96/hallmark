@@ -18,7 +18,12 @@ jobs:
   baseline:
     name: Evaluate ${{ matrix.baseline }}
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    # 15 was not enough: the doi_only live run resolves all 1,119 dev_public
+    # DOIs serially against doi.org and was cancelled at 15m17s on run
+    # 33915448052, mid-evaluation. It reported as `cancelled` rather than
+    # `failure`, which is the reading a matrix `timeout-minutes` gives a job
+    # that ran out of budget rather than one that broke.
+    timeout-minutes: 30
     # Kept so one throttled baseline does not abort the others -- these hit
     # Semantic Scholar and CrossRef from a shared runner IP and a 429 is
     # routine. The cost is that the workflow's own conclusion stops meaning
@@ -31,7 +36,7 @@ jobs:
       matrix:
         include:
           - baseline: doi_only
-            max_entries: 0       # fast — evaluate all
+            max_entries: 0       # evaluate all; ~20 min against doi.org
             precomputed: false
           - baseline: bibtexupdater
             precomputed: true    # rate-limited — use pre-computed results
