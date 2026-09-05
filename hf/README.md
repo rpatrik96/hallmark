@@ -70,10 +70,10 @@ The paper's numbers are computed against tag `v1.2.0`. Later releases (`v1.2.1`,
 from datasets import load_dataset
 
 # Default config (all labels visible)
-ds = load_dataset("hallmark-neurips2026/HALLMARK")
+ds = load_dataset("<owner>/HALLMARK")
 
 # Blind config (labels stripped — for leaderboard submissions)
-blind = load_dataset("hallmark-neurips2026/HALLMARK", "blind")
+blind = load_dataset("<owner>/HALLMARK", "blind")
 ```
 
 The `default` config exposes the full schema with ground-truth labels. The `blind` config strips

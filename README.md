@@ -293,16 +293,13 @@ figures first. Discussion is in [issue #36](https://github.com/rpatrik96/hallmar
 
 ## Hosting & Croissant
 
-The dataset is mirrored on HuggingFace (parquet + jsonl + baseline results + RAI Croissant metadata):
-<https://huggingface.co/datasets/hallmark-neurips2026/HALLMARK>
+The dataset ships in this repository under `data/v1.2/` as JSONL, so every split is available without an external download. The HuggingFace mirror published for the NeurIPS 2026 submission was withdrawn together with the submission.
 
-A [Croissant 1.0](https://mlcommons.org/croissant/) metadata file is included at the repo root (`croissant.json`). It covers all public splits and includes RAI fields required by NeurIPS 2026 D&B. Validate locally with:
+A [Croissant 1.0](https://mlcommons.org/croissant/) metadata file is included at the repo root (`croissant.json`) and points at the files in this repository. It covers all public splits and includes RAI fields required by NeurIPS 2026 D&B. Validate locally with:
 
 ```bash
 mlcroissant validate --jsonld croissant.json
 ```
-
-The data is also shipped in `data/v1.2/` for direct repo-relative access without any external download.
 
 ## Dataset
 

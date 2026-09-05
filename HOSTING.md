@@ -11,7 +11,7 @@ Release and distribution plan for HALLMARK v1.0.
 | Anonymous review repo | https://anonymous.4open.science/r/hallmark/ | git | Double-blind review access |
 | GitHub | https://github.com/rpatrik96/hallmark | git | Canonical public release |
 | Companion website | https://rpatrik96.github.io/hallmark/ | static HTML (GitHub Pages, deployed from `site/`) | Interactive results explorer + examples browser |
-| HuggingFace mirror | https://huggingface.co/datasets/hallmark-neurips2026/HALLMARK | parquet (canonical) + jsonl (mirror) + baseline_results + croissant.json | Dataset hosting |
+| HuggingFace mirror | withdrawn with the NeurIPS 2026 submission | — | — |
 | Zenodo DOI | planned at camera-ready | archive | Permanent archival + DOI minting |
 | PyPI | planned at camera-ready | wheel | `pip install hallmark` |
 
@@ -28,7 +28,7 @@ pip install mlcroissant
 mlcroissant validate --jsonld croissant.json
 ```
 
-The `distribution` block points to parquet files on the HuggingFace mirror; this is the canonical machine-readable target for `mlcroissant` streaming and the NeurIPS Records Generation Test. JSONL versions remain on the same mirror under `jsonl/` for direct human consumption.
+The `distribution` block points to the JSONL files in this repository under `data/v1.2/`; this is the canonical machine-readable target for `mlcroissant` streaming and the NeurIPS Records Generation Test.
 
 RAI fields covered (all required by NeurIPS 2026 D&B):
 `rai:dataCollection`, `rai:dataCollectionType`, `rai:personalSensitiveInformation`,
@@ -47,25 +47,12 @@ Full text: `LICENSE`.
 
 ## Checksums (SHA-256)
 
-### Parquet (canonical, referenced from `croissant.json`, hosted on HuggingFace)
+### JSONL (canonical, referenced from `croissant.json`)
 
 ```
-16cf8f28b28606515fadb7ddef489a1bd88ddf9414345b2b46da8e96f52bab4b  data/dev_public.parquet
-2f8c6d6c009c1ea6c37f53c4e0abb97c484e0c9a1fe098f06d0c457c7e6e1201  data/test_public.parquet
-cb273ad0a04d19320ceed78fee259728179e4886caf2accec660b93f33eab2db  data/stress_test.parquet
-b1b4f41ce89a2d43fb67ae961f22070b2e33b88a961c0d68994fe1b363ad9026  blind/dev_public_blind.parquet
-8c5c5104afbef57daa5d018c61fa979ee9eb9d740d9ea119f6bed15c21c47d5d  blind/test_public_blind.parquet
-3a1e0fdc263fe4c55ca1cc2526b0024eb270bcd6d02d4cc9cd9f8e908c0f9a3e  blind/stress_test_blind.parquet
-```
-
-Paths in this section are HuggingFace-relative (under `https://huggingface.co/datasets/hallmark-neurips2026/HALLMARK/resolve/main/`).
-
-### JSONL mirror (repo `data/v1.2/` and HuggingFace `jsonl/`)
-
-```
-d04a19f469765345febd5ca1a8c45edbe07c1937734edd695fd87f6184890a27  data/v1.2/dev_public.jsonl
+0f75d390f95a086aaf39b627369af2bd03a5eb87cd3bf4cea5d5025e203bb09e  data/v1.2/dev_public.jsonl
 46b9a23a1e1a7564c52ac490a492090fdc8d87f15bfea4c62bc49f8fd9ce42b7  data/v1.2/dev_public_blind.jsonl
-b06821c91398da9aecf35ce4cba0baf8eea6632f384e9984530e10bbd27ce45b  data/v1.2/test_public.jsonl
+0637ffc80747c36f3e010cd613f16481dcb916f944874122b2e2d3f872429973  data/v1.2/test_public.jsonl
 0461cef293e6f2a1e1448b6fa56de72c0efd18a240cdf426377616afc00649bd  data/v1.2/test_public_blind.jsonl
 af3a11606948fea8edccbbd5c512e6efd69c1f9056032d446f01c66950da07d3  data/v1.2/stress_test.jsonl
 cf6f829b2ad99c6badd9eb513214e2d811e6b0fe3218a64263aeecb690ea49e3  data/v1.2/stress_test_blind.jsonl
@@ -74,10 +61,10 @@ f6b5b3fcc7964a8b74be8a30b6c4566582d81f42764f2b1501d89d29ee2dfdbb  data/v1.2/sour
 3e772d02f71ae74601c419f6bfd6244f13acd329be61e003910cb9eb3c1f03b3  data/v1.2/valid_entry_verification.json
 ```
 
-Verify the JSONL mirror locally:
+Verify locally:
 
 ```bash
-shasum -a 256 --check <(grep "data/v1.2/" HOSTING.md | grep -v "^#")
+shasum -a 256 --check <(grep -E "^[0-9a-f]{64}  data/v1.2/" HOSTING.md)
 ```
 
 ---
@@ -102,8 +89,7 @@ Backward-compatible additions increment the minor version in-place.
 
 ## Anonymous review note
 
-Creator and contact metadata in `croissant.json`, `metadata.json`, and HuggingFace dataset
-cards are currently set to placeholder values to comply with NeurIPS 2026 double-blind review
+Creator and contact metadata in `croissant.json` and `metadata.json` are set to placeholder values to comply with NeurIPS 2026 double-blind review
 policy. All identifying fields will be populated at camera-ready. The anonymous review repository
 at https://anonymous.4open.science/r/hallmark/ provides read-only access to reviewers without
 revealing author identity.
