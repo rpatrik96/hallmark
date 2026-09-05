@@ -551,6 +551,11 @@ class EvaluationResult:
     # does not preserve mtimes, so on any fresh clone that check reads checkout
     # order rather than staleness.
     tool_version: str | None = None
+    # bibtex-check's own source-availability report for the run that produced
+    # this result, when it made one: entries with an incomplete lookup, the
+    # total, the fraction, and per-source failure counts. Availability moves
+    # outcomes, so it belongs beside the numbers rather than only in a log.
+    source_condition: dict[str, object] | None = None
     split_sha256: str | None = None
     run_timestamp: str | None = None
 

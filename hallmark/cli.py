@@ -103,6 +103,16 @@ def main(argv: list[str] | None = None) -> int:
         help="Path to predictions JSONL file (alternative to --baseline)",
     )
     eval_parser.add_argument("--output", type=str, help="Path to write evaluation results JSON")
+    eval_parser.add_argument(
+        "--allow-null-run",
+        action="store_true",
+        default=False,
+        help=(
+            "Write the result even when the tool evaluated none of the entries. "
+            "By default such a run is refused: its detection rate and false-positive "
+            "rate are artefacts of the tool not running, not measurements."
+        ),
+    )
     eval_parser.add_argument("--data-dir", type=str, help="Override data directory")
     eval_parser.add_argument("--version", default="v1.2", help="Dataset version")
     eval_parser.add_argument(
@@ -557,6 +567,12 @@ def _stamp_provenance(result: EvaluationResult, args: argparse.Namespace) -> Non
                 result.tool_version = f"bibtex-updater {version}"
         except (ImportError, OSError) as exc:  # pragma: no cover - best effort
             logging.debug("Could not probe bibtex-check version: %s", exc)
+        try:
+            from hallmark.baselines.bibtexupdater import last_source_condition
+
+            result.source_condition = last_source_condition()
+        except ImportError as exc:  # pragma: no cover - best effort
+            logging.debug("Could not read the source condition: %s", exc)
 
     split = getattr(args, "split", None)
     if not split:
@@ -947,6 +963,18 @@ def _cmd_evaluate(args: argparse.Namespace) -> int:
 
         _save_predictions(predictions, args.save_predictions)
         logging.info(f"Predictions written to {args.save_predictions}")
+
+    # A run that evaluated nothing is not a measurement. evaluate() has already
+    # said so at ERROR; refusing here is what stops it becoming a results file
+    # that the leaderboard ranks and the history log records.
+    if result.num_evaluated == 0 and result.num_entries > 0 and not args.allow_null_run:
+        print(
+            f"error: {result.tool_name} evaluated 0 of {result.num_entries} entries on "
+            f"{result.split_name}; every prediction is a fallback, so this is not a "
+            "measurement and will not be written. Pass --allow-null-run to write it anyway.",
+            file=sys.stderr,
+        )
+        return 1
 
     # Save results
     if args.output:

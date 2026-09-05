@@ -46,8 +46,9 @@ def test_a_run_that_checked_nothing_is_marked_unevaluated(monkeypatch):
     """Every batch timing out is a failed run, not a run with no findings.
 
     Originally this asserted a RuntimeError. Refusing outright also discarded
-    partial runs, so the run now returns predictions carrying evaluated=False
-    and the metrics layer declines to score them.
+    partial runs, so the run now returns predictions carrying evaluated=False;
+    evaluate() logs the null run at ERROR and the CLI refuses to write it
+    (tests/test_cli_refuses_a_null_run.py).
     """
     monkeypatch.setattr(harc, "_run_harcx_batch", lambda *a, **k: ({}, set(), True))
     preds = harc._run_harc_batches(

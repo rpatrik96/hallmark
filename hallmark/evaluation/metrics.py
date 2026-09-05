@@ -2033,6 +2033,8 @@ def _make_aggressive_predictions(
                     label="HALLUCINATED",
                     confidence=0.55,
                     reason="[aggressive mode: missing prediction treated as HALLUCINATED]",
+                    # The tool produced nothing for this entry.
+                    evaluated=False,
                 )
             )
         elif pred.label == "UNCERTAIN":
@@ -2050,6 +2052,7 @@ def _make_aggressive_predictions(
                     source=pred.source,
                     predicted_hallucination_type=pred.predicted_hallucination_type,
                     cascade_stage=pred.cascade_stage,
+                    evaluated=pred.evaluated,
                 )
             )
         else:
