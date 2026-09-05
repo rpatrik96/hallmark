@@ -141,6 +141,25 @@ ABSTENTION_STATUSES: frozenset[str] = frozenset(
     }
 )
 
+#: Why each abstention status abstained, in bibtex-check's own terms. "No source
+#: answered" described only the outage statuses: ``unconfirmed`` means a record
+#: was found and a claimed field could not be confirmed, ``skipped`` means the
+#: entry type is not verified at all, and the strict preprint-year warning is a
+#: decision bibtex-check left to the user.
+ABSTENTION_REASONS: dict[str, str] = {
+    "unconfirmed": (
+        "a record was found but a claimed field could not be confirmed against any source"
+    ),
+    "api_error": "the source lookup failed (API error)",
+    "network_error": "the source lookup failed (network error)",
+    "coverage_incomplete": "the lookup did not complete against every source",
+    "skipped": "bibtex-check does not verify this entry type",
+    "strict_warn_preprint_year": (
+        "strict mode flagged a preprint-year discrepancy and left the decision to the user"
+    ),
+    "strict_warn_cnv": "strict mode relabelled an unconfirmed lookup",
+}
+
 #: Set to ``1`` to restore the pre-fix mapping, where an abstention is written as
 #: a committed VALID. Reproduces the published ``bibtex-updater`` rows exactly;
 #: it does not make them right.
@@ -941,8 +960,21 @@ def _parse_jsonl_output(
             mismatched = record.get("mismatched_fields", [])
             api_sources = record.get("api_sources", [])
             errors = record.get("errors", [])
+            p_valid = record.get("p_valid")
 
-            label = STATUS_TO_LABEL.get(status, "VALID")
+            # Under --strict-warn-cnv bibtex-check relabels NOT_FOUND and
+            # UNCONFIRMED to one status. The record keeps p_valid through the
+            # promotion -- 0.35 for a not_found origin, 0.5 for unconfirmed --
+            # so the detection (51 of 52 not_found records on dev_public sit on
+            # HALLUCINATED entries) need not be surrendered to the relabel.
+            cnv_from_not_found = (
+                status == "strict_warn_cnv"
+                and isinstance(p_valid, (int, float))
+                and float(p_valid) < 0.5
+            )
+            effective_status = "not_found" if cnv_from_not_found else status
+
+            label = STATUS_TO_LABEL.get(effective_status, "VALID")
 
             # Post-1.2.0 records carry ``coverage_incomplete``: the abstention
             # was reached while sources errored / were throttled, so a
@@ -951,7 +983,7 @@ def _parse_jsonl_output(
             # of fabrication. For all other statuses the flag is informational
             # and the label mapping is unchanged.
             incomplete_not_found = (
-                status == "not_found" and record.get("coverage_incomplete") is True
+                effective_status == "not_found" and record.get("coverage_incomplete") is True
             )
             if incomplete_not_found:
                 label = "VALID"
@@ -962,11 +994,10 @@ def _parse_jsonl_output(
             # rather than counting as committed VALID, so the DR/FPR/F1 triple
             # becomes the selective one. Set HALLMARK_BTU_ABSTENTION_AS_VALID=1
             # to reproduce a published row under the old convention.
-            is_abstention = status in ABSTENTION_STATUSES or incomplete_not_found
+            is_abstention = effective_status in ABSTENTION_STATUSES or incomplete_not_found
             if is_abstention and not abstentions_are_committed_valid():
                 label = "UNCERTAIN"
 
-            p_valid = record.get("p_valid")
             if incomplete_not_found:
                 confidence = 0.45
             elif p_valid is not None:
@@ -992,9 +1023,15 @@ def _parse_jsonl_output(
                     confidence = raw_confidence
 
             reason_parts = [f"Status: {status}"]
+            if cnv_from_not_found:
+                reason_parts.append("relabelled not_found under --strict-warn-cnv")
             if is_abstention:
+                if incomplete_not_found:
+                    cause = ABSTENTION_REASONS["coverage_incomplete"]
+                else:
+                    cause = ABSTENTION_REASONS.get(status, "no source answered")
                 reason_parts.append(
-                    "Abstention: no source answered, so this is not a verdict"
+                    f"Abstention: {cause}, so this is not a verdict"
                     + ("" if label == "UNCERTAIN" else " (scored as committed VALID)")
                 )
             if incomplete_not_found:
