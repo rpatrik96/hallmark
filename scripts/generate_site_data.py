@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Generate site/data/site_data.js for the companion website (site/).
+"""Generate companion-site data and the canonical README results table.
 
 Reads only released, tracked artifacts:
   - data/v1.2/metadata.json                    (corpus composition)
@@ -17,14 +17,17 @@ Run from the repo root (or anywhere): python scripts/generate_site_data.py
 
 from __future__ import annotations
 
+import csv
 import datetime
 import json
 import random
+import sys
 from pathlib import Path
 from typing import Any
 
 ROOT = Path(__file__).resolve().parents[1]
 OUT = ROOT / "site" / "data" / "site_data.js"
+MAIN_RESULTS_OUT = ROOT / "tables" / "main_results_dev_public.csv"
 SEED = 8042  # matches the corpus build seed
 
 BR = ROOT / "data" / "v1.2" / "baseline_results"
@@ -48,7 +51,7 @@ CATEGORIES = [
 # paper's ranking exclusions (co-designed block; HaRC's coverage caveat).
 MODELS = [
     ("doi_only", "DOI-only", CAT_DB, True, None),
-    ("harc_with_s2key", "HaRC (S2 key)", CAT_DB, False, "excluded in paper"),
+    ("harc_with_s2key", "HaRC (S2 key)", CAT_DB, False, "pre-relabel labels"),
     ("bibtexupdater", "bibtex-updater", CAT_DB, False, "co-designed"),
     ("llm_openai", "GPT-5.1", CAT_LLM, True, None),
     ("llm_openai_gpt54", "GPT-5.4", CAT_LLM, True, None),
@@ -96,6 +99,45 @@ MODELS = [
         "Cascade: btu → Sonnet (aggressive)",
         CAT_AGENTIC,
         False,
+        "co-designed",
+    ),
+]
+
+# README order. Category rows are inserted by the document rather than stored in
+# the CSV so every data row names exactly one released result.
+MAIN_RESULTS = [
+    ("doi_only", "DOI-only", "citation-database"),
+    ("llm_openrouter_gemini_pro", "Gemini 2.5 Pro", "zero-shot"),
+    ("llm_openrouter_claude_opus_4_7", "Claude Opus 4.7", "zero-shot"),
+    ("llm_openrouter_claude_sonnet_4_6", "Claude Sonnet 4.6", "zero-shot"),
+    ("llm_openrouter_gemini_flash", "Gemini 2.5 Flash", "zero-shot"),
+    ("llm_openrouter_llama_4_maverick", "Llama 4 Maverick", "zero-shot"),
+    ("llm_openai_gpt54", "GPT-5.4 (zero-shot)", "zero-shot"),
+    ("llm_openrouter_mistral", "Mistral Large", "zero-shot"),
+    ("llm_openai", "GPT-5.1 (zero-shot)", "zero-shot"),
+    ("llm_openrouter_qwen", "Qwen3-235B", "zero-shot"),
+    ("llm_openrouter_qwen_max", "Qwen3-VL-235B", "zero-shot"),
+    ("llm_openrouter_deepseek_r1", "DeepSeek-R1", "zero-shot"),
+    ("llm_openrouter_deepseek_v3", "DeepSeek-V3.2", "zero-shot"),
+    (
+        "llm_agentic_openai",
+        "GPT-5.1 + CrossRef/OpenAlex/arXiv",
+        "agentic",
+    ),
+    (
+        "llm_agentic_btu_openai",
+        "GPT-5.1 + bibtex-updater (tool optional)",
+        "agentic",
+    ),
+    (
+        "llm_agentic_btu_sonnet_4_6",
+        "Sonnet 4.6 + bibtex-updater (tool optional)",
+        "agentic",
+    ),
+    ("bibtexupdater", "bibtex-updater", "co-designed"),
+    (
+        "llm_tool_augmented",
+        "GPT-5.1 + bibtex-updater (always-call; output in prompt)",
         "co-designed",
     ),
 ]
@@ -729,6 +771,95 @@ def ppv(dr: float | None, fpr: float | None, base_rate: float = 0.02) -> float |
     return dr * base_rate / denom
 
 
+def write_main_results_table() -> None:
+    """Write the README's dev_public table from released result artifacts."""
+    if str(ROOT) not in sys.path:
+        sys.path.insert(0, str(ROOT))
+
+    from hallmark.dataset.loader import load_split
+    from hallmark.dataset.schema import load_predictions
+    from hallmark.evaluation.metrics import evaluate
+    from hallmark.evaluation.table_provenance import record_table
+    from scripts.check_results_freshness import KNOWN_STALE
+
+    fields = [
+        "tool",
+        "split",
+        "display_name",
+        "category",
+        "detection_rate",
+        "false_positive_rate",
+        "f1_hallucination",
+        "mcc",
+        "tier_weighted_f1",
+        "ece",
+        "coverage",
+        "delta_fpr",
+        "known_stale",
+    ]
+    rows = []
+    inputs: list[Path] = []
+    for tool, display_name, category in MAIN_RESULTS:
+        dev_path = BR / f"{tool}_dev_public.json"
+        if dev_path.exists():
+            dev = load_json(dev_path)
+            inputs.append(dev_path)
+        else:
+            # The always-call run has only persisted per-entry predictions on
+            # dev_public. Re-score them offline against the committed split; no
+            # baseline or API is invoked.
+            predictions_path = BR / f"{tool}_dev_public.jsonl"
+            split_path = ROOT / "data" / "v1.2" / "dev_public.jsonl"
+            result = evaluate(
+                load_split("dev_public"),
+                load_predictions(predictions_path),
+                tool_name=tool,
+                split_name="dev_public",
+            )
+            dev = result.to_dict()
+            inputs.extend((predictions_path, split_path))
+
+        test_path = BR / f"{tool}_test_public.json"
+        test = load_json(test_path) if test_path.exists() else None
+        if test is not None:
+            inputs.append(test_path)
+
+        n = dev["num_entries"]
+        coverage = 1.0 - dev.get("num_uncertain", 0) / n
+        delta_fpr = (
+            test["false_positive_rate"] - dev["false_positive_rate"] if test is not None else None
+        )
+        rows.append(
+            {
+                "tool": tool,
+                "split": "dev_public",
+                "display_name": display_name,
+                "category": category,
+                "detection_rate": f"{dev['detection_rate']:.4f}",
+                "false_positive_rate": f"{dev['false_positive_rate']:.4f}",
+                "f1_hallucination": f"{dev['f1_hallucination']:.4f}",
+                "mcc": f"{dev['mcc']:.4f}",
+                "tier_weighted_f1": f"{dev['tier_weighted_f1']:.4f}",
+                "ece": f"{dev['ece']:.4f}",
+                "coverage": f"{coverage:.4f}",
+                "delta_fpr": f"{delta_fpr:.4f}" if delta_fpr is not None else "",
+                "known_stale": str(dev_path.name in KNOWN_STALE).lower(),
+            }
+        )
+
+    MAIN_RESULTS_OUT.parent.mkdir(parents=True, exist_ok=True)
+    with MAIN_RESULTS_OUT.open("w", encoding="utf-8", newline="") as fh:
+        writer = csv.DictWriter(fh, fieldnames=fields, lineterminator="\n")
+        writer.writeheader()
+        writer.writerows(rows)
+    record_table(
+        MAIN_RESULTS_OUT,
+        inputs,
+        generator="scripts/generate_site_data.py",
+        repo_root=ROOT,
+    )
+
+
 def main() -> None:
     metadata = load_json(ROOT / "data" / "v1.2" / "metadata.json")
 
@@ -991,7 +1122,7 @@ def main() -> None:
                 "category": cat,
                 "ranked": ranked,
                 "tag": tag,
-                "default_on": True,
+                "default_on": tool != "harc_with_s2key",
             }
             for tool, name, cat, ranked, tag in MODELS
         ],
@@ -1020,6 +1151,8 @@ def main() -> None:
     print(f"wrote {OUT.relative_to(ROOT)} ({size_kb:.0f} KB)")
     print(f"splits: {[(s, len(r)) for s, r in results.items()]}")
     print(f"examples: {len(examples)}")
+    write_main_results_table()
+    print(f"wrote {MAIN_RESULTS_OUT.relative_to(ROOT)}")
 
 
 if __name__ == "__main__":

@@ -16,7 +16,11 @@ from hallmark.baselines.cascade import _aggressive_fallback
 from hallmark.baselines.common import fallback_predictions, run_with_prescreening
 from hallmark.baselines.prescreening import PreScreenResult, merge_with_predictions
 from hallmark.dataset.schema import BenchmarkEntry, BlindEntry, Prediction
-from hallmark.evaluation.metrics import _make_aggressive_predictions, run_evaluated_nothing
+from hallmark.evaluation.metrics import (
+    _make_aggressive_predictions,
+    evaluate,
+    run_evaluated_nothing,
+)
 
 
 def _blind(key: str) -> BlindEntry:
@@ -112,9 +116,26 @@ class TestAggressiveEvalModeKeepsTheFlag:
         assert all(p.label == "HALLUCINATED" for p in remapped)
         assert all(p.evaluated is False for p in remapped)
 
-    def test_a_missing_prediction_is_synthesised_as_unevaluated(self):
-        remapped = _make_aggressive_predictions(self._entries(), [])
-        assert all(p.evaluated is False for p in remapped)
+    def test_a_missing_prediction_is_synthesised_as_an_answer(self):
+        """The remap covers a prediction the tool made; a missing entry has none.
+
+        Aggressive mode scores an unanswered entry as HALLUCINATED by
+        convention, so its synthesized record has to be an answer or every
+        scoring site skips it and the mode collapses onto conservative.
+        ``evaluate`` measures coverage and the evaluated count from the caller's
+        own predictions, so the record still cannot pass for a response.
+        """
+        entries = self._entries()
+        remapped = _make_aggressive_predictions(entries, [])
+
+        assert all(p.label == "HALLUCINATED" for p in remapped)
+        assert all(p.evaluated is True for p in remapped)
+        assert all("aggressive mode" in p.reason for p in remapped)
+
+        result = evaluate(entries, [], eval_mode="aggressive")
+        assert result.detection_rate == 1.0
+        assert result.coverage == 0.0
+        assert result.num_evaluated == 0
 
 
 def test_both_variants_backfill_is_marked_unevaluated():

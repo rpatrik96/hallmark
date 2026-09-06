@@ -390,10 +390,19 @@ class TestToolAugmentedKwargsForwarding:
             reason="mocked",
         )
 
-        with patch(
-            "hallmark.baselines.llm_verifier._verify_with_openai_compatible",
-            return_value=[dummy_pred],
-        ) as mock_verify:
+        # This call passes no tool_evidence_path, so it takes the live branch.
+        # Without the patch it shells out to an installed bibtex-check and
+        # queries the sources over the network.
+        with (
+            patch(
+                "hallmark.baselines.llm_tool_augmented.save_tool_evidence",
+                return_value={},
+            ),
+            patch(
+                "hallmark.baselines.llm_verifier._verify_with_openai_compatible",
+                return_value=[dummy_pred],
+            ) as mock_verify,
+        ):
             verify_tool_augmented(
                 [_make_entry()],
                 model="gpt-5.1",

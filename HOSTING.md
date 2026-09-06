@@ -1,6 +1,6 @@
 # HOSTING
 
-Release and distribution plan for HALLMARK v1.0.
+Release and distribution plan for HALLMARK v1.2.3.
 
 ---
 
@@ -80,7 +80,7 @@ submission instructions.
 ## Versioning
 
 The `version` field in `data/v1.2/metadata.json` tracks the dataset version using semver.
-Current version: **1.0**.
+Current version: **1.2.3**.
 
 Breaking schema changes increment the major version and receive a new `data/vX.Y/` directory.
 Backward-compatible additions increment the minor version in-place.

@@ -55,6 +55,8 @@ STATUS_TO_TYPE: dict[str, str] = {
     "author_mismatch": "swapped_authors",
     "year_mismatch": "hybrid_fabrication",
     "title_mismatch": "chimeric_title",
+    # ``_detect_chimeric_title`` is the sole emitter (fact_checker.py:2888).
+    "hallucinated": "chimeric_title",
     "preprint_only": "preprint_as_published",
     "url_not_found": "fabricated_doi",
     "url_content_mismatch": "near_miss_title",
@@ -103,6 +105,7 @@ ROUTE_TO_STAGE2: set[str] = {
     "unconfirmed",
     "strict_warn_preprint_year",
     "strict_warn_cnv",
+    "parse_error",
 }
 
 

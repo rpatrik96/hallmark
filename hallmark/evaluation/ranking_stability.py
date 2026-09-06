@@ -274,7 +274,7 @@ def ranking_sensitivity_analysis(
 
     for w in weight_samples:
         # Scale to sum to 6 (like default 1+2+3=6) for comparable magnitudes
-        weights = {1: float(w[0]) * 3, 2: float(w[1]) * 3, 3: float(w[2]) * 3}
+        weights = {1: float(w[0]) * 6, 2: float(w[1]) * 6, 3: float(w[2]) * 6}
         scores = _compute_twf1(weights)
         ranking = sorted(scores.items(), key=lambda x: -x[1])
         order = [t for t, _ in ranking]

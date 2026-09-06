@@ -130,9 +130,9 @@ def refusal_message(health: BatchHealth, checkpoint_path: Path) -> str:
         f"requests, {health.coverage_incomplete} unusable answers), above the "
         f"{health.threshold:.0%} threshold. A share this high is almost always a "
         f"broken transport path — a DNS, network or proxy outage, or sustained "
-        f"throttling — rather than a property of the bibliography. Nothing was "
-        f"written to {checkpoint_path}; fix connectivity and re-run, and the "
-        f"refused entries will be retried."
+        f"throttling — rather than a property of the bibliography. The refused "
+        f"entries were not written to {checkpoint_path}; usable verdicts already "
+        f"in it stay, so the next run resumes from them and re-runs the refused keys."
     )
 
 

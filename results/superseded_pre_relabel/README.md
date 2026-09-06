@@ -15,7 +15,7 @@ relabel does, and three are worse than stale.
 | file | here | canonical | what happened |
 |---|---|---|---|
 | `bibtexupdater_test_public.json` | DR .130, n=840 | DR .877, n=831 | a broken run, scored against a pre-dedup split |
-| `doi_only_test_public.json` | DR .278, n=840 | DR .387, n=831 | same pre-dedup split |
+| `doi_only_test_public.json` | DR .278, n=840 | DR .191, n=831 | same pre-dedup split; the canonical file was re-run after the HTTP-202 fix (`829d2d4`) |
 | `harc_dev_public.json` | DR .143, n=1079 | DR .155, n=521 | **the canonical file is the truncated one here** — n=521 matches no split, and `validate-results --strict` fails on it today |
 
 They are kept rather than deleted because they are the provenance of any figure

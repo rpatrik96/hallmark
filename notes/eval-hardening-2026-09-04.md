@@ -135,7 +135,7 @@ as per-entry verdicts. All carry label UNCERTAIN, so none was scored as a
 substantive prediction, which bounds the damage to miscounted coverage. They fall
 in `dev_public` (124), `test_public` (183) and the cross-domain splits;
 `stress_test` and `hidden` have none. All 180 of DeepSeek-R1's UNCERTAIN records
-on `test_public` are of this kind, so its ΔFPR of −0.310 — the largest cross-split
+on `test_public` are of this kind, so its ΔFPR of −.303 — the largest cross-split
 shift in the main table — compares a dev figure over 1,101 answered entries
 against a test figure over 651.
 
@@ -269,7 +269,7 @@ Scoring every tool three ways — as shipped, with the four real-paper modes
 (`wrong_venue`, `preprint_as_published`, `partial_author_list`,
 `arxiv_version_mismatch`) removed from the scored set, and with them as negatives
 — **the ranking is not stable and the top changes identity.** On `test_public`
-14 of 21 tools move under the first fold and 17 of 21 under the second;
+13 of 20 tools move under the first fold and 16 of 20 under the second;
 `dev_public` agrees. `cascade_db_diagnosis` leads as shipped at MCC 0.897;
 `bibtexupdater` takes first when they are scored as false accusations.
 
@@ -277,7 +277,7 @@ The mechanism, verified independently from the committed `per_type_metrics`:
 those four modes are **26.8% of the positive class** on `test_public` (139 of
 519) and **27.0% of the leading cascade's detections** (139 of 514), every one of
 which it converts — DR 1.000. The spread across tools is the part worth keeping:
-bibtexupdater 20.0%, Sonnet 4.6 23.2%, `doi_only` 9.1%, median DR 0.755 across 21
+bibtexupdater 20.0%, Sonnet 4.6 23.2%, `doi_only` 9.1%, median DR 0.740 across 20
 tools. A tool's rank depends heavily on how much of its credit comes from
 flagging real papers described wrongly, and nothing in the reporting shows it.
 
@@ -286,8 +286,9 @@ flagging real papers described wrongly, and nothing in the reporting shows it.
 sits at DR 1.000 across all 46 entries. So a stress-test detection rate is mostly
 a measure of catching correct citations described imprecisely.
 
-`hybrid_fabrication` does **not** fold with them, and folding it alone moves
-nothing (Kendall tau 1.000, no tool changes position). The distinction is that
+`hybrid_fabrication` does **not** fold with them. Folding it out moves 0 tools,
+but scoring it as false positives moves 6 of 20 tools on `test_public` and 6 of
+19 on `dev_public`. The distinction is that
 the other four mean the work exists and the entry describes it inaccurately,
 while this one means the entry claims one work and the DOI resolves to another —
 a fabrication if the index is right, a correct citation if the index is corrupt.

@@ -22,10 +22,11 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from hallmark.baselines.registry import run_baseline
+from hallmark.baselines.registry import run_baseline_with_tool_run
 from hallmark.dataset.loader import load_split
 from hallmark.dataset.schema import EvaluationResult
 from hallmark.evaluation.metrics import evaluate
+from hallmark.evaluation.provenance import stamp_provenance
 from hallmark.evaluation.validate import compute_sha256
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s: %(message)s")
@@ -86,10 +87,13 @@ def main() -> int:
     }
 
     logger.info("Running %s with total_timeout=%.0fs", args.baseline, args.total_timeout)
-    predictions = run_baseline(args.baseline, entries, split=args.split, **runner_kwargs)
+    predictions, tool_run = run_baseline_with_tool_run(
+        args.baseline, entries, split=args.split, **runner_kwargs
+    )
 
     eval_result = evaluate(entries, predictions, tool_name=args.baseline, split_name=args.split)
     assert isinstance(eval_result, EvaluationResult)
+    stamp_provenance(eval_result, args.split, None, args.version, args.baseline, tool_run=tool_run)
 
     out_path = results_dir / f"{args.baseline}_{args.split}.json"
     out_path.write_text(json.dumps(eval_result.to_dict(), indent=2))
@@ -106,8 +110,7 @@ def main() -> int:
             "files": {},
         }
 
-    rel_path = str(out_path.relative_to(results_dir.parent.parent))
-    manifest["files"][rel_path] = {
+    manifest["files"][out_path.name] = {
         "sha256": compute_sha256(out_path),
         "baseline": args.baseline,
         "split": args.split,
