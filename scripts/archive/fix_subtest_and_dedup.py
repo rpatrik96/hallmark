@@ -129,6 +129,12 @@ def compute_split_metadata(entries: list[dict], file: str) -> dict:
 
 
 def main() -> None:
+    raise SystemExit(
+        "fix_subtest_and_dedup.py is archived and superseded by scripts/build_dataset.py: "
+        "it rewrites the live released splits in place by absolute path, so copy it out "
+        "of the repository and edit those paths if you really mean to run it."
+    )
+
     dev = load_jsonl(DATA_DIR / "dev_public.jsonl")
     test = load_jsonl(DATA_DIR / "test_public.jsonl")
     stress = load_jsonl(DATA_DIR / "stress_test.jsonl")

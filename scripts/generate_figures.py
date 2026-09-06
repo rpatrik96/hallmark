@@ -483,8 +483,14 @@ def fig_overall_comparison(results: list[dict], output_dir: Path) -> None:
 
 def fig_temporal_robustness(results_dir: Path, output_dir: Path) -> None:
     """Two-panel figure: DR and FPR (baseline vs probe) across all models."""
-    # Discover all temporal_probe_*.json files
-    probe_files = sorted(results_dir.glob("temporal_probe_*.json"))
+    # Discover all temporal_probe_*.json files. They live under
+    # ``results/archive/``: a probe report scores no benchmark split, so the
+    # freshness gate over ``results/`` cannot judge it. The top level is still
+    # read, for a probe written by an older run.
+    probe_files = sorted(
+        list(results_dir.glob("temporal_probe_*.json"))
+        + list((results_dir / "archive").glob("temporal_probe_*.json"))
+    )
     # Exclude the probe set JSONL
     probe_files = [p for p in probe_files if p.suffix == ".json"]
     if not probe_files:

@@ -58,10 +58,7 @@ STATUS_TO_TYPE: dict[str, str] = {
     # ``_detect_chimeric_title`` is the sole emitter (fact_checker.py:2888).
     "hallucinated": "chimeric_title",
     "preprint_only": "preprint_as_published",
-    "url_not_found": "fabricated_doi",
     "url_content_mismatch": "near_miss_title",
-    "book_not_found": "plausible_fabrication",
-    "working_paper_not_found": "plausible_fabrication",
     # bibtex-updater >=1.2.0 statuses with positive problem evidence
     "arxiv_id_mismatch": "hybrid_fabrication",  # cited arXiv ID → different paper
     "doi_mismatch": "hybrid_fabrication",  # cited DOI → different paper
@@ -106,6 +103,13 @@ ROUTE_TO_STAGE2: set[str] = {
     "strict_warn_preprint_year",
     "strict_warn_cnv",
     "parse_error",
+    # A dead link is absence evidence about the page, not about the publication
+    # the entry cites: ``url_not_found`` decided ``fabricated_doi`` at Stage 1,
+    # which convicts an entry of fabrication on link rot. The wrapper treats it
+    # as an abstention, and Stage 2 is where an entry with no evidence goes.
+    "url_not_found",
+    "book_not_found",
+    "working_paper_not_found",
 }
 
 

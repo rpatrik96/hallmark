@@ -23,7 +23,14 @@ check it was reaching for, and it survives a clone.
 A result predating ``split_sha256`` is reported as **unverifiable**, not stale.
 Treating it as stale would make the guard red until everything is regenerated,
 which is exactly how the previous one came to be switched off; the count check
-still applies to it.
+still applies to it. A result whose ``per_type_metrics`` rows predate
+``num_valid``/``precision`` is reported the same way: those rows scored their
+false positives inside the type, so their f1 is 2*DR/(1+DR) and their
+false-positive rate 0.0, and 39 of the 42 released results carry them.
+
+Files under ``<results-dir>/archive/`` are skipped. A run kept for the record --
+a CI sample, a smoke run, a probe -- scores no current split, and parking it
+there is how it stops being a staleness report nobody can act on.
 
 The split scored by a result is taken from its ``split_name`` field, falling
 back to the ``<tool>_<split>.json`` filename suffix.
@@ -63,7 +70,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from hallmark.dataset.loader import DEFAULT_DATA_DIR, SPLIT_PATHS, load_split
 from hallmark.evaluation.table_provenance import TableReport, check_tables
-from hallmark.evaluation.validate import compute_sha256
+from hallmark.evaluation.validate import ARCHIVE_DIR_NAME, compute_sha256, iter_result_files
 
 logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
 logger = logging.getLogger(__name__)
@@ -104,6 +111,19 @@ KNOWN_STALE: dict[str, str] = {
 #: regenerated, never by editing the reason.
 KNOWN_STALE_TABLES: dict[str, str] = {}
 
+#: Fields a per-type row carries under the current definition. A row written
+#: before it has only ``detection_rate``, ``false_positive_rate``, ``f1`` and
+#: ``count``: false positives were counted inside the type rather than against
+#: the split's valid pool, so every hallucination type reports a false-positive
+#: rate of 0.0 and an f1 of 2*DR/(1+DR). The two definitions are not comparable,
+#: and the released directory publishes ``per_type_metrics.f1`` under both.
+#:
+#: A result carrying the old rows is reported **unverifiable**, on the contract
+#: that already covers a result predating ``split_sha256``: 39 of the 42
+#: released results carry it, and a fatal check tripping on all of them at once
+#: is how a guard gets switched off. They are regenerated with the next release.
+CURRENT_PER_TYPE_FIELDS: tuple[str, ...] = ("num_valid", "precision")
+
 
 @dataclass
 class TableFreshnessResult:
@@ -126,11 +146,15 @@ class StalenessReport:
     split: str | None
     is_stale: bool
     reasons: list[str] = field(default_factory=list)
-    #: True when the result predates ``split_sha256`` and so cannot be checked
-    #: against a split revision. Reported, never fatal -- otherwise the guard
-    #: would be red until every result is regenerated, which is how the previous
-    #: one ended up switched off.
+    #: True when something about the result cannot be checked at all: it
+    #: predates ``split_sha256``, or its per-type block predates the current
+    #: definition. Reported, never fatal -- otherwise the guard would be red
+    #: until every result is regenerated, which is how the previous one ended up
+    #: switched off.
     unverifiable: bool = False
+    #: The specific gap, so the summary can say which one it is.
+    missing_split_hash: bool = False
+    superseded_per_type: bool = False
 
 
 @dataclass
@@ -160,6 +184,21 @@ def _infer_split(payload: dict, filename: str) -> str | None:
     stem = Path(filename).stem
     matches = [s for s in SPLIT_PATHS if stem == s or stem.endswith(f"_{s}")]
     return max(matches, key=len) if matches else None
+
+
+def _superseded_per_type_rows(per_type: dict) -> int:
+    """Count per-type rows written under the superseded definition.
+
+    A current row names the valid pool it scored false positives against
+    (``num_valid``) and reports ``precision``; an older one carries neither.
+    """
+    return sum(
+        1
+        for name, row in per_type.items()
+        if name != "valid"
+        and isinstance(row, dict)
+        and not any(key in row for key in CURRENT_PER_TYPE_FIELDS)
+    )
 
 
 def _split_counts(split: str, version: str, data_dir: Path) -> dict[str, int]:
@@ -204,10 +243,7 @@ def check_freshness(
     counts_cache: dict[str, dict[str, int]] = {}
     hash_cache: dict[str, str] = {}
 
-    for result_path in sorted(results_dir.glob("*.json")):
-        if result_path.name == "manifest.json":
-            continue
-
+    for result_path in iter_result_files(results_dir):
         try:
             payload = json.loads(result_path.read_text())
         except (OSError, json.JSONDecodeError) as exc:
@@ -254,6 +290,7 @@ def check_freshness(
         recorded_hash = probe.get("split_sha256")
         if recorded_hash is None:
             report.unverifiable = True
+            report.missing_split_hash = True
             report.reasons.append(
                 "no split_sha256 recorded — cannot verify which split revision this scored"
             )
@@ -295,6 +332,23 @@ def check_freshness(
                 report.reasons.append(
                     f"per_type_metrics counts sum to {per_type_positives} positives != "
                     f"current split {current['num_hallucinated']}"
+                )
+
+            # (4) per-type definition check: a row predating num_valid/precision
+            # scored its false positives inside the type, so its f1 is
+            # 2*DR/(1+DR) and its false-positive rate 0.0. The number is not
+            # wrong under the definition that produced it and it is not
+            # comparable with the current one, which is why this is reported
+            # rather than failed.
+            superseded_rows = _superseded_per_type_rows(per_type)
+            if superseded_rows:
+                report.unverifiable = True
+                report.superseded_per_type = True
+                report.reasons.append(
+                    f"{superseded_rows} per_type_metrics row(s) predate "
+                    f"{'/'.join(CURRENT_PER_TYPE_FIELDS)}: their f1 is 2*DR/(1+DR) and their "
+                    "false-positive rate 0.0, so they cannot be compared with the current "
+                    "definition — regenerated with the next release"
                 )
 
         reports.append(report)
@@ -371,7 +425,15 @@ def _report_tables(result: TableFreshnessResult) -> None:
 
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--results-dir", type=Path, default=DEFAULT_RESULTS_DIR)
+    parser.add_argument(
+        "--results-dir",
+        type=Path,
+        default=DEFAULT_RESULTS_DIR,
+        help=(
+            "Directory of aggregate result JSONs to check "
+            f"(files under <results-dir>/{ARCHIVE_DIR_NAME}/ are skipped)."
+        ),
+    )
     parser.add_argument(
         "--tables-dir",
         type=Path,
@@ -421,6 +483,8 @@ def main() -> None:
         _report_tables(tables)
 
     unverifiable = [r.result_file for r in result.reports if r.unverifiable]
+    no_hash = [r.result_file for r in result.reports if r.missing_split_hash]
+    old_per_type = [r.result_file for r in result.reports if r.superseded_per_type]
     if result.passed and (tables is None or tables.passed):
         known = [f for f in result.stale_files if f in KNOWN_STALE]
         verified = len(result.reports) - len(unverifiable)
@@ -430,14 +494,24 @@ def main() -> None:
                 len(known),
                 ", ".join(known),
             )
+        if old_per_type:
+            logger.warning(
+                "%d file(s) carry per_type_metrics rows written under the superseded "
+                "definition (no %s), so their per-type f1 is 2*DR/(1+DR) and their per-type "
+                "false-positive rate 0.0: not comparable with the current rows, and "
+                "regenerated with the next release.",
+                len(old_per_type),
+                "/".join(CURRENT_PER_TYPE_FIELDS),
+            )
         logger.info(
             "No unexpected staleness: %d of %d result file(s) fresh "
-            "(%d verified against the split hash, %d predate split_sha256 and were "
-            "checked on counts only).",
+            "(%d fully verified, %d predate split_sha256 and were checked on counts only, "
+            "%d carry the superseded per-type definition).",
             len(result.reports) - len(known),
             len(result.reports),
             verified,
-            len(unverifiable),
+            len(no_hash),
+            len(old_per_type),
         )
         if tables is not None:
             known_tables = [t for t in tables.stale_tables if t in KNOWN_STALE_TABLES]
