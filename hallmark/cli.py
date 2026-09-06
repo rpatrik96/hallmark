@@ -703,14 +703,15 @@ def _cmd_evaluate(args: argparse.Namespace) -> int:
     if aggressive_result is not None:
         _stamp_provenance(aggressive_result, args)
 
-    if result.response_coverage < 1.0:
+    response_coverage = result.response_coverage
+    if response_coverage is not None and response_coverage < 1.0:
         logging.warning(
-            "Response coverage is %.1f%% (%d/%d entries). Missing predictions are treated as VALID.",
-            result.response_coverage * 100,
-            int(result.response_coverage * result.num_entries),
+            "Response coverage is %.1f%% (%d/%d entries). Missing predictions are not scored.",
+            response_coverage * 100,
+            int(response_coverage * result.num_entries),
             result.num_entries,
         )
-    if result.coverage < result.response_coverage:
+    if response_coverage is not None and result.coverage < response_coverage:
         logging.warning(
             "Decision coverage is %.1f%% because %d uncertain predictions are abstentions.",
             result.coverage * 100,
