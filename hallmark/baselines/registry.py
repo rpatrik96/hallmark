@@ -10,10 +10,13 @@ import logging
 import os
 from collections.abc import Callable
 from dataclasses import dataclass, field
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from hallmark.baselines.common import fallback_predictions
 from hallmark.dataset.schema import BenchmarkEntry, BlindEntry, Prediction
+
+if TYPE_CHECKING:
+    from hallmark.baselines.bibtexupdater import BibtexCheckRun
 
 logger = logging.getLogger(__name__)
 
@@ -26,6 +29,7 @@ __all__ = [
     "list_baselines",
     "register",
     "run_baseline",
+    "run_baseline_with_tool_run",
 ]
 
 
@@ -161,6 +165,27 @@ def run_baseline(
         ValueError: If baseline is unknown.
         ImportError: If required packages are missing.
     """
+    predictions, _ = run_baseline_with_tool_run(name, entries, split=split, **kwargs)
+    return predictions
+
+
+def run_baseline_with_tool_run(
+    name: str,
+    entries: list[BenchmarkEntry],
+    split: str | None = None,
+    **kwargs: Any,
+) -> tuple[list[Prediction], BibtexCheckRun | None]:
+    """Run a baseline and report the bibtex-check run it made, if any.
+
+    A caller that persists the result needs to know whether this baseline
+    started bibtex-check and what condition that call observed. It gets both
+    from the run returned here, so provenance never has to be inferred from
+    state another baseline or another worker may have written.
+
+    Returns:
+        The predictions, and the bibtex-check run this dispatch made or None
+        when the baseline never invoked the tool.
+    """
     if name not in _REGISTRY:
         raise ValueError(f"Unknown baseline: {name}. Available: {', '.join(_REGISTRY.keys())}")
 
@@ -184,8 +209,15 @@ def run_baseline(
         if env_key:
             merged_kwargs["api_key"] = env_key
 
+    from hallmark.baselines import bibtexupdater
+
+    # Clear the wrapper's record before dispatching, so what it holds
+    # afterwards describes this baseline's run and not the previous one's.
+    bibtexupdater.reset_run_state()
+
     blind_entries = _to_blind(entries)
-    return info.runner(blind_entries, **merged_kwargs)
+    predictions = list(info.runner(blind_entries, **merged_kwargs))
+    return predictions, bibtexupdater.current_bibtex_check_run()
 
 
 # Mapping from pip package names to importable module names
