@@ -24,8 +24,19 @@ T = TypeVar("T")
 
 _DEFAULT_CACHE_DIR = Path.home() / ".cache" / "hallmark"
 
-# CLI flags whose *value* is a credential and must never reach a log file.
-_SECRET_FLAGS = frozenset({"--s2-api-key", "--api-key", "--openai-api-key", "--token"})
+# CLI flags whose *value* must never reach a log file: credentials, and the
+# contact addresses the polite-pool APIs ask for, which are personal data that
+# a committed log would publish.
+_SECRET_FLAGS = frozenset(
+    {
+        "--s2-api-key",
+        "--api-key",
+        "--openai-api-key",
+        "--token",
+        "--mailto",
+        "--openalex-mailto",
+    }
+)
 
 # Upper bound on a honoured ``Retry-After``. Servers occasionally answer with windows
 # of an hour or more; sleeping that long would stall an evaluation run, so we wait at

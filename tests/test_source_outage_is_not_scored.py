@@ -61,9 +61,21 @@ class TestSourceConditionParsing:
         assert cond == {
             "entries_with_incomplete_lookups": 285,
             "entries_total": 1119,
-            "incomplete_fraction": pytest.approx(0.255),
+            "incomplete_fraction": pytest.approx(285 / 1119),
+            "reported_fraction": pytest.approx(0.255),
             "per_source_failures": {"dblp": 275, "openalex": 26},
         }
+
+    def test_the_fraction_comes_from_the_counts_not_the_printed_percentage(self):
+        """83 of 831 prints as "10.0%" and is 0.0999, which the tool passes."""
+        cond = parse_source_condition(
+            "WARNING: 83 of 831 entries (10.0%) had at least one source lookup "
+            "that did not complete: dblp (83)"
+        )
+        assert cond is not None
+        assert cond["incomplete_fraction"] == pytest.approx(83 / 831)
+        assert cond["incomplete_fraction"] < 0.10
+        assert cond["reported_fraction"] == pytest.approx(0.10)
 
     def test_a_healthy_run_reports_no_condition(self):
         assert parse_source_condition("INFO: Loaded 1119 entries\nINFO: done") is None
@@ -134,7 +146,12 @@ def fake_bibtex_check(monkeypatch):
 
     monkeypatch.setattr(btu, "resolve_bibtex_check_bin", lambda: "/fake/bibtex-check")
     monkeypatch.setattr(btu, "bibtex_check_version", lambda binary=None: "1.2.0")
+    # Every setting these tests assert over is readable from the environment,
+    # so start each one from a known environment rather than the developer's.
     monkeypatch.delenv(ALLOW_OUTAGE_ENV, raising=False)
+    monkeypatch.delenv(btu.BIBTEX_CHECK_RATE_ENV, raising=False)
+    monkeypatch.delenv(btu.BIBTEX_CHECK_MAILTO_ENV, raising=False)
+    monkeypatch.delenv("S2_API_KEY", raising=False)
 
     def _install(
         returncode: int,
@@ -188,6 +205,49 @@ def test_threshold_fraction_is_refused_even_when_exit_is_zero(fake_bibtex_check)
     )
     with pytest.raises(SourceOutageError, match="5 of 50"):
         run_bibtex_check(_entries(), skip_prescreening=True)
+
+
+@pytest.mark.parametrize(
+    ("summary", "refused"),
+    [
+        # 83/831 = 0.0999: under the threshold, so bibtex-check exits 0 and the
+        # run is scorable. Its own log line rounds that to "10.0%".
+        ("83 of 831 entries (10.0%)", False),
+        # One entry further and the exact fraction is over the threshold.
+        ("84 of 831 entries (10.1%)", True),
+        # Exactly at the threshold, which the gate refuses.
+        ("5 of 50 entries (10.0%)", True),
+    ],
+)
+def test_the_gate_reads_the_counts_not_the_printed_percentage(fake_bibtex_check, summary, refused):
+    """bibtex-check prints a rounded percentage and gates on the exact one.
+
+    Reading the printed number back throws away a completed multi-hour run that
+    the tool itself passed as healthy.
+    """
+    fake_bibtex_check(
+        0,
+        f"WARNING: {summary} had at least one source lookup that did not complete: dblp (1).\n",
+    )
+    if refused:
+        with pytest.raises(SourceOutageError):
+            run_bibtex_check(_entries(), skip_prescreening=True)
+    else:
+        run_bibtex_check(_entries(), skip_prescreening=True)
+
+
+def test_the_condition_records_the_exact_fraction(fake_bibtex_check):
+    """The stamped provenance carries the fraction the gate used."""
+    fake_bibtex_check(
+        0,
+        "WARNING: 83 of 831 entries (10.0%) had at least one source lookup that did not "
+        "complete: dblp (83).\n",
+    )
+    run_bibtex_check(_entries(), skip_prescreening=True)
+    cond = last_source_condition()
+    assert cond is not None
+    assert cond["incomplete_fraction"] == pytest.approx(83 / 831)
+    assert cond["reported_fraction"] == pytest.approx(0.10)
 
 
 def test_wrapper_passes_its_outage_threshold_explicitly(fake_bibtex_check):
@@ -308,6 +368,48 @@ def test_command_and_condition_record_configured_pace_and_contact(
     }
     assert "scale 120/45" in caplog.text
     assert mailto not in caplog.text
+
+
+@pytest.mark.parametrize("spelling", ["separate", "joined"])
+def test_a_contact_address_passed_through_extra_args_is_masked(fake_bibtex_check, caplog, spelling):
+    """The address can arrive on the command line without the wrapper putting it
+    there, and argparse accepts both spellings."""
+    address = "leak@lab.example"
+    extra_args = ["--mailto", address] if spelling == "separate" else [f"--mailto={address}"]
+    fake_bibtex_check(0, "INFO: done\n")
+    with caplog.at_level("INFO", logger="hallmark.baselines.bibtexupdater"):
+        run_bibtex_check(_entries(), skip_prescreening=True, extra_args=extra_args)
+    assert address not in caplog.text
+    assert "***" in caplog.text
+
+
+def test_the_condition_records_the_settings_the_command_ran_with(fake_bibtex_check):
+    """argparse takes the last occurrence, so extra_args beat the wrapper's own
+    flags and the stamp has to follow the command rather than the constants."""
+    calls = fake_bibtex_check(0, "INFO: done\n")
+    run_bibtex_check(_entries(), skip_prescreening=True, extra_args=["--workers", "2"])
+    (cmd,) = calls
+    assert cmd[cmd.index("--workers") + 1] == "8", "the wrapper still sets its own default"
+    assert cmd[-2:] == ["--workers", "2"], "and the caller's override comes after it"
+    assert last_source_condition() == {
+        "rate_limit": 120,
+        "workers": 2,
+        "mailto_configured": False,
+        "mailto_domain": None,
+    }
+
+
+def test_a_contact_address_from_extra_args_reaches_the_condition(fake_bibtex_check):
+    fake_bibtex_check(0, "INFO: done\n")
+    run_bibtex_check(
+        _entries(),
+        skip_prescreening=True,
+        extra_args=["--mailto=researcher@lab.example"],
+    )
+    cond = last_source_condition()
+    assert cond is not None
+    assert cond["mailto_configured"] is True
+    assert cond["mailto_domain"] == "lab.example"
 
 
 def test_clean_exit_stderr_is_not_discarded(fake_bibtex_check, caplog):

@@ -55,7 +55,7 @@ import shutil
 import subprocess
 import tempfile
 import time
-from collections.abc import Iterable
+from collections.abc import Iterable, Sequence
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -472,6 +472,13 @@ def parse_source_condition(output: str) -> dict[str, object] | None:
 
     Availability moves outcomes, so it belongs in the result beside the numbers
     rather than only in a log a reader never sees.
+
+    ``incomplete_fraction`` is derived from the two counts, not from the
+    percentage in the line. bibtex-check prints that percentage rounded to one
+    decimal while gating on the unrounded value, so 83 of 831 entries prints as
+    "10.0%" and is 0.0999 -- healthy by the tool's own 10% threshold. Reading
+    the printed number back would refuse a run the tool passed. The printed
+    value is kept as ``reported_fraction`` so the log line stays reconstructible.
     """
     # The final summary line wins: bibtex-check may report progressively.
     matches = list(_OUTAGE_RE.finditer(output))
@@ -487,12 +494,46 @@ def parse_source_condition(output: str) -> dict[str, object] | None:
                 per_source[name.strip()] = int(count.rstrip(")"))
             except ValueError:
                 continue
+    incomplete = int(match.group(1))
+    total = int(match.group(2))
     return {
-        "entries_with_incomplete_lookups": int(match.group(1)),
-        "entries_total": int(match.group(2)),
-        "incomplete_fraction": float(match.group(3)) / 100.0,
+        "entries_with_incomplete_lookups": incomplete,
+        "entries_total": total,
+        "incomplete_fraction": (incomplete / total) if total else 0.0,
+        "reported_fraction": float(match.group(3)) / 100.0,
         "per_source_failures": per_source,
     }
+
+
+def _cmd_flag_value(cmd: Sequence[str], flag: str) -> str | None:
+    """The value *cmd* actually passes for *flag*, or None if it passes none.
+
+    ``extra_args`` are appended after the wrapper's own flags and argparse takes
+    the last occurrence, so a caller can override a setting the wrapper thinks
+    it chose. Provenance has to read the assembled command rather than the
+    constants it was built from. Both ``--flag value`` and ``--flag=value``
+    count, since argparse accepts both.
+    """
+    value: str | None = None
+    prefix = f"{flag}="
+    for index, part in enumerate(cmd):
+        if part == flag:
+            if index + 1 < len(cmd):
+                value = cmd[index + 1]
+        elif part.startswith(prefix):
+            value = part[len(prefix) :]
+    return value
+
+
+def _cmd_flag_int(cmd: Sequence[str], flag: str, default: int) -> int:
+    """``_cmd_flag_value`` as an integer, falling back to *default* when unreadable."""
+    raw = _cmd_flag_value(cmd, flag)
+    if raw is None:
+        return default
+    try:
+        return int(raw)
+    except ValueError:
+        return default
 
 
 def resolve_bibtex_check_rate_limit(default: int) -> int:
@@ -889,7 +930,6 @@ def _run_bibtex_check_subprocess(
         binary = binary or "bibtex-check"
         rate_limit = resolve_bibtex_check_rate_limit(rate_limit)
         mailto = os.environ.get(BIBTEX_CHECK_MAILTO_ENV, "").strip()
-        mailto_domain = mailto.rpartition("@")[2] or None
         # Say which build is answering. Without this the run is silent about the
         # single fact that decides whether its numbers are comparable to any
         # other run's, and PATH may be resolving an editable install.
@@ -930,12 +970,10 @@ def _run_bibtex_check_subprocess(
         if extra_args:
             cmd.extend(extra_args)
 
-        # Run bibtex-check. API keys are masked by ``redact_command``; mailto is
-        # masked here because the shared secret-flag table is outside this package.
-        logged_cmd = list(cmd)
-        if mailto:
-            logged_cmd[logged_cmd.index("--mailto") + 1] = "***"
-        logger.info("Running: %s", redact_command(logged_cmd))
+        # API keys and the contact address are masked by ``redact_command``,
+        # which reads ``_SECRET_FLAGS`` and covers every spelling and every
+        # occurrence -- including a flag that arrived through ``extra_args``.
+        logger.info("Running: %s", redact_command(cmd))
         timed_out = False
         try:
             result = subprocess.run(
@@ -961,12 +999,16 @@ def _run_bibtex_check_subprocess(
                             if isinstance(source, str):
                                 per_source_failures[source] = per_source_failures.get(source, 0) + 1
                 parsed_condition["per_source_failures"] = per_source_failures
+            # Read the settings back off the command that ran. ``extra_args``
+            # may override any of them, and a stamp that records the wrapper's
+            # constants instead would describe a run that did not happen.
+            ran_mailto = (_cmd_flag_value(cmd, "--mailto") or "").strip()
             condition = {
                 **(parsed_condition or {}),
-                "rate_limit": rate_limit,
-                "workers": BIBTEX_CHECK_WORKERS,
-                "mailto_configured": bool(mailto),
-                "mailto_domain": mailto_domain,
+                "rate_limit": _cmd_flag_int(cmd, "--rate-limit", rate_limit),
+                "workers": _cmd_flag_int(cmd, "--workers", BIBTEX_CHECK_WORKERS),
+                "mailto_configured": bool(ran_mailto),
+                "mailto_domain": ran_mailto.rpartition("@")[2] or None,
             }
             _last_source_condition = condition
             if result.returncode == 0 and result.stderr.strip():
@@ -983,7 +1025,9 @@ def _run_bibtex_check_subprocess(
             )
             # bibtex-check prints its source report below the threshold too, so
             # the report's presence proves nothing; the fraction it carries does.
-            # A strict-mode exit 4 is an outage exactly when that fraction says so.
+            # A strict-mode exit 4 is an outage exactly when that fraction says
+            # so. The fraction is the one computed from the report's counts, so
+            # the wrapper and the tool gate on the same number.
             is_source_outage = (
                 result.returncode == EXIT_SOURCE_OUTAGE
                 or incomplete_fraction >= SOURCE_OUTAGE_THRESHOLD

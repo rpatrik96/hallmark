@@ -89,9 +89,12 @@ class TestBuildConfusionMatrix:
             _entry("h1", "HALLUCINATED"),
         ]
         cm = build_confusion_matrix(entries, {})
-        # Missing predictions treated as VALID (conservative)
-        assert cm.tn == 1
-        assert cm.fn == 1
+        # An entry with no prediction is not an answer: it is skipped, not
+        # scored as VALID, so it can neither supply a true negative nor a miss.
+        assert cm.tn == 0
+        assert cm.fn == 0
+        assert cm.tp == 0
+        assert cm.fp == 0
 
     def test_mixed_results(self):
         entries = [
@@ -2024,16 +2027,14 @@ class TestEvaluateDualMode:
         assert aggr_fpr == pytest.approx(1.0)
 
     def test_evaluate_missing_predictions_aggressive(self):
-        """Missing keys: aggressive treats as HALLUCINATED, conservative as VALID."""
+        """Missing keys: aggressive treats as HALLUCINATED, conservative skips them."""
         entries = [
-            _entry("v1", "VALID"),
-            _entry("h1", "HALLUCINATED"),  # has prediction
-            _entry("h2", "HALLUCINATED"),  # NO prediction
+            _entry("h1", "HALLUCINATED"),  # answered miss
+            _entry("h2", "HALLUCINATED"),  # no prediction
+            _entry("h3", "HALLUCINATED"),  # no prediction
         ]
         predictions = [
-            _pred("v1", "VALID"),
-            _pred("h1", "HALLUCINATED"),
-            # h2 intentionally missing
+            _pred("h1", "VALID"),
         ]
         cons = evaluate(
             entries, predictions, tool_name="t", split_name="dev", eval_mode="conservative"
@@ -2041,14 +2042,17 @@ class TestEvaluateDualMode:
         aggr = evaluate(
             entries, predictions, tool_name="t", split_name="dev", eval_mode="aggressive"
         )
-        # Conservative: h2 missing → treated as VALID (fn) → DR = 1/2 = 0.5
-        assert cons.detection_rate == pytest.approx(0.5)
-        # Aggressive: h2 missing → treated as HALLUCINATED → DR = 2/2 = 1.0
-        assert aggr.detection_rate == pytest.approx(1.0)
-        # Aggressive FPR: v1 predicted VALID → no FP, FPR = 0
-        # Conservative FPR: same, = 0
-        assert cons.false_positive_rate == pytest.approx(0.0)
-        assert aggr.false_positive_rate == pytest.approx(0.0)
+        # Conservative: the two missing entries are skipped, so the answered
+        # miss is the only scored hallucination.
+        assert cons.detection_rate == pytest.approx(0.0)
+        # Aggressive: both missing entries are scored as detected hallucinations.
+        assert aggr.detection_rate == pytest.approx(2 / 3)
+        assert aggr.coverage == cons.coverage == pytest.approx(1 / 3)
+        assert aggr.response_coverage == cons.response_coverage == pytest.approx(1 / 3)
+        assert aggr.num_evaluated == cons.num_evaluated == 1
+
+        with pytest.raises(ValueError, match="Strict mode"):
+            evaluate(entries, predictions, strict=True, eval_mode="aggressive")
 
     def test_evaluate_conservative_default(self):
         """eval_mode defaults to 'conservative' and returns EvaluationResult."""
