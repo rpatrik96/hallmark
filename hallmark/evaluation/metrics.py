@@ -10,12 +10,12 @@ Evaluation Protocol:
 1. **Prediction Labels**:
    - Tools must return VALID or HALLUCINATED predictions
    - UNCERTAIN is accepted as a valid label — see UNCERTAIN Protocol below
-   - Missing predictions are treated as VALID (conservative default)
+   - Missing and unevaluated predictions are excluded from classification metrics
 
 2. **UNCERTAIN Protocol**:
    - UNCERTAIN predictions are excluded from all classification metrics (DR, FPR, F1, TW-F1).
      The tool did respond, but with insufficient confidence to make a definitive call.
-   - UNCERTAIN predictions COUNT toward coverage (the tool processed the entry).
+   - UNCERTAIN predictions count toward response coverage, but not selective-prediction coverage.
    - UNCERTAIN predictions are excluded from AUROC and AUPRC (same as before).
    - UNCERTAIN predictions are excluded from ECE (no reliable confidence signal).
    - ``num_uncertain`` in EvaluationResult tracks how many were skipped.
@@ -33,7 +33,7 @@ Evaluation Protocol:
 
 5. **Metrics Computation**:
    - UNCERTAIN predictions excluded from classification metrics (see UNCERTAIN Protocol)
-   - Missing predictions treated as VALID (conservative default)
+   - Missing and unevaluated predictions excluded from classification metrics
    - Tier-weighted F1: harder hallucinations (Tier 3) weighted 3x vs Tier 1
    - ECE (Expected Calibration Error): measures confidence calibration
    - Per-type metrics: detection rate by hallucination type
@@ -64,6 +64,7 @@ from hallmark.dataset.schema import (
     Prediction,
     is_canary_entry,
 )
+from hallmark.evaluation.selective import is_error_fallback
 
 logger = logging.getLogger(__name__)
 
@@ -159,16 +160,19 @@ def run_evaluated_nothing(predictions: list) -> bool:
     return evaluated_count(predictions) == 0
 
 
+def is_answer(pred: Prediction | None) -> bool:
+    """True when a prediction records a definite judgement from the tool."""
+    return pred is not None and pred.label != "UNCERTAIN" and getattr(pred, "evaluated", True)
+
+
 def build_confusion_matrix(
     entries: list[BenchmarkEntry],
     predictions: dict[str, Prediction] | list[Prediction],
 ) -> ConfusionMatrix:
     """Build confusion matrix from entries and predictions.
 
-    UNCERTAIN Protocol: UNCERTAIN predictions are excluded from the confusion matrix
-    entirely — they do not contribute to TP, FP, TN, or FN. They count toward
-    coverage (the tool did respond) but not toward classification metrics.
-    Missing predictions are treated as VALID (conservative default).
+    UNCERTAIN, unevaluated, and missing predictions are excluded from the
+    confusion matrix entirely — they do not contribute to TP, FP, TN, or FN.
 
     Args:
         entries: Benchmark entries (ground truth).
@@ -188,17 +192,9 @@ def build_confusion_matrix(
             pred = predictions[idx] if idx < len(predictions) else None  # type: ignore[index]
         else:
             pred = pred_map_cm.get(entry.bibtex_key)
-        if pred is None:
-            # Missing prediction treated as "VALID" (conservative)
-            if entry.label == "HALLUCINATED":
-                cm.fn += 1
-            else:
-                cm.tn += 1
+        if not is_answer(pred):
             continue
-
-        # UNCERTAIN excluded from classification metrics — skip this entry entirely
-        if pred.label == "UNCERTAIN":
-            continue
+        assert pred is not None
 
         if entry.label == "HALLUCINATED":
             if pred.label == "HALLUCINATED":
@@ -221,7 +217,7 @@ def tier_weighted_f1(
     """Compute F1 weighted by difficulty tier (Tier 3 worth 3x Tier 1).
 
     Each hallucinated entry contributes to F1 proportionally to its tier weight.
-    UNCERTAIN predictions are excluded (not counted toward the confusion matrix).
+    UNCERTAIN, unevaluated, and missing predictions are excluded.
 
     FP weighting note:
     - False positives (valid entries incorrectly flagged) are always weighted at 1.0,
@@ -256,12 +252,11 @@ def tier_weighted_f1(
         tier = entry.difficulty_tier or 1
         w = tier_weights.get(tier, 1.0)
 
-        # UNCERTAIN predictions are excluded from classification metrics entirely.
-        # Missing predictions are treated as VALID (conservative default).
-        if pred is not None and pred.label == "UNCERTAIN":
+        if not is_answer(pred):
             continue
 
-        pred_label = pred.label if pred is not None else "VALID"
+        assert pred is not None
+        pred_label = pred.label
 
         if entry.label == "HALLUCINATED":
             if pred_label == "HALLUCINATED":
@@ -389,8 +384,8 @@ def per_tier_metrics(
 ) -> dict[int, dict[str, float]]:
     """Compute metrics broken down by difficulty tier.
 
-    VALID entries (difficulty_tier=None) are included in ALL tiers' FPR
-    denominators, not assigned to tier 1. This ensures each tier reports a
+    Answered VALID entries (difficulty_tier=None) are included in ALL tiers'
+    FPR denominators, not assigned to tier 1. This ensures each tier reports a
     meaningful FPR rather than tier 1 absorbing all false positives and tiers
     2-3 showing 0.0 FPR.
 
@@ -398,10 +393,11 @@ def per_tier_metrics(
     - hallucinated entries of that tier (for detection rate / recall)
     - ALL valid entries across all tiers (for FPR)
     """
+    answered_entries = [e for e in entries if is_answer(predictions.get(e.bibtex_key))]
     # Separate valid from hallucinated entries
-    valid_entries = [e for e in entries if e.label == "VALID"]
+    valid_entries = [e for e in answered_entries if e.label == "VALID"]
     hall_by_tier: dict[int, list[BenchmarkEntry]] = defaultdict(list)
-    for entry in entries:
+    for entry in answered_entries:
         if entry.label == "HALLUCINATED":
             tier = entry.difficulty_tier or 1
             hall_by_tier[tier].append(entry)
@@ -429,13 +425,13 @@ def per_type_metrics(
 ) -> dict[str, dict[str, float]]:
     """Compute metrics broken down by hallucination type.
 
-    VALID entries are included in EVERY type's FPR denominator, mirroring
-    :func:`per_tier_metrics`. Grouping strictly by ``hallucination_type`` puts
-    only hallucinated entries in a type's group, which forces precision to 1.0
-    and FPR to 0.0 and collapses F1 to the deterministic ``2*DR/(1+DR)``. The
-    ``"valid"`` group keeps its own semantics: it has no hallucinated entries,
-    so its detection rate and F1 are 0.0 by definition and its FPR is the
-    tool's overall FPR.
+    Answered VALID entries are included in EVERY type's FPR denominator,
+    mirroring :func:`per_tier_metrics`. Grouping strictly by
+    ``hallucination_type`` puts only hallucinated entries in a type's group,
+    which forces precision to 1.0 and FPR to 0.0 and collapses F1 to the
+    deterministic ``2*DR/(1+DR)``. The ``"valid"`` group keeps its own
+    semantics: it has no hallucinated entries, so its detection rate and F1 are
+    0.0 by definition and its FPR is the tool's overall FPR.
 
     For each hallucination type the confusion matrix is built from:
     - hallucinated entries of that type (for detection rate / recall)
@@ -445,23 +441,23 @@ def per_type_metrics(
         entries: Benchmark entries.
         predictions: Tool's predictions — either a dict keyed by bibtex_key
             or a list of Prediction objects (converted internally).
-        compute_ci: If True, add Wilson score 95% CI keys ``dr_ci_lower`` and
-            ``dr_ci_upper`` for detection rate per type. CI is only meaningful
-            for hallucinated types (n > 0); valid entries get 0.0/0.0.
+        compute_ci: Retained for API compatibility. Wilson score 95% CI keys
+            ``dr_ci_lower`` and ``dr_ci_upper`` are always added. CI is only
+            meaningful for hallucinated types (n > 0); valid entries get 0.0/0.0.
 
     Returns:
         Dict mapping hallucination type to metrics dict. ``count`` is the
         number of hallucinated entries of that type (for ``"valid"``, the
         number of valid entries) and excludes the borrowed valid entries.
-        ``num_valid`` records how many valid entries entered the FPR
-        denominator. When ``compute_ci`` is True, each inner dict also
-        contains ``dr_ci_lower`` and ``dr_ci_upper``.
+        ``num_valid`` counts borrowed valid entries and is 0 on the ``"valid"``
+        row. Each inner dict also contains ``dr_ci_lower`` and ``dr_ci_upper``.
     """
     if isinstance(predictions, list):
         predictions = {p.bibtex_key: p for p in predictions}
-    valid_entries = [e for e in entries if e.label == "VALID"]
+    answered_entries = [e for e in entries if is_answer(predictions.get(e.bibtex_key))]
+    valid_entries = [e for e in answered_entries if e.label == "VALID"]
     type_entries: dict[str, list[BenchmarkEntry]] = defaultdict(list)
-    for entry in entries:
+    for entry in answered_entries:
         h_type = entry.hallucination_type or "valid"
         type_entries[h_type].append(entry)
 
@@ -579,7 +575,7 @@ def expected_calibration_error(
     Confidence represents the tool's belief in its own prediction: a tool
     predicting HALLUCINATED with confidence 0.9 claims 90% certainty.
 
-    UNCERTAIN predictions are excluded from ECE entirely (no reliable confidence signal).
+    UNCERTAIN and unevaluated predictions are excluded from ECE entirely.
 
     Args:
         entries: Benchmark entries (ground truth).
@@ -608,13 +604,10 @@ def expected_calibration_error(
             pred = predictions[idx] if idx < len(predictions) else None  # type: ignore[index]
         else:
             pred = pred_map_ece.get(entry.bibtex_key)
-        if pred is None:
+        if not is_answer(pred):
             continue
 
-        # UNCERTAIN excluded from ECE (consistent with AUROC/AUPRC treatment)
-        if pred.label == "UNCERTAIN":
-            continue
-
+        assert pred is not None
         is_correct = pred.label == entry.label
         pairs.append((pred.confidence, is_correct))
 
@@ -676,10 +669,10 @@ def auroc(
     Positive class: HALLUCINATED. Score = confidence for HALLUCINATED predictions,
     (1 - confidence) for VALID predictions.
 
-    Missing predictions and UNCERTAIN predictions are excluded from the AUROC
+    Missing, unevaluated, and UNCERTAIN predictions are excluded from the AUROC
     computation entirely (not assigned a neutral score of 0.5). This avoids
-    artificially inflating or deflating AUROC by treating absence of a prediction
-    as weak evidence. Only entries with a definite HALLUCINATED or VALID prediction
+    artificially inflating or deflating AUROC by treating absence of an answer
+    as weak evidence. Only entries with a definite HALLUCINATED or VALID answer
     are included.
 
     Returns None if fewer than 2 classes present among the included entries.
@@ -702,10 +695,11 @@ def auroc(
     for entry in entries:
         pred = predictions.get(entry.bibtex_key)
 
-        # Skip missing predictions and UNCERTAIN (no reliable score available)
-        if pred is None or pred.label == "UNCERTAIN":
+        # Skip missing, unevaluated, and UNCERTAIN predictions.
+        if not is_answer(pred):
             continue
 
+        assert pred is not None
         score = pred.confidence if pred.label == "HALLUCINATED" else 1.0 - pred.confidence
 
         true_label = 1 if entry.label == "HALLUCINATED" else 0
@@ -765,9 +759,9 @@ def auprc(
 ) -> float | None:
     """Compute Area Under Precision-Recall Curve for hallucination detection.
 
-    Same scoring convention as auroc(). Missing predictions and UNCERTAIN predictions
-    are excluded from the computation entirely (not assigned a neutral score of 0.5).
-    Returns None if no positive examples among the included entries.
+    Same scoring convention as auroc(). Missing, unevaluated, and UNCERTAIN
+    predictions are excluded from the computation entirely (not assigned a
+    neutral score of 0.5). Returns None if no positive examples remain.
 
     Args:
         entries: Benchmark entries (ground truth).
@@ -787,10 +781,11 @@ def auprc(
     for entry in entries:
         pred = predictions.get(entry.bibtex_key)
 
-        # Skip missing predictions and UNCERTAIN (no reliable score available)
-        if pred is None or pred.label == "UNCERTAIN":
+        # Skip missing, unevaluated, and UNCERTAIN predictions.
+        if not is_answer(pred):
             continue
 
+        assert pred is not None
         score = pred.confidence if pred.label == "HALLUCINATED" else 1.0 - pred.confidence
 
         true_label = 1 if entry.label == "HALLUCINATED" else 0
@@ -988,6 +983,9 @@ def stratified_bootstrap_ci(
     Stratification ensures each bootstrap resample maintains the original
     proportion of each hallucination type, preventing bias from underrepresented types.
 
+    Missing and unevaluated predictions are excluded before resampling, so the
+    interval describes the same answered population as the point estimate.
+
     Args:
         entries: Benchmark entries (ground truth).
         predictions: Tool's predictions.
@@ -1013,22 +1011,12 @@ def stratified_bootstrap_ci(
     pred_map = {p.bibtex_key: p for p in predictions}
 
     for entry in entries:
-        h_type = entry.hallucination_type or "valid"
-        # Include all entries (not just those with predictions) so CIs reflect
-        # uncertainty from missing predictions, consistent with build_confusion_matrix.
         pred = pred_map.get(entry.bibtex_key)
+        if pred is None or not is_answer(pred):
+            continue
+        h_type = entry.hallucination_type or "valid"
         type_groups[h_type][0].append(entry)
-        if pred is not None:
-            type_groups[h_type][1].append(pred)
-        else:
-            # Missing prediction → treated as VALID with default confidence
-            type_groups[h_type][1].append(
-                Prediction(
-                    bibtex_key=entry.bibtex_key,
-                    label="VALID",
-                    confidence=0.5,
-                )
-            )
+        type_groups[h_type][1].append(pred)
 
     # Bootstrap resampling
     bootstrap_metrics = []
@@ -1077,8 +1065,7 @@ def _bootstrap_all_cis(
     because it reuses each bootstrap resample for all metrics.
 
     Stratification is by hallucination type, matching ``stratified_bootstrap_ci``.
-    Missing predictions are filled with VALID/0.5 placeholders, consistent with
-    ``build_confusion_matrix``.
+    Missing and unevaluated predictions are excluded, matching the point estimates.
 
     Args:
         entries: Benchmark entries (ground truth).
@@ -1107,15 +1094,12 @@ def _bootstrap_all_cis(
     pred_map = {p.bibtex_key: p for p in predictions}
 
     for entry in entries:
-        h_type = entry.hallucination_type or "valid"
         pred = pred_map.get(entry.bibtex_key)
+        if pred is None or not is_answer(pred):
+            continue
+        h_type = entry.hallucination_type or "valid"
         type_groups[h_type][0].append(entry)
-        if pred is not None:
-            type_groups[h_type][1].append(pred)
-        else:
-            type_groups[h_type][1].append(
-                Prediction(bibtex_key=entry.bibtex_key, label="VALID", confidence=0.5)
-            )
+        type_groups[h_type][1].append(pred)
 
     # Per-metric accumulators
     dr_samples: list[float] = []
@@ -1190,8 +1174,8 @@ def paired_bootstrap_test(
     H0: metric_A <= metric_B.
 
     When ``two_sided=True`` (default), the returned p-value is two-sided:
-    p = 2 * fraction of bootstrap resamples where delta (metric_A - metric_B) <= 0,
-    capped at 1.0. This tests whether the two tools differ in either direction.
+    p = 2 * the smaller bootstrap tail probability around zero, capped at 1.0.
+    This tests whether the two tools differ in either direction.
 
     When ``two_sided=False``, the p-value is one-sided: p = fraction of bootstrap
     resamples where delta <= 0. This tests the directional hypothesis that tool A
@@ -1208,8 +1192,8 @@ def paired_bootstrap_test(
         metric_fn: Function that takes (entries, predictions) and returns a scalar metric.
         n_bootstrap: Number of bootstrap resamples.
         seed: Random seed for reproducibility.
-        two_sided: If True (default), return a two-sided p-value (one-sided * 2, capped at 1.0).
-            If False, return the one-sided p-value directly.
+        two_sided: If True (default), double the smaller bootstrap tail probability,
+            capped at 1.0. If False, return the one-sided p-value directly.
 
     Returns:
         Tuple (observed_diff, p_value, effect_size_cohens_h).
@@ -1235,14 +1219,27 @@ def paired_bootstrap_test(
 
     # Group entries (and corresponding paired predictions) by hallucination type for
     # stratified resampling — same grouping logic as stratified_bootstrap_ci().
+    #
+    # Both tools must keep an entry in the same position, so an entry one tool
+    # did not answer stays in the group with a placeholder rather than being
+    # dropped: ``metric_fn`` and ``build_confusion_matrix`` index entries and
+    # predictions positionally. The placeholder carries ``evaluated=False`` so
+    # each tool skips its own non-answers exactly as standalone ``evaluate``
+    # does, while the pairing stays intact.
     type_groups: dict[str, list[tuple[BenchmarkEntry, Prediction, Prediction]]] = defaultdict(list)
     for entry in entries:
         h_type = entry.hallucination_type or "valid"
         pa = pred_map_a.get(entry.bibtex_key) or Prediction(
-            bibtex_key=entry.bibtex_key, label="VALID", confidence=0.5
+            bibtex_key=entry.bibtex_key,
+            label="VALID",
+            confidence=0.5,
+            evaluated=False,
         )
         pb = pred_map_b.get(entry.bibtex_key) or Prediction(
-            bibtex_key=entry.bibtex_key, label="VALID", confidence=0.5
+            bibtex_key=entry.bibtex_key,
+            label="VALID",
+            confidence=0.5,
+            evaluated=False,
         )
         type_groups[h_type].append((entry, pa, pb))
 
@@ -1425,7 +1422,7 @@ def compute_persisted_cis(
     )
 
     # ECE is only meaningful with >2 distinct confidence values (matches evaluate()).
-    distinct_conf = len({p.confidence for p in predictions if p.label != "UNCERTAIN"})
+    distinct_conf = len({p.confidence for p in predictions if is_answer(p)})
     ece_ci: list[float] | None = list(all_cis["ece"]) if distinct_conf > 2 else None
 
     # FPR is undefined when the split has no valid entries.
@@ -2019,6 +2016,13 @@ def _make_aggressive_predictions(
 
     - UNCERTAIN predictions → HALLUCINATED with confidence 0.55.
     - Missing keys → HALLUCINATED with confidence 0.55.
+
+    Aggressive mode is a scoring convention over the entry set, not a claim
+    about what the tool returned, so the synthesized records are answers and
+    score like any other prediction. ``evaluate`` measures coverage and the
+    evaluated count from the caller's own list, so these records never stand in
+    for a response the tool did not make.
+
     Does NOT mutate the caller's list or any Prediction object.
     """
     pred_map = {p.bibtex_key: p for p in predictions}
@@ -2033,8 +2037,7 @@ def _make_aggressive_predictions(
                     label="HALLUCINATED",
                     confidence=0.55,
                     reason="[aggressive mode: missing prediction treated as HALLUCINATED]",
-                    # The tool produced nothing for this entry.
-                    evaluated=False,
+                    evaluated=True,
                 )
             )
         elif pred.label == "UNCERTAIN":
@@ -2106,8 +2109,8 @@ def evaluate(
 
     Evaluation Protocol:
     - UNCERTAIN predictions are excluded from classification metrics (DR, FPR, F1, TW-F1).
-      They count toward coverage but not toward the confusion matrix.
-    - Missing predictions are treated as VALID (conservative default)
+      They count toward response coverage but not selective-prediction coverage.
+    - Missing and unevaluated predictions are excluded from classification metrics.
     - Pre-screening results (if any) are included in the tool's predictions
     - Incomplete evaluations (partial coverage) can be aggregated using Plackett-Luce
       ranking (see hallmark.evaluation.ranking module)
@@ -2121,8 +2124,11 @@ def evaluate(
         compute_ci: If True, compute bootstrap confidence intervals (requires numpy).
         n_bootstrap: Number of bootstrap resamples for CIs (default 10_000).
         ci_seed: Random seed for bootstrap CI computation (default 42).
-        strict: If True, raise ValueError when coverage < 1.0 (missing predictions).
-            Mirrors the CLI's ``--strict`` flag.
+        strict: If True, raise ValueError when response coverage < 1.0 (missing
+            or unevaluated predictions). Mirrors the CLI's ``--strict`` flag.
+            Strict asks whether the tool answered every entry, which is
+            independent of the scoring convention, so it raises in aggressive
+            mode on the same runs it raises on in conservative mode.
         eval_mode: Controls how UNCERTAIN predictions and missing entries are handled.
             - ``"conservative"`` (default): UNCERTAIN excluded from classification metrics.
             - ``"aggressive"``: UNCERTAIN + missing predictions treated as HALLUCINATED
@@ -2172,6 +2178,14 @@ def evaluate(
         }
 
     # For aggressive mode, transform predictions locally — do NOT mutate caller's list.
+    #
+    # Coverage, the evaluated count and the partial-run warnings are measured
+    # from the caller's own list, kept here before the transform. Aggressive
+    # mode changes how an unanswered entry is scored, not how much of the split
+    # the tool responded to, so its synthesized records must not reach those
+    # counts.
+    original_predictions = list(predictions)
+    original_pred_map = {p.bibtex_key: p for p in original_predictions}
     if eval_mode == "aggressive":
         predictions = _make_aggressive_predictions(entries, predictions)
 
@@ -2229,16 +2243,22 @@ def evaluate(
     # F-7: Use intersection of entry_keys and pred_keys so that extra predictions
     # (keys not in entries) do not push coverage above 1.0.
     #
-    # ``response_coverage`` is the old meaning — did the tool return a record at
-    # all — and it is what strict mode checks, because a missing prediction and
-    # an abstention are different failures.
-    response_coverage = len(entry_keys & pred_keys) / len(entries) if entries else 1.0
+    # ``response_coverage`` is the weaker meaning — did the tool return a record
+    # backed by a real evaluation? UNCERTAIN counts because the tool did respond;
+    # ``evaluated=False`` does not because the record was manufactured.
+    original_pred_keys = set(original_pred_map)
+    response_keys = {
+        key
+        for key in (entry_keys & original_pred_keys)
+        if getattr(original_pred_map[key], "evaluated", True)
+    }
+    response_coverage = len(response_keys) / len(entries) if entries else 1.0
 
     if strict and response_coverage < 1.0:
-        missing = len(entries) - len(entry_keys & pred_keys)
+        missing = len(entries) - len(response_keys)
         raise ValueError(
             f"Strict mode: coverage is {response_coverage:.1%} (expected 100%). "
-            f"Missing predictions for {missing} entries."
+            f"Missing or unevaluated predictions for {missing} entries."
         )
 
     # ``coverage`` is selective-prediction coverage: the fraction of entries the
@@ -2248,7 +2268,9 @@ def evaluate(
     # committed run answers 68 of 500 entries and reported coverage 1.0. With
     # this definition ``coverage_adjusted_f1`` penalises abstention as
     # ``EvaluationResult.coverage_adjusted_f1`` has always documented.
-    answered_keys = {key for key in (entry_keys & pred_keys) if pred_map[key].label != "UNCERTAIN"}
+    answered_keys = {
+        key for key in (entry_keys & original_pred_keys) if is_answer(original_pred_map[key])
+    }
     coverage = len(answered_keys) / len(entries) if entries else 1.0
 
     cm = build_confusion_matrix(entries, pred_map)
@@ -2279,7 +2301,7 @@ def evaluate(
     cost = cost_efficiency(predictions)
     ece_score: float | None = expected_calibration_error(entries, pred_map, adaptive=True)
     # ECE is unreliable with ≤2 distinct confidence values (binary tools with 0.0/1.0 only)
-    distinct_confidences = len(set(p.confidence for p in predictions if p.label != "UNCERTAIN"))
+    distinct_confidences = len({p.confidence for p in predictions if is_answer(p)})
     if distinct_confidences <= 2:
         ece_score = None  # suppress unreliable ECE
     auroc_score = auroc(entries, pred_map)
@@ -2367,8 +2389,9 @@ def evaluate(
     type_conf = type_confusion_matrix(entries, predictions)
     cascade_stats = cascade_breakdown(predictions)
 
-    pred_list: list[Prediction] = list(predictions)
+    pred_list = original_predictions
     n_evaluated = evaluated_count(pred_list)
+    num_error_fallbacks = sum(1 for pred in pred_list if is_error_fallback(pred))
     if run_evaluated_nothing(pred_list):
         # Every prediction was manufactured because the tool never ran. The
         # rates below are all 0.0 and they are artefacts of that, not findings.
@@ -2383,14 +2406,21 @@ def evaluate(
             split_name,
             len(entries),
         )
-    elif n_evaluated < len(pred_list):
+    if n_evaluated < len(pred_list) or num_error_fallbacks > 0:
+        incomplete_mechanisms = []
+        if n_evaluated < len(pred_list):
+            num_unevaluated = len(pred_list) - n_evaluated
+            record_word = "record" if num_unevaluated == 1 else "records"
+            incomplete_mechanisms.append(f"{num_unevaluated} {record_word} marked evaluated=False")
+        if num_error_fallbacks > 0:
+            record_word = "record" if num_error_fallbacks == 1 else "records"
+            incomplete_mechanisms.append(f"{num_error_fallbacks} [Error fallback] {record_word}")
         logger.warning(
-            "%s on %s evaluated %d of %d predictions; the remainder are fallbacks "
-            "and are not evidence about those entries.",
+            "%s on %s has an incomplete evaluation: %s. These records are not "
+            "evidence about their entries.",
             tool_name,
             split_name,
-            n_evaluated,
-            len(pred_list),
+            "; ".join(incomplete_mechanisms),
         )
 
     return EvaluationResult(
@@ -2398,6 +2428,7 @@ def evaluate(
         split_name=split_name,
         num_entries=len(entries),
         num_evaluated=n_evaluated,
+        num_error_fallbacks=num_error_fallbacks,
         num_hallucinated=num_hallucinated,
         num_valid=num_valid,
         detection_rate=cm.detection_rate,

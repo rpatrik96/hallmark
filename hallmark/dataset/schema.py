@@ -576,6 +576,9 @@ class EvaluationResult:
     # predictions were manufactured because the tool was unavailable; zero means
     # the run measured nothing and its rates are artefacts of that, not results.
     num_evaluated: int | None = None
+    # Legacy per-entry failures carry this prose marker but predate the
+    # ``evaluated`` flag, so report them separately from ``num_evaluated``.
+    num_error_fallbacks: int | None = None
 
     # Tier 3 hard subset metric (Hardt benchmark science)
     tier3_f1: float = 0.0  # F1 on Tier 3 (hard) hallucinations only
@@ -602,9 +605,10 @@ class EvaluationResult:
     # covered — otherwise a tool that abstains on the hard entries reports its
     # easy-subset metrics at full coverage.
     coverage: float = 1.0
-    # ``response_coverage`` is the weaker "did the tool return a record at all"
-    # fraction, and is what strict mode checks for missing predictions.
-    response_coverage: float = 1.0
+    # ``response_coverage`` is the weaker "did the tool return a real-evaluation
+    # record" fraction, and is what strict mode checks for missing or manufactured
+    # predictions. None means a historical result did not record this metric.
+    response_coverage: float | None = None
     coverage_adjusted_f1: float = 0.0  # F1 * coverage, penalizes selective abstention
 
     # Type-level diagnosis metrics (populated when predicted_hallucination_type is set)
