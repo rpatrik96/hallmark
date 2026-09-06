@@ -135,7 +135,7 @@ as per-entry verdicts. All carry label UNCERTAIN, so none was scored as a
 substantive prediction, which bounds the damage to miscounted coverage. They fall
 in `dev_public` (124), `test_public` (183) and the cross-domain splits;
 `stress_test` and `hidden` have none. All 180 of DeepSeek-R1's UNCERTAIN records
-on `test_public` are of this kind, so its ΔFPR of −0.310 — the largest cross-split
+on `test_public` are of this kind, so its ΔFPR of −.303 — the largest cross-split
 shift in the main table — compares a dev figure over 1,101 answered entries
 against a test figure over 651.
 

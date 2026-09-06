@@ -24,7 +24,7 @@ HALLMARK draws on best practices from established benchmarks:
 - **Hallucination taxonomy**: 14 types across 3 difficulty tiers (Easy / Medium / Hard)
 - **2,526 annotated entries**: 826 valid + 1,246 hallucinated with ground truth across the public splits, plus a 454-entry hidden split
 - **6 sub-tests per entry**: DOI resolution, title matching, author consistency, venue verification, field completeness, cross-database agreement
-- **Evaluation metrics**: Detection Rate, F1, tier-weighted F1, [`detect@k`](#evaluation-metrics) (strategies needed to detect), [ECE](#evaluation-metrics) (expected confidence calibration error)
+- **Evaluation metrics**: Detection Rate, F1, tier-weighted F1, [`detect@k`](#evaluation-metrics) (fraction detected within k strategies), [ECE](#evaluation-metrics) (expected calibration error)
 - **Built-in baselines**: DOI-only, bibtex-updater, HaRC, verify-citations, LLM-based (OpenAI, Anthropic, OpenRouter), agentic LLMs with tool use, ensemble, DB-first cascade with hallucination-mode diagnosis, plus ports of two recent papers — `hallucitechecker` ([Sakai et al. 2026](https://arxiv.org/abs/2604.26835)) and `checkifexist` ([Abbonato 2026](https://arxiv.org/abs/2602.15871) Algorithm 1) (CiteVerifier and hallucinator are available as wrapper modules but not registered in the default registry)
 - **Baseline registry**: Central discovery, availability checking, and dispatch for all baselines (19+ variants)
 - **Reproducible runs**: opt-in `--cache-path` flag wraps HTTP calls in a SQLite-backed `requests-cache` so re-runs reuse frozen API responses; `--timing-breakdown` and `--subtask-diagnostic` surface per-baseline performance + recognition/matching/calibration decomposition
@@ -420,15 +420,19 @@ predictions = run_title_oracle(blind_test, reference_pool=dev_entries)
 
 ## Main Results (dev_public, 1,119 entries)
 
-Tools evaluated on `dev_public`. All numbers reproduce Table 1 of the paper. **Bold** = best among independent (non-co-designed) tools. ΔFPR is the cross-split shift `test_public − dev_public`; `—` means no `test_public` evaluation.
+Tools evaluated on `dev_public`. All numbers reproduce Table 1 of the paper. **Bold** = best among independent zero-shot LLMs. ΔFPR is the cross-split shift `test_public − dev_public`; `—` means no `test_public` evaluation.
 
 > **Coverage and relabel caveat.** A tool that returns `UNCERTAIN` is excluded
 > from the confusion matrix, so metrics use the entries it answered; coverage
-> reports `1 - num_uncertain / num_entries`. Every row moved under the current
-> labels. The largest separate corrections are DOI-only FPR .195 → .043 after
-> the HTTP-202 re-run (`829d2d4`), and bibtex-updater FPR .179 → .092 with its
-> stored coverage field moving 1.000 → .862 (`467da9d`/`3aff25b`). See
-> `notes/eval-hardening-2026-09-04.md` for the outcomes.
+> reports `1 - num_uncertain / num_entries`. The Coverage column is
+> `dev_public` only, so ΔFPR can compare two denominators: DeepSeek-R1 answered
+> 651 of 831 entries on `test_public` against 1,101 of 1,119 on `dev_public`,
+> and its −.303 is that gap rather than a robustness result. Every row moved
+> under the current labels. The largest separate corrections are DOI-only FPR
+> .195 → .043 after the HTTP-202 re-run (`829d2d4`), and bibtex-updater FPR
+> .179 → .092 with its stored coverage field moving 1.000 → .862
+> (`467da9d`/`3aff25b`). See `notes/eval-hardening-2026-09-04.md` for the
+> outcomes.
 
 | Tool | DR ↑ | FPR ↓ | F1 ↑ | MCC ↑ | TW-F1 ↑ | ECE ↓ | Coverage ↑ | ΔFPR ↓ |
 |------|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
@@ -436,7 +440,7 @@ Tools evaluated on `dev_public`. All numbers reproduce Table 1 of the paper. **B
 | DOI-only | .218 | .043 | .347 | .253 | .268 | .082 | 1.000 | −.001 |
 | *Zero-shot LLMs (sorted by FPR)* | | | | | | | | |
 | Gemini 2.5 Pro | .476 | **.050** | .627 | .473 | .609 | .297 | .967 | +.009 |
-| Claude Opus 4.7† | .752 | .072 | .830 | .683 | .851 | .112 | 1.000 | −.005 |
+| Claude Opus 4.7† | .752 | .072 | **.830** | **.683** | **.851** | .112 | 1.000 | −.005 |
 | Claude Sonnet 4.6† | .780 | .127 | .827 | .652 | .834 | **.066** | 1.000 | −.002 |
 | Gemini 2.5 Flash | .500 | .100 | .631 | .429 | .628 | .265 | .988 | +.006 |
 | Llama 4 Maverick | .614 | .146 | .707 | .476 | .709 | .176 | 1.000 | +.021 |

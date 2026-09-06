@@ -25,12 +25,13 @@ reference is absent.
 | 23:46 | `no_prescreening` dev | scored | none |
 | 00:55 | `no_prescreening` test | scored | none |
 
-DBLP accounts for 86% to 95% of every failure column. Probing it directly on a
-ten-minute cycle gives the shape: answering at 22:11, HTTP 503 at 22:21,
-answering at 22:32 and 22:42, HTTP 503 again at 07:52 the next morning. It is not
-down, and it is not up. It alternates on a timescale shorter than a single arm
-of the ablation, which is why the same command produced 25.5%, 21.8% and 19.9%
-incomplete on three runs of identical code against an identical split.
+Of the entries with an incomplete lookup, DBLP is 92% to 96% in every column.
+Probing it directly on a ten-minute cycle gives the shape: answering at 22:11,
+HTTP 503 at 22:21, answering at 22:32 and 22:42, HTTP 503 again at 07:52 the
+next morning. It is not down, and it is not up. It alternates on a timescale
+shorter than a single arm of the ablation, which is why the same command
+produced 25.5%, 21.8% and 19.9% incomplete on three runs of identical code
+against an identical split.
 
 ## Why the two surviving arms do not rescue the comparison
 
