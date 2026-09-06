@@ -603,6 +603,13 @@ def _cmd_evaluate(args: argparse.Namespace) -> int:
     predictions: list[Prediction]
     tool_name: str = args.tool_name or "unknown"
 
+    # This command evaluates one baseline, so the wrapper's record for this
+    # thread describes that baseline's run and nothing else. Clear it first,
+    # so a --predictions file cannot inherit a run made earlier in the process.
+    from hallmark.baselines import bibtexupdater as _bibtexupdater
+
+    _bibtexupdater.reset_run_state()
+
     if args.predictions:
         predictions = load_predictions(args.predictions)
         logging.info(f"Loaded {len(predictions)} predictions from {args.predictions}")

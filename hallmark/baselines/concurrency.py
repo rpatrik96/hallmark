@@ -257,6 +257,14 @@ def parallel_run_baseline(
     completed = 0
     started = time.time()
 
+    # Each worker records its own bibtex-check run, and the caller stamps
+    # provenance on the thread it called us from. Collect the runs here and
+    # hand the last one back to that thread once the pool drains.
+    from hallmark.baselines import bibtexupdater
+
+    observed_runs: list[bibtexupdater.BibtexCheckRun] = []
+    runs_lock = threading.Lock()
+
     def _call_one(entry: BlindEntry) -> list[Prediction]:
         # Each worker calls the registered runner with a single-entry list.
         # The runner re-blinds on its own (registry.run_baseline does
@@ -279,7 +287,7 @@ def parallel_run_baseline(
             if env_key:
                 merged_kwargs["api_key"] = env_key
         try:
-            return list(info.runner([entry], **merged_kwargs))
+            preds = list(info.runner([entry], **merged_kwargs))
         except Exception as exc:
             logger.exception(
                 "parallel_run_baseline worker failed on %s: %s",
@@ -287,6 +295,11 @@ def parallel_run_baseline(
                 exc,
             )
             return [_fallback_for_unhandled(entry, exc)]
+        run = bibtexupdater.current_bibtex_check_run()
+        if run is not None and run.ran:
+            with runs_lock:
+                observed_runs.append(run)
+        return preds
 
     with ThreadPoolExecutor(max_workers=workers) as ex:
         futures = {ex.submit(_call_one, e): e for e in remaining}
@@ -323,6 +336,8 @@ def parallel_run_baseline(
         len(new_preds),
         time.time() - started,
     )
+    if observed_runs:
+        bibtexupdater.adopt_run_state(observed_runs[-1])
     # Note: a single bibtex_key may appear in both pre_existing (loaded
     # from disk) and new_preds (a worker that raced past resume-dedup
     # because the file didn't exist when we read it).  De-dup by key,

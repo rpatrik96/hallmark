@@ -54,6 +54,7 @@ import re
 import shutil
 import subprocess
 import tempfile
+import threading
 import time
 from collections.abc import Iterable, Sequence
 from dataclasses import dataclass
@@ -449,22 +450,71 @@ _OUTAGE_RE = re.compile(
 )
 
 
-#: The source-availability and invocation settings of the most recent
-#: bibtex-check run in this process, or None before a process started. Set by
-#: ``_run_bibtex_check_subprocess`` on every run and copied onto the
-#: EvaluationResult by the CLI's provenance stamp.
-_last_source_condition: dict[str, object] | None = None
-_ran_bibtex_check = False
+@dataclass(frozen=True)
+class BibtexCheckRun:
+    """What one ``bibtex-check`` invocation did.
+
+    ``ran`` says the binary started; ``condition`` is the source-availability
+    and invocation report that run produced, or None when it produced none.
+    A caller holding this run knows what its own call observed, which a
+    module-level flag cannot tell it once a second baseline runs in the same
+    process or a second worker runs in the same thread pool.
+    """
+
+    predictions: list[Prediction]
+    raw_records: list[dict[str, object]]
+    ran: bool
+    condition: dict[str, object] | None = None
+
+
+#: The wrapper call the current thread made most recently. Each thread keeps
+#: its own record and ``reset_run_state`` clears it, so the accessors below
+#: describe the run just finished on this thread and nothing else.
+_run_state = threading.local()
+
+
+def reset_run_state() -> None:
+    """Forget the wrapper call this thread made most recently.
+
+    ``registry.run_baseline`` calls this before every dispatch, so a baseline
+    that never touches bibtex-check cannot read the previous baseline's run.
+    """
+    _run_state.run = None
+
+
+def current_bibtex_check_run() -> BibtexCheckRun | None:
+    """The wrapper call this thread made most recently, or None."""
+    run: BibtexCheckRun | None = getattr(_run_state, "run", None)
+    return run
+
+
+def adopt_run_state(run: BibtexCheckRun | None) -> None:
+    """Install ``run`` as this thread's most recent wrapper call.
+
+    A fan-out helper runs the wrapper on worker threads and stamps provenance
+    on the thread that called it, so it hands the worker's run back here.
+    """
+    _run_state.run = run
 
 
 def last_source_condition() -> dict[str, object] | None:
-    """The source availability and settings of the last bibtex-check run."""
-    return _last_source_condition
+    """The source availability and settings of the last bibtex-check run.
+
+    Kept for callers that hold no run of their own. New code takes the
+    condition off the ``BibtexCheckRun`` its own call returned.
+    """
+    run = current_bibtex_check_run()
+    return run.condition if run is not None else None
 
 
 def ran_bibtex_check() -> bool:
-    """Whether the most recent wrapper call started ``bibtex-check``."""
-    return _ran_bibtex_check
+    """Whether the most recent wrapper call on this thread started the binary.
+
+    Kept for callers that hold no run of their own. New code reads ``ran`` off
+    the ``BibtexCheckRun`` its own call returned.
+    """
+    run = current_bibtex_check_run()
+    return run is not None and run.ran
 
 
 def parse_source_condition(output: str) -> dict[str, object] | None:
@@ -783,7 +833,12 @@ def run_bibtex_check_with_status(
         rate_limit=rate_limit,
         academic_only=academic_only,
     )
-    if isinstance(subprocess_output, tuple):
+    # A test may stand the helper in with something simpler than the run
+    # object, so accept the older shapes it used to return as well.
+    if isinstance(subprocess_output, BibtexCheckRun):
+        tool_predictions = list(subprocess_output.predictions)
+        raw_records = list(subprocess_output.raw_records)
+    elif isinstance(subprocess_output, tuple):
         tool_predictions, raw_records = subprocess_output
     else:
         tool_predictions = subprocess_output
@@ -901,13 +956,29 @@ def _run_bibtex_check_subprocess(
     timeout: float = 7200.0,
     rate_limit: int = 120,
     academic_only: bool = True,
-) -> tuple[list[Prediction], list[dict[str, object]]]:
-    """Run bibtex-check and return predictions plus its raw JSONL records."""
-    global _last_source_condition, _ran_bibtex_check
-    _last_source_condition = None
-    _ran_bibtex_check = False
+) -> BibtexCheckRun:
+    """Run bibtex-check and report what that call did.
+
+    The returned run carries the predictions, the raw JSONL records, whether
+    the binary started, and the source condition it reported. The same run is
+    recorded as this thread's most recent one, for callers that hold no handle
+    on it.
+    """
+    reset_run_state()
+    ran = False
+    condition: dict[str, object] | None = None
     start_time = time.time()
     raw_records: list[dict[str, object]] = []
+
+    def _record(predictions: list[Prediction]) -> BibtexCheckRun:
+        run = BibtexCheckRun(
+            predictions=predictions,
+            raw_records=raw_records,
+            ran=ran,
+            condition=condition,
+        )
+        adopt_run_state(run)
+        return run
 
     # Use a directory we control to avoid cleanup race on timeout
     tmpdir = tempfile.mkdtemp()
@@ -982,7 +1053,7 @@ def _run_bibtex_check_subprocess(
                 text=True,
                 timeout=timeout,
             )
-            _ran_bibtex_check = True
+            ran = True
             if jsonl_path.exists():
                 raw_records = list(parse_jsonl_to_raw(jsonl_path).values())
             parsed_condition = parse_source_condition(result.stdout + result.stderr)
@@ -1010,7 +1081,10 @@ def _run_bibtex_check_subprocess(
                 "mailto_configured": bool(ran_mailto),
                 "mailto_domain": ran_mailto.rpartition("@")[2] or None,
             }
-            _last_source_condition = condition
+            # Record what this call observed before anything downstream can
+            # raise, so a caller that catches SourceOutageError still sees the
+            # condition that refused the run.
+            _record([])
             if result.returncode == 0 and result.stderr.strip():
                 logger.warning("bibtex-check stderr: %s", result.stderr.strip())
             if result.returncode == EXIT_SOURCE_OUTAGE and parsed_condition is None:
@@ -1063,9 +1137,11 @@ def _run_bibtex_check_subprocess(
                 logger.error(f"bibtex-check failed (exit {result.returncode}): {result.stderr}")
         except FileNotFoundError:
             logger.error("bibtex-check not found. Install with: pipx install bibtex-updater")
-            return fallback_predictions(entries, reason="Fallback: bibtex-check unavailable"), []
+            return _record(
+                fallback_predictions(entries, reason="Fallback: bibtex-check unavailable")
+            )
         except subprocess.TimeoutExpired:
-            _ran_bibtex_check = True
+            ran = True
             timed_out = True
 
         elapsed = time.time() - start_time
@@ -1099,7 +1175,7 @@ def _run_bibtex_check_subprocess(
 
         shutil.rmtree(tmpdir, ignore_errors=True)
 
-    return predictions, raw_records
+    return _record(predictions)
 
 
 def parse_jsonl_to_raw(jsonl_path: Path) -> dict[str, dict]:
