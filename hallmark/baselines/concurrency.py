@@ -63,6 +63,7 @@ from pathlib import Path
 from typing import Any, TypeVar
 
 from hallmark.baselines import registry
+from hallmark.baselines.bibtexupdater import SourceOutageError
 from hallmark.baselines.common import fallback_predictions
 from hallmark.dataset.schema import BenchmarkEntry, BlindEntry, Prediction
 
@@ -155,6 +156,7 @@ def _fallback_for_unhandled(entry: BlindEntry, exc: BaseException) -> Prediction
         wall_clock_seconds=0.0,
         api_calls=0,
         api_sources_queried=[],
+        evaluated=False,
     )
 
 
@@ -202,6 +204,10 @@ def parallel_run_baseline(
             "not via **baseline_kwargs"
         )
 
+    info = registry.get_registry()[name]
+    if workers > 1 and registry.requires_single_worker(name, info):
+        raise ValueError(f"workers > 1 is not supported for CLI baseline {name!r}")
+
     blind_entries = _to_blind_list(entries)
     checkpoint_dir = Path(checkpoint_dir)
     checkpoint_dir.mkdir(parents=True, exist_ok=True)
@@ -212,7 +218,6 @@ def parallel_run_baseline(
     # our entries are already blinded and run_baseline would re-blind them
     # under a different type signature.
     if workers <= 1:
-        info = registry.get_registry()[name]
         merged_kwargs: dict[str, Any] = {
             **info.runner_kwargs,
             **baseline_kwargs,
@@ -288,6 +293,10 @@ def parallel_run_baseline(
                 merged_kwargs["api_key"] = env_key
         try:
             preds = list(info.runner([entry], **merged_kwargs))
+        except SourceOutageError:
+            # An upstream outage is not a per-entry failure: let it abort the
+            # whole run rather than scoring the entry off a fallback.
+            raise
         except Exception as exc:
             logger.exception(
                 "parallel_run_baseline worker failed on %s: %s",
@@ -307,6 +316,8 @@ def parallel_run_baseline(
             entry = futures[fut]
             try:
                 preds = fut.result()
+            except SourceOutageError:
+                raise
             except Exception as exc:
                 logger.exception(
                     "parallel_run_baseline future raised on %s: %s",

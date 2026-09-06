@@ -28,6 +28,7 @@ __all__ = [
     "get_registry",
     "list_baselines",
     "register",
+    "requires_single_worker",
     "run_baseline",
     "run_baseline_with_tool_run",
 ]
@@ -85,6 +86,11 @@ def list_baselines(*, free_only: bool = False) -> list[str]:
     return list(_REGISTRY.keys())
 
 
+def requires_single_worker(name: str, info: BaselineInfo) -> bool:
+    """True for baselines whose runner directly owns a CLI subprocess."""
+    return bool(info.cli_commands) and not name.startswith("llm_")
+
+
 def check_available(name: str) -> tuple[bool, str]:
     """Check if a baseline's dependencies are installed.
 
@@ -101,8 +107,15 @@ def check_available(name: str) -> tuple[bool, str]:
 
     info = _REGISTRY[name]
 
-    # Check CLI commands on PATH (for subprocess-based baselines)
-    missing_cmds = [cmd for cmd in info.cli_commands if shutil.which(cmd) is None]
+    # Check CLI commands, honouring the wrapper's explicit binary pin.
+    def _cli_missing(command: str) -> bool:
+        if command == "bibtex-check":
+            from hallmark.baselines.bibtexupdater import resolve_bibtex_check_bin
+
+            return resolve_bibtex_check_bin() is None
+        return shutil.which(command) is None
+
+    missing_cmds = [cmd for cmd in info.cli_commands if _cli_missing(cmd)]
     if missing_cmds:
         return (
             False,
@@ -189,11 +202,15 @@ def run_baseline_with_tool_run(
     if name not in _REGISTRY:
         raise ValueError(f"Unknown baseline: {name}. Available: {', '.join(_REGISTRY.keys())}")
 
+    info = _REGISTRY[name]
+    workers = kwargs.get("workers", 1)
+    if isinstance(workers, int) and workers > 1 and requires_single_worker(name, info):
+        raise ValueError(f"workers > 1 is not supported for CLI baseline {name!r}")
+
     available, msg = check_available(name)
     if not available:
         raise ImportError(msg)
 
-    info = _REGISTRY[name]
     merged_kwargs = {**info.runner_kwargs, **kwargs}
     if split is not None:
         merged_kwargs.setdefault("split", split)

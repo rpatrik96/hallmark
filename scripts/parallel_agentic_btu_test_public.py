@@ -120,6 +120,20 @@ def _read_done_keys(jsonl_path: Path) -> set[str]:
     return keys
 
 
+def _read_error_keys(jsonl_path: Path) -> set[str]:
+    """Keys whose checkpoint records carry no verdict."""
+    if not jsonl_path.exists():
+        return set()
+    keys: set[str] = set()
+    for line in jsonl_path.read_text().splitlines():
+        if not line.strip():
+            continue
+        rec = json.loads(line)
+        if is_error_record(rec):
+            keys.add(str(rec.get("bibtex_key", "")))
+    return keys
+
+
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--checkpoint-dir", type=Path, required=True)
@@ -151,6 +165,8 @@ def main() -> None:
 
     verifier_fn, verifier_prefix = VERIFIERS[args.verifier]
     jsonl_path = args.checkpoint_dir / f"{verifier_prefix}_{_safe_model(args.model)}.jsonl"
+    if not args.dry_run:
+        quarantine_error_records(jsonl_path, _read_error_keys(jsonl_path))
     done_keys = _read_done_keys(jsonl_path)
 
     entries = load_split(split=args.split, version=args.version)
@@ -180,7 +196,6 @@ def main() -> None:
     start = time.time()
     tracker = RunHealthTracker(checkpoint_path=jsonl_path)
     poisoned: PoisonedBatchError | None = None
-    run_keys: set[str] = set()
 
     or_api_key = os.environ.get("OPENROUTER_API_KEY")
     if not or_api_key:
@@ -198,6 +213,7 @@ def main() -> None:
             # ``base_url`` parameter in commit 8fbd06e).
             "base_url": OPENROUTER_BASE_URL,
             "api_key": or_api_key,
+            "retry_failed": True,
         }
         # tool_augmented has no cache_db_path arg.
         if args.verifier != "tool_augmented":
@@ -213,7 +229,20 @@ def main() -> None:
                 "api_calls": 0,
                 "api_sources_queried": [],
             }
-        p = preds[0]
+        p = next(
+            (pred for pred in preds if pred.bibtex_key == getattr(entry, "bibtex_key", None)),
+            None,
+        )
+        if p is None:
+            return {
+                "bibtex_key": getattr(entry, "bibtex_key", "?"),
+                "label": "UNCERTAIN",
+                "confidence": 0.5,
+                "reason": "[Error fallback] verifier returned no prediction for this entry",
+                "wall_clock_seconds": 0.0,
+                "api_calls": 0,
+                "api_sources_queried": [],
+            }
         return {
             "bibtex_key": p.bibtex_key,
             "label": p.label,
@@ -241,7 +270,6 @@ def main() -> None:
                     "confidence": 0.5,
                     "reason": f"[Error fallback] Unhandled: {e}",
                 }
-            run_keys.add(str(rec.get("bibtex_key", "")))
             try:
                 tracker.add(rec)
             except PoisonedBatchError as exc:
@@ -263,8 +291,8 @@ def main() -> None:
                     eta_min,
                 )
 
+    sidecar = quarantine_error_records(jsonl_path, {e.bibtex_key for e in remaining})
     if poisoned is not None:
-        sidecar = quarantine_error_records(jsonl_path, run_keys)
         detail = f"\nRefused records: {sidecar}" if sidecar else ""
         raise SystemExit(f"{poisoned}{detail}")
 
