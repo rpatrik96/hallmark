@@ -47,9 +47,9 @@ attribute a source outage to pre-screening.
 Two independent measurements say the effect is large enough to change a
 conclusion. Correcting the source conditions on the same tool and split —
 supplying the keys, the credentials and a 20-per-minute pace — moved the
-incomplete-lookup fraction from 53.7% to 10.0%, and the run got *faster*: 2.4
-seconds per entry against 5.7. Pacing beats retrying, because a starved source
-turns into a retry storm that costs more than the wait it was avoiding. And on a
+incomplete-lookup fraction from 53.7% to 25.5%, 285 of 1,119 entries in the
+16:00 attempt above. Pacing beats retrying, because a starved source turns into
+a retry storm that costs more than the wait it was avoiding. And on a
 119-entry probe holding the model and prompt fixed, 12% of flags cleared with
 arXiv starved against 24% with it answering: the same verifier, the same
 entries, half the corrections.

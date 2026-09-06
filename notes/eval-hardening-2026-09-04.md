@@ -180,9 +180,9 @@ refused the run — the guard working exactly as designed.
 Three causes, all fixed: the keyless OpenAlex pool (1,000/day/IP) was exhausted
 and returned 429 to a bare probe; OpenReview 403s without credentials; and the
 wrapper drove `--rate-limit 120` where the tool's documented baseline is 45.
-With a key, credentials and a rate of 20, failures fell to **10.0%** — and the run
-got **faster**, 2.4 s/entry against 5.7, because pacing avoids the retry storms
-that retrying causes. Pacing beats retrying, with the clock going the right way.
+With a key, credentials and a rate of 20, failures fell to **25.5%** — 285 of the
+same 1,119 entries — because pacing avoids the retry storms that retrying causes.
+Pacing beats retrying.
 
 Two things worth carrying: **a dead credential is worse than none** (the expired
 S2 key 403'd every call while keyless merely throttled — dropping it took failures
@@ -343,7 +343,7 @@ paper as a stated result rather than being settled by relabelling five splits.
   counts.
 - **Issue #36**, the largest open item: the taxonomy folds "this work does not
   exist" together with "this entry describes a real work incorrectly". On the
-  wild corpus 63% of flags were the second kind, 47% from venue and preprint
-  status alone.
+  wild corpus, of the 324 references Stage 2 upheld as flags, 59.0% resolved to a real
+work described wrongly.
 - **Regenerating the reference results** under pinned versions, and rebuilding
   the README and site from one run.

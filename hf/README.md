@@ -40,8 +40,6 @@ configs:
 
 > This is the staged card for a future HuggingFace publication. No HuggingFace mirror is live.
 
-> **Anonymized for NeurIPS 2026 Datasets & Benchmarks Track double-blind review.**
-> Source code: <https://anonymous.4open.science/r/hallmark/>
 > **Corpus version:** v1.2.3 (2026-08-31) — see the source repository's `CHANGELOG.md` and tagged releases for provenance of every version.
 
 **HALL**ucination bench**MARK** evaluates citation verification tools on detecting hallucinated references in academic papers. The benchmark was motivated by the NeurIPS 2025 incident in which 53 accepted papers were found to contain fabricated citations that passed peer review.
