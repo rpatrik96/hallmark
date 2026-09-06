@@ -21,6 +21,7 @@ from __future__ import annotations
 
 import json
 import logging
+import subprocess
 from pathlib import Path
 from typing import Any
 
@@ -45,6 +46,54 @@ def _parse(tmp_path: Path, records: list[dict[str, Any]]) -> list[Prediction]:
     jsonl_path = tmp_path / "results.jsonl"
     jsonl_path.write_text("\n".join(json.dumps(r) for r in records) + "\n")
     return _parse_jsonl_output(jsonl_path, 1.0, len(records))
+
+
+# The status vocabulary of the bibtex-updater build this wrapper targets, read
+# from ``FactCheckStatus`` in ``src/bibtex_updater/fact_checker.py`` at
+# bibtexupdater commit b1fec73.  bibtex-updater needs bibtexparser 1.x and is
+# therefore installed in isolation, so the package cannot be imported from this
+# environment or from CI -- a frozen copy is what lets the drift check run
+# everywhere.  ``test_the_pinned_tool_still_emits_the_frozen_vocabulary`` reads
+# the live vocabulary wherever the tool is installed and fails when the two
+# disagree, which is the signal to refresh this set and re-check the maps.
+FROZEN_TOOL_STATUSES = frozenset(
+    {
+        "verified",
+        "not_found",
+        "unconfirmed",
+        "title_mismatch",
+        "author_mismatch",
+        "given_name_substitution",
+        "year_mismatch",
+        "venue_mismatch",
+        "nonexistent_venue",
+        "partial_match",
+        "hallucinated",
+        "api_error",
+        "arxiv_id_mismatch",
+        "doi_mismatch",
+        "future_date",
+        "invalid_year",
+        "doi_not_found",
+        "preprint_only",
+        "unpublished_at_claimed_venue",
+        "published_version_exists",
+        "url_verified",
+        "url_accessible",
+        "url_not_found",
+        "url_content_mismatch",
+        "book_verified",
+        "book_not_found",
+        "working_paper_verified",
+        "working_paper_not_found",
+        "title_near_miss",
+        "author_truncated",
+        "strict_warn_preprint_year",
+        "strict_warn_cnv",
+        "skipped",
+        "parse_error",
+    }
+)
 
 
 class TestStatusMaps:
@@ -78,6 +127,69 @@ class TestStatusMaps:
         fact_checker = pytest.importorskip("bibtex_updater.fact_checker")
         routed = set(STATUS_TO_TYPE) | STAGE1_VERIFIED | ROUTE_TO_STAGE2
         assert {status.value for status in fact_checker.FactCheckStatus} <= routed
+
+    def test_the_frozen_tool_vocabulary_is_fully_labeled(self) -> None:
+        """The wrapper knows every status the tool can emit.
+
+        This is the check the import above cannot make in CI, where the tool is
+        absent and the skip swallows the whole test.
+        """
+        unlabeled = FROZEN_TOOL_STATUSES - set(STATUS_TO_LABEL)
+        assert not unlabeled, (
+            f"bibtex-check statuses the wrapper cannot label: {sorted(unlabeled)}. "
+            "Add them to STATUS_TO_LABEL and STATUS_TO_CONFIDENCE in "
+            "hallmark/baselines/bibtexupdater.py."
+        )
+
+    def test_the_frozen_tool_vocabulary_is_fully_routed(self) -> None:
+        """The cascade routes every status the tool can emit."""
+        routed = set(STATUS_TO_TYPE) | STAGE1_VERIFIED | ROUTE_TO_STAGE2
+        unrouted = FROZEN_TOOL_STATUSES - routed
+        assert not unrouted, (
+            f"bibtex-check statuses the cascade does not route: {sorted(unrouted)}. "
+            "Add them to STATUS_TO_TYPE, STAGE1_VERIFIED or ROUTE_TO_STAGE2 in "
+            "hallmark/baselines/cascade.py."
+        )
+
+    def test_the_pinned_tool_still_emits_the_frozen_vocabulary(self) -> None:
+        """Read the vocabulary from the build the wrapper would actually run.
+
+        The snapshot is only as good as its last refresh, so wherever
+        bibtex-check is installed, ask the interpreter in its own environment
+        what the enum holds now.  Skips where the tool is absent, which includes
+        CI, and skips on a build too old to expose the enum -- an outdated
+        install is not the drift this guards against.
+        """
+        binary = btu.resolve_bibtex_check_bin()
+        if binary is None:
+            pytest.skip("bibtex-check is not installed")
+        with open(Path(binary).resolve()) as script:
+            first_line = script.readline().strip()
+        if not first_line.startswith("#!"):
+            pytest.skip("bibtex-check console script has no shebang")
+        interpreter = first_line.removeprefix("#!").strip().split()[0]
+        probe = subprocess.run(
+            [
+                interpreter,
+                "-c",
+                "from bibtex_updater.fact_checker import FactCheckStatus; "
+                "print(','.join(s.value for s in FactCheckStatus))",
+            ],
+            capture_output=True,
+            text=True,
+            timeout=30,
+        )
+        if probe.returncode != 0:
+            pytest.skip(f"bibtex-check does not expose FactCheckStatus: {probe.stderr}")
+        live = frozenset(probe.stdout.strip().split(","))
+        assert live == FROZEN_TOOL_STATUSES, (
+            "The installed bibtex-check emits a different status vocabulary than "
+            f"the frozen snapshot: added {sorted(live - FROZEN_TOOL_STATUSES)}, "
+            f"removed {sorted(FROZEN_TOOL_STATUSES - live)}. Update "
+            "FROZEN_TOOL_STATUSES in this module, then check that STATUS_TO_LABEL "
+            "in hallmark/baselines/bibtexupdater.py and the cascade maps in "
+            "hallmark/baselines/cascade.py cover every value it gained."
+        )
 
 
 class TestBibtexCheckVersion:
