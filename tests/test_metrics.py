@@ -89,9 +89,12 @@ class TestBuildConfusionMatrix:
             _entry("h1", "HALLUCINATED"),
         ]
         cm = build_confusion_matrix(entries, {})
-        # Missing predictions treated as VALID (conservative)
-        assert cm.tn == 1
-        assert cm.fn == 1
+        # An entry with no prediction is not an answer: it is skipped, not
+        # scored as VALID, so it can neither supply a true negative nor a miss.
+        assert cm.tn == 0
+        assert cm.fn == 0
+        assert cm.tp == 0
+        assert cm.fp == 0
 
     def test_mixed_results(self):
         entries = [
@@ -2024,7 +2027,7 @@ class TestEvaluateDualMode:
         assert aggr_fpr == pytest.approx(1.0)
 
     def test_evaluate_missing_predictions_aggressive(self):
-        """Missing keys: aggressive treats as HALLUCINATED, conservative as VALID."""
+        """Missing keys: aggressive treats as HALLUCINATED, conservative skips them."""
         entries = [
             _entry("v1", "VALID"),
             _entry("h1", "HALLUCINATED"),  # has prediction
@@ -2041,8 +2044,9 @@ class TestEvaluateDualMode:
         aggr = evaluate(
             entries, predictions, tool_name="t", split_name="dev", eval_mode="aggressive"
         )
-        # Conservative: h2 missing → treated as VALID (fn) → DR = 1/2 = 0.5
-        assert cons.detection_rate == pytest.approx(0.5)
+        # Conservative: h2 missing → not an answer, skipped → DR over the one
+        # answered hallucination = 1/1 = 1.0
+        assert cons.detection_rate == pytest.approx(1.0)
         # Aggressive: h2 missing → treated as HALLUCINATED → DR = 2/2 = 1.0
         assert aggr.detection_rate == pytest.approx(1.0)
         # Aggressive FPR: v1 predicted VALID → no FP, FPR = 0

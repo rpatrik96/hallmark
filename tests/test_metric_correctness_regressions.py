@@ -8,7 +8,11 @@ once you know what it replaced.
 
 from __future__ import annotations
 
-from hallmark.dataset.schema import BenchmarkEntry, Prediction
+import logging
+
+import pytest
+
+from hallmark.dataset.schema import BenchmarkEntry, EvaluationResult, Prediction
 from hallmark.evaluation.metrics import (
     _metric_f1,
     evaluate,
@@ -231,3 +235,102 @@ def test_strict_mode_still_keys_on_missing_predictions_not_abstention():
 
     result = evaluate(entries, preds, strict=True)  # must not raise
     assert result.coverage == 0.0
+
+
+# --- 5. Manufactured predictions are not answers ---
+
+
+def _partial_run_with_backfills():
+    entries = _split(n_hall=3, n_valid=3)
+    predictions = [
+        _pred("h0", "VALID", 0.9),
+        _pred("h1", "VALID", 0.8),
+        _pred("v0", "HALLUCINATED", 0.6),
+        Prediction(bibtex_key="h2", label="VALID", confidence=0.5, evaluated=False),
+        Prediction(bibtex_key="v1", label="VALID", confidence=0.5, evaluated=False),
+        Prediction(bibtex_key="v2", label="VALID", confidence=0.5, evaluated=False),
+    ]
+    return entries, predictions
+
+
+def test_unevaluated_backfills_reduce_both_coverage_measures():
+    entries, predictions = _partial_run_with_backfills()
+
+    result = evaluate(entries, predictions)
+
+    assert result.coverage == 0.5
+    assert result.response_coverage == 0.5
+
+
+def test_unevaluated_backfills_do_not_affect_scored_metrics():
+    entries, predictions = _partial_run_with_backfills()
+
+    result = evaluate(entries, predictions)
+
+    assert result.false_positive_rate == 1.0
+    assert result.ece == pytest.approx(0.7666666666666667)
+    assert result.auroc == 0.0
+    assert result.per_tier_metrics[1]["num_hallucinated"] == 2
+    assert result.per_tier_metrics[1]["num_valid"] == 1
+    assert result.per_type_metrics["fabricated_doi"]["count"] == 2
+    assert result.per_type_metrics["fabricated_doi"]["num_valid"] == 1
+
+
+def test_strict_mode_rejects_a_fully_unevaluated_backfill():
+    entries = _split(n_hall=2, n_valid=2)
+    predictions = [
+        Prediction(bibtex_key=e.bibtex_key, label="VALID", evaluated=False) for e in entries
+    ]
+
+    with pytest.raises(ValueError, match="Strict mode"):
+        evaluate(entries, predictions, strict=True)
+
+
+# --- 6. Legacy error fallbacks remain visible at run level ---
+
+
+def _run_with_error_fallbacks():
+    entries = _split(n_hall=2, n_valid=2)
+    predictions = [_pred(e.bibtex_key, e.label) for e in entries]
+    predictions[1].reason = "[Error fallback] API timeout"
+    return entries, predictions
+
+
+def test_error_fallbacks_are_counted_without_changing_num_evaluated():
+    entries, predictions = _run_with_error_fallbacks()
+
+    result = evaluate(entries, predictions)
+
+    assert result.num_evaluated == 4
+    assert result.num_error_fallbacks == 1
+
+
+def test_error_fallbacks_emit_an_incomplete_evaluation_warning(caplog):
+    entries, predictions = _run_with_error_fallbacks()
+
+    with caplog.at_level(logging.WARNING):
+        evaluate(entries, predictions, tool_name="legacy", split_name="fixture")
+
+    assert "1 [Error fallback] record" in caplog.text
+
+
+# --- 7. Legacy result files do not claim unrecorded response coverage ---
+
+
+def test_result_without_response_coverage_deserializes_as_not_recorded():
+    payload = {
+        "tool_name": "legacy",
+        "split_name": "fixture",
+        "num_entries": 4,
+        "num_hallucinated": 2,
+        "num_valid": 2,
+        "detection_rate": 0.5,
+        "false_positive_rate": 0.0,
+        "f1_hallucination": 0.5,
+        "tier_weighted_f1": 0.5,
+    }
+
+    result = EvaluationResult.from_dict(payload)
+
+    assert result.response_coverage is None
+    assert "response_coverage" in result.to_dict()
