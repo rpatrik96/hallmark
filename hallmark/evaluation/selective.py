@@ -66,6 +66,13 @@ alternative: ``harc_with_s2key_dev_public`` reports ``mean_api_calls`` 0.0 and i
 a real evaluation at coverage 1.0, and the ``always_valid`` baseline produces
 that signature as its correct output by construction. The rule would discard
 both — the same conflation one level further out.
+
+This module is staged, not wired: nothing outside its own test file imports it
+yet, and no result, report or CI check consumes it. The shrink-only test in
+tests/test_selective_prediction.py is what enforces the register in
+:data:`NOT_A_MEASUREMENT` today. The runtime refusal in
+:func:`not_a_measurement` activates once a caller that scores named runs
+through it exists.
 """
 
 from __future__ import annotations
@@ -98,6 +105,10 @@ ERROR_FALLBACK_MARKER = "[Error fallback]"
 #: VALID for every entry at confidence 1.0, so DR 0.0 and FPR 0.0 with no API
 #: calls is its CORRECT output, and a rule that excluded the signature would
 #: throw away the degenerate baseline the benchmark keeps on purpose.
+#:
+#: Today the shrink-only test in tests/test_selective_prediction.py is the only
+#: thing that holds this register: the runtime check in
+#: :func:`not_a_measurement` runs only through callers that do not exist yet.
 NOT_A_MEASUREMENT: dict[str, str] = {
     "bibtexupdater_no_prescreening_dev_public": (
         "DR 0.0, FPR 0.0 and mean_api_calls 0.0 over 1,079 entries: fallback_predictions "
