@@ -10,6 +10,7 @@ from hallmark.evaluation.ranking_stability import (
     _kendall_tau,
     iia_violation_check,
     per_subtype_ranking_stability,
+    ranking_sensitivity_analysis,
 )
 
 
@@ -101,6 +102,33 @@ class TestPerSubtypeRankingStability:
 
 
 class TestRankingSensitivity:
+    def test_uniform_tier_detection_rates_preserve_reference_ranking(self):
+        entries = [
+            _entry(f"h{tier}_{i}", "HALLUCINATED", tier=tier)
+            for tier in (1, 2, 3)
+            for i in range(2)
+        ] + [_entry(f"v{i}", "VALID") for i in range(8)]
+        tool_predictions = {
+            "high_recall_with_false_positives": [
+                _pred(entry.bibtex_key, "HALLUCINATED") for entry in entries
+            ],
+            "lower_recall_without_false_positives": [
+                _pred(
+                    entry.bibtex_key,
+                    (
+                        "HALLUCINATED"
+                        if entry.label == "HALLUCINATED" and entry.bibtex_key.endswith("_0")
+                        else "VALID"
+                    ),
+                )
+                for entry in entries
+            ],
+        }
+
+        result = ranking_sensitivity_analysis(entries, tool_predictions, n_samples=100, seed=0)
+
+        assert result.concordance_fraction == 1.0
+
     def test_requires_numpy(self):
         from unittest.mock import patch
 

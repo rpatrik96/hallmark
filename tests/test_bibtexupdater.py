@@ -67,6 +67,18 @@ class TestStatusMaps:
         routed = set(STATUS_TO_TYPE) | STAGE1_VERIFIED | ROUTE_TO_STAGE2
         assert set(STATUS_TO_LABEL) <= routed
 
+    def test_every_status_the_tool_can_emit_has_a_cascade_route(self) -> None:
+        """The invariant above reads HALLMARK's copy of the vocabulary, so it
+        cannot see a status the tool added and the wrapper never learned.
+
+        bibtex-updater needs bibtexparser 1.x and is installed in isolation, so
+        it is importable only where someone put it in this environment
+        deliberately; the check skips elsewhere.
+        """
+        fact_checker = pytest.importorskip("bibtex_updater.fact_checker")
+        routed = set(STATUS_TO_TYPE) | STAGE1_VERIFIED | ROUTE_TO_STAGE2
+        assert {status.value for status in fact_checker.FactCheckStatus} <= routed
+
 
 class TestBibtexCheckVersion:
     @staticmethod
