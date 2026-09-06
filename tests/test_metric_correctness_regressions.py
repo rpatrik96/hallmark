@@ -91,6 +91,61 @@ def test_two_sided_p_value_is_high_for_identical_tools():
     assert p > 0.05
 
 
+def test_bootstrap_ci_contains_point_estimate_with_missing_predictions():
+    """A point estimate must lie inside its own published interval.
+
+    The bootstrap backfilled a missing prediction as VALID at confidence 0.5 and
+    scored it, while ``evaluate`` excludes it, so the two sides described
+    different populations: on this fixture the detection rate is 1.0 against an
+    interval around 0.25. Both sides now resample only the answered entries.
+    """
+    entries = _split(n_hall=40, n_valid=40)
+    predictions = [_pred(f"h{i}", "HALLUCINATED") for i in range(10)]
+    predictions += [_pred(f"v{i}", "VALID") for i in range(10)]
+
+    result = evaluate(entries, predictions, compute_ci=True, n_bootstrap=300, ci_seed=0)
+
+    assert result.detection_rate_ci is not None
+    dr_lower, dr_upper = result.detection_rate_ci
+    assert dr_lower <= result.detection_rate <= dr_upper, (
+        f"detection rate {result.detection_rate} outside its CI {result.detection_rate_ci}"
+    )
+
+    assert result.f1_hallucination_ci is not None
+    f1_lower, f1_upper = result.f1_hallucination_ci
+    assert f1_lower <= result.f1_hallucination <= f1_upper, (
+        f"F1 {result.f1_hallucination} outside its CI {result.f1_hallucination_ci}"
+    )
+
+
+def test_aggressive_mode_scores_missing_entries_without_claiming_coverage():
+    """Aggressive mode must score an unanswered entry and still report it unanswered.
+
+    The synthesized missing-entry records were stamped ``evaluated=False``, so
+    every scoring site skipped them and aggressive mode returned the
+    conservative numbers under the aggressive label. They are answers now, while
+    coverage, response coverage and the evaluated count are measured from the
+    caller's own predictions so the manufactured records do not inflate them.
+    """
+    entries = [
+        _entry("h1", "HALLUCINATED"),  # answered, and the tool got it wrong
+        _entry("h2", "HALLUCINATED"),  # no prediction
+        _entry("h3", "HALLUCINATED"),  # no prediction
+    ]
+    predictions = [_pred("h1", "VALID")]
+
+    cons = evaluate(entries, predictions, eval_mode="conservative")
+    aggr = evaluate(entries, predictions, eval_mode="aggressive")
+
+    assert cons.detection_rate == pytest.approx(0.0)
+    assert aggr.detection_rate == pytest.approx(2 / 3)
+    assert aggr.detection_rate != cons.detection_rate
+
+    assert aggr.coverage == cons.coverage == pytest.approx(1 / 3)
+    assert aggr.response_coverage == cons.response_coverage == pytest.approx(1 / 3)
+    assert aggr.num_evaluated == cons.num_evaluated == 1
+
+
 # --- 2. Per-type metrics need a real FPR denominator ---
 
 

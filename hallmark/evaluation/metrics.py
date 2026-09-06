@@ -983,6 +983,9 @@ def stratified_bootstrap_ci(
     Stratification ensures each bootstrap resample maintains the original
     proportion of each hallucination type, preventing bias from underrepresented types.
 
+    Missing and unevaluated predictions are excluded before resampling, so the
+    interval describes the same answered population as the point estimate.
+
     Args:
         entries: Benchmark entries (ground truth).
         predictions: Tool's predictions.
@@ -1008,22 +1011,12 @@ def stratified_bootstrap_ci(
     pred_map = {p.bibtex_key: p for p in predictions}
 
     for entry in entries:
-        h_type = entry.hallucination_type or "valid"
-        # Include all entries (not just those with predictions) so CIs reflect
-        # uncertainty from missing predictions, consistent with build_confusion_matrix.
         pred = pred_map.get(entry.bibtex_key)
+        if pred is None or not is_answer(pred):
+            continue
+        h_type = entry.hallucination_type or "valid"
         type_groups[h_type][0].append(entry)
-        if pred is not None:
-            type_groups[h_type][1].append(pred)
-        else:
-            # Missing prediction → treated as VALID with default confidence
-            type_groups[h_type][1].append(
-                Prediction(
-                    bibtex_key=entry.bibtex_key,
-                    label="VALID",
-                    confidence=0.5,
-                )
-            )
+        type_groups[h_type][1].append(pred)
 
     # Bootstrap resampling
     bootstrap_metrics = []
@@ -1072,8 +1065,7 @@ def _bootstrap_all_cis(
     because it reuses each bootstrap resample for all metrics.
 
     Stratification is by hallucination type, matching ``stratified_bootstrap_ci``.
-    Missing predictions are filled with VALID/0.5 placeholders, consistent with
-    ``build_confusion_matrix``.
+    Missing and unevaluated predictions are excluded, matching the point estimates.
 
     Args:
         entries: Benchmark entries (ground truth).
@@ -1102,15 +1094,12 @@ def _bootstrap_all_cis(
     pred_map = {p.bibtex_key: p for p in predictions}
 
     for entry in entries:
-        h_type = entry.hallucination_type or "valid"
         pred = pred_map.get(entry.bibtex_key)
+        if pred is None or not is_answer(pred):
+            continue
+        h_type = entry.hallucination_type or "valid"
         type_groups[h_type][0].append(entry)
-        if pred is not None:
-            type_groups[h_type][1].append(pred)
-        else:
-            type_groups[h_type][1].append(
-                Prediction(bibtex_key=entry.bibtex_key, label="VALID", confidence=0.5)
-            )
+        type_groups[h_type][1].append(pred)
 
     # Per-metric accumulators
     dr_samples: list[float] = []
@@ -1230,14 +1219,27 @@ def paired_bootstrap_test(
 
     # Group entries (and corresponding paired predictions) by hallucination type for
     # stratified resampling — same grouping logic as stratified_bootstrap_ci().
+    #
+    # Both tools must keep an entry in the same position, so an entry one tool
+    # did not answer stays in the group with a placeholder rather than being
+    # dropped: ``metric_fn`` and ``build_confusion_matrix`` index entries and
+    # predictions positionally. The placeholder carries ``evaluated=False`` so
+    # each tool skips its own non-answers exactly as standalone ``evaluate``
+    # does, while the pairing stays intact.
     type_groups: dict[str, list[tuple[BenchmarkEntry, Prediction, Prediction]]] = defaultdict(list)
     for entry in entries:
         h_type = entry.hallucination_type or "valid"
         pa = pred_map_a.get(entry.bibtex_key) or Prediction(
-            bibtex_key=entry.bibtex_key, label="VALID", confidence=0.5
+            bibtex_key=entry.bibtex_key,
+            label="VALID",
+            confidence=0.5,
+            evaluated=False,
         )
         pb = pred_map_b.get(entry.bibtex_key) or Prediction(
-            bibtex_key=entry.bibtex_key, label="VALID", confidence=0.5
+            bibtex_key=entry.bibtex_key,
+            label="VALID",
+            confidence=0.5,
+            evaluated=False,
         )
         type_groups[h_type].append((entry, pa, pb))
 
@@ -2014,6 +2016,13 @@ def _make_aggressive_predictions(
 
     - UNCERTAIN predictions → HALLUCINATED with confidence 0.55.
     - Missing keys → HALLUCINATED with confidence 0.55.
+
+    Aggressive mode is a scoring convention over the entry set, not a claim
+    about what the tool returned, so the synthesized records are answers and
+    score like any other prediction. ``evaluate`` measures coverage and the
+    evaluated count from the caller's own list, so these records never stand in
+    for a response the tool did not make.
+
     Does NOT mutate the caller's list or any Prediction object.
     """
     pred_map = {p.bibtex_key: p for p in predictions}
@@ -2028,8 +2037,7 @@ def _make_aggressive_predictions(
                     label="HALLUCINATED",
                     confidence=0.55,
                     reason="[aggressive mode: missing prediction treated as HALLUCINATED]",
-                    # The tool produced nothing for this entry.
-                    evaluated=False,
+                    evaluated=True,
                 )
             )
         elif pred.label == "UNCERTAIN":
@@ -2118,6 +2126,9 @@ def evaluate(
         ci_seed: Random seed for bootstrap CI computation (default 42).
         strict: If True, raise ValueError when response coverage < 1.0 (missing
             or unevaluated predictions). Mirrors the CLI's ``--strict`` flag.
+            Strict asks whether the tool answered every entry, which is
+            independent of the scoring convention, so it raises in aggressive
+            mode on the same runs it raises on in conservative mode.
         eval_mode: Controls how UNCERTAIN predictions and missing entries are handled.
             - ``"conservative"`` (default): UNCERTAIN excluded from classification metrics.
             - ``"aggressive"``: UNCERTAIN + missing predictions treated as HALLUCINATED
@@ -2167,6 +2178,14 @@ def evaluate(
         }
 
     # For aggressive mode, transform predictions locally — do NOT mutate caller's list.
+    #
+    # Coverage, the evaluated count and the partial-run warnings are measured
+    # from the caller's own list, kept here before the transform. Aggressive
+    # mode changes how an unanswered entry is scored, not how much of the split
+    # the tool responded to, so its synthesized records must not reach those
+    # counts.
+    original_predictions = list(predictions)
+    original_pred_map = {p.bibtex_key: p for p in original_predictions}
     if eval_mode == "aggressive":
         predictions = _make_aggressive_predictions(entries, predictions)
 
@@ -2227,8 +2246,11 @@ def evaluate(
     # ``response_coverage`` is the weaker meaning — did the tool return a record
     # backed by a real evaluation? UNCERTAIN counts because the tool did respond;
     # ``evaluated=False`` does not because the record was manufactured.
+    original_pred_keys = set(original_pred_map)
     response_keys = {
-        key for key in (entry_keys & pred_keys) if getattr(pred_map[key], "evaluated", True)
+        key
+        for key in (entry_keys & original_pred_keys)
+        if getattr(original_pred_map[key], "evaluated", True)
     }
     response_coverage = len(response_keys) / len(entries) if entries else 1.0
 
@@ -2246,7 +2268,9 @@ def evaluate(
     # committed run answers 68 of 500 entries and reported coverage 1.0. With
     # this definition ``coverage_adjusted_f1`` penalises abstention as
     # ``EvaluationResult.coverage_adjusted_f1`` has always documented.
-    answered_keys = {key for key in (entry_keys & pred_keys) if is_answer(pred_map[key])}
+    answered_keys = {
+        key for key in (entry_keys & original_pred_keys) if is_answer(original_pred_map[key])
+    }
     coverage = len(answered_keys) / len(entries) if entries else 1.0
 
     cm = build_confusion_matrix(entries, pred_map)
@@ -2365,7 +2389,7 @@ def evaluate(
     type_conf = type_confusion_matrix(entries, predictions)
     cascade_stats = cascade_breakdown(predictions)
 
-    pred_list: list[Prediction] = list(predictions)
+    pred_list = original_predictions
     n_evaluated = evaluated_count(pred_list)
     num_error_fallbacks = sum(1 for pred in pred_list if is_error_fallback(pred))
     if run_evaluated_nothing(pred_list):
