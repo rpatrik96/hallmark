@@ -3,10 +3,30 @@
 from __future__ import annotations
 
 import json
+import logging
+import sys
+from argparse import Namespace
 
 import pytest
 
 from hallmark.cli import _SPLIT_CHOICES, main
+from hallmark.dataset.schema import EvaluationResult
+
+
+def _minimal_evaluation_result(
+    tool_name: str = "test_tool", split_name: str = "dev_public"
+) -> EvaluationResult:
+    return EvaluationResult(
+        tool_name=tool_name,
+        split_name=split_name,
+        num_entries=1,
+        num_hallucinated=1,
+        num_valid=0,
+        detection_rate=1.0,
+        false_positive_rate=None,
+        f1_hallucination=1.0,
+        tier_weighted_f1=1.0,
+    )
 
 
 def test_stats_dev_public(capsys: pytest.CaptureFixture[str]) -> None:
@@ -127,6 +147,34 @@ class TestEvaluateWithPredictions:
         out = capsys.readouterr().out
         assert "tool" in out
         assert "detection_rate" in out
+
+    def test_missing_predictions_and_abstentions_have_separate_warnings(
+        self,
+        tmp_path: pytest.TempPathFactory,
+        caplog: pytest.LogCaptureFixture,
+    ) -> None:
+        from hallmark.dataset.loader import load_split
+
+        entries = load_split("dev_public")
+        predictions = [
+            {
+                "bibtex_key": entry.bibtex_key,
+                "label": "UNCERTAIN" if index == 0 else "VALID",
+                "confidence": 0.5,
+            }
+            for index, entry in enumerate(entries[:-1])
+        ]
+        pred_file = tmp_path / "preds_with_abstention.jsonl"
+        pred_file.write_text("\n".join(json.dumps(prediction) for prediction in predictions))
+
+        with caplog.at_level(logging.WARNING):
+            rc = main(["evaluate", "--split", "dev_public", "--predictions", str(pred_file)])
+
+        assert rc == 0
+        assert "Missing predictions" in caplog.text
+        assert f"({len(entries) - 1}/{len(entries)} entries)" in caplog.text
+        assert "abstention" in caplog.text.lower()
+        assert "1 uncertain" in caplog.text
 
 
 class TestEvaluateUnavailableBaseline:
@@ -465,6 +513,232 @@ class TestHistoryAppendAllMetrics:
 
         for field in ("mcc", "ece", "auroc", "auprc", "coverage", "coverage_adjusted_f1"):
             assert field in record, f"Field '{field}' missing from history record"
+
+    def test_history_append_skips_non_evaluation_json(
+        self,
+        tmp_path: pytest.TempPathFactory,
+        caplog: pytest.LogCaptureFixture,
+    ) -> None:
+        results_dir = tmp_path / "results"
+        results_dir.mkdir()
+        (results_dir / "result.json").write_text(
+            json.dumps({"tool_name": "tool", "split_name": "dev_public"})
+        )
+        (results_dir / "temporal_probe.json").write_text(json.dumps({"probe": []}))
+        history_file = tmp_path / "history.jsonl"
+
+        with caplog.at_level(logging.WARNING):
+            rc = main(
+                [
+                    "history-append",
+                    "--results-dir",
+                    str(results_dir),
+                    "--output",
+                    str(history_file),
+                ]
+            )
+
+        assert rc == 0
+        assert len(history_file.read_text().splitlines()) == 1
+        assert "temporal_probe.json" in caplog.text
+        assert "Skipping" in caplog.text
+
+
+class TestResultProvenance:
+    def test_cli_stamps_bibtex_check_when_baseline_name_does_not_match(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        from hallmark.baselines import bibtexupdater
+        from hallmark.cli import _stamp_provenance
+
+        monkeypatch.setattr(bibtexupdater, "ran_bibtex_check", lambda: True)
+        monkeypatch.setattr(bibtexupdater, "resolve_bibtex_check_bin", lambda: "/tmp/check")
+        monkeypatch.setattr(bibtexupdater, "bibtex_check_version", lambda _binary: "1.2.3")
+        monkeypatch.setattr(
+            bibtexupdater,
+            "last_source_condition",
+            lambda: {"incomplete_fraction": 0.1},
+        )
+        result = _minimal_evaluation_result(tool_name="ensemble")
+
+        _stamp_provenance(result, Namespace(baseline="ensemble", split=None))
+
+        assert result.tool_version == "bibtex-updater 1.2.3"
+        assert result.source_condition == {"incomplete_fraction": 0.1}
+
+    def test_cli_does_not_stamp_bibtex_check_that_did_not_run(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        from hallmark.baselines import bibtexupdater
+        from hallmark.cli import _stamp_provenance
+
+        monkeypatch.setattr(bibtexupdater, "ran_bibtex_check", lambda: False)
+        monkeypatch.setattr(
+            bibtexupdater,
+            "bibtex_check_version",
+            lambda _binary: pytest.fail("version probe should not run"),
+        )
+        result = _minimal_evaluation_result(tool_name="bibtexupdater")
+
+        _stamp_provenance(result, Namespace(baseline="bibtexupdater", split=None))
+
+        assert result.tool_version is None
+        assert result.source_condition is None
+
+    def test_cli_logs_version_probe_failure_without_losing_provenance(
+        self,
+        monkeypatch: pytest.MonkeyPatch,
+        caplog: pytest.LogCaptureFixture,
+    ) -> None:
+        from hallmark.baselines import bibtexupdater
+        from hallmark.cli import _stamp_provenance
+
+        monkeypatch.setattr(bibtexupdater, "ran_bibtex_check", lambda: True)
+        monkeypatch.setattr(
+            bibtexupdater,
+            "resolve_bibtex_check_bin",
+            lambda: (_ for _ in ()).throw(RuntimeError("missing pinned binary")),
+        )
+        result = _minimal_evaluation_result(tool_name="bibtexupdater")
+
+        with caplog.at_level(logging.ERROR):
+            _stamp_provenance(result, Namespace(baseline="bibtexupdater", split=None))
+
+        assert result.run_timestamp is not None
+        assert "missing pinned binary" in caplog.text
+
+    def test_generate_reference_results_stamps_split_hash(
+        self, tmp_path: pytest.TempPathFactory, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        from hallmark.dataset.loader import DEFAULT_DATA_DIR, SPLIT_PATHS
+        from hallmark.evaluation.validate import compute_sha256
+        from scripts import generate_reference_results as script
+
+        monkeypatch.setattr(script, "load_split", lambda **_kwargs: [object()])
+        monkeypatch.setattr(script, "run_baseline", lambda *_args, **_kwargs: [object()])
+        monkeypatch.setattr(
+            script,
+            "evaluate",
+            lambda **kwargs: _minimal_evaluation_result(kwargs["tool_name"], kwargs["split_name"]),
+        )
+        monkeypatch.setattr(
+            script,
+            "validate_reference_results",
+            lambda *_args, **_kwargs: Namespace(passed=True, errors=[]),
+        )
+
+        script.generate(["harc"], results_dir=tmp_path)
+
+        payload = json.loads((tmp_path / "harc_dev_public.json").read_text())
+        split_file = DEFAULT_DATA_DIR / "v1.2" / SPLIT_PATHS["dev_public"]
+        assert payload["split_sha256"] == compute_sha256(split_file)
+
+    def test_run_all_baselines_stamps_split_hash(
+        self, tmp_path: pytest.TempPathFactory, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        from hallmark.evaluation.validate import compute_sha256
+        from scripts import run_all_baselines as script
+
+        data_dir = tmp_path / "data"
+        split_file = data_dir / "v1.2" / "dev_public.jsonl"
+        split_file.parent.mkdir(parents=True)
+        split_file.write_text('{"split": "fixture"}\n')
+        output_dir = tmp_path / "results"
+        output_dir.mkdir()
+        monkeypatch.setattr(script, "run_baseline", lambda *_args, **_kwargs: [object()])
+        monkeypatch.setattr(
+            script,
+            "evaluate",
+            lambda *_args, **_kwargs: _minimal_evaluation_result("harc", "dev_public"),
+        )
+
+        script.run_single_baseline(
+            "harc",
+            [object()],
+            "dev_public",
+            output_dir,
+            data_dir=data_dir,
+            version="v1.2",
+        )
+
+        payload = json.loads((output_dir / "harc_dev_public.json").read_text())
+        assert payload["split_sha256"] == compute_sha256(split_file)
+
+    def test_run_evaluation_stamps_both_split_hashes(
+        self, tmp_path: pytest.TempPathFactory, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        from hallmark.evaluation.validate import compute_sha256
+        from scripts import run_evaluation as script
+
+        data_dir = tmp_path / "data"
+        split_file = data_dir / "v1.2" / "dev_public.jsonl"
+        split_file.parent.mkdir(parents=True)
+        split_file.write_text('{"split": "fixture"}\n')
+        output_path = tmp_path / "evaluation.json"
+        monkeypatch.setattr(script, "load_split", lambda *_args, **_kwargs: [object()])
+        monkeypatch.setattr(script, "_run_baseline", lambda *_args, **_kwargs: [object()])
+        monkeypatch.setattr(
+            script,
+            "evaluate",
+            lambda *_args, **_kwargs: {
+                "conservative": _minimal_evaluation_result("doi_only", "dev_public"),
+                "aggressive": _minimal_evaluation_result("doi_only", "dev_public"),
+            },
+        )
+        monkeypatch.setattr(
+            sys,
+            "argv",
+            [
+                "run_evaluation.py",
+                "--split",
+                "dev_public",
+                "--baseline",
+                "doi_only",
+                "--data-dir",
+                str(data_dir),
+                "--output",
+                str(output_path),
+                "--eval-mode",
+                "both",
+            ],
+        )
+
+        script.main()
+
+        payload = json.loads(output_path.read_text())
+        expected = compute_sha256(split_file)
+        assert payload["conservative"]["split_sha256"] == expected
+        assert payload["aggressive"]["split_sha256"] == expected
+
+    def test_rate_limited_writer_matches_generator_manifest_key_and_stamps_hash(
+        self, tmp_path: pytest.TempPathFactory, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        from hallmark.dataset.loader import DEFAULT_DATA_DIR, SPLIT_PATHS
+        from hallmark.evaluation.validate import compute_sha256
+        from scripts import run_rate_limited_baselines as script
+
+        monkeypatch.setenv("S2_API_KEY", "test-key")
+        monkeypatch.setattr(script, "DEFAULT_RESULTS_DIR", tmp_path)
+        monkeypatch.setattr(script, "load_split", lambda **_kwargs: [object()])
+        monkeypatch.setattr(script, "run_baseline", lambda *_args, **_kwargs: [object()])
+        monkeypatch.setattr(
+            script,
+            "evaluate",
+            lambda *_args, **_kwargs: _minimal_evaluation_result("harc", "dev_public"),
+        )
+        monkeypatch.setattr(
+            sys,
+            "argv",
+            ["run_rate_limited_baselines.py", "--baseline", "harc", "--split", "dev_public"],
+        )
+
+        assert script.main() == 0
+
+        payload = json.loads((tmp_path / "harc_dev_public.json").read_text())
+        split_file = DEFAULT_DATA_DIR / "v1.2" / SPLIT_PATHS["dev_public"]
+        assert payload["split_sha256"] == compute_sha256(split_file)
+        manifest = json.loads((tmp_path / "manifest.json").read_text())
+        assert set(manifest["files"]) == {"harc_dev_public.json"}
 
 
 class TestLeaderboardCovF1Column:

@@ -22,6 +22,7 @@ from typing import Any
 from hallmark.baselines.registry import check_available, list_baselines, run_baseline
 from hallmark.dataset.loader import load_split
 from hallmark.evaluation.metrics import evaluate
+from hallmark.evaluation.provenance import stamp_provenance
 
 logger = logging.getLogger(__name__)
 
@@ -154,6 +155,8 @@ def run_single_baseline(
     split: str,
     output_dir: Path,
     checkpoint_root: Path | None = None,
+    data_dir: str | Path | None = None,
+    version: str = "v1.2",
 ) -> dict[str, Any] | None:
     """Run a single baseline and save results.
 
@@ -165,6 +168,8 @@ def run_single_baseline(
         checkpoint_root: Optional root for incremental JSONL checkpoints. If
             provided, LLM-based baselines write a per-call prediction line so
             partial runs survive interruption and can be inspected mid-run.
+        data_dir: Root containing the versioned split files.
+        version: Dataset version containing the split.
 
     Returns:
         Dictionary with baseline results or None if failed
@@ -187,6 +192,7 @@ def run_single_baseline(
 
         # Evaluate
         result = evaluate(entries, predictions, tool_name=name, split_name=split)
+        stamp_provenance(result, split, data_dir, version, name)
 
         # Save results
         output_file = output_dir / f"{name}_{split}.json"
@@ -360,6 +366,8 @@ def main() -> None:
                     args.split,
                     args.output_dir,
                     checkpoint_root,
+                    args.data_dir,
+                    args.version,
                 ): name
                 for name in baselines
             }
@@ -372,7 +380,13 @@ def main() -> None:
         logger.info("Running baselines sequentially...")
         for name in baselines:
             result = run_single_baseline(
-                name, entries, args.split, args.output_dir, checkpoint_root
+                name,
+                entries,
+                args.split,
+                args.output_dir,
+                checkpoint_root,
+                args.data_dir,
+                args.version,
             )
             if result is not None:
                 results.append(result)
