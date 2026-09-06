@@ -56,6 +56,11 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          # The precomputed leg validates data/v1.2/baseline_results against its
+          # manifest, and the raw .jsonl results the manifest covers are LFS-tracked.
+          # Without the objects those files are pointer stubs and every checksum
+          # mismatches.
+          lfs: true
 
       - name: Set up Python 3.12
         uses: actions/setup-python@v5

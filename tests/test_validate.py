@@ -4,12 +4,15 @@ from __future__ import annotations
 
 import json
 import sys
+from pathlib import Path
 
 import pytest
 
 from hallmark.dataset.schema import EvaluationResult
 from hallmark.evaluation.validate import compute_sha256, validate_reference_results
 from scripts import rebuild_results_manifest as rebuild_manifest
+
+RELEASED_RESULTS = Path(__file__).resolve().parent.parent / "data/v1.2/baseline_results"
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -229,6 +232,34 @@ class TestValidateReferenceResults:
         vr = validate_reference_results(tmp_path, metadata_path=meta_path)
         assert not vr.passed
         assert any("num_entries" in e for e in vr.errors)
+
+
+# ---------------------------------------------------------------------------
+# The released manifest against the released directory
+# ---------------------------------------------------------------------------
+
+
+def test_released_manifest_covers_every_released_result():
+    """A result the manifest omits is never checksummed, and the suite stays green.
+
+    Names only, never checksums, so this holds on a checkout that has not fetched
+    the LFS objects behind the raw .jsonl results.
+    """
+    manifest = json.loads((RELEASED_RESULTS / "manifest.json").read_text())
+    listed = set(manifest["files"])
+    on_disk = {
+        path.name
+        for pattern in ("*.json", "*.jsonl")
+        for path in RELEASED_RESULTS.glob(pattern)
+        if path.name != "manifest.json"
+    }
+    assert listed == on_disk, (
+        f"{RELEASED_RESULTS.name}/manifest.json no longer describes the directory it "
+        "ships with.\n"
+        f"  on disk, unlisted: {sorted(on_disk - listed)}\n"
+        f"  listed, absent   : {sorted(listed - on_disk)}\n"
+        "Repair with: python scripts/rebuild_results_manifest.py --apply"
+    )
 
 
 # ---------------------------------------------------------------------------

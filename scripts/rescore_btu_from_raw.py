@@ -103,11 +103,19 @@ def main() -> int:
     split_file = args.data_dir / args.version / SPLIT_PATHS[args.split]
     entries = load_entries(split_file)
     predictions = _parse_jsonl_output(args.raw, 0.0, len(entries))
-    if len(predictions) != len(entries):
+    # The run behind the aggregate sizes this check, not the split. A bibtex-check
+    # run holds fewer records than the split has entries whenever it skipped an
+    # entry, and the aggregate's histogram counts exactly the records that run
+    # produced -- the released dev_public pair is 1112 records against 1119 entries,
+    # and coverage divides by the split size on purpose. Only where there is no
+    # histogram is the split size the one bound left.
+    expected = sum(recorded.values()) if recorded else len(entries)
+    reference = "the aggregate's status histogram" if recorded else str(split_file)
+    if len(predictions) != expected:
         print(
-            f"{args.raw} contains {len(predictions)} parsed record(s), but {split_file} "
-            f"contains {len(entries)} scored entry(ies); refusing to derive coverage from "
-            "a partial raw output.",
+            f"{args.raw} contains {len(predictions)} parsed record(s), but {reference} "
+            f"accounts for {expected}; refusing to derive coverage from a partial raw "
+            "output.",
             file=sys.stderr,
         )
         return 1

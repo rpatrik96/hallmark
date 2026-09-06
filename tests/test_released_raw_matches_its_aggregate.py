@@ -149,7 +149,47 @@ def test_rescore_allows_explicit_unverified_raw_override(monkeypatch, tmp_path):
 
 
 def test_rescore_refuses_a_partial_raw_output(monkeypatch, tmp_path):
+    """With no histogram to size the run, the split size is the only bound left."""
+    results_dir, data_dir, raw = _write_rescore_fixture(tmp_path, entries=2, recorded=...)
+    assert _run_rescore(monkeypatch, results_dir, data_dir, raw, "--allow-unverified-raw") == 1
+
+
+def test_rescore_accepts_a_raw_shorter_than_its_split(monkeypatch, tmp_path):
+    """A run that skipped an entry is the normal case, and the histogram sizes it."""
     results_dir, data_dir, raw = _write_rescore_fixture(
         tmp_path, entries=2, recorded={"verified": 1}
     )
-    assert _run_rescore(monkeypatch, results_dir, data_dir, raw) == 1
+    assert _run_rescore(monkeypatch, results_dir, data_dir, raw) == 0
+
+
+def test_rescore_reproduces_the_released_coverage(monkeypatch, capsys):
+    """The script that regenerates a published number runs on the data it ships with.
+
+    The count guard sizes the raw file against the run rather than the split, and
+    the released pair is the case that separates the two: 1112 records against 1119
+    entries. No fixture stands in for it, because a guard sized to the split passes
+    every fixture in this file and refuses the release.
+    """
+    raw = RESULTS / "bibtexupdater_raw_dev_public.jsonl"
+    aggregate = RESULTS / "bibtexupdater_dev_public.json"
+    if not raw.is_file() or not aggregate.is_file():
+        pytest.skip("the released dev_public raw/aggregate pair is not present")
+    if raw.read_text(errors="ignore").startswith("version https://git-lfs"):
+        pytest.skip(f"{raw.name} is an unfetched LFS pointer")
+    released = json.loads(aggregate.read_text())
+
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        ["rescore_btu_from_raw.py", "--split", "dev_public", "--raw", str(raw)],
+    )
+    assert rescore.main() == 0, "the released raw/aggregate pair no longer rescores"
+
+    printed = capsys.readouterr().out
+    recomputed = {
+        line.split()[0]: float(line.split("->")[1])
+        for line in (text.strip() for text in printed.splitlines())
+        if line.startswith(("coverage ", "num_uncertain "))
+    }
+    assert recomputed["coverage"] == pytest.approx(released["coverage"], abs=5e-5)
+    assert recomputed["num_uncertain"] == released["num_uncertain"]
