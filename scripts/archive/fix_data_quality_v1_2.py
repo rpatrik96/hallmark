@@ -1,3 +1,4 @@
+# Archived; superseded by scripts/build_dataset.py.
 """
 Data quality fix script for HALLMARK benchmark data files.
 Runs all 5 tasks:

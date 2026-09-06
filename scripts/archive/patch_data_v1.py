@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# Archived; superseded by scripts/build_dataset.py.
 """Patch shipped data files to fix known quality issues.
 
 Fixes applied (idempotent — safe to run multiple times):

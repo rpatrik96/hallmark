@@ -61,6 +61,11 @@ def main() -> int:
     ap.add_argument("--results-dir", type=Path, default=REPO_ROOT / "data/v1.2/baseline_results")
     ap.add_argument("--data-dir", type=Path, default=REPO_ROOT / "data")
     ap.add_argument("--version", default="v1.2")
+    ap.add_argument(
+        "--allow-unverified-raw",
+        action="store_true",
+        help="allow a raw file when the aggregate records no usable status histogram",
+    )
     ap.add_argument("--apply", action="store_true", help="write (default: dry run)")
     args = ap.parse_args()
 
@@ -76,6 +81,14 @@ def main() -> int:
 
     observed = status_histogram(args.raw)
     recorded = released.get("_btu_status_histogram")
+    if not recorded and not args.allow_unverified_raw:
+        print(
+            f"{target} records no usable _btu_status_histogram, so the raw file cannot "
+            "be verified as the run behind this aggregate. Pass --allow-unverified-raw "
+            "to accept that risk explicitly.",
+            file=sys.stderr,
+        )
+        return 1
     if recorded and observed != recorded:
         print(
             f"{args.raw} does not match the aggregate it would annotate.\n"
@@ -90,6 +103,14 @@ def main() -> int:
     split_file = args.data_dir / args.version / SPLIT_PATHS[args.split]
     entries = load_entries(split_file)
     predictions = _parse_jsonl_output(args.raw, 0.0, len(entries))
+    if len(predictions) != len(entries):
+        print(
+            f"{args.raw} contains {len(predictions)} parsed record(s), but {split_file} "
+            f"contains {len(entries)} scored entry(ies); refusing to derive coverage from "
+            "a partial raw output.",
+            file=sys.stderr,
+        )
+        return 1
     abstentions = sum(1 for p in predictions if p.label == "UNCERTAIN")
     answered = sum(1 for p in predictions if p.label != "UNCERTAIN")
     coverage = answered / len(entries)
