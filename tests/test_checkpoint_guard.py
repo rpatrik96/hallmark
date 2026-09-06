@@ -10,11 +10,13 @@ from __future__ import annotations
 
 import importlib.util
 import json
+import subprocess
 from pathlib import Path
 from typing import Any
 
 import pytest
 
+from hallmark.baselines.bibtexupdater import SourceOutageError
 from hallmark.baselines.checkpoint_guard import (
     GuardedCheckpointWriter,
     PoisonedBatchError,
@@ -26,6 +28,7 @@ from hallmark.baselines.checkpoint_guard import (
     refusal_message,
     rejected_path_for,
 )
+from hallmark.dataset.schema import BlindEntry, Prediction
 
 _HAS_OPENAI = importlib.util.find_spec("openai") is not None
 
@@ -61,6 +64,14 @@ def _read(path: Path) -> list[dict[str, Any]]:
     if not path.exists():
         return []
     return [json.loads(line) for line in path.read_text().splitlines() if line.strip()]
+
+
+def _entry(key: str = "k") -> BlindEntry:
+    return BlindEntry(
+        bibtex_key=key,
+        bibtex_type="article",
+        fields={"title": "Test", "author": "A. Author", "year": "2024"},
+    )
 
 
 class TestRecordClassification:
@@ -120,8 +131,151 @@ class TestAssessRunHealth:
         message = refusal_message(health, Path("/tmp/ckpt.jsonl"))
         assert "40/40" in message
         assert "transport" in message
-        assert "retried" in message
+        assert "re-runs" in message
         assert "/tmp/ckpt.jsonl" in message
+
+    def test_refusal_message_preserves_usable_verdicts(self) -> None:
+        health = assess_run_health([_ok(f"g{i}") for i in range(20)] + [_api_error("bad")])
+        message = refusal_message(health, Path("/tmp/ckpt.jsonl"))
+        assert "usable verdicts already in it stay" in message
+        assert "refused entries were not written" in message.lower()
+
+
+class TestParallelOutageHandling:
+    def test_error_fallback_is_not_evaluated(self) -> None:
+        from hallmark.baselines.concurrency import _fallback_for_unhandled
+
+        pred = _fallback_for_unhandled(_entry(), RuntimeError("boom"))
+        assert pred.evaluated is False
+
+    def test_source_outage_propagates_from_worker(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        from hallmark.baselines import concurrency
+        from hallmark.baselines.registry import BaselineInfo
+
+        def _outage(_entries: list[BlindEntry], **_kwargs: Any) -> list[Prediction]:
+            raise SourceOutageError("sources unavailable")
+
+        info = BaselineInfo(name="outage", description="test", runner=_outage)
+        monkeypatch.setattr(concurrency.registry, "get_registry", lambda: {"outage": info})
+
+        with pytest.raises(SourceOutageError, match="sources unavailable"):
+            concurrency.parallel_run_baseline(
+                "outage", [_entry()], workers=2, checkpoint_dir=tmp_path
+            )
+
+    def test_registry_refuses_parallel_cli_baseline(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        from hallmark.baselines import registry
+        from hallmark.baselines.registry import BaselineInfo
+
+        called = False
+
+        def _runner(_entries: list[BlindEntry], **_kwargs: Any) -> list[Prediction]:
+            nonlocal called
+            called = True
+            return []
+
+        monkeypatch.setitem(
+            registry._REGISTRY,
+            "bibtexupdater",
+            BaselineInfo(
+                name="bibtexupdater",
+                description="test",
+                runner=_runner,
+                cli_commands=["bibtex-check"],
+            ),
+        )
+        monkeypatch.setattr(registry, "check_available", lambda _name: (True, "OK"))
+
+        with pytest.raises(ValueError, match=r"workers.*CLI"):
+            registry.run_baseline("bibtexupdater", [], workers=8)
+        assert called is False
+
+    def test_pinned_bibtex_check_counts_as_available(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        from hallmark.baselines import registry
+
+        binary = tmp_path / "bibtex-check"
+        binary.write_text("#!/bin/sh\n")
+        monkeypatch.setenv("HALLMARK_BIBTEX_CHECK_BIN", str(binary))
+        monkeypatch.setattr("shutil.which", lambda _cmd: None)
+
+        available, message = registry.check_available("bibtexupdater")
+        assert available, message
+
+
+class TestBibtexEvidenceOutageHandling:
+    @staticmethod
+    def _install_exit_five(monkeypatch: pytest.MonkeyPatch) -> None:
+        from hallmark.baselines import bibtexupdater as btu
+
+        record = {
+            "key": "k",
+            "status": "unconfirmed",
+            "mismatched_fields": ["venue"],
+        }
+
+        def _run(cmd: list[str], **_kwargs: Any) -> subprocess.CompletedProcess[str]:
+            jsonl_path = Path(cmd[cmd.index("--jsonl") + 1])
+            jsonl_path.write_text(json.dumps(record) + "\n")
+            report = (
+                "1 of 1 entries (100.0%) had at least one source lookup that did not "
+                "complete: dblp (1).\n"
+            )
+            return subprocess.CompletedProcess(cmd, 5, stdout=report, stderr="")
+
+        monkeypatch.setattr("shutil.which", lambda _cmd: "/fake/bibtex-check")
+        monkeypatch.setattr(btu, "resolve_bibtex_check_bin", lambda: "/fake/bibtex-check")
+        monkeypatch.setattr(btu, "bibtex_check_version", lambda _binary=None: "test")
+        monkeypatch.setattr("subprocess.run", _run)
+
+    def test_saved_evidence_refuses_exit_five(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        from hallmark.baselines.llm_tool_augmented import save_tool_evidence
+
+        self._install_exit_five(monkeypatch)
+        with pytest.raises(SourceOutageError):
+            save_tool_evidence([_entry()], tmp_path / "evidence.jsonl")
+
+    def test_agentic_tool_returns_explicit_unavailable_verdict(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        from hallmark.baselines import _agentic_tools
+
+        self._install_exit_five(monkeypatch)
+        monkeypatch.setattr(_agentic_tools, "_pace", lambda _service: 0.0)
+        result = _agentic_tools.verify_with_bibtex_updater(_entry().to_bibtex())
+        assert result["status"] == "sources_unavailable"
+        assert "source outage" in result["errors"].lower()
+
+    def test_legacy_unconfirmed_evidence_does_not_claim_a_contradiction(self) -> None:
+        from hallmark.baselines.llm_tool_augmented import format_tool_evidence
+
+        text = format_tool_evidence(
+            {
+                "status": "unconfirmed",
+                "mismatched_fields": ["venue"],
+            }
+        )
+        assert "Fields the checker refuted:" not in text
+        assert "could not separate into refuted vs. not-compared" in text
+        assert "confirmed nothing" in text
+
+    def test_current_evidence_separates_refuted_and_unconfirmed_fields(self) -> None:
+        from hallmark.baselines.llm_tool_augmented import format_tool_evidence
+
+        text = format_tool_evidence(
+            {
+                "status": "partial_match",
+                "mismatched_fields": ["title"],
+                "unconfirmed_fields": ["venue"],
+            }
+        )
+        assert "Fields the checker refuted: title" in text
+        assert "Fields it could not compare (not a disagreement): venue" in text
 
 
 class TestRunHealthTracker:
@@ -218,7 +372,6 @@ class TestQuarantineErrorRecords:
         assert quarantine_error_records(tmp_path / "nope.jsonl", {"a"}) is None
 
 
-@pytest.mark.skipif(not _HAS_OPENAI, reason="scripts import the openai SDK")
 class TestAgenticScriptResume:
     """``_read_done_keys`` must not treat a failed record as done."""
 
@@ -255,6 +408,59 @@ class TestAgenticScriptResume:
         records = [_ok("k"), _api_error("k")]
         path.write_text("\n".join(json.dumps(r) for r in records) + "\n")
         assert module._read_done_keys(path) == set()
+
+    def test_resume_quarantines_and_reverifies_failed_record(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        module = self._load_script()
+        checkpoint_dir = tmp_path / "ckpt"
+        checkpoint_dir.mkdir()
+        jsonl_path = checkpoint_dir / "agentic_btu_openai_test_model.jsonl"
+        jsonl_path.write_text(
+            "\n".join(json.dumps(record) for record in [_ok("good"), _api_error("bad")]) + "\n"
+        )
+        entries = [_entry("good"), _entry("bad")]
+        calls: list[tuple[str, bool]] = []
+
+        def _verify(requested: list[BlindEntry], **kwargs: Any) -> list[Prediction]:
+            calls.append((requested[0].bibtex_key, kwargs.get("retry_failed") is True))
+            return [
+                Prediction(
+                    bibtex_key="good",
+                    label="VALID",
+                    confidence=0.9,
+                    reason="stale checkpoint result",
+                ),
+                Prediction(
+                    bibtex_key=requested[0].bibtex_key,
+                    label="VALID",
+                    confidence=0.9,
+                    reason="reverified",
+                ),
+            ]
+
+        monkeypatch.setitem(module.VERIFIERS, "agentic_btu_openai", (_verify, "agentic_btu_openai"))
+        monkeypatch.setattr(module, "load_split", lambda **_kwargs: entries)
+        monkeypatch.setenv("OPENROUTER_API_KEY", "test-key")
+        monkeypatch.setattr(
+            "sys.argv",
+            [
+                "parallel_agentic_btu_test_public.py",
+                "--checkpoint-dir",
+                str(checkpoint_dir),
+                "--model",
+                "test/model",
+                "--workers",
+                "1",
+                "--cache-db-path",
+                str(tmp_path / "cache.sqlite"),
+            ],
+        )
+
+        module.main()
+
+        assert calls == [("bad", True)]
+        assert [record["bibtex_key"] for record in _read(jsonl_path)] == ["good"]
 
 
 @pytest.mark.skipif(not _HAS_OPENAI, reason="the script imports the openai SDK")

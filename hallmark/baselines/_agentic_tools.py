@@ -796,65 +796,104 @@ def verify_with_bibtex_updater(bibtex: str) -> dict[str, str]:
 
     Returns:
         Flat dict with keys ``status``, ``confidence``, ``mismatched_fields``,
-        ``api_sources``, ``errors``.  All values are strings (empty if absent).
+        ``unconfirmed_fields``, ``api_sources``, ``errors``. All values are
+        strings (empty if absent).
 
     Raises:
         RuntimeError: ``bibtex-check`` not on PATH, or subprocess failure.
     """
-    import json as _json
-    import os
-    import shutil
-    import subprocess
-    import tempfile
-    from pathlib import Path
+    from hallmark.baselines.bibtexupdater import (
+        SourceOutageError,
+        _run_bibtex_check_subprocess,
+        ran_bibtex_check,
+        resolve_bibtex_check_bin,
+    )
+    from hallmark.dataset.schema import BlindEntry
+    from hallmark.dataset.text_utils import parse_bibtex_entry
 
-    bin_path = shutil.which("bibtex-check")
-    if bin_path is None:
+    raw_bibtex = bibtex if bibtex.lstrip().startswith("@") else f"@misc{{x,\n{bibtex}\n}}"
+    parsed = parse_bibtex_entry(raw_bibtex)
+    if parsed is None:
+        raise RuntimeError("bibtex-check received invalid BibTeX")
+    entry = BlindEntry(
+        bibtex_key=parsed["key"],
+        bibtex_type=parsed["type"],
+        fields=parsed["fields"],
+        raw_bibtex=raw_bibtex,
+    )
+
+    if resolve_bibtex_check_bin() is None:
         raise RuntimeError(
             "bibtex-check not found on PATH. Install with: pipx install bibtex-updater"
         )
 
-    with tempfile.TemporaryDirectory() as td:
-        bib_path = Path(td) / "input.bib"
-        jsonl_path = Path(td) / "out.jsonl"
-        bib_path.write_text(
-            bibtex if bibtex.lstrip().startswith("@") else f"@misc{{x,\n{bibtex}\n}}"
+    _pace("bibtexupdater")
+    try:
+        predictions, raw_records = _run_bibtex_check_subprocess(
+            [entry], timeout=180.0, rate_limit=120, academic_only=True
         )
-
-        cmd = [
-            bin_path,
-            str(bib_path),
-            "--jsonl",
-            str(jsonl_path),
-            "--rate-limit",
-            "120",
-            "--academic-only",
-        ]
-        s2_key = os.environ.get("S2_API_KEY")
-        if s2_key:
-            cmd.extend(["--s2-api-key", s2_key])
-
-        _pace("bibtexupdater")
-        try:
-            subprocess.run(cmd, capture_output=True, text=True, timeout=180.0, check=False)
-        except subprocess.TimeoutExpired as exc:
-            raise RuntimeError("bibtex-check timed out after 180s") from exc
-
-        if not jsonl_path.exists():
-            raise RuntimeError("bibtex-check produced no output")
-
-        lines = [ln for ln in jsonl_path.read_text().splitlines() if ln.strip()]
-        if not lines:
-            raise RuntimeError("bibtex-check returned empty output")
-
-        rec = _json.loads(lines[0])
+    except SourceOutageError as exc:
         return {
-            "status": _trunc(rec.get("status", "unknown")),
-            "confidence": _trunc(rec.get("confidence", "")),
-            "mismatched_fields": _trunc(", ".join(rec.get("mismatched_fields", []) or [])),
-            "api_sources": _trunc(", ".join(rec.get("api_sources", []) or [])),
-            "errors": _trunc("; ".join(str(e) for e in rec.get("errors", []) or [])),
+            "status": "sources_unavailable",
+            "confidence": "",
+            "mismatched_fields": "",
+            "unconfirmed_fields": "",
+            "api_sources": "",
+            "errors": _trunc(str(exc)),
         }
+
+    if not ran_bibtex_check():
+        raise RuntimeError(
+            "bibtex-check not found on PATH. Install with: pipx install bibtex-updater"
+        )
+    if not raw_records and predictions:
+        # Malformed legacy output can omit ``key``. Preserve the verdict the
+        # shared parser recovered without bypassing its outage handling.
+        import ast
+
+        prediction = predictions[0]
+        reason = prediction.reason or ""
+        status_match = re.search(r"Status: ([^;]+)", reason)
+        mismatched_match = re.search(r"Mismatched: (\[[^;]*\])", reason)
+        mismatched: list[str] = []
+        if mismatched_match:
+            try:
+                parsed_mismatched = ast.literal_eval(mismatched_match.group(1))
+            except (SyntaxError, ValueError):
+                pass
+            else:
+                if isinstance(parsed_mismatched, list):
+                    mismatched = [str(field) for field in parsed_mismatched]
+        raw_records = [
+            {
+                "key": entry.bibtex_key,
+                "status": status_match.group(1) if status_match else "unknown",
+                "confidence": prediction.confidence,
+                "mismatched_fields": mismatched,
+                "api_sources": prediction.api_sources_queried,
+            }
+        ]
+    if not raw_records:
+        raise RuntimeError("bibtex-check produced no output")
+
+    rec = next(
+        (record for record in raw_records if record.get("key") == entry.bibtex_key),
+        raw_records[0],
+    )
+
+    def _join_values(value: object, separator: str) -> str:
+        if not isinstance(value, list):
+            return ""
+        return separator.join(str(item) for item in value)
+
+    return {
+        "status": _trunc(rec.get("status", "unknown")),
+        "confidence": _trunc(rec.get("confidence", "")),
+        "mismatched_fields": _trunc(_join_values(rec.get("mismatched_fields"), ", ")),
+        "unconfirmed_fields": _trunc(_join_values(rec.get("unconfirmed_fields"), ", ")),
+        "api_sources": _trunc(_join_values(rec.get("api_sources"), ", ")),
+        "errors": _trunc(_join_values(rec.get("errors"), "; ")),
+    }
 
 
 _HALLUCINATION_TYPE_INSTRUCTION = """\

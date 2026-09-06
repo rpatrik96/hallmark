@@ -12,13 +12,10 @@ from __future__ import annotations
 
 import logging
 import shutil
-import subprocess
 import tempfile
 from pathlib import Path
 from typing import Any
 
-from hallmark.baselines._cache import redact_command
-from hallmark.baselines.common import entries_to_bib
 from hallmark.dataset.schema import BlindEntry, Prediction
 
 logger = logging.getLogger(__name__)
@@ -92,8 +89,25 @@ def format_tool_evidence(record: dict[str, Any]) -> str:
         parts.append(f"Confidence: {confidence:.2f}")
 
     mismatched = record.get("mismatched_fields", [])
-    if mismatched:
-        parts.append(f"Mismatched fields: {', '.join(str(f) for f in mismatched)}")
+    if "unconfirmed_fields" in record:
+        if mismatched:
+            parts.append(f"Fields the checker refuted: {', '.join(str(f) for f in mismatched)}")
+        unconfirmed = record.get("unconfirmed_fields", [])
+        if unconfirmed:
+            parts.append(
+                "Fields it could not compare (not a disagreement): "
+                f"{', '.join(str(f) for f in unconfirmed)}"
+            )
+    elif mismatched:
+        parts.append(
+            "Fields this build could not separate into refuted vs. not-compared: "
+            f"{', '.join(str(f) for f in mismatched)}"
+        )
+    if "unconfirmed_fields" not in record and status == "unconfirmed":
+        parts.append(
+            "This unconfirmed status means the checker confirmed nothing; "
+            "it did not establish that any field disagreed."
+        )
 
     api_sources = record.get("api_sources", [])
     if api_sources:
@@ -130,59 +144,45 @@ def save_tool_evidence(
     Returns:
         Mapping from bibtex_key to raw record dict.
     """
+    import json
     import os
 
-    tmpdir = tempfile.mkdtemp()
-    bib_path = Path(tmpdir) / "input.bib"
-    jsonl_path = Path(tmpdir) / "results.jsonl"
+    from hallmark.baselines.bibtexupdater import (
+        BIBTEX_CHECK_BIN_ENV,
+        _run_bibtex_check_subprocess,
+        ran_bibtex_check,
+        resolve_bibtex_check_bin,
+    )
 
-    try:
-        bib_content = entries_to_bib(entries)
-        bib_path.write_text(bib_content)
+    if resolve_bibtex_check_bin() is None:
+        pinned = os.environ.get(BIBTEX_CHECK_BIN_ENV)
+        if pinned:
+            raise RuntimeError(
+                f"{BIBTEX_CHECK_BIN_ENV} points at a missing bibtex-check binary: {pinned}"
+            )
+        logger.error("bibtex-check not found. Install with: pipx install bibtex-updater")
+        return {}
 
-        # Find bibtex-check binary, preferring pipx-installed version
-        bibtex_check_bin = shutil.which("bibtex-check")
-        if bibtex_check_bin is None:
-            logger.error("bibtex-check not found. Install with: pipx install bibtex-updater")
-            return {}
-
-        cmd = [
-            bibtex_check_bin,
-            str(bib_path),
-            "--jsonl",
-            str(jsonl_path),
-            "--rate-limit",
-            str(rate_limit),
-        ]
-        if academic_only:
-            cmd.append("--academic-only")
-        s2_key = os.environ.get("S2_API_KEY")
-        if s2_key:
-            cmd.extend(["--s2-api-key", s2_key])
-        if extra_args:
-            cmd.extend(extra_args)
-
-        logger.info(f"Running bibtex-check for tool evidence: {redact_command(cmd)}")
-        try:
-            subprocess.run(cmd, capture_output=True, text=True, timeout=timeout)
-        except FileNotFoundError:
-            logger.error("bibtex-check not found. Install with: pipx install bibtex-updater")
-            return {}
-        except subprocess.TimeoutExpired:
-            logger.warning(f"bibtex-check timed out after {timeout}s (partial results may exist)")
-
-        if jsonl_path.exists():
-            # Copy to output path before cleanup
-            output_path.parent.mkdir(parents=True, exist_ok=True)
-            shutil.copy2(jsonl_path, output_path)
-            from hallmark.baselines.bibtexupdater import parse_jsonl_to_raw
-
-            return parse_jsonl_to_raw(output_path)
-
+    _, raw_records = _run_bibtex_check_subprocess(
+        entries,
+        extra_args=extra_args,
+        timeout=timeout,
+        rate_limit=rate_limit,
+        academic_only=academic_only,
+    )
+    if not ran_bibtex_check():
+        return {}
+    if not raw_records:
         logger.warning("No JSONL output produced by bibtex-check")
         return {}
-    finally:
-        shutil.rmtree(tmpdir, ignore_errors=True)
+
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    output_path.write_text("".join(json.dumps(record) + "\n" for record in raw_records))
+    return {
+        str(record["key"]): record
+        for record in raw_records
+        if isinstance(record.get("key"), str) and record["key"]
+    }
 
 
 def verify_tool_augmented(
