@@ -8,6 +8,12 @@
       "num_entries": 1119,
       "f1_hallucination": 0.8903993203058623
     },
+    "bibtexupdater_raw_dev_public.jsonl": {
+      "sha256": "bfa01ad369fe974829002fef0e9296da847efaee8d07556b3ff75eb639009e09"
+    },
+    "bibtexupdater_raw_supplement_chatgpt_citations.jsonl": {
+      "sha256": "39244a8fcbb8bc1ba08dd64eb7ff6f347e195954f207c6a61309f26080b95348"
+    },
     "bibtexupdater_test_public.json": {
       "sha256": "132b4d2fa383b8c2f359bb62e5c9ce6ab1f3f14ce233b88edb25293d9870e517",
       "baseline": "bibtexupdater",
@@ -302,6 +308,9 @@
       "split": "test_public",
       "num_entries": 831,
       "f1_hallucination": 0.7976291278577476
+    },
+    "llm_tool_augmented_dev_public.jsonl": {
+      "sha256": "2dd0c108966ae2fe74eea8fadd56d0837ad64e68ea7b4ba696c2d512df4244b0"
     },
     "llm_tool_augmented_test_public.json": {
       "sha256": "7d7733e0363906790592d11a953af83590024f0c54d7b56e290680dfa6a3e836",

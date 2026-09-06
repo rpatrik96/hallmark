@@ -74,7 +74,12 @@ def main() -> int:
         manifest = json.loads(manifest_path.read_text())
     manifest.setdefault("files", {})
 
-    present = sorted(p for p in args.results_dir.glob("*.json") if p.name != "manifest.json")
+    present = sorted(
+        path
+        for pattern in ("*.json", "*.jsonl")
+        for path in args.results_dir.glob(pattern)
+        if path.name != "manifest.json"
+    )
     before = set(manifest["files"])
     rebuilt: dict[str, Any] = {}
     for path in present:

@@ -16,12 +16,19 @@ file. It is the general form of the guard in
 from __future__ import annotations
 
 import collections
+import importlib.util
 import json
+import sys
 from pathlib import Path
 
 import pytest
 
 RESULTS = Path(__file__).resolve().parent.parent / "data/v1.2/baseline_results"
+_RESCORE_SCRIPT = Path(__file__).resolve().parent.parent / "scripts/rescore_btu_from_raw.py"
+_spec = importlib.util.spec_from_file_location("rescore_btu_from_raw", _RESCORE_SCRIPT)
+assert _spec is not None and _spec.loader is not None
+rescore = importlib.util.module_from_spec(_spec)
+_spec.loader.exec_module(rescore)
 
 
 def _raw_aggregate_pairs() -> list[tuple[Path, Path]]:
@@ -66,3 +73,123 @@ def test_raw_output_describes_its_aggregate(raw: Path, aggregate: Path):
 def test_at_least_one_pair_is_checked():
     """Otherwise the parametrisation is empty and this file asserts nothing."""
     assert _raw_aggregate_pairs(), "no raw/aggregate pair found -- the guard is inert"
+
+
+@pytest.mark.parametrize(
+    "aggregate", sorted(RESULTS.glob("bibtexupdater_*.json")), ids=lambda p: p.name
+)
+def test_every_released_bibtexupdater_aggregate_has_a_status_histogram(aggregate: Path):
+    recorded = json.loads(aggregate.read_text()).get("_btu_status_histogram")
+    assert recorded, f"{aggregate.name} records no status histogram to verify raw output against"
+
+
+def _write_rescore_fixture(
+    tmp_path: Path, *, entries: int, recorded: object
+) -> tuple[Path, Path, Path]:
+    results_dir = tmp_path / "results"
+    results_dir.mkdir()
+    aggregate = {
+        "f1_hallucination": 0.5,
+        "coverage": 1.0,
+        "num_uncertain": 0,
+        "coverage_adjusted_f1": 0.5,
+    }
+    if recorded is not ...:
+        aggregate["_btu_status_histogram"] = recorded
+    (results_dir / "bibtexupdater_dev_public.json").write_text(json.dumps(aggregate))
+
+    data_dir = tmp_path / "data"
+    split = data_dir / "v1.2" / "dev_public.jsonl"
+    split.parent.mkdir(parents=True)
+    records = [
+        {
+            "bibtex_key": f"k{index}",
+            "bibtex_type": "article",
+            "fields": {"title": "T", "author": "A", "year": "2024"},
+            "label": "VALID",
+        }
+        for index in range(entries)
+    ]
+    split.write_text("".join(json.dumps(record) + "\n" for record in records))
+
+    raw = tmp_path / "raw.jsonl"
+    raw.write_text('{"key":"k0","status":"verified"}\n')
+    return results_dir, data_dir, raw
+
+
+def _run_rescore(monkeypatch, results_dir: Path, data_dir: Path, raw: Path, *extra: str) -> int:
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        [
+            "rescore_btu_from_raw.py",
+            "--split",
+            "dev_public",
+            "--raw",
+            str(raw),
+            "--results-dir",
+            str(results_dir),
+            "--data-dir",
+            str(data_dir),
+            *extra,
+        ],
+    )
+    return rescore.main()
+
+
+@pytest.mark.parametrize("recorded", [..., {}], ids=["missing", "empty"])
+def test_rescore_refuses_an_unverifiable_raw(monkeypatch, tmp_path, recorded):
+    results_dir, data_dir, raw = _write_rescore_fixture(tmp_path, entries=1, recorded=recorded)
+    assert _run_rescore(monkeypatch, results_dir, data_dir, raw) == 1
+
+
+def test_rescore_allows_explicit_unverified_raw_override(monkeypatch, tmp_path):
+    results_dir, data_dir, raw = _write_rescore_fixture(tmp_path, entries=1, recorded=...)
+    assert _run_rescore(monkeypatch, results_dir, data_dir, raw, "--allow-unverified-raw") == 0
+
+
+def test_rescore_refuses_a_partial_raw_output(monkeypatch, tmp_path):
+    """With no histogram to size the run, the split size is the only bound left."""
+    results_dir, data_dir, raw = _write_rescore_fixture(tmp_path, entries=2, recorded=...)
+    assert _run_rescore(monkeypatch, results_dir, data_dir, raw, "--allow-unverified-raw") == 1
+
+
+def test_rescore_accepts_a_raw_shorter_than_its_split(monkeypatch, tmp_path):
+    """A run that skipped an entry is the normal case, and the histogram sizes it."""
+    results_dir, data_dir, raw = _write_rescore_fixture(
+        tmp_path, entries=2, recorded={"verified": 1}
+    )
+    assert _run_rescore(monkeypatch, results_dir, data_dir, raw) == 0
+
+
+def test_rescore_reproduces_the_released_coverage(monkeypatch, capsys):
+    """The script that regenerates a published number runs on the data it ships with.
+
+    The count guard sizes the raw file against the run rather than the split, and
+    the released pair is the case that separates the two: 1112 records against 1119
+    entries. No fixture stands in for it, because a guard sized to the split passes
+    every fixture in this file and refuses the release.
+    """
+    raw = RESULTS / "bibtexupdater_raw_dev_public.jsonl"
+    aggregate = RESULTS / "bibtexupdater_dev_public.json"
+    if not raw.is_file() or not aggregate.is_file():
+        pytest.skip("the released dev_public raw/aggregate pair is not present")
+    if raw.read_text(errors="ignore").startswith("version https://git-lfs"):
+        pytest.skip(f"{raw.name} is an unfetched LFS pointer")
+    released = json.loads(aggregate.read_text())
+
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        ["rescore_btu_from_raw.py", "--split", "dev_public", "--raw", str(raw)],
+    )
+    assert rescore.main() == 0, "the released raw/aggregate pair no longer rescores"
+
+    printed = capsys.readouterr().out
+    recomputed = {
+        line.split()[0]: float(line.split("->")[1])
+        for line in (text.strip() for text in printed.splitlines())
+        if line.startswith(("coverage ", "num_uncertain "))
+    }
+    assert recomputed["coverage"] == pytest.approx(released["coverage"], abs=5e-5)
+    assert recomputed["num_uncertain"] == released["num_uncertain"]
