@@ -150,7 +150,6 @@ def save_tool_evidence(
     from hallmark.baselines.bibtexupdater import (
         BIBTEX_CHECK_BIN_ENV,
         _run_bibtex_check_subprocess,
-        ran_bibtex_check,
         resolve_bibtex_check_bin,
     )
 
@@ -163,24 +162,28 @@ def save_tool_evidence(
         logger.error("bibtex-check not found. Install with: pipx install bibtex-updater")
         return {}
 
-    _, raw_records = _run_bibtex_check_subprocess(
+    # Read the outcome off the run this call returned. The module-level
+    # accessors report whichever wrapper call ran most recently, so under a
+    # fan-out they say the binary never started for an entry it did verify,
+    # and the entry reaches the model as one the tool never saw.
+    run = _run_bibtex_check_subprocess(
         entries,
         extra_args=extra_args,
         timeout=timeout,
         rate_limit=rate_limit,
         academic_only=academic_only,
     )
-    if not ran_bibtex_check():
+    if not run.ran:
         return {}
-    if not raw_records:
+    if not run.raw_records:
         logger.warning("No JSONL output produced by bibtex-check")
         return {}
 
     output_path.parent.mkdir(parents=True, exist_ok=True)
-    output_path.write_text("".join(json.dumps(record) + "\n" for record in raw_records))
+    output_path.write_text("".join(json.dumps(record) + "\n" for record in run.raw_records))
     return {
         str(record["key"]): record
-        for record in raw_records
+        for record in run.raw_records
         if isinstance(record.get("key"), str) and record["key"]
     }
 

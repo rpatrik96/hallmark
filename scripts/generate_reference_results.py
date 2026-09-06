@@ -21,7 +21,7 @@ from pathlib import Path
 # Ensure the project root is importable
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from hallmark.baselines.registry import run_baseline
+from hallmark.baselines.registry import run_baseline_with_tool_run
 from hallmark.dataset.loader import load_split
 from hallmark.dataset.schema import EvaluationResult
 from hallmark.evaluation.metrics import evaluate
@@ -84,7 +84,7 @@ def generate(
     for baseline_name in baselines:
         logger.info(f"Running baseline: {baseline_name}")
         try:
-            predictions = run_baseline(baseline_name, entries)
+            predictions, tool_run = run_baseline_with_tool_run(baseline_name, entries)
         except Exception:
             logger.exception(f"Failed to run {baseline_name}")
             continue
@@ -95,7 +95,7 @@ def generate(
             tool_name=baseline_name,
             split_name=split,
         )
-        stamp_provenance(result, split, None, version, baseline_name)
+        stamp_provenance(result, split, None, version, baseline_name, tool_run=tool_run)
 
         # Write result JSON
         filename = f"{baseline_name}_{split}.json"

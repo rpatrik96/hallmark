@@ -615,7 +615,9 @@ class TestResultProvenance:
         from scripts import generate_reference_results as script
 
         monkeypatch.setattr(script, "load_split", lambda **_kwargs: [object()])
-        monkeypatch.setattr(script, "run_baseline", lambda *_args, **_kwargs: [object()])
+        monkeypatch.setattr(
+            script, "run_baseline_with_tool_run", lambda *_args, **_kwargs: ([object()], None)
+        )
         monkeypatch.setattr(
             script,
             "evaluate",
@@ -645,7 +647,9 @@ class TestResultProvenance:
         split_file.write_text('{"split": "fixture"}\n')
         output_dir = tmp_path / "results"
         output_dir.mkdir()
-        monkeypatch.setattr(script, "run_baseline", lambda *_args, **_kwargs: [object()])
+        monkeypatch.setattr(
+            script, "run_baseline_with_tool_run", lambda *_args, **_kwargs: ([object()], None)
+        )
         monkeypatch.setattr(
             script,
             "evaluate",
@@ -720,7 +724,9 @@ class TestResultProvenance:
         monkeypatch.setenv("S2_API_KEY", "test-key")
         monkeypatch.setattr(script, "DEFAULT_RESULTS_DIR", tmp_path)
         monkeypatch.setattr(script, "load_split", lambda **_kwargs: [object()])
-        monkeypatch.setattr(script, "run_baseline", lambda *_args, **_kwargs: [object()])
+        monkeypatch.setattr(
+            script, "run_baseline_with_tool_run", lambda *_args, **_kwargs: ([object()], None)
+        )
         monkeypatch.setattr(
             script,
             "evaluate",

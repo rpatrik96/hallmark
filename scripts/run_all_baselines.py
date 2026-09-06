@@ -19,7 +19,12 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
 from typing import Any
 
-from hallmark.baselines.registry import check_available, list_baselines, run_baseline
+from hallmark.baselines.registry import (
+    check_available,
+    list_baselines,
+    run_baseline,
+    run_baseline_with_tool_run,
+)
 from hallmark.dataset.loader import load_split
 from hallmark.evaluation.metrics import evaluate
 from hallmark.evaluation.provenance import stamp_provenance
@@ -188,11 +193,15 @@ def run_single_baseline(
             run_kwargs["checkpoint_dir"] = ckpt
 
         # Run baseline
-        predictions = run_baseline(name, entries, **run_kwargs)
+        # Take the bibtex-check run off this dispatch rather than off module
+        # state: 19 baselines share this process, and --parallel runs four of
+        # them at once, so state would stamp one baseline's tool build and
+        # outage report onto another's result.
+        predictions, tool_run = run_baseline_with_tool_run(name, entries, **run_kwargs)
 
         # Evaluate
         result = evaluate(entries, predictions, tool_name=name, split_name=split)
-        stamp_provenance(result, split, data_dir, version, name)
+        stamp_provenance(result, split, data_dir, version, name, tool_run=tool_run)
 
         # Save results
         output_file = output_dir / f"{name}_{split}.json"

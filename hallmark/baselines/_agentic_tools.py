@@ -805,7 +805,6 @@ def verify_with_bibtex_updater(bibtex: str) -> dict[str, str]:
     from hallmark.baselines.bibtexupdater import (
         SourceOutageError,
         _run_bibtex_check_subprocess,
-        ran_bibtex_check,
         resolve_bibtex_check_bin,
     )
     from hallmark.dataset.schema import BlindEntry
@@ -829,7 +828,11 @@ def verify_with_bibtex_updater(bibtex: str) -> dict[str, str]:
 
     _pace("bibtexupdater")
     try:
-        predictions, raw_records = _run_bibtex_check_subprocess(
+        # The run this call returned says whether the binary started. The
+        # module-level accessors report whichever wrapper call ran most
+        # recently, and reading those under a fan-out turns a completed check
+        # into an error record against this entry.
+        run = _run_bibtex_check_subprocess(
             [entry], timeout=180.0, rate_limit=120, academic_only=True
         )
     except SourceOutageError as exc:
@@ -842,16 +845,17 @@ def verify_with_bibtex_updater(bibtex: str) -> dict[str, str]:
             "errors": _trunc(str(exc)),
         }
 
-    if not ran_bibtex_check():
+    if not run.ran:
         raise RuntimeError(
             "bibtex-check not found on PATH. Install with: pipx install bibtex-updater"
         )
-    if not raw_records and predictions:
+    raw_records: list[dict[str, object]] = list(run.raw_records)
+    if not raw_records and run.predictions:
         # Malformed legacy output can omit ``key``. Preserve the verdict the
         # shared parser recovered without bypassing its outage handling.
         import ast
 
-        prediction = predictions[0]
+        prediction = run.predictions[0]
         reason = prediction.reason or ""
         status_match = re.search(r"Status: ([^;]+)", reason)
         mismatched_match = re.search(r"Mismatched: (\[[^;]*\])", reason)

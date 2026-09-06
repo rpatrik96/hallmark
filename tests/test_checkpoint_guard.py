@@ -11,11 +11,13 @@ from __future__ import annotations
 import importlib.util
 import json
 import subprocess
+import threading
 from pathlib import Path
 from typing import Any
 
 import pytest
 
+from hallmark.baselines import bibtexupdater as btu
 from hallmark.baselines.bibtexupdater import SourceOutageError
 from hallmark.baselines.checkpoint_guard import (
     GuardedCheckpointWriter,
@@ -28,6 +30,7 @@ from hallmark.baselines.checkpoint_guard import (
     refusal_message,
     rejected_path_for,
 )
+from hallmark.baselines.llm_tool_augmented import save_tool_evidence
 from hallmark.dataset.schema import BlindEntry, Prediction
 
 _HAS_OPENAI = importlib.util.find_spec("openai") is not None
@@ -548,3 +551,87 @@ class TestResumeScriptWiring:
         module, jsonl_path = self._run(monkeypatch, tmp_path, _always_succeeds)
         module.main()
         assert {r["bibtex_key"] for r in _read(jsonl_path)} == {f"k{i}" for i in range(40)}
+
+
+class TestToolEvidenceComesFromItsOwnRun:
+    """Tool evidence belongs to the call that produced it.
+
+    ``registry.requires_single_worker`` permits several workers for the
+    tool-augmented baseline and each of them shells out to bibtex-check, so a
+    call that decides "did the binary run" from shared wrapper state reads
+    another worker's answer. The entry then reaches the model as "No tool
+    results available" although the checker verified it, which is a wrong
+    prediction recorded as an ordinary one.
+    """
+
+    @staticmethod
+    def _entry(key: str) -> BlindEntry:
+        return BlindEntry(
+            bibtex_key=key,
+            bibtex_type="article",
+            fields={"title": f"Title {key}", "author": "Doe, Jane", "year": "2020"},
+        )
+
+    def test_two_threads_each_get_their_own_records(
+        self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+    ) -> None:
+        a_ran = threading.Event()
+        b_cleared_shared_state = threading.Event()
+        a_read_its_outcome = threading.Event()
+
+        def _fake_subprocess_run(cmd: list[str], **kwargs: Any) -> subprocess.CompletedProcess:
+            key = "b0" if threading.current_thread().name == "B" else "a0"
+            jsonl_path = Path(cmd[cmd.index("--jsonl") + 1])
+            jsonl_path.write_text(json.dumps({"key": key, "status": "verified"}) + "\n")
+            if threading.current_thread().name == "B":
+                # B has entered the wrapper and cleared the state it clears on
+                # entry, and has not yet recorded a run of its own. Hold it
+                # here, which is the window in which A reads its own outcome.
+                b_cleared_shared_state.set()
+                a_read_its_outcome.wait(timeout=10)
+            return subprocess.CompletedProcess(cmd, 0, stdout="", stderr="")
+
+        real_parse = btu.parse_jsonl_to_raw
+
+        def _parse_then_wait(jsonl_path: Path) -> dict[str, dict]:
+            records = real_parse(jsonl_path)
+            if threading.current_thread().name == "A":
+                # A's call has finished the subprocess and recorded its run.
+                # Let B in, and wait until B is parked inside its own call.
+                a_ran.set()
+                b_cleared_shared_state.wait(timeout=10)
+            return records
+
+        monkeypatch.setattr(btu, "resolve_bibtex_check_bin", lambda: "/fake/bibtex-check")
+        monkeypatch.setattr(btu, "bibtex_check_version", lambda binary=None: "9.9.9")
+        monkeypatch.setattr(btu, "parse_jsonl_to_raw", _parse_then_wait)
+        monkeypatch.setattr(btu.subprocess, "run", _fake_subprocess_run)
+        monkeypatch.delenv(btu.ALLOW_OUTAGE_ENV, raising=False)
+        monkeypatch.delenv(btu.BIBTEX_CHECK_RATE_ENV, raising=False)
+        monkeypatch.delenv(btu.BIBTEX_CHECK_MAILTO_ENV, raising=False)
+        monkeypatch.delenv("S2_API_KEY", raising=False)
+
+        evidence: dict[str, dict[str, dict[str, Any]]] = {}
+
+        def _worker_a() -> None:
+            evidence["A"] = save_tool_evidence([self._entry("a0")], tmp_path / "a.jsonl")
+            a_read_its_outcome.set()
+
+        def _worker_b() -> None:
+            a_ran.wait(timeout=10)
+            evidence["B"] = save_tool_evidence([self._entry("b0")], tmp_path / "b.jsonl")
+
+        threads = [
+            threading.Thread(target=_worker_a, name="A"),
+            threading.Thread(target=_worker_b, name="B"),
+        ]
+        for thread in threads:
+            thread.start()
+        for thread in threads:
+            thread.join(timeout=30)
+        assert not any(thread.is_alive() for thread in threads)
+
+        assert set(evidence["A"]) == {"a0"}
+        assert set(evidence["B"]) == {"b0"}
+        assert json.loads((tmp_path / "a.jsonl").read_text())["key"] == "a0"
+        assert json.loads((tmp_path / "b.jsonl").read_text())["key"] == "b0"
