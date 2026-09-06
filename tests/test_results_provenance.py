@@ -266,3 +266,78 @@ class TestBibtexCheckBinaryPinning:
         from hallmark.baselines import bibtexupdater as btu
 
         assert btu.bibtex_check_version(str(tmp_path / "absent")) is None
+
+
+# ---------------------------------------------------------------------------
+# ``results/`` is read as a directory of current results, so it is globbed here
+# the way the canonical directory is. Everything kept for the record lives under
+# ``results/archive/``, which ``iter_result_files`` skips.
+# ---------------------------------------------------------------------------
+
+
+def _top_level_results() -> list[Path]:
+    from hallmark.evaluation.validate import iter_result_files
+
+    return iter_result_files(_RESULTS)
+
+
+def test_top_level_results_hold_to_the_released_contract():
+    """Whatever sits at the top of ``results/`` is ranked as a current result.
+
+    The leaderboard and the figure scripts default to this directory, so a file
+    here that is not an evaluation result is read as one. Seven temporal-probe
+    reports sat here carrying ``probe_metrics`` and no ``split_name``: the
+    freshness gate could only say it did not know which split they scored.
+    """
+    bad: list[str] = []
+    for path in _top_level_results():
+        try:
+            data = json.loads(path.read_text())
+        except json.JSONDecodeError as exc:
+            bad.append(f"{path.name}: unparseable ({exc})")
+            continue
+        if not isinstance(data, dict):
+            bad.append(f"{path.name}: not an object")
+            continue
+        probe = data.get("conservative", data)
+        for key in ("tool_name", "split_name", "detection_rate", "num_entries"):
+            if probe.get(key) is None:
+                bad.append(f"{path.name}: no {key}")
+    assert not bad, (
+        "results/ holds file(s) that are not evaluation results: "
+        + "; ".join(bad)
+        + ". Move them to results/archive/, which the freshness gate and the leaderboard "
+        "both skip."
+    )
+
+
+def test_no_top_level_result_is_a_null_run():
+    """The quarantine rule that already covers the released set covers this one."""
+    offenders = []
+    for path in _top_level_results():
+        try:
+            data = json.loads(path.read_text())
+        except json.JSONDecodeError:
+            continue
+        if not isinstance(data, dict) or not _is_null_run(data):
+            continue
+        tool = str(data.get("tool_name") or path.stem)
+        if any(name in tool for name in DEGENERATE_BASELINES):
+            continue
+        offenders.append(path.name)
+    assert not offenders, (
+        f"null run(s) at the top of results/: {offenders}. Move them to "
+        "results/failed_runs/ or re-run them."
+    )
+
+
+def test_the_archive_is_skipped_and_says_what_it_is():
+    archive = _RESULTS / "archive"
+    if not archive.is_dir():
+        pytest.skip("no archive present")
+    readme = archive / "README.md"
+    assert readme.is_file(), "an archive of runs kept for the record must say what it is"
+    assert "freshness" in readme.read_text().lower()
+    assert not [p for p in _top_level_results() if "archive" in p.parts], (
+        "iter_result_files must not descend into results/archive/"
+    )

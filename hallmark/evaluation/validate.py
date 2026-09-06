@@ -35,6 +35,38 @@ def compute_sha256(path: Path) -> str:
     return h.hexdigest()
 
 
+#: Subdirectory of a results directory holding runs kept for the record: CI
+#: samples, smoke runs, probe runs and superseded results. They score no current
+#: split, so the freshness gate and the leaderboard both pass over them, and a
+#: run parked here is one nobody has to explain to a staleness check.
+ARCHIVE_DIR_NAME = "archive"
+
+
+def iter_result_files(results_dir: str | Path) -> list[Path]:
+    """The aggregate result JSONs a gate or a leaderboard should read.
+
+    ``manifest.json`` is an index rather than a result, and anything under
+    ``<results_dir>/archive/`` is kept for the record. The glob is deliberately
+    non-recursive; the archive filter is what keeps the exclusion true if it
+    ever widens.
+
+    Args:
+        results_dir: Directory of ``<tool>_<split>.json`` aggregate results.
+
+    Returns:
+        Sorted paths, empty when the directory does not exist.
+    """
+    results_dir = Path(results_dir)
+    if not results_dir.is_dir():
+        return []
+    return sorted(
+        path
+        for path in results_dir.glob("*.json")
+        if path.name != "manifest.json"
+        and ARCHIVE_DIR_NAME not in path.relative_to(results_dir).parts
+    )
+
+
 #: Splits carrying an entry that a result may legitimately not score, and how
 #: many. ``stress_test`` holds 121 hallucinated entries plus a single VALID
 #: contamination canary; with one valid entry the false-positive rate is not a

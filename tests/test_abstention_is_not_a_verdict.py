@@ -29,6 +29,7 @@ import pytest
 
 from hallmark.baselines.bibtexupdater import (
     ABSTENTION_AS_VALID_ENV,
+    ABSTENTION_REASONS,
     ABSTENTION_STATUSES,
     STATUS_TO_LABEL,
     _parse_jsonl_output,
@@ -180,7 +181,7 @@ def test_the_guard_is_not_vacuous():
     assert "partial_match" not in ABSTENTION_STATUSES
 
 
-# --- Each abstention says why it abstained; strict_warn_cnv keeps its origin ------
+# --- Each abstention says why it abstained ---------------------------------------
 
 
 def _preds(tmp_path: Path, records: list[dict]) -> dict[str, object]:
@@ -188,29 +189,27 @@ def _preds(tmp_path: Path, records: list[dict]) -> dict[str, object]:
     return {p.bibtex_key: p for p in preds}
 
 
-def test_strict_warn_cnv_from_a_not_found_stays_a_detection(tmp_path):
+@pytest.mark.parametrize("p_valid", [0.35, 0.5, None])
+def test_strict_warn_cnv_is_an_abstention_whatever_p_valid_says(tmp_path, p_valid):
     """Under --strict-warn-cnv bibtex-check relabels NOT_FOUND and UNCONFIRMED to
-    one status. The record keeps p_valid, 0.35 for a not_found origin and 0.5
-    for unconfirmed, so the detection need not be surrendered."""
-    preds = _preds(
-        tmp_path,
-        [{"key": "a", "status": "strict_warn_cnv", "abstained": False, "p_valid": 0.35}],
-    )
-    assert preds["a"].label == "HALLUCINATED"
-    assert "not_found" in preds["a"].reason
+    one status, and the promoted record says nothing about which it was.
 
-
-def test_strict_warn_cnv_from_an_unconfirmed_is_an_abstention(tmp_path):
-    preds = _preds(
-        tmp_path,
-        [{"key": "a", "status": "strict_warn_cnv", "abstained": False, "p_valid": 0.5}],
-    )
+    The wrapper used to read p_valid below 0.5 as a not_found origin and restore
+    the detection. bibtex-check does not write that value on this status, so no
+    record it can emit ever took that branch; two of the three fixtures pinning
+    it were records the tool cannot produce. What the status carries is an
+    abstention, and that is what it is scored as.
+    """
+    record = {"key": "a", "status": "strict_warn_cnv", "abstained": False}
+    if p_valid is not None:
+        record["p_valid"] = p_valid
+    preds = _preds(tmp_path, [record])
     assert preds["a"].label == "UNCERTAIN"
+    assert ABSTENTION_REASONS["strict_warn_cnv"] in preds["a"].reason
+    assert "not_found" not in preds["a"].reason
 
 
-def test_strict_warn_cnv_reached_during_an_outage_is_an_abstention(tmp_path):
-    """A not_found origin does not survive coverage_incomplete, exactly as a
-    plain not_found does not."""
+def test_strict_warn_cnv_reached_during_an_outage_is_still_an_abstention(tmp_path):
     preds = _preds(
         tmp_path,
         [
@@ -223,6 +222,81 @@ def test_strict_warn_cnv_reached_during_an_outage_is_an_abstention(tmp_path):
         ],
     )
     assert preds["a"].label == "UNCERTAIN"
+
+
+# --- Absence of a page is not evidence of fabrication ----------------------------
+
+_ABSENCE_STATUSES = {
+    "url_not_found": "the host answered 404/410 for the cited URL",
+    "book_not_found": "no library catalogue returned the book",
+    "working_paper_not_found": "no working-paper index returned the paper",
+}
+
+
+@pytest.mark.parametrize("status,phrase", sorted(_ABSENCE_STATUSES.items()))
+def test_a_missing_page_or_catalogue_record_is_an_abstention(tmp_path, status, phrase):
+    """These three mapped to HALLUCINATED at HALLMARK's end while both of
+    upstream's abstain sets called them abstentions.
+
+    ``p_valid`` answers whether the entry as cited is a genuine publication. A
+    host that has stopped serving a page, a catalogue that does not hold a book
+    and a thin working-paper index have each said nothing about that.
+    """
+    preds = _preds(tmp_path, [{"key": "a", "status": status, "confidence": 0.75}])
+    assert preds["a"].label == "UNCERTAIN"
+    assert status in ABSTENTION_STATUSES
+    assert phrase in preds["a"].reason, preds["a"].reason
+
+
+@pytest.mark.parametrize("status", sorted(_ABSENCE_STATUSES))
+def test_a_missing_page_is_a_committed_valid_under_the_legacy_env(tmp_path, status, monkeypatch):
+    """The escape hatch has to reach these too: an abstention scored under the
+    old convention is a conservative VALID, never a detection."""
+    monkeypatch.setenv(ABSTENTION_AS_VALID_ENV, "1")
+    preds = _preds(tmp_path, [{"key": "a", "status": status, "confidence": 0.75}])
+    assert preds["a"].label == "VALID"
+
+
+def test_url_not_found_defers_to_stage_two_in_the_cascade(tmp_path):
+    """The cascade decided ``fabricated_doi`` on it, which convicts an entry of
+    fabrication on link rot."""
+    from hallmark.baselines.cascade import ROUTE_TO_STAGE2, STATUS_TO_TYPE
+
+    assert "url_not_found" in ROUTE_TO_STAGE2
+    assert "url_not_found" not in STATUS_TO_TYPE
+
+
+# --- api_calls counts calls where the tool records them --------------------------
+
+
+def test_api_calls_prefers_the_queried_list(tmp_path):
+    """bibtex-check writes ``api_sources`` from ``api_sources_with_hits``, so the
+    published mean_api_calls is a hit count. From bibtex-updater 1.12 the record
+    also carries ``api_sources_queried``, which is the cost."""
+    preds = _preds(
+        tmp_path,
+        [
+            {
+                "key": "a",
+                "status": "verified",
+                "api_sources": ["crossref"],
+                "api_sources_queried": ["crossref", "openalex", "semanticscholar"],
+            }
+        ],
+    )
+    assert preds["a"].api_calls == 3
+    assert preds["a"].api_sources_queried == ["crossref", "openalex", "semanticscholar"]
+
+
+def test_api_calls_falls_back_to_the_hit_list(tmp_path):
+    """Every committed raw file predates the key; none of them may start
+    reporting a different number because of this change."""
+    preds = _preds(
+        tmp_path,
+        [{"key": "a", "status": "verified", "api_sources": ["crossref", "openalex"]}],
+    )
+    assert preds["a"].api_calls == 2
+    assert preds["a"].api_sources_queried == ["crossref", "openalex"]
 
 
 @pytest.mark.parametrize(

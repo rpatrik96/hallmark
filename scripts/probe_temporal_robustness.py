@@ -535,7 +535,11 @@ def main() -> None:
     parser.add_argument(
         "--results-dir",
         default="results",
-        help="Directory containing baseline result JSONs",
+        help=(
+            "Directory containing baseline result JSONs. Probe reports are written to "
+            "its archive/ subdirectory: they score no benchmark split, so the freshness "
+            "gate over results/ cannot judge them."
+        ),
     )
     parser.add_argument(
         "--n-valid",
@@ -557,6 +561,7 @@ def main() -> None:
     args = parser.parse_args()
 
     results_dir = Path(args.results_dir)
+    probe_out_dir = results_dir / "archive"
     probe_set_path = Path(args.probe_set)
     checkpoint_dir = Path(args.checkpoint_dir)
 
@@ -597,7 +602,7 @@ def main() -> None:
 
     # ── Step 3: Run each model ────────────────────────────────────────
     for model_key in model_keys:
-        output_path = results_dir / f"temporal_probe_{model_key}.json"
+        output_path = probe_out_dir / f"temporal_probe_{model_key}.json"
 
         # Skip if already completed
         if output_path.exists():
@@ -617,7 +622,7 @@ def main() -> None:
     logger.info("TEMPORAL ROBUSTNESS SUMMARY")
     logger.info(f"{'=' * 70}")
     for model_key in model_keys:
-        output_path = results_dir / f"temporal_probe_{model_key}.json"
+        output_path = probe_out_dir / f"temporal_probe_{model_key}.json"
         if not output_path.exists():
             continue
         with open(output_path) as f:

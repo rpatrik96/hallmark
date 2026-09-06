@@ -1144,8 +1144,13 @@ def _cmd_leaderboard(args: argparse.Namespace) -> int:
         logging.error(f"Results directory not found: {results_dir}")
         return 1
 
+    from hallmark.evaluation.validate import iter_result_files
+
+    # ``results/archive/`` holds runs kept for the record -- CI samples, smoke
+    # runs, probes -- which score no current split and must not be ranked
+    # against one.
     results = []
-    for path in results_dir.glob("*.json"):
+    for path in iter_result_files(results_dir):
         with open(path) as f:
             data = json.load(f)
         if data.get("split_name") == args.split:

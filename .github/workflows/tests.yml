@@ -66,6 +66,29 @@ jobs:
         # the known debt and may only shrink, like KNOWN_STALE above.
         run: python scripts/check_results_freshness.py --results-dir data/v1.2/baseline_results --data-dir data --version v1.2
 
+      - name: Check results/ freshness
+        # ``results/`` is the default --results-dir for the CLI leaderboard and
+        # the figure scripts, so whatever sits at its top level is read as a
+        # current result -- and until now nothing checked it. The same gate runs
+        # over it, hard and with the same flags; the tables are checked once, in
+        # the step above, against the canonical directory they derive from.
+        #
+        # Runs kept for the record live in results/archive/, which the gate and
+        # the leaderboard both skip: a CI sample, a smoke run or a temporal probe
+        # scores no current split, so a staleness verdict on it says nothing.
+        # The subdirectories results/superseded_pre_relabel/,
+        # results/failed_runs/ and results/checkpoints/ are outside the gate's
+        # non-recursive glob and stay where they are.
+        run: python scripts/check_results_freshness.py --results-dir results --skip-tables --data-dir data --version v1.2
+
+      - name: Check the site payload against its inputs
+        # site/data/site_data.js is generated from the released results, and a
+        # result re-run leaves it describing numbers that no longer exist -- the
+        # same failure the table guard catches one layer down. --check
+        # regenerates into a temporary directory and compares, ignoring only the
+        # generation date.
+        run: python scripts/generate_site_data.py --check
+
       - name: Run tests
         run: pytest --tb=short -q --cov=hallmark --cov-report=term-missing
 

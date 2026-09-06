@@ -111,6 +111,15 @@ def test_stage1_new_positive_evidence_statuses_do_not_defer() -> None:
         assert out.cascade_stage == "stage1_db"
 
 
+def test_a_dead_link_defers_instead_of_deciding_fabrication() -> None:
+    """``url_not_found`` decided ``fabricated_doi`` at Stage 1, so an entry whose
+    cited page has rotted was convicted of fabrication without Stage 2 ever
+    seeing it. Absence of a page is absence evidence about the page."""
+    assert "url_not_found" in ROUTE_TO_STAGE2
+    assert "url_not_found" not in STATUS_TO_TYPE
+    assert _stage1_predict(_entry("k7"), _raw("k7"), "url_not_found") is None
+
+
 def test_not_found_still_routes_to_stage2() -> None:
     """``not_found`` (including coverage-incomplete lookups, which carry the
     same raw status string) stays uncertain and defers to Stage 2."""

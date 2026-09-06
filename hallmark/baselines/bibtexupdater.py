@@ -116,14 +116,22 @@ STATUS_TO_LABEL: dict[str, str] = {
     # Web reference verification
     "url_verified": "VALID",
     "url_accessible": "VALID",
-    "url_not_found": "HALLUCINATED",
+    # A rotted URL is not evidence of fabrication: p_valid answers whether the
+    # entry is a genuine publication, and a host that has stopped serving a page
+    # has said nothing about that. Abstention (see ABSTENTION_STATUSES); upstream
+    # treats it as one in both of its abstain sets.
+    "url_not_found": "VALID",
     "url_content_mismatch": "HALLUCINATED",
     # Book verification
     "book_verified": "VALID",
-    "book_not_found": "HALLUCINATED",
+    # No catalogue answered, which is a gap in catalogue coverage as often as it
+    # is a gap in the world. Abstention.
+    "book_not_found": "VALID",
     # Working paper verification
     "working_paper_verified": "VALID",
-    "working_paper_not_found": "HALLUCINATED",
+    # As for books: the working-paper indexes are thin, and their silence is not
+    # a verdict. Abstention.
+    "working_paper_not_found": "VALID",
     # General
     "parse_error": "VALID",  # Parser failure: abstention, not evidence
     "skipped": "VALID",  # Conservative
@@ -144,6 +152,12 @@ STATUS_TO_LABEL: dict[str, str] = {
 #: which for ``not_found`` coincides with the detection: of the 52 such records on
 #: ``dev_public``, 51 sit on HALLUCINATED entries. They are verdicts, and the
 #: mapping to HALLUCINATED is right. The same applies to ``partial_match``.
+#: The three ``*_not_found`` web/book/working-paper statuses are here because
+#: absence of a page, a catalogue record or an index entry is absence evidence
+#: about the *artifact*, not about the publication the entry cites. They mapped
+#: to HALLUCINATED while both of upstream's abstain sets called them abstentions,
+#: so the same condition carried opposite polarities on either side of the
+#: wrapper.
 ABSTENTION_STATUSES: frozenset[str] = frozenset(
     {
         "unconfirmed",
@@ -154,6 +168,9 @@ ABSTENTION_STATUSES: frozenset[str] = frozenset(
         "skipped",
         "strict_warn_preprint_year",
         "strict_warn_cnv",
+        "url_not_found",
+        "book_not_found",
+        "working_paper_not_found",
     }
 )
 
@@ -174,7 +191,10 @@ ABSTENTION_REASONS: dict[str, str] = {
     "strict_warn_preprint_year": (
         "strict mode flagged a preprint-year discrepancy and left the decision to the user"
     ),
-    "strict_warn_cnv": "strict mode relabelled an unconfirmed lookup",
+    "strict_warn_cnv": "strict mode relabelled a lookup it could not verify",
+    "url_not_found": "the host answered 404/410 for the cited URL",
+    "book_not_found": "no library catalogue returned the book",
+    "working_paper_not_found": "no working-paper index returned the paper",
 }
 
 #: Set to ``1`` to restore the pre-fix mapping, where an abstention is written as
@@ -218,12 +238,15 @@ STATUS_TO_CONFIDENCE: dict[str, float] = {
     "published_version_exists": 0.60,
     "url_verified": 0.90,
     "url_accessible": 0.70,
-    "url_not_found": 0.75,
+    # The three *_not_found statuses are abstentions, and an abstention carries
+    # little confidence in either direction: these sit with the other abstention
+    # statuses above rather than with the verdicts.
+    "url_not_found": 0.45,
     "url_content_mismatch": 0.80,
     "book_verified": 0.90,
-    "book_not_found": 0.75,
+    "book_not_found": 0.45,
     "working_paper_verified": 0.85,
-    "working_paper_not_found": 0.70,
+    "working_paper_not_found": 0.45,
     "parse_error": 0.50,
     "skipped": 0.50,
 }
@@ -1184,7 +1207,7 @@ def parse_jsonl_to_raw(jsonl_path: Path) -> dict[str, dict]:
     Returns:
         Mapping from bibtex_key to the full raw record dict containing status,
         mismatched_fields, unconfirmed_fields (>= 1.11.0), api_sources,
-        confidence, errors, etc.
+        api_sources_queried (>= 1.12), confidence, errors, etc.
     """
     records: dict[str, dict] = {}
     with open(jsonl_path) as f:
@@ -1211,6 +1234,7 @@ def _parse_jsonl_output(
     """Parse bibtex-check JSONL output into Predictions."""
     predictions = []
     per_entry_time = total_elapsed / total_entries if total_entries > 0 else 0.0
+    any_queried_recorded = False
 
     with open(jsonl_path) as f:
         for line in f:
@@ -1242,23 +1266,28 @@ def _parse_jsonl_output(
             # >= 1.11.0 only; absent on older releases, where abstained fields
             # were folded into ``mismatched_fields``.
             unconfirmed = record.get("unconfirmed_fields") or []
-            api_sources = record.get("api_sources", [])
+            # bibtex-check writes ``api_sources`` from its
+            # ``api_sources_with_hits`` list, so it counts the sources that
+            # returned a matching record rather than the sources it asked. From
+            # bibtex-updater 1.12 the record also carries ``api_sources_queried``,
+            # which is the cost. Prefer it; fall back to the hit list for every
+            # file written before it, and say which one was read.
+            api_sources_hit = record.get("api_sources") or []
+            api_sources_queried = record.get("api_sources_queried")
+            if isinstance(api_sources_queried, list):
+                any_queried_recorded = True
+            else:
+                api_sources_queried = api_sources_hit
             errors = record.get("errors", [])
             p_valid = record.get("p_valid")
 
             # Under --strict-warn-cnv bibtex-check relabels NOT_FOUND and
-            # UNCONFIRMED to one status. The record keeps p_valid through the
-            # promotion -- 0.35 for a not_found origin, 0.5 for unconfirmed --
-            # so the detection (51 of 52 not_found records on dev_public sit on
-            # HALLUCINATED entries) need not be surrendered to the relabel.
-            cnv_from_not_found = (
-                status == "strict_warn_cnv"
-                and isinstance(p_valid, (int, float))
-                and float(p_valid) < 0.5
-            )
-            effective_status = "not_found" if cnv_from_not_found else status
-
-            label = STATUS_TO_LABEL.get(effective_status, "VALID")
+            # UNCONFIRMED to one status, and the record that comes out carries
+            # nothing that names which of the two it was: the wrapper read a
+            # p_valid below 0.5 as a not_found origin, but the tool does not
+            # write that value on this status, so no real record ever took the
+            # branch. The status is an abstention, and that is all it says.
+            label = STATUS_TO_LABEL.get(status, "VALID")
 
             # Post-1.2.0 records carry ``coverage_incomplete``: the abstention
             # was reached while sources errored / were throttled, so a
@@ -1267,7 +1296,7 @@ def _parse_jsonl_output(
             # of fabrication. For all other statuses the flag is informational
             # and the label mapping is unchanged.
             incomplete_not_found = (
-                effective_status == "not_found" and record.get("coverage_incomplete") is True
+                status == "not_found" and record.get("coverage_incomplete") is True
             )
             if incomplete_not_found:
                 label = "VALID"
@@ -1278,9 +1307,7 @@ def _parse_jsonl_output(
             # rather than counting as committed VALID, so the DR/FPR/F1 triple
             # becomes the selective one. Set HALLMARK_BTU_ABSTENTION_AS_VALID=1
             # to reproduce a published row under the old convention.
-            is_abstention = (
-                effective_status in ABSTENTION_STATUSES or incomplete_not_found or is_unmapped
-            )
+            is_abstention = status in ABSTENTION_STATUSES or incomplete_not_found or is_unmapped
             if is_abstention and not abstentions_are_committed_valid():
                 label = "UNCERTAIN"
 
@@ -1309,8 +1336,6 @@ def _parse_jsonl_output(
                     confidence = raw_confidence
 
             reason_parts = [f"Status: {status}"]
-            if cnv_from_not_found:
-                reason_parts.append("relabelled not_found under --strict-warn-cnv")
             if is_abstention:
                 if incomplete_not_found:
                     cause = ABSTENTION_REASONS["coverage_incomplete"]
@@ -1344,10 +1369,16 @@ def _parse_jsonl_output(
                     label=label,  # type: ignore[arg-type]
                     confidence=confidence,
                     reason="; ".join(reason_parts),
-                    api_sources_queried=api_sources,
+                    api_sources_queried=list(api_sources_queried),
                     wall_clock_seconds=per_entry_time,
-                    api_calls=len(api_sources),
+                    api_calls=len(api_sources_queried),
                 )
             )
 
+    if predictions and not any_queried_recorded:
+        logger.warning(
+            "bibtex-check JSONL records carry no api_sources_queried; api_calls counts "
+            "the sources that returned a hit, not the sources queried. Re-run under "
+            "bibtex-updater 1.12 or later to record the calls."
+        )
     return predictions

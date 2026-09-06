@@ -359,3 +359,65 @@ def test_a_provenance_entry_for_a_vanished_table_is_reported(tmp_path):
     orphan = _report(reports, "old_name.csv")
     assert orphan.unverifiable and not orphan.is_stale
     assert "no such table exists" in "; ".join(orphan.reasons)
+
+
+# --- The site payload, the layer above the tables -----------------------------
+#
+# ``site/data/site_data.js`` is generated from the released results by
+# ``scripts/generate_site_data.py`` and had no guard at all, so a re-run left the
+# companion site publishing numbers no artifact in the repo still holds. The
+# generator gained a ``--check`` mode: it regenerates into a temporary directory
+# and compares, ignoring the generation date, which moves daily and says nothing
+# about the numbers.
+
+
+def _site_data(**payload: object) -> str:
+    return "// header\nwindow.HALLMARK_DATA = " + json.dumps(payload) + ";\n"
+
+
+def test_site_data_check_ignores_the_generation_date(tmp_path):
+    import generate_site_data as gsd
+
+    committed = tmp_path / "committed.js"
+    fresh = tmp_path / "fresh.js"
+    committed.write_text(_site_data(generated="2026-01-01", results={"dev": [1, 2]}))
+    fresh.write_text(_site_data(generated="2026-09-06", results={"dev": [1, 2]}))
+
+    assert gsd.diff_against_committed(fresh, committed) == []
+
+
+def test_site_data_check_names_the_key_that_moved(tmp_path):
+    import generate_site_data as gsd
+
+    committed = tmp_path / "committed.js"
+    fresh = tmp_path / "fresh.js"
+    committed.write_text(_site_data(generated="2026-01-01", corpus_version="1.2.3", kpis=[1]))
+    fresh.write_text(_site_data(generated="2026-01-01", corpus_version="1.2.4", kpis=[1]))
+
+    differences = gsd.diff_against_committed(fresh, committed)
+    assert len(differences) == 1
+    assert "corpus_version" in differences[0]
+    assert "1.2.3" in differences[0] and "1.2.4" in differences[0]
+
+
+def test_site_data_payload_survives_the_script_escaping(tmp_path):
+    """Corpus strings are adversarial, so the generator escapes ``</``. The
+    reader has to get the original string back or every check would be a diff."""
+    import generate_site_data as gsd
+
+    path = tmp_path / "site_data.js"
+    path.write_text(
+        "window.HALLMARK_DATA = " + json.dumps({"t": "</script>"}).replace("</", "<\\/") + ";\n"
+    )
+    assert gsd.read_payload(path.read_text())["t"] == "</script>"
+
+
+@pytest.mark.skipif(
+    not (_REPO_ROOT / "site" / "data" / "site_data.js").is_file(),
+    reason="no committed site payload",
+)
+def test_the_committed_site_payload_agrees_with_its_inputs():
+    """What the CI step runs, as a test that fails in the same place."""
+    import generate_site_data as gsd
+
+    assert gsd.main(["--check"]) == 0

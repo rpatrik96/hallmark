@@ -405,3 +405,148 @@ def test_the_two_patched_claude_dev_results_are_caught_and_registered():
         assert any("per_type" in reason for reason in by_name[name].reasons)
         assert name in crf.KNOWN_STALE, f"{name} flagged but not registered"
     assert res.passed, res.errors
+
+
+# --- Tests: the superseded per-type definition --------------------------------
+
+
+def _per_type_result(results_dir: Path, per_type: dict, *, split_sha256: str | None = None) -> Path:
+    result_file = results_dir / "mytool_dev_public.json"
+    _write_result(
+        result_file,
+        tool="mytool",
+        split="dev_public",
+        n_entries=20,
+        n_hall=10,
+        n_valid=10,
+        split_sha256=split_sha256,
+    )
+    payload = json.loads(result_file.read_text())
+    payload["per_type_metrics"] = per_type
+    result_file.write_text(json.dumps(payload))
+    return result_file
+
+
+def test_per_type_rows_without_num_valid_are_unverifiable(tmp_path):
+    """39 of the 42 released results carry the superseded per-type definition.
+
+    Those rows counted false positives inside the type, so every hallucination
+    type reports a false-positive rate of 0.0 and an f1 of 2*DR/(1+DR). They are
+    not comparable with the current rows and they are not evidence of a moved
+    split, so they are reported on the unverifiable contract rather than failed:
+    a check that trips on 39 of 42 files at once is a check someone switches off.
+    """
+    data_dir, _split_file, results_dir = _build_env(tmp_path, n_hall=10, n_valid=10)
+    _per_type_result(
+        results_dir,
+        {
+            "fabricated_doi": {
+                "detection_rate": 0.5,
+                "false_positive_rate": 0.0,
+                "f1": 2 / 3,
+                "count": 6,
+            },
+            "wrong_venue": {
+                "detection_rate": 0.5,
+                "false_positive_rate": 0.0,
+                "f1": 2 / 3,
+                "count": 4,
+            },
+        },
+    )
+
+    res = crf.check_freshness(results_dir, version="v1.2", data_dir=data_dir)
+    report = next(r for r in res.reports if r.result_file == "mytool_dev_public.json")
+    assert report.unverifiable is True
+    assert report.superseded_per_type is True
+    assert report.is_stale is False, "a superseded definition is not a moved split"
+    assert res.passed is True
+    assert any("2 per_type_metrics row(s) predate" in reason for reason in report.reasons), (
+        report.reasons
+    )
+
+
+def test_per_type_rows_with_num_valid_are_not_flagged(tmp_path):
+    """A row under the current definition names the valid pool it scored against."""
+    data_dir, split_file, results_dir = _build_env(tmp_path, n_hall=10, n_valid=10)
+    _per_type_result(
+        results_dir,
+        {
+            "fabricated_doi": {
+                "detection_rate": 0.5,
+                "false_positive_rate": 0.1,
+                "f1": 0.5,
+                "precision": 0.5,
+                "count": 6,
+                "num_valid": 10,
+            },
+            "wrong_venue": {
+                "detection_rate": 0.5,
+                "false_positive_rate": 0.1,
+                "f1": 0.5,
+                "precision": 0.5,
+                "count": 4,
+                "num_valid": 10,
+            },
+        },
+        split_sha256=crf.compute_sha256(split_file),
+    )
+
+    res = crf.check_freshness(results_dir, version="v1.2", data_dir=data_dir)
+    report = next(r for r in res.reports if r.result_file == "mytool_dev_public.json")
+    assert report.superseded_per_type is False
+    assert report.unverifiable is False
+    assert res.passed is True
+
+
+@pytest.mark.skipif(not _REAL_RESULTS_DIR.is_dir(), reason="real results dir not present")
+def test_the_released_results_report_the_superseded_definition():
+    """Pins the count: 39 of the 42 released results, reported and not fatal."""
+    res = crf.check_freshness(_REAL_RESULTS_DIR, version="v1.2", data_dir=_REAL_DATA_DIR)
+    flagged = [r.result_file for r in res.reports if r.superseded_per_type]
+    assert len(flagged) == 39, f"{len(flagged)} of {len(res.reports)} flagged: {flagged[:5]}"
+    assert res.passed, res.errors
+
+
+# --- Tests: results/archive/ is outside the gate ------------------------------
+
+
+def test_files_under_archive_are_skipped(tmp_path):
+    """A run kept for the record scores no current split, and saying so once in
+    the directory layout beats saying it once per file in a register."""
+    data_dir, _split_file, results_dir = _build_env(tmp_path, n_hall=10, n_valid=10)
+    archive = results_dir / "archive"
+    archive.mkdir()
+    # Stale by every check the gate makes: wrong counts, wrong split hash.
+    _write_result(
+        archive / "oldtool_dev_public.json",
+        tool="oldtool",
+        split="dev_public",
+        n_entries=99,
+        n_hall=99,
+        n_valid=99,
+        split_sha256="0" * 64,
+    )
+    _write_result(
+        results_dir / "mytool_dev_public.json",
+        tool="mytool",
+        split="dev_public",
+        n_entries=20,
+        n_hall=10,
+        n_valid=10,
+    )
+
+    res = crf.check_freshness(results_dir, version="v1.2", data_dir=data_dir)
+    assert [r.result_file for r in res.reports] == ["mytool_dev_public.json"]
+    assert res.passed is True
+
+
+def test_an_empty_results_dir_passes(tmp_path):
+    """The gate over ``results/`` guards a surface that is currently empty; it
+    has to stay green until someone drops a result there."""
+    results_dir = tmp_path / "results"
+    results_dir.mkdir()
+    data_dir, _split_file, _ = _build_env(tmp_path)
+    res = crf.check_freshness(results_dir, version="v1.2", data_dir=data_dir)
+    assert res.passed is True
+    assert res.reports == []
