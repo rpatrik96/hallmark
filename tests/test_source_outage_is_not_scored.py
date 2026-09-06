@@ -21,19 +21,23 @@ in one day, which is why the fix records the condition rather than only refusing
 
 from __future__ import annotations
 
+import json
 import subprocess
 from argparse import Namespace
+from pathlib import Path
 
 import pytest
 
 from hallmark.baselines import registry as R
 from hallmark.baselines.bibtexupdater import (
     ALLOW_OUTAGE_ENV,
+    BIBTEX_CHECK_BIN_ENV,
     EXIT_SOURCE_OUTAGE,
     SourceOutageError,
     last_source_condition,
     parse_source_condition,
     run_bibtex_check,
+    run_bibtex_check_with_health,
 )
 from hallmark.dataset.schema import BenchmarkEntry, BlindEntry, EvaluationResult
 
@@ -87,9 +91,30 @@ class TestSourceConditionParsing:
         assert cond["per_source_failures"] == {"openalex": 3}
 
 
-def test_the_exit_code_is_the_one_the_tool_documents():
-    """Pinned because the whole guard keys on it."""
-    assert EXIT_SOURCE_OUTAGE == 5
+def test_the_exit_code_matches_the_pinned_tool():
+    """Read the contract from the build the wrapper would actually run."""
+    from hallmark.baselines import bibtexupdater as btu
+
+    binary = btu.resolve_bibtex_check_bin()
+    if binary is None:
+        pytest.skip("bibtex-check is not installed")
+    with open(Path(binary).resolve()) as script:
+        first_line = script.readline().strip()
+    if not first_line.startswith("#!"):
+        pytest.skip("bibtex-check console script has no shebang")
+    interpreter = first_line.removeprefix("#!").strip().split()[0]
+    probe = subprocess.run(
+        [
+            interpreter,
+            "-c",
+            "from bibtex_updater.fact_checker import EXIT_SOURCE_OUTAGE; print(EXIT_SOURCE_OUTAGE)",
+        ],
+        capture_output=True,
+        text=True,
+        timeout=30,
+    )
+    assert probe.returncode == 0, probe.stderr
+    assert int(probe.stdout.strip()) == EXIT_SOURCE_OUTAGE
 
 
 # --- Through the subprocess, not only the regex -----------------------------------
@@ -111,11 +136,23 @@ def fake_bibtex_check(monkeypatch):
     monkeypatch.setattr(btu, "bibtex_check_version", lambda binary=None: "1.2.0")
     monkeypatch.delenv(ALLOW_OUTAGE_ENV, raising=False)
 
-    def _install(returncode: int, output: str):
+    def _install(
+        returncode: int,
+        output: str,
+        records: list[dict] | None = None,
+        stderr: str = "",
+    ):
+        calls: list[list[str]] = []
+
         def _run(cmd, **kw):
-            return subprocess.CompletedProcess(cmd, returncode, stdout=output, stderr="")
+            calls.append(cmd)
+            if records is not None:
+                jsonl_path = Path(cmd[cmd.index("--jsonl") + 1])
+                jsonl_path.write_text("\n".join(json.dumps(record) for record in records) + "\n")
+            return subprocess.CompletedProcess(cmd, returncode, stdout=output, stderr=stderr)
 
         monkeypatch.setattr(btu.subprocess, "run", _run)
+        return calls
 
     return _install
 
@@ -123,6 +160,63 @@ def fake_bibtex_check(monkeypatch):
 def test_exit_5_raises_through_the_public_runner(fake_bibtex_check):
     fake_bibtex_check(EXIT_SOURCE_OUTAGE, REAL_OUTAGE_OUTPUT)
     with pytest.raises(SourceOutageError, match="285 of 1119"):
+        run_bibtex_check(_entries(), skip_prescreening=True)
+
+
+def test_strict_exit_4_with_an_outage_report_is_refused(fake_bibtex_check):
+    fake_bibtex_check(4, REAL_OUTAGE_OUTPUT)
+    with pytest.raises(SourceOutageError, match="285 of 1119"):
+        run_bibtex_check(_entries(), skip_prescreening=True)
+
+
+def test_strict_exit_4_below_the_threshold_is_not_an_outage(fake_bibtex_check):
+    """bibtex-check prints its source report under the threshold as well, so a
+    strict-mode exit 4 beside an 8% report is a strict verdict, not an outage."""
+    fake_bibtex_check(
+        4,
+        "WARNING: 4 of 50 entries (8.0%) had at least one source lookup that did not "
+        "complete: dblp (4).\n",
+    )
+    run_bibtex_check(_entries(), skip_prescreening=True)
+
+
+def test_threshold_fraction_is_refused_even_when_exit_is_zero(fake_bibtex_check):
+    fake_bibtex_check(
+        0,
+        "WARNING: 5 of 50 entries (10.0%) had at least one source lookup that did not "
+        "complete: dblp (5).\n",
+    )
+    with pytest.raises(SourceOutageError, match="5 of 50"):
+        run_bibtex_check(_entries(), skip_prescreening=True)
+
+
+def test_wrapper_passes_its_outage_threshold_explicitly(fake_bibtex_check):
+    calls = fake_bibtex_check(0, "INFO: done\n")
+    run_bibtex_check(_entries(), skip_prescreening=True)
+    (cmd,) = calls
+    threshold_index = cmd.index("--outage-threshold")
+    assert float(cmd[threshold_index + 1]) == pytest.approx(0.10)
+
+
+def test_exit_5_without_a_source_report_logs_a_broken_parser(fake_bibtex_check, caplog):
+    fake_bibtex_check(EXIT_SOURCE_OUTAGE, "ERROR: source outage\n")
+    with (
+        caplog.at_level("ERROR", logger="hallmark.baselines.bibtexupdater"),
+        pytest.raises(SourceOutageError),
+    ):
+        run_bibtex_check(_entries(), skip_prescreening=True)
+    assert any("source-condition report" in record.message for record in caplog.records)
+
+
+def test_a_missing_pinned_binary_never_falls_back_to_path(tmp_path, monkeypatch):
+    missing = tmp_path / "missing" / "bibtex-check"
+    monkeypatch.setenv(BIBTEX_CHECK_BIN_ENV, str(missing))
+
+    def _must_not_run(*_args, **_kwargs):
+        raise AssertionError("subprocess.run must not be called for a missing pinned binary")
+
+    monkeypatch.setattr(subprocess, "run", _must_not_run)
+    with pytest.raises(RuntimeError, match=f"{BIBTEX_CHECK_BIN_ENV}.*{missing}"):
         run_bibtex_check(_entries(), skip_prescreening=True)
 
 
@@ -140,18 +234,112 @@ def test_a_sub_threshold_outage_is_recorded_even_though_the_tool_exits_0(fake_bi
     """bibtex-check prints the same summary below its 10% threshold and exits 0."""
     fake_bibtex_check(
         0,
-        "WARNING: 5 of 50 entries (10.0%) had at least one source lookup that did not "
-        "complete: dblp (5). Those entries report api_error, not not_found.\n",
+        "WARNING: 4 of 50 entries (8.0%) had at least one source lookup that did not "
+        "complete: dblp (4). Those entries report api_error, not not_found.\n",
     )
     run_bibtex_check(_entries(), skip_prescreening=True)
     cond = last_source_condition()
-    assert cond is not None and cond["entries_with_incomplete_lookups"] == 5
+    assert cond is not None and cond["entries_with_incomplete_lookups"] == 4
 
 
-def test_a_healthy_run_clears_the_condition(fake_bibtex_check):
+def test_per_source_failures_come_from_jsonl_records(fake_bibtex_check):
+    records = [
+        {"key": "e0", "status": "api_error", "sources_failed": ["dblp", "openalex"]},
+        {"key": "e1", "status": "api_error", "sources_failed": ["dblp"]},
+        {"key": "e2", "status": "verified", "sources_failed": []},
+    ]
+    fake_bibtex_check(
+        0,
+        "WARNING: 2 of 50 entries (4.0%) had at least one source lookup that did not "
+        "complete: stale-log-value (99).\n",
+        records,
+    )
+    run_bibtex_check(_entries(), skip_prescreening=True)
+    cond = last_source_condition()
+    assert cond is not None
+    assert cond["per_source_failures"] == {"dblp": 2, "openalex": 1}
+
+
+def test_record_coverage_flags_reach_batch_health(fake_bibtex_check):
+    records = [
+        {
+            "key": f"e{i}",
+            "status": "unconfirmed" if i < 20 else "verified",
+            "coverage_incomplete": i < 20,
+        }
+        for i in range(40)
+    ]
+    fake_bibtex_check(0, "INFO: done\n", records)
+    _, _, health = run_bibtex_check_with_health(_entries(40), skip_prescreening=True)
+    assert health.coverage_incomplete == 20
+    assert health.no_evidence == 20
+    assert health.suspected_transport_failure
+
+
+def test_a_healthy_run_records_its_pace_and_contact_condition(fake_bibtex_check):
     fake_bibtex_check(0, "INFO: Loaded 3 entries\nINFO: done\n")
     run_bibtex_check(_entries(), skip_prescreening=True)
-    assert last_source_condition() is None
+    assert last_source_condition() == {
+        "rate_limit": 120,
+        "workers": 8,
+        "mailto_configured": False,
+        "mailto_domain": None,
+    }
+
+
+def test_command_and_condition_record_configured_pace_and_contact(
+    fake_bibtex_check, monkeypatch, caplog
+):
+    mailto = "researcher@example.org"
+    monkeypatch.setenv("BIBTEX_CHECK_MAILTO", mailto)
+    calls = fake_bibtex_check(0, "INFO: done\n")
+    with caplog.at_level("INFO", logger="hallmark.baselines.bibtexupdater"):
+        run_bibtex_check(_entries(), skip_prescreening=True)
+
+    (cmd,) = calls
+    assert cmd[cmd.index("--rate-limit") + 1] == "120"
+    assert cmd[cmd.index("--workers") + 1] == "8"
+    assert cmd[cmd.index("--mailto") + 1] == mailto
+    assert last_source_condition() == {
+        "rate_limit": 120,
+        "workers": 8,
+        "mailto_configured": True,
+        "mailto_domain": "example.org",
+    }
+    assert "scale 120/45" in caplog.text
+    assert mailto not in caplog.text
+
+
+def test_clean_exit_stderr_is_not_discarded(fake_bibtex_check, caplog):
+    warning = "No contact email configured; using placeholder"
+    fake_bibtex_check(0, "INFO: done\n", stderr=f"WARNING: {warning}\n")
+    with caplog.at_level("WARNING", logger="hallmark.baselines.bibtexupdater"):
+        run_bibtex_check(_entries(), skip_prescreening=True)
+    assert warning in caplog.text
+
+
+def test_exit_2_is_logged_but_partial_jsonl_is_retained(fake_bibtex_check, caplog):
+    records = [{"key": "e0", "status": "verified", "unconfirmed_fields": []}]
+    fake_bibtex_check(2, "", records, stderr="parse failure")
+    with caplog.at_level("ERROR", logger="hallmark.baselines.bibtexupdater"):
+        preds = run_bibtex_check(_entries(), skip_prescreening=True)
+    assert any(pred.bibtex_key == "e0" and pred.reason == "Status: verified" for pred in preds)
+    assert "exit 2" in caplog.text
+
+
+def test_unconfirmed_fields_capability_is_checked_per_run(fake_bibtex_check, caplog):
+    legacy = [{"key": "e0", "status": "verified"}]
+    fake_bibtex_check(0, "", legacy)
+    with caplog.at_level("WARNING", logger="hallmark.baselines.bibtexupdater"):
+        run_bibtex_check(_entries(), skip_prescreening=True)
+    assert "unconfirmed_fields" in caplog.text
+
+    caplog.clear()
+    modern = [{"key": "e0", "status": "verified", "unconfirmed_fields": []}]
+    fake_bibtex_check(0, "", modern)
+    with caplog.at_level("WARNING", logger="hallmark.baselines.bibtexupdater"):
+        run_bibtex_check(_entries(), skip_prescreening=True)
+    assert "unconfirmed_fields" not in caplog.text
 
 
 def test_the_condition_lands_on_the_result(fake_bibtex_check, monkeypatch):

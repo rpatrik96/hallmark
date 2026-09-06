@@ -65,6 +65,10 @@ from hallmark.dataset.schema import BlindEntry, Prediction
 
 logger = logging.getLogger(__name__)
 
+# Unmapped statuses seen in this process, so a drifted tool vocabulary emits
+# one operator warning per status rather than one per record.
+_WARNED_UNMAPPED_STATUSES: set[str] = set()
+
 
 class SourceOutageError(RuntimeError):
     """bibtex-check reported that its sources went dark during the run.
@@ -91,7 +95,6 @@ STATUS_TO_LABEL: dict[str, str] = {
     "hallucinated": "HALLUCINATED",
     "api_error": "VALID",  # Conservative: don't flag on errors
     "network_error": "VALID",  # Lookup never reached a source: abstention, not evidence
-    "coverage_incomplete": "VALID",  # Sources throttled/errored: abstention, not evidence
     # bibtex-updater >=1.2.0 statuses
     "unconfirmed": "VALID",  # Abstention (could-not-verify): conservative VALID
     "given_name_substitution": "HALLUCINATED",  # Co-author given name is a different person
@@ -121,6 +124,7 @@ STATUS_TO_LABEL: dict[str, str] = {
     "working_paper_verified": "VALID",
     "working_paper_not_found": "HALLUCINATED",
     # General
+    "parse_error": "VALID",  # Parser failure: abstention, not evidence
     "skipped": "VALID",  # Conservative
 }
 
@@ -145,6 +149,7 @@ ABSTENTION_STATUSES: frozenset[str] = frozenset(
         "api_error",
         "network_error",
         "coverage_incomplete",
+        "parse_error",
         "skipped",
         "strict_warn_preprint_year",
         "strict_warn_cnv",
@@ -163,6 +168,7 @@ ABSTENTION_REASONS: dict[str, str] = {
     "api_error": "the source lookup failed (API error)",
     "network_error": "the source lookup failed (network error)",
     "coverage_incomplete": "the lookup did not complete against every source",
+    "parse_error": "bibtex-check could not read this entry",
     "skipped": "bibtex-check does not verify this entry type",
     "strict_warn_preprint_year": (
         "strict mode flagged a preprint-year discrepancy and left the decision to the user"
@@ -217,6 +223,7 @@ STATUS_TO_CONFIDENCE: dict[str, float] = {
     "book_not_found": 0.75,
     "working_paper_verified": 0.85,
     "working_paper_not_found": 0.70,
+    "parse_error": 0.50,
     "skipped": 0.50,
 }
 
@@ -343,6 +350,7 @@ class BatchHealth:
 def assess_batch_health(
     statuses: Iterable[str],
     *,
+    coverage_flags: Iterable[bool] | None = None,
     threshold: float = NOT_FOUND_SHARE_THRESHOLD,
     min_batch_size: int = MIN_BATCH_FOR_HEALTH_CHECK,
 ) -> BatchHealth:
@@ -351,6 +359,8 @@ def assess_batch_health(
     Args:
         statuses: Raw per-entry status strings, e.g. the values of the dict
             returned by ``run_bibtex_check_with_status``.
+        coverage_flags: Per-entry ``coverage_incomplete`` values from the raw
+            records, aligned with ``statuses``.
         threshold: No-evidence share above which the batch is suspect.
         min_batch_size: Smallest batch on which the share is evaluated.
 
@@ -359,11 +369,25 @@ def assess_batch_health(
         caller gates checkpointing on.
     """
     status_list = list(statuses)
+    flag_list = list(coverage_flags or ())
+    flag_list.extend([False] * (len(status_list) - len(flag_list)))
+    coverage_incomplete = [
+        flag or status in COVERAGE_INCOMPLETE_STATUSES
+        for status, flag in zip(status_list, flag_list, strict=False)
+    ]
     return BatchHealth(
         total=len(status_list),
-        not_found=sum(1 for s in status_list if s == "not_found"),
-        transport_error=sum(1 for s in status_list if s in TRANSPORT_FAILURE_STATUSES),
-        coverage_incomplete=sum(1 for s in status_list if s in COVERAGE_INCOMPLETE_STATUSES),
+        not_found=sum(
+            1
+            for status, incomplete in zip(status_list, coverage_incomplete, strict=False)
+            if status == "not_found" and not incomplete
+        ),
+        transport_error=sum(
+            1
+            for status, incomplete in zip(status_list, coverage_incomplete, strict=False)
+            if status in TRANSPORT_FAILURE_STATUSES and not incomplete
+        ),
+        coverage_incomplete=sum(coverage_incomplete),
         threshold=threshold,
         min_batch_size=min_batch_size,
     )
@@ -394,6 +418,8 @@ BIBTEX_CHECK_BIN_ENV = "HALLMARK_BIBTEX_CHECK_BIN"
 #: Pacing is therefore part of the run condition and belongs on the same
 #: footing as the binary: settable, and recorded in the log.
 BIBTEX_CHECK_RATE_ENV = "HALLMARK_BIBTEX_CHECK_RATE_LIMIT"
+BIBTEX_CHECK_MAILTO_ENV = "BIBTEX_CHECK_MAILTO"
+BIBTEX_CHECK_WORKERS = 8
 
 #: bibtex-check's exit code for "sources went dark during this run".
 #:
@@ -409,6 +435,7 @@ BIBTEX_CHECK_RATE_ENV = "HALLMARK_BIBTEX_CHECK_RATE_LIMIT"
 #: entries' abstentions carry no information -- and nothing downstream could
 #: tell them from real ones.
 EXIT_SOURCE_OUTAGE = 5
+SOURCE_OUTAGE_THRESHOLD = 0.10
 
 #: Set to "1" to score a run bibtex-check reported as a source outage anyway.
 #: Deliberately awkward: the numbers are not comparable to a healthy run.
@@ -422,19 +449,22 @@ _OUTAGE_RE = re.compile(
 )
 
 
-#: The source-availability report of the most recent bibtex-check run in this
-#: process, or None when it reported none. Set by ``_run_bibtex_check_subprocess``
-#: on every run -- exit 0 included, since bibtex-check prints the same summary
-#: below its 10% threshold -- and copied onto the EvaluationResult by the CLI's
-#: provenance stamp. Before this the report was parsed only to format one log
-#: line, so a run scored under HALLMARK_ALLOW_SOURCE_OUTAGE=1 carried no record
-#: of which sources were dark.
+#: The source-availability and invocation settings of the most recent
+#: bibtex-check run in this process, or None before a process started. Set by
+#: ``_run_bibtex_check_subprocess`` on every run and copied onto the
+#: EvaluationResult by the CLI's provenance stamp.
 _last_source_condition: dict[str, object] | None = None
+_ran_bibtex_check = False
 
 
 def last_source_condition() -> dict[str, object] | None:
-    """The source-availability report of the last bibtex-check run, if any."""
+    """The source availability and settings of the last bibtex-check run."""
     return _last_source_condition
+
+
+def ran_bibtex_check() -> bool:
+    """Whether the most recent wrapper call started ``bibtex-check``."""
+    return _ran_bibtex_check
 
 
 def parse_source_condition(output: str) -> dict[str, object] | None:
@@ -466,7 +496,10 @@ def parse_source_condition(output: str) -> dict[str, object] | None:
 
 
 def resolve_bibtex_check_rate_limit(default: int) -> int:
-    """Per-service request rate for this run, from the environment or *default*."""
+    """``--rate-limit`` scale for this run, from the environment or *default*.
+
+    bibtex-check interprets 45 as scale 1.0 and derives separate service budgets.
+    """
     raw = os.environ.get(BIBTEX_CHECK_RATE_ENV)
     if not raw:
         return default
@@ -522,10 +555,29 @@ def bibtex_check_version(binary: str | None = None) -> str | None:
     binary = binary or resolve_bibtex_check_bin()
     if not binary:
         return None
-    python = Path(binary).with_name("python")
-    if not python.exists():
-        python = Path(binary).with_name("python3")
-    if not python.exists():
+    requested_binary = binary
+    resolved_binary = Path(os.path.realpath(binary))
+    python: Path | None = None
+    try:
+        with open(resolved_binary) as script:
+            first_line = script.readline().strip()
+        if first_line.startswith("#!"):
+            interpreter = first_line.removeprefix("#!").strip().split()
+            if interpreter:
+                candidate = Path(interpreter[0])
+                if candidate.exists():
+                    python = candidate
+    except (OSError, UnicodeError):
+        pass
+
+    if python is None:
+        for name in ("python", "python3"):
+            candidate = resolved_binary.with_name(name)
+            if candidate.exists():
+                python = candidate
+                break
+    if python is None:
+        logger.warning("Could not find bibtex-check's interpreter for %s", requested_binary)
         return None
     try:
         out = subprocess.run(
@@ -534,10 +586,12 @@ def bibtex_check_version(binary: str | None = None) -> str | None:
             text=True,
             timeout=30,
         )
-    except (OSError, subprocess.SubprocessError):
+    except (OSError, subprocess.SubprocessError) as exc:
+        logger.warning("Could not probe bibtex-check version for %s: %s", requested_binary, exc)
         return None
     lines = [ln.strip() for ln in out.stdout.splitlines() if ln.strip()]
-    if not lines:
+    if out.returncode != 0 or not lines:
+        logger.warning("Could not probe bibtex-check version for %s", requested_binary)
         return None
     source_version = lines[0]
     metadata_version = lines[1] if len(lines) > 1 else None
@@ -593,6 +647,7 @@ def run_bibtex_check_with_status(
     rate_limit: int = 120,
     academic_only: bool = True,
     skip_prescreening: bool = False,
+    _health_out: list[BatchHealth] | None = None,
     **_kw: object,
 ) -> tuple[list[Prediction], dict[str, str]]:
     """Run bibtex-check and return both predictions and raw per-entry status strings.
@@ -680,13 +735,18 @@ def run_bibtex_check_with_status(
 
     # Step 1: Run the subprocess on all entries to get raw tool predictions.
     # The reason string encodes the raw status as "Status: <status>[; ...]".
-    tool_predictions = _run_bibtex_check_subprocess(
+    subprocess_output = _run_bibtex_check_subprocess(
         entries,
         extra_args=extra_args,
         timeout=timeout,
         rate_limit=rate_limit,
         academic_only=academic_only,
     )
+    if isinstance(subprocess_output, tuple):
+        tool_predictions, raw_records = subprocess_output
+    else:
+        tool_predictions = subprocess_output
+        raw_records = []
 
     # Step 2: Extract raw status from each tool prediction's reason string.
     tool_key_to_status: dict[str, str] = {}
@@ -702,20 +762,12 @@ def run_bibtex_check_with_status(
     tool_key_set = {p.bibtex_key for p in tool_predictions}
     missing_keys: set[str] = {e.bibtex_key for e in entries} - tool_key_set
 
-    # Step 4: Obtain the final merged predictions via run_with_prescreening,
-    # which handles backfill and pre-screening merge in one pass.
-    def _run_tool(tool_entries: list[BlindEntry]) -> list[Prediction]:
-        return _run_bibtex_check_subprocess(
-            tool_entries,
-            extra_args=extra_args,
-            timeout=timeout,
-            rate_limit=rate_limit,
-            academic_only=academic_only,
-        )
-
+    # Step 4: Apply backfill and pre-screening to the predictions already in
+    # hand. ``run_with_prescreening`` may append backfills to the runner's list,
+    # so return a copy to preserve the raw tool results used below.
     final_predictions = run_with_prescreening(
         entries,
-        _run_tool,
+        lambda _entries: list(tool_predictions),
         skip_prescreening=skip_prescreening,
         backfill_reason="Entry not in bibtex-check output",
     )
@@ -746,9 +798,17 @@ def run_bibtex_check_with_status(
     # broken lookup path, not a bibliography of invented papers — say so loudly
     # so an operator watching the log can kill the run before it burns Stage 2
     # budget on entries no database was ever asked about.
-    health = assess_batch_health(status_dict.values())
+    raw_by_key = {record.get("key", ""): record for record in raw_records}
+    coverage_flags = [
+        raw_by_key.get(key, {}).get("coverage_incomplete") is True for key in all_keys
+    ]
+    health = assess_batch_health(
+        (status_dict[key] for key in all_keys), coverage_flags=coverage_flags
+    )
     if health.suspected_transport_failure:
         logger.warning(health.warning_message())
+    if _health_out is not None:
+        _health_out.append(health)
 
     return final_predictions, status_dict
 
@@ -781,6 +841,7 @@ def run_bibtex_check_with_health(
     Returns:
         A 3-tuple ``(predictions, status_dict, health)``.
     """
+    health_out: list[BatchHealth] = []
     predictions, status_dict = run_bibtex_check_with_status(
         entries,
         extra_args=extra_args,
@@ -788,8 +849,9 @@ def run_bibtex_check_with_health(
         rate_limit=rate_limit,
         academic_only=academic_only,
         skip_prescreening=skip_prescreening,
+        _health_out=health_out,
     )
-    return predictions, status_dict, assess_batch_health(status_dict.values())
+    return predictions, status_dict, health_out[0]
 
 
 def _run_bibtex_check_subprocess(
@@ -798,11 +860,13 @@ def _run_bibtex_check_subprocess(
     timeout: float = 7200.0,
     rate_limit: int = 120,
     academic_only: bool = True,
-) -> list[Prediction]:
-    """Run bibtex-check subprocess and return raw predictions (no pre-screening)."""
-    global _last_source_condition
+) -> tuple[list[Prediction], list[dict[str, object]]]:
+    """Run bibtex-check and return predictions plus its raw JSONL records."""
+    global _last_source_condition, _ran_bibtex_check
     _last_source_condition = None
+    _ran_bibtex_check = False
     start_time = time.time()
+    raw_records: list[dict[str, object]] = []
 
     # Use a directory we control to avoid cleanup race on timeout
     tmpdir = tempfile.mkdtemp()
@@ -815,8 +879,17 @@ def _run_bibtex_check_subprocess(
         bib_path.write_text(bib_content)
 
         # Build command with performance optimizations
-        binary = resolve_bibtex_check_bin() or "bibtex-check"
+        binary = resolve_bibtex_check_bin()
+        pinned_binary = os.environ.get(BIBTEX_CHECK_BIN_ENV)
+        if pinned_binary and binary is None:
+            raise RuntimeError(
+                f"{BIBTEX_CHECK_BIN_ENV} points at a missing bibtex-check binary: "
+                f"{os.path.expanduser(pinned_binary)}"
+            )
+        binary = binary or "bibtex-check"
         rate_limit = resolve_bibtex_check_rate_limit(rate_limit)
+        mailto = os.environ.get(BIBTEX_CHECK_MAILTO_ENV, "").strip()
+        mailto_domain = mailto.rpartition("@")[2] or None
         # Say which build is answering. Without this the run is silent about the
         # single fact that decides whether its numbers are comparable to any
         # other run's, and PATH may be resolving an editable install.
@@ -828,7 +901,12 @@ def _run_bibtex_check_subprocess(
             if os.environ.get(BIBTEX_CHECK_BIN_ENV)
             else f" [unpinned; set {BIBTEX_CHECK_BIN_ENV} to pin]",
         )
-        logger.info("bibtex-check rate limit: %d req/min per service", rate_limit)
+        logger.info(
+            "bibtex-check pace: --rate-limit %d (scale %d/45; "
+            "the tool derives per-service budgets)",
+            rate_limit,
+            rate_limit,
+        )
         cmd = [
             binary,
             str(bib_path),
@@ -836,6 +914,10 @@ def _run_bibtex_check_subprocess(
             str(jsonl_path),
             "--rate-limit",
             str(rate_limit),
+            "--outage-threshold",
+            str(SOURCE_OUTAGE_THRESHOLD),
+            "--workers",
+            str(BIBTEX_CHECK_WORKERS),
         ]
         if academic_only:
             cmd.append("--academic-only")
@@ -843,11 +925,17 @@ def _run_bibtex_check_subprocess(
         s2_key = os.environ.get("S2_API_KEY")
         if s2_key:
             cmd.extend(["--s2-api-key", s2_key])
+        if mailto:
+            cmd.extend(["--mailto", mailto])
         if extra_args:
             cmd.extend(extra_args)
 
-        # Run bibtex-check (the API key is masked — see redact_command)
-        logger.info(f"Running: {redact_command(cmd)}")
+        # Run bibtex-check. API keys are masked by ``redact_command``; mailto is
+        # masked here because the shared secret-flag table is outside this package.
+        logged_cmd = list(cmd)
+        if mailto:
+            logged_cmd[logged_cmd.index("--mailto") + 1] = "***"
+        logger.info("Running: %s", redact_command(logged_cmd))
         timed_out = False
         try:
             result = subprocess.run(
@@ -856,41 +944,84 @@ def _run_bibtex_check_subprocess(
                 text=True,
                 timeout=timeout,
             )
-            condition = parse_source_condition(result.stdout + result.stderr)
+            _ran_bibtex_check = True
+            if jsonl_path.exists():
+                raw_records = list(parse_jsonl_to_raw(jsonl_path).values())
+            parsed_condition = parse_source_condition(result.stdout + result.stderr)
+            if (
+                parsed_condition is not None
+                and raw_records
+                and any("sources_failed" in record for record in raw_records)
+            ):
+                per_source_failures: dict[str, int] = {}
+                for record in raw_records:
+                    sources_failed = record.get("sources_failed")
+                    if isinstance(sources_failed, list):
+                        for source in sources_failed:
+                            if isinstance(source, str):
+                                per_source_failures[source] = per_source_failures.get(source, 0) + 1
+                parsed_condition["per_source_failures"] = per_source_failures
+            condition = {
+                **(parsed_condition or {}),
+                "rate_limit": rate_limit,
+                "workers": BIBTEX_CHECK_WORKERS,
+                "mailto_configured": bool(mailto),
+                "mailto_domain": mailto_domain,
+            }
             _last_source_condition = condition
-            if result.returncode == EXIT_SOURCE_OUTAGE:
+            if result.returncode == 0 and result.stderr.strip():
+                logger.warning("bibtex-check stderr: %s", result.stderr.strip())
+            if result.returncode == EXIT_SOURCE_OUTAGE and parsed_condition is None:
+                logger.error(
+                    "bibtex-check exited %d for a source outage, but its "
+                    "source-condition report could not be parsed",
+                    EXIT_SOURCE_OUTAGE,
+                )
+            raw_fraction = parsed_condition.get("incomplete_fraction") if parsed_condition else None
+            incomplete_fraction = (
+                float(raw_fraction) if isinstance(raw_fraction, (int, float)) else 0.0
+            )
+            # bibtex-check prints its source report below the threshold too, so
+            # the report's presence proves nothing; the fraction it carries does.
+            # A strict-mode exit 4 is an outage exactly when that fraction says so.
+            is_source_outage = (
+                result.returncode == EXIT_SOURCE_OUTAGE
+                or incomplete_fraction >= SOURCE_OUTAGE_THRESHOLD
+            )
+            if is_source_outage:
                 detail = ""
-                if condition:
+                if parsed_condition:
                     detail = (
-                        f" {condition['entries_with_incomplete_lookups']} of "
-                        f"{condition['entries_total']} entries "
-                        f"({condition['incomplete_fraction']:.1%}) had an incomplete "
-                        f"lookup: {condition['per_source_failures']}."
+                        f" {parsed_condition['entries_with_incomplete_lookups']} of "
+                        f"{parsed_condition['entries_total']} entries "
+                        f"({parsed_condition['incomplete_fraction']:.1%}) had an incomplete "
+                        f"lookup: {parsed_condition['per_source_failures']}."
                     )
                 if os.environ.get(ALLOW_OUTAGE_ENV) == "1":
                     logger.error(
                         "bibtex-check reported a SOURCE OUTAGE (exit %d).%s "
                         "Scoring it anyway because %s=1 -- these numbers are NOT "
                         "comparable to a healthy run.",
-                        EXIT_SOURCE_OUTAGE,
+                        result.returncode,
                         detail,
                         ALLOW_OUTAGE_ENV,
                     )
                 else:
                     raise SourceOutageError(
                         f"bibtex-check reported a source outage (exit "
-                        f"{EXIT_SOURCE_OUTAGE}) and asked for the run to be "
+                        f"{result.returncode}) and asked for the run to be "
                         f"discarded.{detail} A source that never answered is not "
                         "evidence a reference is absent, so this run cannot be "
                         "scored. Re-run when the sources are reachable, or set "
                         f"{ALLOW_OUTAGE_ENV}=1 to score it regardless."
                     )
-            elif result.returncode not in (0, 2, 4):
+            elif result.returncode not in (0, 4):
                 logger.error(f"bibtex-check failed (exit {result.returncode}): {result.stderr}")
         except FileNotFoundError:
             logger.error("bibtex-check not found. Install with: pipx install bibtex-updater")
-            return fallback_predictions(entries, reason="Fallback: bibtex-check unavailable")
+            return fallback_predictions(entries, reason="Fallback: bibtex-check unavailable"), []
         except subprocess.TimeoutExpired:
+            _ran_bibtex_check = True
             timed_out = True
 
         elapsed = time.time() - start_time
@@ -898,6 +1029,13 @@ def _run_bibtex_check_subprocess(
         # Parse JSONL output (works for both complete and partial results)
         predictions: list[Prediction] = []
         if jsonl_path.exists():
+            if not raw_records:
+                raw_records = list(parse_jsonl_to_raw(jsonl_path).values())
+            if raw_records and not any("unconfirmed_fields" in record for record in raw_records):
+                logger.warning(
+                    "bibtex-check JSONL records do not carry unconfirmed_fields; "
+                    "the installed build predates that output capability"
+                )
             predictions = _parse_jsonl_output(jsonl_path, elapsed, len(entries))
 
         checked = len(predictions)
@@ -917,7 +1055,7 @@ def _run_bibtex_check_subprocess(
 
         shutil.rmtree(tmpdir, ignore_errors=True)
 
-    return predictions
+    return predictions, raw_records
 
 
 def parse_jsonl_to_raw(jsonl_path: Path) -> dict[str, dict]:
@@ -967,6 +1105,18 @@ def _parse_jsonl_output(
 
             key = record.get("key", "")
             status = record.get("status", "skipped")
+            is_unmapped = status not in STATUS_TO_LABEL
+            if is_unmapped:
+                if status not in _WARNED_UNMAPPED_STATUSES:
+                    _WARNED_UNMAPPED_STATUSES.add(status)
+                    logger.warning(
+                        "bibtex-check returned unmapped status %r (first seen on %s); "
+                        "emitting UNCERTAIN",
+                        status,
+                        key,
+                    )
+                else:
+                    logger.debug("bibtex-check returned unmapped status %r for %s", status, key)
             raw_confidence = record.get("confidence", STATUS_TO_CONFIDENCE.get(status, 0.5))
             mismatched = record.get("mismatched_fields") or []
             # >= 1.11.0 only; absent on older releases, where abstained fields
@@ -1008,7 +1158,9 @@ def _parse_jsonl_output(
             # rather than counting as committed VALID, so the DR/FPR/F1 triple
             # becomes the selective one. Set HALLMARK_BTU_ABSTENTION_AS_VALID=1
             # to reproduce a published row under the old convention.
-            is_abstention = effective_status in ABSTENTION_STATUSES or incomplete_not_found
+            is_abstention = (
+                effective_status in ABSTENTION_STATUSES or incomplete_not_found or is_unmapped
+            )
             if is_abstention and not abstentions_are_committed_valid():
                 label = "UNCERTAIN"
 
@@ -1043,7 +1195,9 @@ def _parse_jsonl_output(
                 if incomplete_not_found:
                     cause = ABSTENTION_REASONS["coverage_incomplete"]
                 else:
-                    cause = ABSTENTION_REASONS.get(status, "no source answered")
+                    cause = ABSTENTION_REASONS.get(
+                        status, "bibtex-check returned an unmapped status"
+                    )
                 reason_parts.append(
                     f"Abstention: {cause}, so this is not a verdict"
                     + ("" if label == "UNCERTAIN" else " (scored as committed VALID)")

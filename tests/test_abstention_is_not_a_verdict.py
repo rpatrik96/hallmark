@@ -53,7 +53,7 @@ def test_every_abstention_status_maps_to_valid_in_the_legacy_table():
     and one of them is wrong.
     """
     for status in ABSTENTION_STATUSES:
-        assert STATUS_TO_LABEL.get(status) == "VALID", (
+        assert status not in STATUS_TO_LABEL or STATUS_TO_LABEL[status] == "VALID", (
             f"{status!r} is registered as an abstention but STATUS_TO_LABEL maps it to "
             f"{STATUS_TO_LABEL.get(status)!r}. An abstention is a VALID that carries no "
             "evidence; a status mapping elsewhere is a verdict and does not belong here."
@@ -114,11 +114,18 @@ def test_source_outage_abstention_is_uncertain(tmp_path):
     )
 
 
+def test_parse_error_is_uncertain_and_names_the_parse_failure(tmp_path):
+    preds = _preds(tmp_path, [{"key": "a", "status": "parse_error", "p_valid": 0.5}])
+    assert preds["a"].label == "UNCERTAIN"
+    assert "could not read this entry" in preds["a"].reason
+
+
 def test_legacy_env_reproduces_the_published_mapping(tmp_path, monkeypatch):
     """The escape hatch exists to reproduce a published row, not to bless it."""
     records = [
         {"key": "a", "status": "unconfirmed", "abstained": True, "p_valid": 0.22},
         {"key": "b", "status": "not_found", "coverage_incomplete": True},
+        {"key": "c", "status": "future_unmapped_status"},
     ]
     monkeypatch.setenv(ABSTENTION_AS_VALID_ENV, "1")
     assert set(_labels(tmp_path, records).values()) == {"VALID"}

@@ -26,6 +26,7 @@ from typing import Any
 
 import pytest
 
+from hallmark.baselines import bibtexupdater as btu
 from hallmark.baselines.bibtexupdater import (
     MIN_BATCH_FOR_HEALTH_CHECK,
     NOT_FOUND_SHARE_THRESHOLD,
@@ -36,6 +37,7 @@ from hallmark.baselines.bibtexupdater import (
     run_bibtex_check_with_health,
     run_bibtex_check_with_status,
 )
+from hallmark.baselines.cascade import ROUTE_TO_STAGE2, STAGE1_VERIFIED, STATUS_TO_TYPE
 from hallmark.dataset.schema import BlindEntry, Prediction
 
 
@@ -59,7 +61,73 @@ class TestStatusMaps:
         assert STATUS_TO_LABEL["preprint_only"] == "HALLUCINATED"
 
     def test_every_label_status_has_a_confidence(self) -> None:
-        assert set(STATUS_TO_LABEL) == set(STATUS_TO_CONFIDENCE)
+        assert set(STATUS_TO_LABEL) <= set(STATUS_TO_CONFIDENCE)
+
+    def test_every_bibtex_check_status_has_a_cascade_route(self) -> None:
+        routed = set(STATUS_TO_TYPE) | STAGE1_VERIFIED | ROUTE_TO_STAGE2
+        assert set(STATUS_TO_LABEL) <= routed
+
+
+class TestBibtexCheckVersion:
+    @staticmethod
+    def _version_result(cmd: list[str]) -> Any:
+        return btu.subprocess.CompletedProcess(
+            cmd,
+            0,
+            stdout="1.2.3\n1.2.3\n/fake/bibtex_updater/__init__.py\n",
+            stderr="",
+        )
+
+    def test_uses_the_console_scripts_shebang_interpreter(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        interpreter = tmp_path / "venv" / "bin" / "python"
+        interpreter.parent.mkdir(parents=True)
+        interpreter.touch()
+        binary = tmp_path / "bibtex-check"
+        binary.write_text(f"#!{interpreter}\n")
+
+        def _run(cmd: list[str], **_kw: Any) -> Any:
+            assert cmd[0] == str(interpreter)
+            return self._version_result(cmd)
+
+        monkeypatch.setattr(btu.subprocess, "run", _run)
+        assert btu.bibtex_check_version(str(binary)) == "1.2.3"
+
+    def test_resolves_a_symlink_before_using_a_sibling_interpreter(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        target_dir = tmp_path / "venv" / "bin"
+        target_dir.mkdir(parents=True)
+        target = target_dir / "bibtex-check"
+        target.write_text("# no shebang\n")
+        interpreter = target_dir / "python"
+        interpreter.touch()
+        shim_dir = tmp_path / "shims"
+        shim_dir.mkdir()
+        shim = shim_dir / "bibtex-check"
+        shim.symlink_to(target)
+
+        def _run(cmd: list[str], **_kw: Any) -> Any:
+            assert cmd[0] == str(interpreter)
+            return self._version_result(cmd)
+
+        monkeypatch.setattr(btu.subprocess, "run", _run)
+        assert btu.bibtex_check_version(str(shim)) == "1.2.3"
+
+    def test_warns_when_no_interpreter_can_be_found(
+        self,
+        tmp_path: Path,
+        caplog: pytest.LogCaptureFixture,
+    ) -> None:
+        binary = tmp_path / "bibtex-check"
+        binary.write_text("# no shebang\n")
+
+        with caplog.at_level(logging.WARNING, logger="hallmark.baselines.bibtexupdater"):
+            version = btu.bibtex_check_version(str(binary))
+
+        assert version is None
+        assert any(str(binary) in record.message for record in caplog.records)
 
 
 class TestParseJsonlOutput:
@@ -323,8 +391,8 @@ class TestTransportStatusMapping:
         assert STATUS_TO_LABEL["network_error"] == "VALID"
         assert STATUS_TO_CONFIDENCE["network_error"] == 0.30
 
-    def test_coverage_incomplete_status_is_a_conservative_valid(self) -> None:
-        assert STATUS_TO_LABEL["coverage_incomplete"] == "VALID"
+    def test_coverage_incomplete_status_is_a_forward_compatible_abstention(self) -> None:
+        assert "coverage_incomplete" not in STATUS_TO_LABEL
         assert STATUS_TO_CONFIDENCE["coverage_incomplete"] == 0.45
 
     def test_network_error_record_never_parses_to_hallucinated(self, tmp_path: Path) -> None:
@@ -345,22 +413,33 @@ class TestTransportStatusMapping:
         assert pred.label == "UNCERTAIN"
         assert pred.label != "HALLUCINATED"
 
-    def test_unknown_future_status_never_parses_to_hallucinated(self, tmp_path: Path) -> None:
+    def test_unknown_future_status_is_uncertain_and_warns_once(
+        self,
+        tmp_path: Path,
+        monkeypatch: pytest.MonkeyPatch,
+        caplog: pytest.LogCaptureFixture,
+    ) -> None:
         """Whatever the sibling tool names its new transport status, an unmapped
-        status falls through to conservative VALID rather than a fabrication
-        verdict."""
+        status abstains rather than becoming a verdict."""
+        status = "transport_failure_some_future_name"
+        monkeypatch.setattr(btu, "_WARNED_UNMAPPED_STATUSES", set(), raising=False)
         records: list[dict[str, Any]] = [
             {
-                "key": "u",
-                "status": "transport_failure_some_future_name",
+                "key": key,
+                "status": status,
                 "confidence": 0.0,
                 "mismatched_fields": [],
                 "api_sources": [],
                 "errors": ["dns failure"],
             }
+            for key in ("u1", "u2")
         ]
-        (pred,) = _parse(tmp_path, records)
-        assert pred.label == "VALID"
+        with caplog.at_level(logging.WARNING, logger="hallmark.baselines.bibtexupdater"):
+            preds = _parse(tmp_path, records)
+
+        assert {pred.label for pred in preds} == {"UNCERTAIN"}
+        warnings = [record for record in caplog.records if status in record.message]
+        assert len(warnings) == 1
 
 
 class TestAssessBatchHealth:
@@ -391,6 +470,20 @@ class TestAssessBatchHealth:
         health = assess_batch_health(["coverage_incomplete"] * 100)
         assert health.suspected_transport_failure
         assert health.coverage_incomplete == 100
+
+    def test_record_flags_count_coverage_and_deduplicate_not_found(self) -> None:
+        try:
+            health = assess_batch_health(
+                ["not_found"] * 40 + ["verified"] * 60,
+                coverage_flags=[True] * 40 + [False] * 60,
+            )
+        except TypeError:
+            health = None
+
+        assert health is not None
+        assert health.not_found == 0
+        assert health.coverage_incomplete == 40
+        assert health.no_evidence == 40
 
     def test_mixed_failure_shapes_accumulate(self) -> None:
         """A partially-upgraded pipeline splits the same outage across statuses;
@@ -447,8 +540,10 @@ def _blind(key: str) -> BlindEntry:
 
 
 def _fake_subprocess(status: str) -> Any:
-    def _run(entries: list[BlindEntry], **_kw: Any) -> list[Prediction]:
-        return [
+    def _run(
+        entries: list[BlindEntry], **_kw: Any
+    ) -> tuple[list[Prediction], list[dict[str, object]]]:
+        predictions = [
             Prediction(
                 bibtex_key=e.bibtex_key,
                 label=STATUS_TO_LABEL.get(status, "VALID"),  # type: ignore[arg-type]
@@ -457,6 +552,10 @@ def _fake_subprocess(status: str) -> Any:
             )
             for e in entries
         ]
+        records: list[dict[str, object]] = [
+            {"key": entry.bibtex_key, "status": status} for entry in entries
+        ]
+        return predictions, records
 
     return _run
 
@@ -515,3 +614,32 @@ class TestBatchHealthPlumbing:
         entries = [_blind(f"k{i}") for i in range(40)]
         _, _, health = run_bibtex_check_with_health(entries, skip_prescreening=True)
         assert not health.suspected_transport_failure
+
+
+@pytest.mark.parametrize(
+    "runner_name",
+    ["run_bibtex_check", "run_bibtex_check_with_status", "run_bibtex_check_with_health"],
+)
+@pytest.mark.parametrize("skip_prescreening", [False, True])
+def test_each_public_runner_invokes_bibtex_check_once(
+    monkeypatch: pytest.MonkeyPatch,
+    runner_name: str,
+    skip_prescreening: bool,
+) -> None:
+    calls = 0
+
+    def _counted(
+        entries: list[BlindEntry], **_kw: Any
+    ) -> tuple[list[Prediction], list[dict[str, object]]]:
+        nonlocal calls
+        calls += 1
+        return _fake_subprocess("verified")(entries)
+
+    monkeypatch.setattr(btu, "_run_bibtex_check_subprocess", _counted)
+    getattr(btu, runner_name)([_blind("one")], skip_prescreening=skip_prescreening)
+
+    assert calls == 1
+
+
+def test_ran_bibtex_check_accessor_is_exposed() -> None:
+    assert callable(getattr(btu, "ran_bibtex_check", None))
