@@ -10,12 +10,14 @@ later refactor is most likely to quietly undo.
 from __future__ import annotations
 
 import pathlib
+import random
 
 import pytest
 
 from hallmark.dataset.schema import BenchmarkEntry, Prediction
 from hallmark.evaluation.selective import (
     NOT_A_MEASUREMENT,
+    _bins,
     abstention_breakdown,
     brier_decomposition,
     calibration_report,
@@ -127,6 +129,34 @@ class TestRiskCoverage:
         curve = risk_coverage_curve([], {})
         assert curve.points == [] and curve.aurc == 0.0
 
+    def test_reordered_list_matches_bibtex_key_mapping(self):
+        entries = [
+            entry("a", "VALID"),
+            entry("b", "VALID"),
+            entry("c", "HALLUCINATED"),
+            entry("d", "HALLUCINATED"),
+        ]
+        predictions = [
+            pred("d", "HALLUCINATED"),
+            pred("c", "HALLUCINATED"),
+            pred("b", "VALID"),
+            pred("a", "VALID"),
+        ]
+        by_key = {prediction.bibtex_key: prediction for prediction in predictions}
+
+        assert risk_coverage_curve(entries, predictions) == risk_coverage_curve(entries, by_key)
+        assert calibration_report(entries, predictions) == calibration_report(entries, by_key)
+
+    def test_duplicate_list_keys_warn_and_last_prediction_wins(self, caplog):
+        entries = [entry("a", "VALID"), entry("b", "VALID")]
+        predictions = [pred("a", "VALID"), pred("a", "HALLUCINATED")]
+
+        curve = risk_coverage_curve(entries, predictions)
+
+        assert curve.n_missing == 1
+        assert curve.risk_at_full_coverage == 1.0
+        assert "Duplicate bibtex_key(s) found in predictions" in caplog.text
+
 
 class TestErrorFallbacks:
     """An API failure is not a decision to abstain."""
@@ -174,8 +204,39 @@ class TestAURCComparability:
 
     def _curve(self, n_scored: int, n_entries: int):
         entries = [entry(f"e{i}", "VALID") for i in range(n_entries)]
-        preds = {f"e{i}": pred(f"e{i}", "VALID", 0.9) for i in range(n_scored)}
+        preds = {
+            f"e{i}": pred(f"e{i}", "VALID", 0.51 + 0.48 * i / max(1, n_scored - 1))
+            for i in range(n_scored)
+        }
         return risk_coverage_curve(entries, preds)
+
+    def test_aurc_is_invariant_to_order_with_tied_rejection_scores(self):
+        entries = [entry(f"e{i}", "VALID") for i in range(20)]
+        predictions = {
+            e.bibtex_key: pred(e.bibtex_key, "HALLUCINATED" if i < 5 else "VALID", 0.9)
+            for i, e in enumerate(entries)
+        }
+        rng = random.Random(0)
+        orderings = [entries]
+        for _ in range(3):
+            shuffled = entries.copy()
+            rng.shuffle(shuffled)
+            orderings.append(shuffled)
+
+        curves = [risk_coverage_curve(ordering, predictions) for ordering in orderings]
+
+        assert all(len(curve.points) == 1 for curve in curves)
+        assert all(curve.aurc == pytest.approx(curves[0].aurc) for curve in curves[1:])
+
+    def test_refuses_to_rank_single_confidence_tools(self):
+        entries = [entry(f"e{i}", "VALID") for i in range(10)]
+        predictions = {e.bibtex_key: pred(e.bibtex_key, "VALID", 0.9) for e in entries}
+        curve = risk_coverage_curve(entries, predictions)
+
+        out = compare_aurc({"a": curve, "b": curve})
+
+        assert out["ranking"] is None
+        assert "not comparable" in out["reason"]
 
     def test_refuses_to_rank_across_disjoint_domains(self):
         wide = self._curve(500, 500)
@@ -198,9 +259,24 @@ class TestAURCComparability:
 class TestBrierDecomposition:
     def test_identity_holds(self):
         """brier = reliability - resolution + uncertainty, to binning error."""
-        pairs = [(0.9, True), (0.8, True), (0.3, False), (0.1, False), (0.6, True)]
+        pairs = [
+            (confidence, outcome)
+            for confidence, outcome in [
+                (0.9, True),
+                (0.8, True),
+                (0.3, False),
+                (0.1, False),
+                (0.6, True),
+            ]
+            for _ in range(40)
+        ]
         d = brier_decomposition(pairs, n_bins=5)
         assert d.brier == pytest.approx(d.reliability - d.resolution + d.uncertainty, abs=1e-9)
+
+    def test_equal_frequency_binning_uses_at_most_the_requested_count(self):
+        for n in (7, 19, 105, 831):
+            pairs = [(i / n, i % 2 == 0) for i in range(n)]
+            assert len(_bins(pairs, 10)) == min(10, n)
 
     def test_perfect_calibration_has_near_zero_reliability(self):
         pairs = [(1.0, True)] * 50 + [(0.0, False)] * 50
@@ -216,6 +292,10 @@ class TestBrierDecomposition:
 
     def test_empty_input_does_not_raise(self):
         assert brier_decomposition([]).brier == 0.0
+
+    def test_skill_is_undefined_without_outcome_uncertainty(self):
+        pairs = [(0.9, True), (0.8, True), (0.7, True)]
+        assert brier_decomposition(pairs).skill is None
 
 
 class TestCalibrationReport:
