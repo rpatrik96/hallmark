@@ -1,0 +1,19 @@
+tool,split,display_name,category,detection_rate,false_positive_rate,f1_hallucination,mcc,tier_weighted_f1,ece,coverage,delta_fpr,known_stale
+doi_only,dev_public,DOI-only,citation-database,0.2178,0.0429,0.3474,0.2530,0.2683,0.0815,1.0000,-0.0012,false
+llm_openrouter_gemini_pro,dev_public,Gemini 2.5 Pro,zero-shot,0.4759,0.0500,0.6267,0.4734,0.6092,0.2972,0.9669,0.0092,false
+llm_openrouter_claude_opus_4_7,dev_public,Claude Opus 4.7,zero-shot,0.7525,0.0721,0.8298,0.6828,0.8514,0.1117,1.0000,-0.0048,true
+llm_openrouter_claude_sonnet_4_6,dev_public,Claude Sonnet 4.6,zero-shot,0.7805,0.1267,0.8269,0.6520,0.8340,0.0658,1.0000,-0.0017,true
+llm_openrouter_gemini_flash,dev_public,Gemini 2.5 Flash,zero-shot,0.5000,0.1000,0.6307,0.4290,0.6278,0.2651,0.9884,0.0058,false
+llm_openrouter_llama_4_maverick,dev_public,Llama 4 Maverick,zero-shot,0.6139,0.1462,0.7066,0.4758,0.7089,0.1760,1.0000,0.0205,false
+llm_openai_gpt54,dev_public,GPT-5.4 (zero-shot),zero-shot,0.7673,0.2281,0.7828,0.5378,0.8070,0.2021,1.0000,-0.0037,false
+llm_openrouter_mistral,dev_public,Mistral Large,zero-shot,0.7164,0.2505,0.7420,0.4646,0.7653,0.2289,0.9893,0.0316,false
+llm_openai,dev_public,GPT-5.1 (zero-shot),zero-shot,0.8366,0.4113,0.7659,0.4420,0.8218,0.1901,1.0000,0.0695,false
+llm_openrouter_qwen,dev_public,Qwen3-235B,zero-shot,0.8595,0.5332,0.7439,0.3583,0.8212,0.2795,0.9982,0.0822,false
+llm_openrouter_qwen_max,dev_public,Qwen3-VL-235B,zero-shot,0.8597,0.5508,0.7395,0.3422,0.8179,0.2864,0.9991,0.0774,false
+llm_openrouter_deepseek_r1,dev_public,DeepSeek-R1,zero-shot,0.8958,0.6225,0.7387,0.3237,0.8248,0.2377,0.9839,-0.3032,false
+llm_openrouter_deepseek_v3,dev_public,DeepSeek-V3.2,zero-shot,0.9109,0.7018,0.7273,0.2684,0.8214,0.3161,1.0000,0.0258,false
+llm_agentic_openai,dev_public,GPT-5.1 + CrossRef/OpenAlex/arXiv,agentic,0.9670,0.4776,0.8156,0.5578,0.8922,0.1750,1.0000,0.0801,false
+llm_agentic_btu_openai,dev_public,GPT-5.1 + bibtex-updater (tool optional),agentic,0.9802,0.4698,0.8244,0.5844,0.8997,0.1250,1.0000,-0.1140,false
+llm_agentic_btu_sonnet_4_6,dev_public,Sonnet 4.6 + bibtex-updater (tool optional),agentic,0.9901,0.4308,0.8409,0.6305,0.9125,0.1179,1.0000,-0.0879,false
+bibtexupdater,dev_public,bibtex-updater,co-designed,0.8647,0.0916,0.8904,0.7706,0.9084,0.3829,0.8686,0.0238,false
+llm_tool_augmented,dev_public,GPT-5.1 + bibtex-updater (always-call; output in prompt),co-designed,0.8432,0.1443,0.8564,0.6977,0.8726,0.0783,0.9294,0.1121,false
