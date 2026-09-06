@@ -536,57 +536,16 @@ def _stratified_sample(entries: list[BenchmarkEntry], n: int) -> list[BenchmarkE
 
 
 def _stamp_provenance(result: EvaluationResult, args: argparse.Namespace) -> None:
-    """Record which data revision and when, on the result itself.
+    """Record provenance using the evaluate command's arguments."""
+    from hallmark.evaluation.provenance import stamp_provenance
 
-    Without this a result cannot be tied to the split that produced it, which is
-    how the freshness guard came to compare file mtimes -- a signal git does not
-    preserve, so it read checkout order on every clone. Hashing the split file
-    and storing the digest beside the numbers is the check it was reaching for.
-
-    Best effort: a missing or unreadable split file leaves the fields unset
-    rather than failing an evaluation that has already been computed.
-    """
-    from datetime import datetime, timezone
-
-    result.run_timestamp = datetime.now(timezone.utc).isoformat()
-
-    # Which external build answered. The field existed and nothing filled it, so
-    # the first ablation run after adding it still wrote tool_version: None --
-    # for the very tool whose PATH-resolved version motivated the field.
-    baseline = getattr(args, "baseline", None) or ""
-    if "bibtexupdater" in baseline or "cascade" in baseline or "btu" in baseline:
-        try:
-            from hallmark.baselines.bibtexupdater import (
-                bibtex_check_version,
-                resolve_bibtex_check_bin,
-            )
-
-            binary = resolve_bibtex_check_bin()
-            version = bibtex_check_version(binary)
-            if version:
-                result.tool_version = f"bibtex-updater {version}"
-        except (ImportError, OSError) as exc:  # pragma: no cover - best effort
-            logging.debug("Could not probe bibtex-check version: %s", exc)
-        try:
-            from hallmark.baselines.bibtexupdater import last_source_condition
-
-            result.source_condition = last_source_condition()
-        except ImportError as exc:  # pragma: no cover - best effort
-            logging.debug("Could not read the source condition: %s", exc)
-
-    split = getattr(args, "split", None)
-    if not split:
-        return
-    try:
-        from hallmark.dataset.loader import DEFAULT_DATA_DIR, SPLIT_PATHS
-        from hallmark.evaluation.validate import compute_sha256
-
-        data_root = Path(args.data_dir) if getattr(args, "data_dir", None) else DEFAULT_DATA_DIR
-        split_file = data_root / getattr(args, "version", "v1.2") / SPLIT_PATHS[split]
-        if split_file.exists():
-            result.split_sha256 = compute_sha256(split_file)
-    except (KeyError, OSError) as exc:  # pragma: no cover - provenance is best effort
-        logging.debug("Could not hash split file for provenance: %s", exc)
+    stamp_provenance(
+        result=result,
+        split=getattr(args, "split", None),
+        data_dir=getattr(args, "data_dir", None),
+        version=getattr(args, "version", "v1.2"),
+        baseline=getattr(args, "baseline", None),
+    )
 
 
 def _cmd_evaluate(args: argparse.Namespace) -> int:
@@ -744,12 +703,18 @@ def _cmd_evaluate(args: argparse.Namespace) -> int:
     if aggressive_result is not None:
         _stamp_provenance(aggressive_result, args)
 
-    if result.coverage < 1.0:
+    if result.response_coverage < 1.0:
         logging.warning(
-            "Coverage is %.1f%% (%d/%d entries). Missing predictions are treated as VALID.",
-            result.coverage * 100,
-            int(result.coverage * result.num_entries),
+            "Response coverage is %.1f%% (%d/%d entries). Missing predictions are treated as VALID.",
+            result.response_coverage * 100,
+            int(result.response_coverage * result.num_entries),
             result.num_entries,
+        )
+    if result.coverage < result.response_coverage:
+        logging.warning(
+            "Decision coverage is %.1f%% because %d uncertain predictions are abstentions.",
+            result.coverage * 100,
+            result.num_uncertain,
         )
 
     # Build pred_map once (needed for confusion matrix and detailed sections)
@@ -1433,6 +1398,9 @@ def _cmd_history_append(args: argparse.Namespace) -> int:
     for path in sorted(results_dir.glob("*.json")):
         with open(path) as f:
             data = json.load(f)
+        if data.get("tool_name") is None or data.get("split_name") is None:
+            logging.warning("Skipping non-evaluation result %s", path)
+            continue
         entry = {
             "timestamp": datetime.datetime.now(datetime.timezone.utc).isoformat(),
             "tool_name": data.get("tool_name"),

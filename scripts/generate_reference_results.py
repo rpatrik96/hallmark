@@ -25,6 +25,7 @@ from hallmark.baselines.registry import run_baseline
 from hallmark.dataset.loader import load_split
 from hallmark.dataset.schema import EvaluationResult
 from hallmark.evaluation.metrics import evaluate
+from hallmark.evaluation.provenance import stamp_provenance
 from hallmark.evaluation.validate import compute_sha256, validate_reference_results
 
 logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
@@ -94,6 +95,7 @@ def generate(
             tool_name=baseline_name,
             split_name=split,
         )
+        stamp_provenance(result, split, None, version, baseline_name)
 
         # Write result JSON
         filename = f"{baseline_name}_{split}.json"
