@@ -55,6 +55,8 @@ _spec.loader.exec_module(vs)
 # a field, whose False is correct data against a True default.
 MAX_PUBLIC_MISMATCHES = 101
 MAX_HIDDEN_MISMATCHES = 42
+MAX_PUBLIC_STRUCTURAL = 0
+MAX_HIDDEN_STRUCTURAL = 0
 
 # A single total hid two different defects, because it was tuned to exactly the
 # splits CI can see. ``data/hidden/`` is gitignored, so a contributor's run and
@@ -124,6 +126,26 @@ class TestVerifyEntrySubtests:
         m = vs.verify_entry_subtests(entry)
         assert [x.subtest for x in m] == ["title_exists"]
         assert m[0].assigned is True and m[0].expected is False
+
+    def test_max_structural_cli_gate_is_independent(self, monkeypatch, tmp_path):
+        split = tmp_path / "data" / "v1.2" / "dev_public.jsonl"
+        split.parent.mkdir(parents=True)
+        split.write_text(
+            '{"bibtex_key":"k","label":"VALID","fields":{},"subtests":{"doi_resolves":false}}\n'
+        )
+        monkeypatch.setattr(
+            sys,
+            "argv",
+            [
+                "verify_subtests.py",
+                "--data-root",
+                str(tmp_path),
+                "--max-structural",
+                "0",
+            ],
+        )
+
+        assert vs.main() == 1
 
     def test_authors_match_mismatch_flagged(self):
         # placeholder_authors expects authors_match=False.
@@ -303,4 +325,23 @@ class TestSubtestConsistencyGate:
         assert hidden <= MAX_HIDDEN_MISMATCHES, (
             f"sub-test consistency regressed on the hidden split: {hidden} mismatches "
             f"> baseline {MAX_HIDDEN_MISMATCHES}. Ratchet DOWN only."
+        )
+
+    def test_public_structural_violations_within_baseline(self, report):
+        public = [m for m in report.structural if m.split != "test_hidden"]
+        assert len(public) <= MAX_PUBLIC_STRUCTURAL, (
+            f"structural sub-test consistency regressed on the public splits: "
+            f"{len(public)} violations > baseline {MAX_PUBLIC_STRUCTURAL}. Repair with "
+            "`python scripts/fix_doi_resolves_na.py --apply`."
+        )
+
+    def test_hidden_structural_violations_within_baseline(self, report):
+        if not (_REPO_ROOT / vs.DEFAULT_SPLITS["test_hidden"]).exists():
+            pytest.skip("hidden split not present — its structural bound was not checked")
+
+        hidden = [m for m in report.structural if m.split == "test_hidden"]
+        assert len(hidden) <= MAX_HIDDEN_STRUCTURAL, (
+            f"structural sub-test consistency regressed on the hidden split: "
+            f"{len(hidden)} violations > baseline {MAX_HIDDEN_STRUCTURAL}. Repair with "
+            "`python scripts/fix_doi_resolves_na.py --apply`."
         )

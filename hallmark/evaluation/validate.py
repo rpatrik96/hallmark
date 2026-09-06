@@ -74,7 +74,8 @@ def validate_reference_results(
     Checks:
         1. manifest.json exists and is valid JSON
         2. All listed result files exist and checksums match
-        3. Each result JSON deserializes as a valid EvaluationResult
+        3. Each result JSON deserializes as a valid EvaluationResult; a raw
+           .jsonl output is checksummed and checked to be one JSON object per line
         4. num_entries matches dataset metadata (if metadata_path provided)
         5. (strict) Rejects F1=0.0 as likely failed run
 
@@ -102,9 +103,8 @@ def validate_reference_results(
 
     files: dict[str, dict] = manifest.get("files", {})
 
-    # Empty manifest is valid (placeholder state)
     if not files:
-        return ValidationResult(passed=True, warnings=["manifest has no files"])
+        return ValidationResult(passed=False, errors=["manifest has no files"])
 
     # Load metadata for cross-validation if provided
     metadata_splits: dict | None = None
@@ -133,6 +133,19 @@ def validate_reference_results(
                 f"{filename}: checksum mismatch "
                 f"(expected {expected_sha[:12]}..., got {actual_sha[:12]}...)"
             )
+            continue
+
+        # A released raw output (.jsonl) is one prediction per line, not an
+        # EvaluationResult: it is covered by the checksum above, and each line
+        # has to be a JSON object, nothing more.
+        if file_path.suffix == ".jsonl":
+            try:
+                with file_path.open() as fh:
+                    for lineno, line in enumerate(fh, start=1):
+                        if line.strip() and not isinstance(json.loads(line), dict):
+                            raise ValueError(f"line {lineno} is not a JSON object")
+            except (json.JSONDecodeError, ValueError, OSError) as e:
+                errors.append(f"{filename}: raw output is not one JSON object per line: {e}")
             continue
 
         # Deserializes as valid EvaluationResult?

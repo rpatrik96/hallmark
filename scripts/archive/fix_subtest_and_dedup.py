@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# Archived; superseded by scripts/build_dataset.py.
 """One-pass data quality fixes for HALLMARK benchmark splits.
 
 Tasks:

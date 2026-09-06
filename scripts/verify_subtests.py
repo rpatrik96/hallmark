@@ -327,6 +327,15 @@ def main() -> int:
         ),
     )
     parser.add_argument(
+        "--max-structural",
+        type=int,
+        default=None,
+        help=(
+            "CI regression gate: exit non-zero if the structural violation count "
+            "exceeds this threshold. Track this separately from truth-table mismatches."
+        ),
+    )
+    parser.add_argument(
         "--data-root",
         type=Path,
         default=Path("."),
@@ -357,14 +366,23 @@ def main() -> int:
     else:
         print_report(report)
 
+    failed = False
     if args.max_mismatches is not None and report.num_mismatches > args.max_mismatches:
         print(
             f"\nFAIL: {report.num_mismatches} mismatches exceed the allowed "
             f"maximum of {args.max_mismatches}.",
             file=sys.stderr,
         )
-        return 1
-    return 0
+        failed = True
+    if args.max_structural is not None and report.num_structural > args.max_structural:
+        print(
+            f"\nFAIL: {report.num_structural} structural violations exceed the allowed "
+            f"maximum of {args.max_structural}. Repair with "
+            "`python scripts/fix_doi_resolves_na.py --apply`.",
+            file=sys.stderr,
+        )
+        failed = True
+    return int(failed)
 
 
 if __name__ == "__main__":

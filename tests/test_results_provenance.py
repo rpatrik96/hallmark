@@ -248,7 +248,7 @@ class TestBibtexCheckBinaryPinning:
         assert btu.resolve_bibtex_check_bin() == str(fake)
 
     def test_missing_pinned_binary_is_reported_not_silently_ignored(self, monkeypatch, tmp_path):
-        """Falling back to PATH would run a different build than the operator asked for."""
+        """An invalid explicit binary pin is reported as unresolvable."""
         from hallmark.baselines import bibtexupdater as btu
 
         monkeypatch.setenv(btu.BIBTEX_CHECK_BIN_ENV, str(tmp_path / "nope"))
