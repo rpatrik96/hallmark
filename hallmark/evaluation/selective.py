@@ -70,10 +70,13 @@ both — the same conflation one level further out.
 
 from __future__ import annotations
 
+import logging
 from dataclasses import dataclass, field
-from itertools import pairwise
+from itertools import groupby, pairwise
 
 from hallmark.dataset.schema import BenchmarkEntry, Prediction
+
+logger = logging.getLogger(__name__)
 
 ERROR_FALLBACK_MARKER = "[Error fallback]"
 
@@ -237,8 +240,18 @@ def _paired(
 ) -> tuple[list[tuple[BenchmarkEntry, Prediction]], int]:
     """Pair entries with their predictions; also count entries with none."""
     if isinstance(predictions, list):
-        pairs = [(e, p) for e, p in zip(entries, predictions, strict=False)]
-        return pairs, max(0, len(entries) - len(pairs))
+        seen_keys: set[str] = set()
+        duplicate_keys: list[str] = []
+        for prediction in predictions:
+            if prediction.bibtex_key in seen_keys:
+                duplicate_keys.append(prediction.bibtex_key)
+            seen_keys.add(prediction.bibtex_key)
+        if duplicate_keys:
+            logger.warning(
+                "Duplicate bibtex_key(s) found in predictions: %s. Last prediction wins.",
+                duplicate_keys,
+            )
+        predictions = {prediction.bibtex_key: prediction for prediction in predictions}
     pairs = []
     missing = 0
     for entry in entries:
@@ -270,7 +283,8 @@ def risk_coverage_curve(
 
     Args:
         entries: Benchmark entries (ground truth).
-        predictions: Tool predictions, keyed by bibtex_key or parallel to entries.
+        predictions: Tool predictions. Mapping and list inputs are matched to entries
+            by ``bibtex_key``.
         exclude_non_decisions: Drop records that carry no judgement — a recorded
             API failure, or an entry the tool never ran on. Neither is an
             abstention, and counting them as such flatters the curve.
@@ -348,15 +362,23 @@ def risk_coverage_curve(
 
     points: list[RiskCoveragePoint] = []
     errors = 0
-    for i, (entry, pred) in enumerate(scored, start=1):
-        if pred.label != entry.label:
-            errors += 1
+    covered = 0
+    for _, group in groupby(scored, key=lambda ep: rejection_score(ep[1])):
+        tied = list(group)
+        errors += sum(1 for entry, pred in tied if pred.label != entry.label)
+        covered += len(tied)
         points.append(
-            RiskCoveragePoint(coverage=i / denom, risk=errors / i, n_covered=i, n_errors=errors)
+            RiskCoveragePoint(
+                coverage=covered / denom,
+                risk=errors / covered,
+                n_covered=covered,
+                n_errors=errors,
+            )
         )
 
-    # Trapezoidal integration over coverage. The first point sits at 1/n rather
-    # than 0, so the integral runs over the range actually observed.
+    # Trapezoidal integration over coverage. The first point sits at the first
+    # rejection-score group boundary, so the integral runs over the range
+    # actually observed.
     aurc = 0.0
     for a, b in pairwise(points):
         aurc += (b.coverage - a.coverage) * (a.risk + b.risk) / 2.0
@@ -381,7 +403,8 @@ def compare_aurc(curves: dict[str, RiskCoverageCurve], *, min_overlap: float = 0
     one answering all 500; their AURCs are not the same integral. Where the
     shared coverage range is narrower than ``min_overlap`` this returns the
     ranking as ``None`` and says why, rather than producing a number that invites
-    a comparison it cannot support.
+    a comparison it cannot support. A single-confidence tool has only the full-
+    coverage boundary, so refusing to rank it is the honest outcome.
     """
     usable = {k: c for k, c in curves.items() if c.points}
     if not usable:
@@ -421,7 +444,10 @@ class ReliabilityBin:
 
 @dataclass(frozen=True)
 class BrierDecomposition:
-    """Murphy's decomposition: ``brier = reliability - resolution + uncertainty``.
+    """Murphy's binned decomposition.
+
+    The identity ``brier = reliability - resolution + uncertainty`` holds
+    exactly only when the forecast is constant within each bin.
 
     Reliability is calibration error and should be small. Resolution is
     discrimination and should be large. Uncertainty is a property of the split,
@@ -435,9 +461,9 @@ class BrierDecomposition:
     uncertainty: float
 
     @property
-    def skill(self) -> float:
+    def skill(self) -> float | None:
         """Brier skill score against the base-rate predictor; 1.0 is perfect."""
-        return 1.0 - self.brier / self.uncertainty if self.uncertainty > 0 else 0.0
+        return 1.0 - self.brier / self.uncertainty if self.uncertainty > 0 else None
 
 
 def _bins(pairs: list[tuple[float, bool]], n_bins: int) -> list[ReliabilityBin]:
@@ -446,12 +472,11 @@ def _bins(pairs: list[tuple[float, bool]], n_bins: int) -> list[ReliabilityBin]:
         return []
     ordered = sorted(pairs, key=lambda t: t[0])
     n = len(ordered)
-    size = max(1, n // n_bins)
+    k = min(n_bins, n)
+    edges = [(i * n) // k for i in range(k)] + [n]
     out: list[ReliabilityBin] = []
-    for start in range(0, n, size):
-        chunk = ordered[start : start + size]
-        if not chunk:
-            continue
+    for lo, hi in pairwise(edges):
+        chunk = ordered[lo:hi]
         confs = [c for c, _ in chunk]
         out.append(
             ReliabilityBin(
@@ -515,6 +540,8 @@ def calibration_report(
     population a user acts on — every one is an accusation against a real
     author — and it is where miscalibration is expensive. An aggregate over a
     mostly-VALID corpus averages it away.
+
+    Mapping and list prediction inputs are matched to entries by ``bibtex_key``.
 
     Per-tier figures use ``difficulty_tier``. VALID entries carry no tier and are
     included in every tier's calibration, since a tool's false-positive
