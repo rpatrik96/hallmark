@@ -23,6 +23,21 @@ three ways and compares the rankings:
     This is what a user experiences who reads HALLUCINATED as "fabricated" --
     the failure the issue is about -- and it is the pessimistic bound.
 
+Which modes are folded is a named preset, chosen with ``--fold``:
+
+``real_paper`` (default)
+    The four modes above.
+
+``hybrid_fabrication``
+    That mode alone, as a control on whether folding any mode class out is
+    enough to move a ranking.
+
+``neurips_2026``
+    The seven modes the NeurIPS 2026 hallucinated-reference criteria leave
+    outside the label, read type by type -- ``wrong_venue``,
+    ``preprint_as_published``, ``arxiv_version_mismatch``, ``near_miss_title``,
+    ``partial_author_list``, ``fabricated_doi`` and ``future_date``.
+
 Reconstructed from ``per_type_metrics`` in the released result JSONs rather than
 from per-entry predictions, which do not exist for every tool. The
 reconstruction is validated against each result's own reported figures before
@@ -64,6 +79,26 @@ FOLD_SETS: dict[str, tuple[str, ...]] = {
         "arxiv_version_mismatch",
     ),
     "hybrid_fabrication": ("hybrid_fabrication",),
+    # The line a venue actually draws. Source: the NeurIPS 2026 program chairs'
+    # hallucinated-reference criteria, adopted from the ICLR and ICML 2026
+    # guidance and sent to authors on 5 September 2026, read type by type.
+    # Bullets 1 and 4 exempt title near-misses and a real venue that is wrong
+    # for the reference, naming wrong journal names and arXiv IDs; bullet 2
+    # exempts small author-list errors, so a partial list with the leading
+    # authors right falls outside. No criterion covers a DOI or a year, so
+    # ``fabricated_doi`` and ``future_date`` are outside as written.
+    # ``hybrid_fabrication`` stays inside: its DOI resolves to a different work,
+    # which is the wrong-author-list and unfindable-title case, not a wrong
+    # venue string.
+    "neurips_2026": (
+        "wrong_venue",
+        "preprint_as_published",
+        "arxiv_version_mismatch",
+        "near_miss_title",
+        "partial_author_list",
+        "fabricated_doi",
+        "future_date",
+    ),
 }
 
 REAL_PAPER_MODES = (
@@ -300,7 +335,11 @@ def main() -> int:
     )
 
     order = {
-        scoring: [t for t, _ in sorted(scored.items(), key=lambda kv: -kv[1][scoring].mcc)]
+        # Rank on the four-decimal value the CSV stores, so the printed rank moves and
+        # the ones a reader recomputes from the committed table agree.
+        scoring: [
+            t for t, _ in sorted(scored.items(), key=lambda kv: -round(kv[1][scoring].mcc, 4))
+        ]
         for scoring in ("as_shipped", "folded_out", "as_false_positives")
     }
 

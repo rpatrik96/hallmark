@@ -258,14 +258,32 @@ citation", so a tool that correctly identifies a stale venue is scored as having
 found a fabrication. They are 26.1% of the positive class on `dev_public` and
 26.8% on `test_public`.
 
+The NeurIPS 2026 program chairs draw the same line for their area chairs. Their
+criteria, adopted from the ICLR and ICML 2026 guidance and sent to authors on 5
+September 2026, count a reference as hallucinated when no document with a title
+anywhere near the one given can be found, when the author list adds non-authors
+or drops a large fraction of them, or when there is no evidence the venue
+exists; a real venue that is wrong for the reference, including a wrong journal
+name or arXiv ID, and small title or author errors are errors the authors are
+told to fix, not hallucinations. Under those criteria `wrong_venue`,
+`preprint_as_published` and `arxiv_version_mismatch` fall outside the label,
+`near_miss_title` and `partial_author_list` fall outside unless the error is
+large, and `fabricated_doi` and `future_date` are not covered at all. The
+criteria carry no public URL; the source is the program chairs' message to
+authors of 5 September 2026.
+
 **The ranking is not stable if they stop counting as fabrication.** Scoring every
 tool three ways — as shipped, with the four modes out of the scored set, and with
 them as negatives so flagging one is a false accusation:
 
-| split | folded out of the scored set | scored as false positives |
-|---|---|---|
-| `test_public` | Kendall tau 0.884, 13 of 20 tools change rank | tau 0.821, 16 of 20 change |
-| `dev_public` | tau 0.906, 14 of 19 change | tau 0.801, 16 of 19 change |
+| split | folded out of the scored set | scored as false positives | NeurIPS 2026 criteria folded out |
+|---|---|---|---|
+| `test_public` | Kendall tau 0.884, 13 of 20 tools change rank | tau 0.821, 16 of 20 change | tau 0.884, 12 of 20 change |
+| `dev_public` | tau 0.906, 14 of 19 change | tau 0.801, 16 of 19 change | tau 0.895, 10 of 19 change |
+
+The last column folds out the seven modes the NeurIPS 2026 criteria leave
+outside the label rather than the four this section is about, from
+`python scripts/ablate_taxonomy_fold.py --split test_public --fold neurips_2026`.
 
 The top of the table changes identity: `cascade_db_diagnosis` leads as shipped at
 MCC 0.897 on `test_public`, and `bibtexupdater` takes first place under
