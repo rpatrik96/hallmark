@@ -305,11 +305,17 @@ changing position — and moves six tools under as-false-positives (tau 0.968 an
 0.965), so the instability belongs to the four modes rather than to folding a
 mode class,
 though at 4.3% and 5.6% of positives that null carries less weight than the
-effect it contrasts with. And the cascade's 1.000 is not an artefact of how the
-entries were generated: a gradient-boosted classifier over surface features
-alone, with no lookup of any kind, reaches detection rate 0.468 on `dev_public`
-and 0.388 on `test_public` against false-positive rates of 0.045 and 0.096. Some
-separability is there, and it is far short of what the cascade achieves.
+effect it contrasts with.
+
+Surface features alone — field presence, string lengths, author count, entry
+type, year, no lookups — separate the four modes from VALID entries at DR 0.468
+on `dev_public` and 0.388 on `test_public` against a majority baseline of 0.000,
+and conditioning the negatives the same way the positives are conditioned does
+not move it. That is real leakage and a benchmark limitation. It is also well
+short of the cascade's 1.000, so the cascade's score is not only the generator
+being read back.
+
+Reproduce: `uv run --with scikit-learn python scripts/shortcut_control_four_modes.py`
 
 `stress_test` inherits the same property by construction. It holds three modes,
 two of which are on this list: 75 of its 121 scored entries, 62%. Its one VALID
@@ -607,8 +613,8 @@ wrong. **The gap between "this work does not exist" and "this entry describes a
 real work incorrectly" carries most of the real signal**, and the current
 taxonomy folds the second into the first (see
 [issue #36](https://github.com/rpatrik96/hallmark/issues/36)); on the wild
-corpus, 63% of flags were real works described wrongly, 47% from venue and
-preprint status alone.
+corpus, of the 324 references Stage 2 upheld as flags, 59.0% resolved to a real
+work described wrongly.
 
 This analysis is joint work with the InterpScience submission-screening effort,
 which contributed the 5,043-reference corpus and its adjudications.
