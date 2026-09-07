@@ -73,3 +73,23 @@ def test_a_byte_identical_copy_is_dropped_and_named(tmp_path, capsys, monkeypatc
     assert [r["tool"] for r in rows] == ["a_tool_test_public", "b_tool_test_public"]
     printed = capsys.readouterr().out
     assert "a_tool_z_copy_test_public" in printed and "byte-identical" in printed
+
+
+def test_the_neurips_2026_fold_holds_the_seven_types_the_criteria_exempt():
+    """The preset is a reading of a policy, so it is pinned where a drift shows.
+
+    The NeurIPS 2026 hallucinated-reference criteria exempt title near-misses
+    and real-but-wrong venues including arXiv IDs, exempt small author-list
+    errors, and cover neither DOIs nor years. ``hybrid_fabrication`` is on the
+    other side of the line: its DOI resolves to a different work.
+    """
+    assert fold.FOLD_SETS["neurips_2026"] == (
+        "wrong_venue",
+        "preprint_as_published",
+        "arxiv_version_mismatch",
+        "near_miss_title",
+        "partial_author_list",
+        "fabricated_doi",
+        "future_date",
+    )
+    assert not set(fold.FOLD_SETS["neurips_2026"]) & set(fold.FOLD_SETS["hybrid_fabrication"])
