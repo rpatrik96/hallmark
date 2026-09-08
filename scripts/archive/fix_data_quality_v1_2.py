@@ -1,3 +1,4 @@
+# Archived; superseded by scripts/build_dataset.py.
 """
 Data quality fix script for HALLMARK benchmark data files.
 Runs all 5 tasks:
@@ -282,6 +283,13 @@ def validate_file(fname: str) -> bool:
 
 
 def main():
+    raise SystemExit(
+        "fix_data_quality_v1_2.py is archived and superseded by scripts/build_dataset.py: "
+        "it rewrites the live released splits in place by absolute path and leaves "
+        "dev_public half-rewritten when it raises partway, so copy it out of the "
+        "repository and edit those paths if you really mean to run it."
+    )
+
     print("=== HALLMARK Data Quality Fix Script ===\n")
     all_ok = True
 

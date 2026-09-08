@@ -17,6 +17,7 @@ import sys
 from hallmark.cli import _run_baseline
 from hallmark.dataset.loader import load_split
 from hallmark.evaluation.metrics import evaluate
+from hallmark.evaluation.provenance import stamp_provenance
 
 
 def main() -> None:
@@ -84,6 +85,8 @@ def main() -> None:
         both = evaluate(entries, predictions, args.baseline, args.split, eval_mode="both")
         result = both["conservative"]
         agg = both["aggressive"]
+        stamp_provenance(result, args.split, args.data_dir, args.version, args.baseline)
+        stamp_provenance(agg, args.split, args.data_dir, args.version, args.baseline)
         Path(args.output).write_text(
             _json.dumps(
                 {
@@ -108,6 +111,7 @@ def main() -> None:
             args.split,
             eval_mode=cast(Literal["conservative", "aggressive"], eval_mode),
         )
+        stamp_provenance(result, args.split, args.data_dir, args.version, args.baseline)
         Path(args.output).write_text(result.to_json())
         logging.info(f"Results written to {args.output}")
 

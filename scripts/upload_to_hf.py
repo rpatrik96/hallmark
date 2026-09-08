@@ -1,12 +1,17 @@
 #!/usr/bin/env python3
-"""Refresh the HALLMARK HuggingFace mirror (hallmark-neurips2026/HALLMARK).
+"""Publish the HALLMARK corpus as a HuggingFace dataset mirror.
 
-ANONYMITY: the hub dataset is linked in the NeurIPS 2026 submission and must
-stay double-blind until the decision. Every staged file is scanned for
-de-anonymizing strings (author names, GitHub handle, arXiv ID) and the run
-aborts on a hit; pass --allow-deanonymized only after the review period ends.
+The mirror published for the NeurIPS 2026 submission was withdrawn together
+with the submission, so no mirror is live. The script stays for a future
+re-publication, which names its own target through --repo-name.
 
-Mirrors the LIVE hub layout (which differs from the repo layout):
+ANONYMITY: every staged file is scanned for de-anonymizing strings (author
+names, GitHub handle, arXiv ID) and the run aborts on a hit; pass
+--allow-deanonymized to publish under the authors' own identity. croissant.json
+serves the corpus from the GitHub repository and so carries the handle, which
+means a named re-publication needs that flag.
+
+Hub layout (which differs from the repo layout):
 
     jsonl/<split>.jsonl            <- data/v1.2/<split>.jsonl   (6 files)
     data/<split>.parquet           <- built from jsonl           (3 files)
@@ -18,15 +23,16 @@ Mirrors the LIVE hub layout (which differs from the repo layout):
     croissant.json                 <- croissant.json
     README.md                      <- hf/README.md (dataset card, tracked here)
 
-Parquet files are rebuilt deterministically (pandas + snappy) and their SHA-256
-is verified against croissant.json before anything is uploaded; metadata.json
-is verified the same way. A mismatch aborts the run. Everything ships as one
+Parquet files are rebuilt deterministically (pandas + snappy) from the JSONL.
+Every source file croissant.json declares -- the six JSONL splits and
+metadata.json -- has its SHA-256 verified against croissant.json before
+anything is uploaded. A mismatch aborts the run. Everything ships as one
 hub commit; unchanged blobs are deduplicated server-side.
 
 baseline_results/ on the hub is a separate artifact set and is not touched.
 
 Usage:
-    python scripts/upload_to_hf.py [--repo-name hallmark-neurips2026/HALLMARK]
+    python scripts/upload_to_hf.py --repo-name <owner>/<name>
                                    [--token <hf_token>] [--dry-run]
 
 Without --token the cached `hf auth login` credential is used.
@@ -43,6 +49,9 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 DATA_DIR = ROOT / "data" / "v1.2"
+
+# croissant.json serves the corpus from this repository, not from any hub mirror
+GITHUB_REPO = "rpatrik96/hallmark"
 
 JSONL_SPLITS = [
     "dev_public",
@@ -82,14 +91,16 @@ def sha256(path: Path) -> str:
 
 
 def croissant_checksums() -> dict[str, str]:
-    """Hub path -> expected sha256, from croissant.json's distribution block."""
+    """Repo-relative path -> expected sha256, from croissant.json's distribution."""
     spec = json.loads((ROOT / "croissant.json").read_text(encoding="utf-8"))
     expected = {}
     for obj in spec["distribution"]:
         url = obj.get("contentUrl", "")
-        marker = "/resolve/main/"
+        marker = f"/{GITHUB_REPO}/main/"
         if marker in url and "sha256" in obj:
             expected[url.split(marker, 1)[1]] = obj["sha256"]
+    if not expected:
+        sys.exit("croissant.json declares no checksummed file in this repository")
     return expected
 
 
@@ -112,7 +123,7 @@ def build_parquets(dst: Path) -> dict[Path, str]:
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="Refresh the HALLMARK HuggingFace mirror")
-    parser.add_argument("--repo-name", default="hallmark-neurips2026/HALLMARK")
+    parser.add_argument("--repo-name", required=True, help="target hub repo, <owner>/<name>")
     parser.add_argument("--token", default=None, help="HF token (default: cached login)")
     parser.add_argument("--dry-run", action="store_true", help="verify + list, upload nothing")
     parser.add_argument(
@@ -139,21 +150,22 @@ def main() -> None:
             hits = [m.decode() for m in DEANONYMIZING_MARKERS if m in blob]
             if hits:
                 sys.exit(
-                    f"ANONYMITY VIOLATION: {hub_path} contains {hits}; the hub dataset "
-                    "is double-blind for NeurIPS 2026 review. Fix the file or, after "
-                    "the decision, rerun with --allow-deanonymized."
+                    f"ANONYMITY VIOLATION: {hub_path} contains {hits}; this run is "
+                    "staging an anonymized mirror. Fix the file, or rerun with "
+                    "--allow-deanonymized to publish under the authors' own identity."
                 )
         print("anonymity scan: clean")
 
-    expected = croissant_checksums()
-    by_hub = {hub: src for src, hub in uploads.items()}
-    for hub_path, want in expected.items():
-        got = sha256(by_hub[hub_path])
-        print(f"checksum {'ok' if got == want else 'MISMATCH'}: {hub_path}")
+    for rel_path, want in croissant_checksums().items():
+        src = ROOT / rel_path
+        if not src.exists():
+            sys.exit(f"croissant.json declares {rel_path}, which is not in the repository")
+        got = sha256(src)
+        print(f"checksum {'ok' if got == want else 'MISMATCH'}: {rel_path}")
         if got != want:
             sys.exit(
-                f"{hub_path}: sha256 {got} does not match croissant.json ({want}); "
-                "regenerate croissant.json or investigate non-determinism before uploading"
+                f"{rel_path}: sha256 {got} does not match croissant.json ({want}); "
+                "regenerate croissant.json before uploading"
             )
 
     for src, hub_path in sorted(uploads.items(), key=lambda kv: kv[1]):

@@ -230,10 +230,20 @@ def ranking_sensitivity_analysis(
                 tm = td.get(tier, {})
                 tp = tm.get("num_hallucinated", 0) * tm.get("detection_rate", 0.0)
                 fn = tm.get("num_hallucinated", 0) * (1 - tm.get("detection_rate", 0.0))
-                fp = tm.get("num_valid", 0) * tm.get("fpr", 0.0)
                 weighted_tp += w * tp
                 weighted_fn += w * fn
-                total_fp += fp  # FPs carry uniform weight
+            # FPs carry uniform weight and are counted ONCE. ``per_tier_metrics``
+            # puts every VALID entry into every tier's FPR denominator, so
+            # num_valid and false_positive_rate are identical across tiers and
+            # summing them would triple the false positives. The key is
+            # ``false_positive_rate``; reading ``fpr`` silently defaulted to 0.0
+            # for every tool, which made this sweep measure weighted recall and
+            # report perfect ranking stability regardless of the weights.
+            for tier in (1, 2, 3):
+                tm = td.get(tier, {})
+                if "false_positive_rate" in tm:
+                    total_fp = tm.get("num_valid", 0) * tm["false_positive_rate"]
+                    break
             precision = (
                 weighted_tp / (weighted_tp + total_fp) if (weighted_tp + total_fp) > 0 else 0.0
             )
@@ -264,7 +274,7 @@ def ranking_sensitivity_analysis(
 
     for w in weight_samples:
         # Scale to sum to 6 (like default 1+2+3=6) for comparable magnitudes
-        weights = {1: float(w[0]) * 3, 2: float(w[1]) * 3, 3: float(w[2]) * 3}
+        weights = {1: float(w[0]) * 6, 2: float(w[1]) * 6, 3: float(w[2]) * 6}
         scores = _compute_twf1(weights)
         ranking = sorted(scores.items(), key=lambda x: -x[1])
         order = [t for t, _ in ranking]

@@ -24,7 +24,7 @@ HALLMARK draws on best practices from established benchmarks:
 - **Hallucination taxonomy**: 14 types across 3 difficulty tiers (Easy / Medium / Hard)
 - **2,526 annotated entries**: 826 valid + 1,246 hallucinated with ground truth across the public splits, plus a 454-entry hidden split
 - **6 sub-tests per entry**: DOI resolution, title matching, author consistency, venue verification, field completeness, cross-database agreement
-- **Evaluation metrics**: Detection Rate, F1, tier-weighted F1, detect@k, ECE
+- **Evaluation metrics**: Detection Rate, F1, tier-weighted F1, [`detect@k`](#evaluation-metrics) (fraction detected within k strategies), [ECE](#evaluation-metrics) (expected calibration error)
 - **Built-in baselines**: DOI-only, bibtex-updater, HaRC, verify-citations, LLM-based (OpenAI, Anthropic, OpenRouter), agentic LLMs with tool use, ensemble, DB-first cascade with hallucination-mode diagnosis, plus ports of two recent papers — `hallucitechecker` ([Sakai et al. 2026](https://arxiv.org/abs/2604.26835)) and `checkifexist` ([Abbonato 2026](https://arxiv.org/abs/2602.15871) Algorithm 1) (CiteVerifier and hallucinator are available as wrapper modules but not registered in the default registry)
 - **Baseline registry**: Central discovery, availability checking, and dispatch for all baselines (19+ variants)
 - **Reproducible runs**: opt-in `--cache-path` flag wraps HTTP calls in a SQLite-backed `requests-cache` so re-runs reuse frozen API responses; `--timing-breakdown` and `--subtask-diagnostic` surface per-baseline performance + recognition/matching/calibration decomposition
@@ -33,20 +33,22 @@ HALLMARK draws on best practices from established benchmarks:
 - **Temporal analysis**: Contamination detection via pre/post-cutoff comparison
 - **Community contributions**: ONEBench-style ever-expanding sample pool
 
-## Headline cascade results (v1.1)
+## Headline cascade results
 
 `cascade_db_diagnosis` — Stage 1 bibtex-updater + Stage 2 Claude Sonnet 4.6 (via OpenRouter, up to 5 tool calls), conservative vs aggressive scoring of residual `UNCERTAIN`:
 
-| Split          | Mode         |   DR  |  FPR  |   F1  | Tier-3 F1 | AUROC |
-|----------------|--------------|------:|------:|------:|----------:|------:|
-| `dev_public`   | conservative | 0.976 | 0.559 | 0.760 |     0.417 | 0.833 |
-| `dev_public`   | **aggressive** | 0.983 | 0.560 | 0.815 | **0.570** | 0.740 |
-| `test_public`  | conservative | 0.972 | 0.456 | 0.854 |     0.596 | 0.867 |
-| `test_public`  | **aggressive** | 0.978 | 0.456 | 0.882 | **0.707** | 0.805 |
-| `stress_test`  | conservative | 0.969 |   —   | 0.985 |     0.983 |   —   |
-| `stress_test`  | **aggressive** | 0.975 |   —   | 0.987 |     0.986 |   —   |
+| Split          | Mode         |   DR  |  FPR  |   F1  | Tier-3 F1 | Area Under the ROC Curve (AUROC) |
+|----------------|--------------|------:|------:|------:|----------:|---------------------------------:|
+| `dev_public`   | conservative | 0.996 | 0.108 | 0.947 |     0.800 | 0.952 |
+| `dev_public`   | **aggressive** | 0.997 | 0.148 | 0.939 | **0.821** | 0.938 |
+| `test_public`  | conservative | 0.990 | 0.112 | 0.957 |     0.834 | 0.951 |
+| `test_public`  | **aggressive** | 0.992 | 0.160 | 0.950 | **0.845** | 0.936 |
+| `stress_test`  | conservative | 0.951 |   —   | 0.975 |     0.955 |   —   |
+| `stress_test`  | **aggressive** | 0.959 |   —   | 0.979 |     0.957 |   —   |
 
-Aggressive promotion of residual `UNCERTAIN` (the "DB-as-gold-standard" stance) lifts Tier-3 F1 by **+11.1 pp on `test_public`** and **+15.3 pp on `dev_public`** at ≤0.1 pp FPR cost; the trade is paid in rank-discrimination (AUROC −6.2 / −9.3 pp). Runner-level (`cascade_db_diagnosis_aggressive`) and evaluator-level (`--eval-mode aggressive`) promotion paths agree to within ~1 pp on every metric. Full JSONs (incl. per-tier/per-type breakdowns) in [`data/v1.2/baseline_results/`](data/v1.2/baseline_results/); see paper §Stage-2 diagnosis cascade for analysis.
+Every released retrieval-dependent run predates `EvaluationResult.source_condition` and records no incomplete-lookup fraction; re-runs will carry it.
+
+Aggressive promotion of residual `UNCERTAIN` (the "DB-as-gold-standard" stance) lifts Tier-3 F1 by **+2.05 pp on `dev_public` / +1.07 pp on `test_public`** at **+4.00 / +4.84 pp FPR**; the trade is paid in rank-discrimination (AUROC −1.34 / −1.47 pp). Full JSONs (incl. per-tier/per-type breakdowns) in [`data/v1.2/baseline_results/`](data/v1.2/baseline_results/); see paper §Stage-2 diagnosis cascade for analysis.
 
 ## Installation
 
@@ -68,6 +70,12 @@ uv pip install -e ".[all]"
 
 > **Note**: `pip install hallmark` is not yet published to PyPI. Use the clone + install path above.
 
+### Credentials & source availability
+
+Set `HALLMARK_BIBTEX_CHECK_BIN` to pin the `bibtex-check` executable and `HALLMARK_BIBTEX_CHECK_RATE_LIMIT` to set its per-service request rate. `HALLMARK_BTU_ABSTENTION_AS_VALID=1` restores the legacy abstention-to-`VALID` mapping and changes the reported FPR. `S2_API_KEY` authenticates Semantic Scholar, while `BIBTEX_CHECK_MAILTO` selects CrossRef's polite pool. `HALLMARK_ALLOW_SOURCE_OUTAGE=1` overrides the outage guard and produces numbers that are not comparable to a healthy run.
+
+`bibtex-check` exits 5 when its sources go dark, the wrapper raises `SourceOutageError`, and HALLMARK refuses to score that run. Before any multi-hour run, use `python scripts/check_source_reachability.py --require dblp,openalex`: exit 0 passes, exit 1 means a required source is down, and exit 2 means nothing was probed.
+
 ### Baseline Installation Guide
 
 The `[baselines]` extra installs only the LLM SDKs (`openai`, `anthropic`). External CLI tools require separate installation due to a `bibtexparser` 1.x dependency conflict:
@@ -76,8 +84,15 @@ The `[baselines]` extra installs only the LLM SDKs (`openai`, `anthropic`). Exte
 # HaRC
 pipx install harcx
 
-# bibtex-updater (released HALLMARK numbers use tag v1.2.0)
-pipx install "bibtex-updater==1.2.0"
+# bibtex-updater. The wrapper targets >=1.11.0, which separates fields the
+# checker refuted (`mismatched_fields`) from fields it declined to compare
+# (`unconfirmed_fields`); older releases still parse, minus that distinction.
+pipx install "bibtex-updater>=1.11.0"
+# To reproduce released numbers, pin the release that produced them:
+#   1.2.0 (scripts/regen_btu_v1_2_0.py, 2026-05-31) produced
+#   data/v1.2/baseline_results/bibtexupdater_{dev,test}_public.json:
+#   dev DR .865 / FPR .092, test DR .877 / FPR .115
+#   Walters & Wilder supplement -> 1.4.0  (docs/walters_wilder_supplement.md, 2026-07)
 
 # verify-citations
 pipx install verify-citations
@@ -159,7 +174,7 @@ python scripts/parallel_agentic_btu_test_public.py \
     --split test_public --verifier agentic_btu_openai
 ```
 
-Both scripts support checkpointing and can safely resume interrupted runs without recomputing completed entries.
+Both scripts support checkpointing and can safely resume interrupted runs without recomputing completed entries. Add `--dry-run` for a safe first invocation.
 
 ### View the leaderboard
 
@@ -213,6 +228,8 @@ See [`examples/03_custom_baseline.py`](examples/03_custom_baseline.py) for a com
 
 **Confidence semantics**: `confidence` = P(your predicted label is correct). If you predict `HALLUCINATED` with 0.9, you claim 90% certainty it is hallucinated. If you predict `VALID` with 0.8, you claim 80% certainty it is valid. This is NOT P(HALLUCINATED).
 
+**`api_calls` on the released `bibtex-updater` rows**: bibtex-check wrote the sources that returned a matching record, so for those rows the reported `mean_api_calls` counts hits rather than calls. Runs with bibtex-updater 1.12 or later record the queried sources and count calls.
+
 ## Hallucination Taxonomy
 
 ### Tier 1: Easy (detectable by simple API lookup)
@@ -244,18 +261,100 @@ See [`examples/03_custom_baseline.py`](examples/03_custom_baseline.py) for a com
 | `plausible_fabrication` | Entirely fabricated but realistic | Realistic author + plausible title |
 | `arxiv_version_mismatch` | Mixed preprint/published metadata | arXiv ID with conference venue claim |
 
+### Four of these modes describe papers that exist
+
+`wrong_venue`, `preprint_as_published`, `partial_author_list` and
+`arxiv_version_mismatch` are conditions on real works. An entry carrying one of
+them cites a paper that exists and says something inaccurate about it, usually a
+stale venue string or a preprint cited by its conference version. They sit under
+a label the agentic system prompt defines as "a HALLUCINATED (fabricated)
+citation", so a tool that correctly identifies a stale venue is scored as having
+found a fabrication. They are 26.1% of the positive class on `dev_public` and
+26.8% on `test_public`.
+
+The NeurIPS 2026 program chairs draw the same line for their area chairs. Their
+criteria, adopted from the ICLR and ICML 2026 guidance and sent to authors on 5
+September 2026, count a reference as hallucinated when no document with a title
+anywhere near the one given can be found, when the author list adds non-authors
+or drops a large fraction of them, or when there is no evidence the venue
+exists; a real venue that is wrong for the reference, including a wrong journal
+name or arXiv ID, and small title or author errors are errors the authors are
+told to fix, not hallucinations. Under those criteria `wrong_venue`,
+`preprint_as_published` and `arxiv_version_mismatch` fall outside the label,
+`near_miss_title` and `partial_author_list` fall outside unless the error is
+large, and `fabricated_doi` and `future_date` are not covered at all. The
+criteria carry no public URL; the source is the program chairs' message to
+authors of 5 September 2026.
+
+**The ranking is not stable if they stop counting as fabrication.** Scoring every
+tool three ways — as shipped, with the four modes out of the scored set, and with
+them as negatives so flagging one is a false accusation:
+
+| split | folded out of the scored set | scored as false positives | NeurIPS 2026 criteria folded out |
+|---|---|---|---|
+| `test_public` | Kendall tau 0.884, 13 of 20 tools change rank | tau 0.821, 16 of 20 change | tau 0.884, 12 of 20 change |
+| `dev_public` | tau 0.906, 14 of 19 change | tau 0.801, 16 of 19 change | tau 0.895, 10 of 19 change |
+
+The last column folds out the seven modes the NeurIPS 2026 criteria leave
+outside the label rather than the four this section is about, from
+`python scripts/ablate_taxonomy_fold.py --split test_public --fold neurips_2026`.
+
+The top of the table changes identity: `cascade_db_diagnosis` leads as shipped at
+MCC 0.897 on `test_public`, and `bibtexupdater` takes first place under
+as-false-positives on both splits (MCC 0.685 against the cascade's 0.631 on
+`test_public`, 0.733 against 0.678 on `dev_public`).
+
+How much of a tool's credit comes from these modes varies widely, and no
+published column shows it. On `test_public` they are 27.0% of the cascade's 514
+detections, 23.2% of Sonnet 4.6's, 20.0% of `bibtexupdater`'s and 9.1% of
+`doi_only`'s. Detection rate on the four ranges from 0.065 (`doi_only`) to 1.000
+(the cascade), median 0.740 across 20 tools. The `dev_public` count excludes
+the Opus 4.7 result, whose per-type block predates the relabel and does not
+reproduce its published MCC; it is registered known-stale in
+`scripts/check_results_freshness.py`.
+
+Two controls bound what this means. Folding `hybrid_fabrication` alone leaves
+the folded-out ranking unchanged on both public splits — tau 1.000, no tool
+changing position — and moves six tools under as-false-positives (tau 0.968 and
+0.965), so the instability belongs to the four modes rather than to folding a
+mode class,
+though at 4.3% and 5.6% of positives that null carries less weight than the
+effect it contrasts with.
+
+Surface features alone — field presence, string lengths, author count, entry
+type, year, no lookups — separate the four modes from VALID entries at DR 0.468
+on `dev_public` and 0.388 on `test_public` against a majority baseline of 0.000,
+and conditioning the negatives the same way the positives are conditioned does
+not move it. That is real leakage and a benchmark limitation. It is also well
+short of the cascade's 1.000, so the cascade's score is not only the generator
+being read back.
+
+Reproduce: `uv run --with scikit-learn python scripts/shortcut_control_four_modes.py`
+
+`stress_test` inherits the same property by construction. It holds three modes,
+two of which are on this list: 75 of its 121 scored entries, 62%. Its one VALID
+entry is a contamination canary excluded from scoring, so its false-positive
+rate is undefined and its MCC is 0.0 by degeneracy rather than by measurement, and every one of the cascade's misses
+there is on the two real-paper modes — folding them takes it from 0.953 to 1.000.
+
+**No labels change in this release.** Separating the two questions means
+relabelling across every split and moving every per-type and per-tier number, so
+the instability is reported rather than repaired; treat a ranking on the current
+target as a ranking over both questions at once. Reproduce with
+`python scripts/ablate_taxonomy_fold.py --split test_public`, which writes
+`tables/taxonomy_fold_ablation_*.csv` and rebuilds each tool's confusion matrix
+from `per_type_metrics`, validating it against that result's own published
+figures first. Discussion is in [issue #36](https://github.com/rpatrik96/hallmark/issues/36).
+
 ## Hosting & Croissant
 
-The dataset is mirrored on HuggingFace (parquet + jsonl + baseline results + RAI Croissant metadata):
-<https://huggingface.co/datasets/hallmark-neurips2026/HALLMARK>
+The dataset ships in this repository under `data/v1.2/` as JSONL, so every split is available without an external download. The HuggingFace mirror published for the NeurIPS 2026 submission was withdrawn together with the submission.
 
-A [Croissant 1.0](https://mlcommons.org/croissant/) metadata file is included at the repo root (`croissant.json`). It covers all public splits and includes RAI fields required by NeurIPS 2026 D&B. Validate locally with:
+A [Croissant 1.0](https://mlcommons.org/croissant/) metadata file is included at the repo root (`croissant.json`) and points at the files in this repository. It covers all public splits and includes RAI fields required by NeurIPS 2026 D&B. Validate locally with:
 
 ```bash
 mlcroissant validate --jsonld croissant.json
 ```
-
-The data is also shipped in `data/v1.2/` for direct repo-relative access without any external download.
 
 ## Dataset
 
@@ -361,46 +460,64 @@ predictions = run_title_oracle(blind_test, reference_pool=dev_entries)
 
 ## Main Results (dev_public, 1,119 entries)
 
-Twelve full-coverage tools evaluated on `dev_public`. All numbers reproduce Table 1 of the paper. **Bold** = best among independent (non-co-designed) full-coverage tools. ΔFPR is the cross-split shift `test_public − dev_public`; `—` means no `test_public` evaluation.
+Tools evaluated on `dev_public`. All numbers reproduce Table 1 of the paper. **Bold** = best among independent zero-shot LLMs. ΔFPR is the cross-split shift `test_public − dev_public`; `—` means no `test_public` evaluation.
 
-| Tool | DR ↑ | FPR ↓ | F1 ↑ | MCC ↑ | TW-F1 ↑ | ECE ↓ | ΔFPR ↓ |
-|------|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
-| *Citation-database tools (with shared pre-screening)* | | | | | | | |
-| DOI-only | .256 | .195 | .361 | .093 | .314 | .143 | +0.108 |
-| *Zero-shot LLMs (sorted by FPR)* | | | | | | | |
-| Gemini 2.5 Pro | .456 | **.053** | .609 | .446 | .587 | .321 | +0.011 |
-| Claude Opus 4.7 | .733 | .060 | .824 | .672 | .840 | .112 | −0.001 |
-| Claude Sonnet 4.6 | .777 | .095 | **.840** | **.677** | **.842** | **.066** | +0.023 |
-| Gemini 2.5 Flash | .482 | .101 | .617 | .406 | .608 | .286 | +0.010 |
-| Llama 4 Maverick | .591 | .150 | .693 | .446 | .688 | .197 | +0.028 |
-| GPT-5.4 (zero-shot) | .744 | .228 | .775 | .512 | .792 | .215 | −0.005 |
-| Mistral Large | .691 | .258 | .731 | .430 | .743 | .247 | +0.045 |
-| GPT-5.1 (zero-shot) | .823 | .405 | .771 | .432 | .818 | .189 | +0.076 |
-| Qwen3-235B | .832 | .551 | .737 | .307 | .806 | .294 | +0.080 |
-| Qwen3-VL-235B | .834 | .567 | .735 | .294 | .804 | .298 | +0.085 |
-| DeepSeek-R1 | .871 | .640 | .737 | .273 | .814 | .247 | −0.310 |
-| DeepSeek-V3.2 | **.880** | .730 | .721 | .191 | .805 | .331 | +0.047 |
-| *Agentic (tool-use; up to 5 tool calls per entry)* | | | | | | | |
-| GPT-5.1 + CrossRef/OpenAlex/arXiv | .956 | .465 | .827 | .556 | .895 | .165 | +0.058 |
-| GPT-5.1 + bibtex-updater (tool optional) | .965 | .461 | .832 | .574 | .901 | .113 | −0.116 |
-| Sonnet 4.6 + bibtex-updater (tool optional) | .970 | .426 | .845 | .610 | .908 | .110 | −0.092 |
-| *Co-designed (reference upper bound)* | | | | | | | |
-| bibtex-updater | .946 | .179 | .908 | .781 | .936 | .297 | +0.159 |
-| GPT-5.1 + bibtex-updater (always-call; output in prompt) | .818 | .144 | .846 | .670 | .856 | .086 | +0.110 |
+> **Coverage and relabel caveat.** A tool that returns `UNCERTAIN` is excluded
+> from the confusion matrix, so metrics use the entries it answered; coverage
+> reports `1 - num_uncertain / num_entries`. The Coverage column is
+> `dev_public` only, so ΔFPR can compare two denominators: DeepSeek-R1 answered
+> 651 of 831 entries on `test_public` against 1,101 of 1,119 on `dev_public`,
+> and its −.303 is that gap rather than a robustness result. Every row moved
+> under the current labels. The largest separate corrections are DOI-only FPR
+> .195 → .043 after the HTTP-202 re-run (`829d2d4`), and bibtex-updater FPR
+> .179 → .092 with its stored coverage field moving 1.000 → .862
+> (`467da9d`/`3aff25b`). See `notes/eval-hardening-2026-09-04.md` for the
+> outcomes.
 
-DR = Detection Rate · FPR = False Positive Rate · TW-F1 = Tier-weighted F1 · MCC = Matthews Correlation Coefficient · ECE = Expected Calibration Error. The shaded *co-designed* block is a reference upper bound: `bibtex-updater`'s development overlapped with the benchmark's taxonomy design, so its scores risk construct-overfitting and should not be compared head-to-head with independent tools. `HaRC` and `verify-citations` are omitted: Semantic Scholar throttling collapses their effective coverage to <7% on `dev_public`.
+| Tool | DR ↑ | FPR ↓ | F1 ↑ | MCC ↑ | TW-F1 ↑ | ECE ↓ | Coverage ↑ | ΔFPR ↓ |
+|------|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
+| *Citation-database tools (with shared pre-screening)* | | | | | | | | |
+| DOI-only | .218 | .043 | .347 | .253 | .268 | .082 | 1.000 | −.001 |
+| *Zero-shot LLMs (sorted by FPR)* | | | | | | | | |
+| Gemini 2.5 Pro | .476 | **.050** | .627 | .473 | .609 | .297 | .967 | +.009 |
+| Claude Opus 4.7† | .752 | .072 | **.830** | **.683** | **.851** | .112 | 1.000 | −.005 |
+| Claude Sonnet 4.6† | .780 | .127 | .827 | .652 | .834 | **.066** | 1.000 | −.002 |
+| Gemini 2.5 Flash | .500 | .100 | .631 | .429 | .628 | .265 | .988 | +.006 |
+| Llama 4 Maverick | .614 | .146 | .707 | .476 | .709 | .176 | 1.000 | +.021 |
+| GPT-5.4 (zero-shot) | .767 | .228 | .783 | .538 | .807 | .202 | 1.000 | −.004 |
+| Mistral Large | .716 | .251 | .742 | .465 | .765 | .229 | .989 | +.032 |
+| GPT-5.1 (zero-shot) | .837 | .411 | .766 | .442 | .822 | .190 | 1.000 | +.070 |
+| Qwen3-235B | .860 | .533 | .744 | .358 | .821 | .280 | .998 | +.082 |
+| Qwen3-VL-235B | .860 | .551 | .740 | .342 | .818 | .286 | .999 | +.077 |
+| DeepSeek-R1 | .896 | .623 | .739 | .324 | .825 | .238 | .984 | −.303 |
+| DeepSeek-V3.2 | **.911** | .702 | .727 | .268 | .821 | .316 | 1.000 | +.026 |
+| *Agentic (tool-use; up to 5 tool calls per entry)* | | | | | | | | |
+| GPT-5.1 + CrossRef/OpenAlex/arXiv | .967 | .478 | .816 | .558 | .892 | .175 | 1.000 | +.080 |
+| GPT-5.1 + bibtex-updater (tool optional) | .980 | .470 | .824 | .584 | .900 | .125 | 1.000 | −.114 |
+| Sonnet 4.6 + bibtex-updater (tool optional) | .990 | .431 | .841 | .630 | .912 | .118 | 1.000 | −.088 |
+| *Co-designed (reference upper bound)* | | | | | | | | |
+| bibtex-updater | .865 | .092 | .890 | .771 | .908 | .383 | .869 | +.024 |
+| GPT-5.1 + bibtex-updater (always-call; output in prompt) | .843 | .144 | .856 | .698 | .873 | .078 | .929 | +.112 |
+
+† Registered in `KNOWN_STALE`: the Opus 4.7 and Sonnet 4.6 dev files retain pre-relabel per-type blocks and need re-runs under the current labels.
+
+Every released retrieval-dependent run predates `EvaluationResult.source_condition` and records no incomplete-lookup fraction; re-runs will carry it.
+
+DR = Detection Rate · FPR = False Positive Rate · TW-F1 = Tier-weighted F1 · MCC = Matthews Correlation Coefficient · ECE = Expected Calibration Error. The canonical data for this table are in [`tables/main_results_dev_public.csv`](tables/main_results_dev_public.csv). The shaded *co-designed* block is a reference upper bound: `bibtex-updater`'s development overlapped with the benchmark's taxonomy design, so its scores risk construct-overfitting and should not be compared head-to-head with independent tools. `HaRC` and `verify-citations` are omitted. For HaRC the stated reason — Semantic Scholar throttling collapsing effective coverage below 7% — does not survive inspection: given a key, HaRC runs at **full coverage** on `dev_public` (`harc_with_s2key_dev_public.json`). That keyed run is itself scored against the pre-relabel ground truth, so its detection rate and FPR are not comparable to the current-label results above and are not quoted here; it is registered as known-stale in `scripts/check_results_freshness.py`. Regenerating it needs a working Semantic Scholar key, which as of 2026-09-04 returns HTTP 403. The unkeyed `harc_dev_public.json` was withdrawn the same day: it scored 521 of 1,119 entries, matching no split, and reported FPR 0.000 — a truncated run, not a result.
+
+Two caveats on that omission, both open. `bibtexupdater.py` reads `S2_API_KEY` from the environment automatically and the HaRC wrapper did not until 2026-09-04, so a default side-by-side run handed the co-designed tool authenticated access and its competitor the unauthenticated pool. And if HaRC leans on Semantic Scholar where bibtex-updater's cascade can fall through to CrossRef and OpenAlex, then "HaRC throttles" is partly a measurement of which tool depended on the source that was down rather than a property of the tools. That is not currently checkable: the HaRC wrapper records `mean_api_calls: 0.0` and no per-source counts, so the released artifacts cannot answer it. The bibtex-updater side of that comparison is a hit count rather than a call count, for the reason given under [Prediction Fields](#prediction-fields).
 
 ### Key Takeaways
 
-1. **LLMs span a wide recall–precision spectrum.** From ultra-conservative (Gemini 2.5 Pro: 46% DR, 5% FPR) to aggressive (DeepSeek-V3.2: 88% DR, 73% FPR). Claude Sonnet 4.6 and Opus 4.7 jointly lead independent tools on F1/calibration (Sonnet F1 = 0.840 / ECE = 0.066), far ahead of GPT-5.1 (F1 0.771) and the recall-aggressive open-weight cohort.
+1. **LLMs span a wide recall–precision spectrum.** From ultra-conservative (Gemini 2.5 Pro: 48% DR, 5% FPR) to aggressive (DeepSeek-V3.2: 91% DR, 70% FPR). Sonnet 4.6 and Opus 4.7 tie and lead the independent tools on `dev_public` (Sonnet F1 = 0.827 / ECE = 0.066); on `test_public`, Sonnet leads in F1 (p = 0.0486). Both are far ahead of GPT-5.1 (F1 0.766) and the recall-aggressive open-weight cohort.
 
-2. **Agentic lookups inflate FPR.** A 5-call budget closes GPT-5.1's recall gap to `bibtex-updater` (DR 0.97 vs. 0.95), but agentic FPR remains ~2.6× higher (0.46 vs. 0.18) because the harness flags an entry whenever any one of CrossRef/OpenAlex/arXiv returns no match. F1 still trails by 7.6 pp. Substituting Sonnet 4.6 reproduces the GPT-5.1 profile within ≤3.5 pp on every metric — the FPR rise is harness-driven, not LLM-driven.
+2. **Agentic lookups inflate FPR.** A 5-call budget overtakes `bibtex-updater` by 11.5 pp DR (0.98 vs. 0.86), but agentic FPR remains ~5× higher (0.47 vs. 0.09) because the harness flags an entry whenever any one of CrossRef/OpenAlex/arXiv returns no match. F1 still trails by 6.6 pp. Substituting Sonnet 4.6 reproduces the GPT-5.1 profile within ≤4.7 pp on every metric — the FPR rise is harness-driven, not LLM-driven.
 
-3. **Base-rate precision collapse.** Extrapolated to real-world hallucination rates, every evaluated setting yields roughly one true hallucination per ten flagged citations, so recall-optimized verifiers misallocate reviewer effort.
+3. **Base-rate precision collapse.** At a 1% base rate the twenty evaluated settings return between one true finding per ten flags (Opus 4.7) and one per eighty (DeepSeek-V3.2), and the cascade one per seventeen; at the 0.1% end the best is one per eighty-nine. Recall-optimized verifiers misallocate reviewer effort (see "What these numbers mean on a real bibliography").
 
 4. **Post-cutoff calibration breakdown.** On 448 papers from 2024–2025, 8 of 12 LLMs over-flag sharply (FPR up to 0.89). Sonnet 4.6 and Opus 4.7 hold FPR ≤ 0.12; GPT-5.4 (FPR 0.41) and Gemini 2.5 Pro (FPR 0.25) only partially recover.
 
-5. **A capability gap remains.** Even the highest-recall independent model misses 12% of hallucinations, with systematic weaknesses on subtle types (`near_miss_title`: 56%, `author_mismatch`: 58% for GPT-5.1). No tool dominates across regimes: `bibtex-updater` is cheapest and most temporally stable; Sonnet 4.6 / Opus 4.7 lead on FPR and PPV; the rule-based F1 lead collapses on `test_public`.
+5. **A capability gap remains.** Even the highest-recall independent model misses 9% of hallucinations, with systematic weaknesses on subtle types (`near_miss_title`: 58%, `author_mismatch`: 45% for GPT-5.1). No tool dominates across regimes: `bibtex-updater` is cheapest and most temporally stable; Sonnet 4.6 / Opus 4.7 lead on FPR and PPV; the rule-based F1 lead collapses on `test_public`.
 
 See the [paper](https://arxiv.org/abs/2607.18360) for the full per-tier, per-type, and temporal-robustness analyses, or explore them interactively on the [companion website](https://rpatrik96.github.io/hallmark/).
 
@@ -448,6 +565,73 @@ See also:
 - [GhostCite paper](https://arxiv.org/abs/2602.06718) — large-scale analysis of 2.2M citations across 56K papers
 - [HalluCitation paper](https://arxiv.org/abs/2601.18724) — analysis of ~300 hallucinated papers in ACL conferences
 - [GPTZero Hallucination Detector](https://gptzero.me/hallucination-detector) — commercial API for citation verification
+
+
+## What these numbers mean on a real bibliography
+
+`test_public` is 62.5% hallucinated by construction, and that is the operating
+point every number above is measured at. Detection rate and false-positive rate
+are properties of a detector and do not move with prevalence, but **precision
+does** — and precision is what a user actually experiences, because it is the
+share of the flags handed to them that are real. A tool can therefore post an
+honest 99% detection rate at a 16% false-positive rate and still hand a user
+mostly false accusations.
+
+Holding each tool's measured DR and FPR fixed and sweeping the assumed
+prevalence (`python scripts/compute_base_rate_precision.py`, full table in
+[`tables/base_rate_precision.csv`](tables/base_rate_precision.csv)):
+
+| assumed prevalence | `cascade_db_diagnosis_aggressive` precision (`test_public`) | flags read per true finding |
+|---|---|---|
+| 0.1% | 0.6% | 162 |
+| 1% | 5.9% | 17 |
+| 5% | 24.6% | 4.1 |
+| 20% | 60.8% | 1.6 |
+| **62.5%** (this benchmark) | **91.2%** | **1.1** |
+
+The benchmark's own prevalence is the only point on that curve where the
+instrument looks good, and no arithmetic here is new — it is Bayes' rule over
+numbers already in `data/v1.2/baseline_results/`.
+
+### The wild base rate is not 62.5%
+
+We ran HALLMARK's own `cascade_db_diagnosis` with an agentic Stage 2 over 5,043
+deduplicated references from 267 real NeurIPS-workshop submissions. Stage 1
+located a matching record for every reference it ruled on, and **not one
+fabricated work was found in 5,043 references.** Of those, 3,244 were confirmed
+outright, 920 differed from the indexed record only in the venue string, 187
+carried some other metadata difference, 431 were flagged and 261 abstained.
+
+Eleven accusations survived re-adjudication and hand audit, and none was a
+citation to something that does not exist:
+
+| n | what it actually was |
+|---|---|
+| 3 | corrupt OpenAlex index records — correct DOI, correct author list, wrong title |
+| 3 | real papers whose DOIs were never registered |
+| 2 | real works in humanities venues the indexes do not cover |
+| 2 | unverifiable by construction (author `Anonymous`, under review) |
+| 1 | a work whose existence was proved by the rebuttal that names it in its own title, read as evidence of absence |
+
+So on real bibliographies the instrument's main output is false positives, and
+the flag list is dominated by citation-style artefacts and tool bugs rather than
+fabrication. That is worth stating plainly rather than leaving for a reader to
+derive: at a wild prevalence indistinguishable from zero, the left-hand column
+of the table above is the column that applies.
+
+Two consequences for how these baselines should be read. **Report precision at
+the prevalence you expect, not the benchmark's**, and prefer a tool that
+abstains over one that guesses — a citation flagged as fabricated is a serious
+accusation against a named author, and at these base rates most such flags are
+wrong. **The gap between "this work does not exist" and "this entry describes a
+real work incorrectly" carries most of the real signal**, and the current
+taxonomy folds the second into the first (see
+[issue #36](https://github.com/rpatrik96/hallmark/issues/36)); on the wild
+corpus, of the 324 references Stage 2 upheld as flags, 59.0% resolved to a real
+work described wrongly.
+
+This analysis is joint work with the InterpScience submission-screening effort,
+which contributed the 5,043-reference corpus and its adjudications.
 
 
 ## Python API
@@ -512,7 +696,7 @@ hallmark/
 │   ├── contribution/          # Pool manager, entry validation
 │   └── cli.py                 # Command-line interface
 ├── data/
-│   ├── v1.0/                  # Benchmark splits (dev_public, test_public)
+│   ├── v1.2/                  # Benchmark splits (dev_public, test_public, stress_test)
 │   ├── hidden/                # Hidden test set (not public)
 │   └── raw/                   # Raw scraped/generated entries
 ├── scripts/
@@ -520,7 +704,7 @@ hallmark/
 ├── .github/workflows/
 │   ├── tests.yml              # CI: test suite across Python versions
 │   └── baselines.yml          # CI: weekly free baseline evaluation
-├── tests/                     # Test suite (562 tests)
+├── tests/                     # Test suite
 ├── figures/                   # Evaluation figures
 └── examples/                  # Usage examples
 ```

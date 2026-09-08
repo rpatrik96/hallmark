@@ -103,6 +103,16 @@ def main(argv: list[str] | None = None) -> int:
         help="Path to predictions JSONL file (alternative to --baseline)",
     )
     eval_parser.add_argument("--output", type=str, help="Path to write evaluation results JSON")
+    eval_parser.add_argument(
+        "--allow-null-run",
+        action="store_true",
+        default=False,
+        help=(
+            "Write the result even when the tool evaluated none of the entries. "
+            "By default such a run is refused: its detection rate and false-positive "
+            "rate are artefacts of the tool not running, not measurements."
+        ),
+    )
     eval_parser.add_argument("--data-dir", type=str, help="Override data directory")
     eval_parser.add_argument("--version", default="v1.2", help="Dataset version")
     eval_parser.add_argument(
@@ -525,6 +535,19 @@ def _stratified_sample(entries: list[BenchmarkEntry], n: int) -> list[BenchmarkE
     return combined
 
 
+def _stamp_provenance(result: EvaluationResult, args: argparse.Namespace) -> None:
+    """Record provenance using the evaluate command's arguments."""
+    from hallmark.evaluation.provenance import stamp_provenance
+
+    stamp_provenance(
+        result=result,
+        split=getattr(args, "split", None),
+        data_dir=getattr(args, "data_dir", None),
+        version=getattr(args, "version", "v1.2"),
+        baseline=getattr(args, "baseline", None),
+    )
+
+
 def _cmd_evaluate(args: argparse.Namespace) -> int:
     """Run evaluation command."""
     try:
@@ -579,6 +602,13 @@ def _cmd_evaluate(args: argparse.Namespace) -> int:
     # Get predictions
     predictions: list[Prediction]
     tool_name: str = args.tool_name or "unknown"
+
+    # This command evaluates one baseline, so the wrapper's record for this
+    # thread describes that baseline's run and nothing else. Clear it first,
+    # so a --predictions file cannot inherit a run made earlier in the process.
+    from hallmark.baselines import bibtexupdater as _bibtexupdater
+
+    _bibtexupdater.reset_run_state()
 
     if args.predictions:
         predictions = load_predictions(args.predictions)
@@ -676,12 +706,23 @@ def _cmd_evaluate(args: argparse.Namespace) -> int:
             eval_mode=eval_mode,
         )
 
-    if result.coverage < 1.0:
+    _stamp_provenance(result, args)
+    if aggressive_result is not None:
+        _stamp_provenance(aggressive_result, args)
+
+    response_coverage = result.response_coverage
+    if response_coverage is not None and response_coverage < 1.0:
         logging.warning(
-            "Coverage is %.1f%% (%d/%d entries). Missing predictions are treated as VALID.",
-            result.coverage * 100,
-            int(result.coverage * result.num_entries),
+            "Response coverage is %.1f%% (%d/%d entries). Missing predictions are not scored.",
+            response_coverage * 100,
+            int(response_coverage * result.num_entries),
             result.num_entries,
+        )
+    if response_coverage is not None and result.coverage < response_coverage:
+        logging.warning(
+            "Decision coverage is %.1f%% because %d uncertain predictions are abstentions.",
+            result.coverage * 100,
+            result.num_uncertain,
         )
 
     # Build pred_map once (needed for confusion matrix and detailed sections)
@@ -896,6 +937,18 @@ def _cmd_evaluate(args: argparse.Namespace) -> int:
         _save_predictions(predictions, args.save_predictions)
         logging.info(f"Predictions written to {args.save_predictions}")
 
+    # A run that evaluated nothing is not a measurement. evaluate() has already
+    # said so at ERROR; refusing here is what stops it becoming a results file
+    # that the leaderboard ranks and the history log records.
+    if result.num_evaluated == 0 and result.num_entries > 0 and not args.allow_null_run:
+        print(
+            f"error: {result.tool_name} evaluated 0 of {result.num_entries} entries on "
+            f"{result.split_name}; every prediction is a fallback, so this is not a "
+            "measurement and will not be written. Pass --allow-null-run to write it anyway.",
+            file=sys.stderr,
+        )
+        return 1
+
     # Save results
     if args.output:
         if aggressive_result is not None:
@@ -1091,8 +1144,13 @@ def _cmd_leaderboard(args: argparse.Namespace) -> int:
         logging.error(f"Results directory not found: {results_dir}")
         return 1
 
+    from hallmark.evaluation.validate import iter_result_files
+
+    # ``results/archive/`` holds runs kept for the record -- CI samples, smoke
+    # runs, probes -- which score no current split and must not be ranked
+    # against one.
     results = []
-    for path in results_dir.glob("*.json"):
+    for path in iter_result_files(results_dir):
         with open(path) as f:
             data = json.load(f)
         if data.get("split_name") == args.split:
@@ -1353,6 +1411,9 @@ def _cmd_history_append(args: argparse.Namespace) -> int:
     for path in sorted(results_dir.glob("*.json")):
         with open(path) as f:
             data = json.load(f)
+        if data.get("tool_name") is None or data.get("split_name") is None:
+            logging.warning("Skipping non-evaluation result %s", path)
+            continue
         entry = {
             "timestamp": datetime.datetime.now(datetime.timezone.utc).isoformat(),
             "tool_name": data.get("tool_name"),

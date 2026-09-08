@@ -65,7 +65,8 @@ dev = [
 all = ["hallmark[baselines,ranking,scraping,analysis,dev]"]
 # NOTE: bibtex-updater and harcx require bibtexparser 1.x which conflicts
 # with hallmark's bibtexparser>=2.0. Install them in isolation:
-#   pipx install "bibtex-updater==1.2.0"  # released HALLMARK numbers use tag v1.2.0
+#   pipx install "bibtex-updater>=1.11.0"  # wrapper target; released dev/test numbers
+#                                          # used 1.2.0, the W&W supplement 1.4.0 (README)
 #   pipx install harcx
 
 [project.scripts]

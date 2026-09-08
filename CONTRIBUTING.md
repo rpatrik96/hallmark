@@ -9,7 +9,7 @@ HALLMARK uses an ever-expanding pool inspired by [ONEBench](https://arxiv.org/ab
 Valid entries must:
 - Be real, published papers verifiable in at least 2 databases (DBLP, CrossRef, Semantic Scholar)
 - Include accurate metadata: title, authors, year, venue, and DOI (if available)
-- Have `label: "VALID"` and all subtests set to `true`
+- Have `label: "VALID"`, with `subtests` recording what a verifier would actually find. `null` marks a check that does not apply to the entry (an entry with no `doi` field carries `doi_resolves: null`); `false` marks a check that ran and failed and is legitimate on a real paper (an incomplete BibTeX entry, or databases that disagree). A VALID label means the work exists and the metadata is accurate, not that all six sub-tests pass.
 
 ### Hallucinated Entries
 
@@ -23,7 +23,7 @@ Hallucinated entries must:
 
 **Tier 1 (Easy):** `fabricated_doi`, `nonexistent_venue`, `placeholder_authors`, `future_date`
 
-**Tier 2 (Medium):** `chimeric_title`, `wrong_venue`, `author_mismatch` (covers swapped and fabricated authors; data value: `swapped_authors`), `preprint_as_published`, `hybrid_fabrication`
+**Tier 2 (Medium):** `chimeric_title`, `wrong_venue`, `author_mismatch` (covers swapped and fabricated authors; data value: `swapped_authors`), `preprint_as_published`, `hybrid_fabrication`, `merged_citation`, `partial_author_list`
 
 **Tier 3 (Hard):** `near_miss_title`, `plausible_fabrication`, `arxiv_version_mismatch`
 
@@ -67,7 +67,7 @@ Or open a pull request adding your entries to `data/pool/contributions/`.
 
 ## Adding a New Hallucination Type
 
-Adding a new type requires changes in 8 locations:
+Adding a new type requires changes in 9 locations:
 
 1. **Enum member**: Add to `HallucinationType` in `hallmark/dataset/schema.py`
 2. **Tier mapping**: Add to `HALLUCINATION_TIER_MAP` in `hallmark/dataset/schema.py` with the appropriate `DifficultyTier`
@@ -80,6 +80,7 @@ Adding a new type requires changes in 8 locations:
 6. **Generator exports**: Add to `hallmark/dataset/generators/__init__.py`
 7. **Batch dispatcher**: Add dispatch logic in `hallmark/dataset/generators/batch.py`
 8. **Tests**: Add generation tests in `tests/test_generator.py`
+9. **Generator registration**: decorate the function with `@register_generator(HallucinationType.YOUR_TYPE, extra_args=(...), description=...)` from `hallmark/dataset/generators/_registry.py`; `build_dataset.py` resolves generators through this registry (`scripts/stages/_common.py`), and the decorator only fires if the module is imported, which step 6 ensures.
 
 See `generate_fabricated_doi` in `tier1.py` for the simplest example.
 
@@ -109,7 +110,7 @@ def run_my_tool(entries):
     )
 ```
 
-Results are reported both with and without pre-screening for transparency.
+Pre-screening runs behind every released row, so integrate it to keep your baseline comparable. The with/without comparison is not currently released — the pre-screening ablation is stopped (see `notes/source-availability-is-a-measurement-condition.md`) and the only committed no-pre-screening artifacts are the null runs in `results/failed_runs/`. If you run both arms, say so in your PR and attach them.
 
 ## Development Setup
 

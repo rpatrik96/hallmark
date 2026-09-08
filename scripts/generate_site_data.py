@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Generate site/data/site_data.js for the companion website (site/).
+"""Generate companion-site data and the canonical README results table.
 
 Reads only released, tracked artifacts:
   - data/v1.2/metadata.json                    (corpus composition)
@@ -17,14 +17,19 @@ Run from the repo root (or anywhere): python scripts/generate_site_data.py
 
 from __future__ import annotations
 
+import argparse
+import csv
 import datetime
 import json
 import random
+import sys
+import tempfile
 from pathlib import Path
 from typing import Any
 
 ROOT = Path(__file__).resolve().parents[1]
 OUT = ROOT / "site" / "data" / "site_data.js"
+MAIN_RESULTS_OUT = ROOT / "tables" / "main_results_dev_public.csv"
 SEED = 8042  # matches the corpus build seed
 
 BR = ROOT / "data" / "v1.2" / "baseline_results"
@@ -48,7 +53,7 @@ CATEGORIES = [
 # paper's ranking exclusions (co-designed block; HaRC's coverage caveat).
 MODELS = [
     ("doi_only", "DOI-only", CAT_DB, True, None),
-    ("harc_with_s2key", "HaRC (S2 key)", CAT_DB, False, "excluded in paper"),
+    ("harc_with_s2key", "HaRC (S2 key)", CAT_DB, False, "pre-relabel labels"),
     ("bibtexupdater", "bibtex-updater", CAT_DB, False, "co-designed"),
     ("llm_openai", "GPT-5.1", CAT_LLM, True, None),
     ("llm_openai_gpt54", "GPT-5.4", CAT_LLM, True, None),
@@ -96,6 +101,45 @@ MODELS = [
         "Cascade: btu → Sonnet (aggressive)",
         CAT_AGENTIC,
         False,
+        "co-designed",
+    ),
+]
+
+# README order. Category rows are inserted by the document rather than stored in
+# the CSV so every data row names exactly one released result.
+MAIN_RESULTS = [
+    ("doi_only", "DOI-only", "citation-database"),
+    ("llm_openrouter_gemini_pro", "Gemini 2.5 Pro", "zero-shot"),
+    ("llm_openrouter_claude_opus_4_7", "Claude Opus 4.7", "zero-shot"),
+    ("llm_openrouter_claude_sonnet_4_6", "Claude Sonnet 4.6", "zero-shot"),
+    ("llm_openrouter_gemini_flash", "Gemini 2.5 Flash", "zero-shot"),
+    ("llm_openrouter_llama_4_maverick", "Llama 4 Maverick", "zero-shot"),
+    ("llm_openai_gpt54", "GPT-5.4 (zero-shot)", "zero-shot"),
+    ("llm_openrouter_mistral", "Mistral Large", "zero-shot"),
+    ("llm_openai", "GPT-5.1 (zero-shot)", "zero-shot"),
+    ("llm_openrouter_qwen", "Qwen3-235B", "zero-shot"),
+    ("llm_openrouter_qwen_max", "Qwen3-VL-235B", "zero-shot"),
+    ("llm_openrouter_deepseek_r1", "DeepSeek-R1", "zero-shot"),
+    ("llm_openrouter_deepseek_v3", "DeepSeek-V3.2", "zero-shot"),
+    (
+        "llm_agentic_openai",
+        "GPT-5.1 + CrossRef/OpenAlex/arXiv",
+        "agentic",
+    ),
+    (
+        "llm_agentic_btu_openai",
+        "GPT-5.1 + bibtex-updater (tool optional)",
+        "agentic",
+    ),
+    (
+        "llm_agentic_btu_sonnet_4_6",
+        "Sonnet 4.6 + bibtex-updater (tool optional)",
+        "agentic",
+    ),
+    ("bibtexupdater", "bibtex-updater", "co-designed"),
+    (
+        "llm_tool_augmented",
+        "GPT-5.1 + bibtex-updater (always-call; output in prompt)",
         "co-designed",
     ),
 ]
@@ -729,7 +773,110 @@ def ppv(dr: float | None, fpr: float | None, base_rate: float = 0.02) -> float |
     return dr * base_rate / denom
 
 
-def main() -> None:
+def write_main_results_table(out_path: Path | None = None) -> None:
+    """Write the README's dev_public table from released result artifacts.
+
+    Args:
+        out_path: Where to write it; the released table by default. The
+            provenance sidecar is written beside it, so a check run pointed at a
+            temporary directory leaves the tracked one alone.
+    """
+    out_path = MAIN_RESULTS_OUT if out_path is None else Path(out_path)
+    if str(ROOT) not in sys.path:
+        sys.path.insert(0, str(ROOT))
+
+    from hallmark.dataset.loader import load_split
+    from hallmark.dataset.schema import load_predictions
+    from hallmark.evaluation.metrics import evaluate
+    from hallmark.evaluation.table_provenance import record_table
+    from scripts.check_results_freshness import KNOWN_STALE
+
+    fields = [
+        "tool",
+        "split",
+        "display_name",
+        "category",
+        "detection_rate",
+        "false_positive_rate",
+        "f1_hallucination",
+        "mcc",
+        "tier_weighted_f1",
+        "ece",
+        "coverage",
+        "delta_fpr",
+        "known_stale",
+    ]
+    rows = []
+    inputs: list[Path] = []
+    for tool, display_name, category in MAIN_RESULTS:
+        dev_path = BR / f"{tool}_dev_public.json"
+        if dev_path.exists():
+            dev = load_json(dev_path)
+            inputs.append(dev_path)
+        else:
+            # The always-call run has only persisted per-entry predictions on
+            # dev_public. Re-score them offline against the committed split; no
+            # baseline or API is invoked.
+            predictions_path = BR / f"{tool}_dev_public.jsonl"
+            split_path = ROOT / "data" / "v1.2" / "dev_public.jsonl"
+            result = evaluate(
+                load_split("dev_public"),
+                load_predictions(predictions_path),
+                tool_name=tool,
+                split_name="dev_public",
+            )
+            dev = result.to_dict()
+            inputs.extend((predictions_path, split_path))
+
+        test_path = BR / f"{tool}_test_public.json"
+        test = load_json(test_path) if test_path.exists() else None
+        if test is not None:
+            inputs.append(test_path)
+
+        n = dev["num_entries"]
+        coverage = 1.0 - dev.get("num_uncertain", 0) / n
+        delta_fpr = (
+            test["false_positive_rate"] - dev["false_positive_rate"] if test is not None else None
+        )
+        rows.append(
+            {
+                "tool": tool,
+                "split": "dev_public",
+                "display_name": display_name,
+                "category": category,
+                "detection_rate": f"{dev['detection_rate']:.4f}",
+                "false_positive_rate": f"{dev['false_positive_rate']:.4f}",
+                "f1_hallucination": f"{dev['f1_hallucination']:.4f}",
+                "mcc": f"{dev['mcc']:.4f}",
+                "tier_weighted_f1": f"{dev['tier_weighted_f1']:.4f}",
+                "ece": f"{dev['ece']:.4f}",
+                "coverage": f"{coverage:.4f}",
+                "delta_fpr": f"{delta_fpr:.4f}" if delta_fpr is not None else "",
+                "known_stale": str(dev_path.name in KNOWN_STALE).lower(),
+            }
+        )
+
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+    with out_path.open("w", encoding="utf-8", newline="") as fh:
+        writer = csv.DictWriter(fh, fieldnames=fields, lineterminator="\n")
+        writer.writeheader()
+        writer.writerows(rows)
+    record_table(
+        out_path,
+        inputs,
+        generator="scripts/generate_site_data.py",
+        repo_root=ROOT,
+    )
+
+
+def generate(out_path: Path | None = None, main_results_path: Path | None = None) -> None:
+    """Write the site payload and the README's main results table.
+
+    Args:
+        out_path: Where the site payload goes; the tracked file by default.
+        main_results_path: Where the main results CSV goes; likewise.
+    """
+    out_path = OUT if out_path is None else Path(out_path)
     metadata = load_json(ROOT / "data" / "v1.2" / "metadata.json")
 
     results: dict[str, list[dict]] = {}
@@ -991,7 +1138,7 @@ def main() -> None:
                 "category": cat,
                 "ranked": ranked,
                 "tag": tag,
-                "default_on": True,
+                "default_on": tool != "harc_with_s2key",
             }
             for tool, name, cat, ranked, tag in MODELS
         ],
@@ -1006,21 +1153,92 @@ def main() -> None:
         "examples": examples,
     }
 
-    OUT.parent.mkdir(parents=True, exist_ok=True)
+    out_path.parent.mkdir(parents=True, exist_ok=True)
     payload = json.dumps(data, ensure_ascii=False, separators=(",", ":"))
     # Harden against </script> breakout: corpus strings are adversarial by
     # design, so no data string may ever close the enclosing script element.
     payload = payload.replace("</", "<\\/")
-    OUT.write_text(
+    out_path.write_text(
         "// Generated by scripts/generate_site_data.py — do not edit by hand.\n"
         f"window.HALLMARK_DATA = {payload};\n",
         encoding="utf-8",
     )
-    size_kb = OUT.stat().st_size / 1024
-    print(f"wrote {OUT.relative_to(ROOT)} ({size_kb:.0f} KB)")
+    size_kb = out_path.stat().st_size / 1024
+    print(f"wrote {_display(out_path)} ({size_kb:.0f} KB)")
     print(f"splits: {[(s, len(r)) for s, r in results.items()]}")
     print(f"examples: {len(examples)}")
+    write_main_results_table(main_results_path)
+    print(f"wrote {_display(main_results_path or MAIN_RESULTS_OUT)}")
+
+
+def _display(path: Path) -> str:
+    """Path relative to the repo root where that says something, else as given."""
+    path = Path(path)
+    return str(path.relative_to(ROOT)) if path.is_relative_to(ROOT) else str(path)
+
+
+def read_payload(js_text: str) -> dict:
+    """Read the data object out of a generated ``site_data.js``."""
+    start = js_text.index("{")
+    end = js_text.rindex("}")
+    return json.loads(js_text[start : end + 1])
+
+
+def diff_against_committed(candidate: Path, committed: Path) -> list[str]:
+    """Name the payload keys on which a freshly generated file disagrees.
+
+    The generation date is excluded: it moves every day and says nothing about
+    the numbers.
+
+    Returns:
+        One line per differing key, empty when the two agree.
+    """
+    fresh = read_payload(candidate.read_text(encoding="utf-8"))
+    old = read_payload(committed.read_text(encoding="utf-8"))
+    fresh.pop("generated", None)
+    old.pop("generated", None)
+    return [
+        f"{key}: committed {old.get(key)!r} != regenerated {fresh.get(key)!r}"
+        if not isinstance(fresh.get(key), (dict, list))
+        else f"{key}: committed and regenerated differ"
+        for key in sorted(set(fresh) | set(old))
+        if fresh.get(key) != old.get(key)
+    ]
+
+
+def main(argv: list[str] | None = None) -> int:
+    parser = argparse.ArgumentParser(description="Generate the companion-site data.")
+    parser.add_argument(
+        "--check",
+        action="store_true",
+        help=(
+            "Regenerate into a temporary directory and compare with the committed "
+            "site/data/site_data.js instead of writing it. Exit 1 when they disagree."
+        ),
+    )
+    args = parser.parse_args(argv)
+
+    if not args.check:
+        generate()
+        return 0
+
+    with tempfile.TemporaryDirectory() as tmp:
+        candidate = Path(tmp) / OUT.name
+        generate(candidate, Path(tmp) / MAIN_RESULTS_OUT.name)
+        if not OUT.exists():
+            print(f"{_display(OUT)} is missing; run this script without --check")
+            return 1
+        differences = diff_against_committed(candidate, OUT)
+
+    if differences:
+        print(f"{_display(OUT)} disagrees with what its inputs produce now:")
+        for line in differences:
+            print(f"  - {line}")
+        print("Regenerate it with: python scripts/generate_site_data.py")
+        return 1
+    print(f"{_display(OUT)} agrees with its inputs")
+    return 0
 
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())

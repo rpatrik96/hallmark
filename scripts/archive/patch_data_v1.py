@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# Archived; superseded by scripts/build_dataset.py.
 """Patch shipped data files to fix known quality issues.
 
 Fixes applied (idempotent — safe to run multiple times):
@@ -157,6 +158,12 @@ def update_metadata(data_dir: Path, split_stats: dict[str, dict]) -> None:
 
 
 def main() -> None:
+    raise SystemExit(
+        "patch_data_v1.py is archived and superseded by scripts/build_dataset.py: it "
+        "rewrites the live released splits in place by absolute path, so copy it out of "
+        "the repository and edit those paths if you really mean to run it."
+    )
+
     print("HALLMARK Data Patch v1.0")
     print("=" * 40)
 

@@ -630,7 +630,9 @@ def merge_with_predictions(
     """Merge pre-screening results with tool predictions.
 
     Logic:
-    - If pre-screening found HALLUCINATED and tool said VALID → override to HALLUCINATED
+    - If pre-screening found HALLUCINATED and tool said VALID or abstained (UNCERTAIN)
+      → override to HALLUCINATED. An abstention is not a verdict, so a local
+      detection outranks it exactly as it outranks a committed VALID.
     - If both say HALLUCINATED → keep higher confidence
     - If pre-screening says UNKNOWN → keep tool prediction unchanged
     - For entries with no tool prediction (timeout/missing) → use pre-screening if available
@@ -671,6 +673,8 @@ def merge_with_predictions(
                         wall_clock_seconds=0.0,
                         api_calls=0,
                         source="prescreening",
+                        # The tool returned nothing for this entry.
+                        evaluated=False,
                     )
                 )
             else:
@@ -686,12 +690,16 @@ def merge_with_predictions(
                         wall_clock_seconds=0.0,
                         api_calls=0,
                         source="prescreening",
+                        evaluated=False,
                     )
                 )
         else:
             # Tool prediction exists
-            if strongest_hallucinated and tool_pred.label == "VALID":
-                # Override: pre-screening found hallucination, tool said valid
+            if strongest_hallucinated and tool_pred.label in ("VALID", "UNCERTAIN"):
+                # Override: pre-screening found a hallucination and the tool
+                # either cleared the entry or abstained on it. Since #49 an
+                # abstention arrives as UNCERTAIN; overriding only VALID dropped
+                # 25 + 19 detections on the public splits.
                 merged.append(
                     Prediction(
                         bibtex_key=key,
@@ -706,6 +714,9 @@ def merge_with_predictions(
                         wall_clock_seconds=tool_pred.wall_clock_seconds,
                         api_calls=tool_pred.api_calls,
                         source="prescreening_override",
+                        # Pre-screening is a benchmark-side check, not the tool:
+                        # whether the tool ran for this entry is unchanged.
+                        evaluated=tool_pred.evaluated,
                     )
                 )
             elif strongest_hallucinated and tool_pred.label == "HALLUCINATED":
@@ -725,6 +736,7 @@ def merge_with_predictions(
                             wall_clock_seconds=tool_pred.wall_clock_seconds,
                             api_calls=tool_pred.api_calls,
                             source="tool",
+                            evaluated=tool_pred.evaluated,
                         )
                     )
                 else:
@@ -743,6 +755,7 @@ def merge_with_predictions(
                             wall_clock_seconds=tool_pred.wall_clock_seconds,
                             api_calls=tool_pred.api_calls,
                             source="tool",
+                            evaluated=tool_pred.evaluated,
                         )
                     )
             else:

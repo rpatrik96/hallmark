@@ -38,9 +38,9 @@ configs:
 
 # HALLMARK — Citation Hallucination Detection Benchmark
 
-> **Anonymized for NeurIPS 2026 Datasets & Benchmarks Track double-blind review.**
-> Source code: <https://anonymous.4open.science/r/hallmark/>
-> **Corpus version:** v1.2.2 (2026-07-22) — see the source repository's `CHANGELOG.md` and tagged releases for provenance of every version.
+> This is the staged card for a future HuggingFace publication. No HuggingFace mirror is live.
+
+> **Corpus version:** v1.2.3 (2026-08-31) — see the source repository's `CHANGELOG.md` and tagged releases for provenance of every version.
 
 **HALL**ucination bench**MARK** evaluates citation verification tools on detecting hallucinated references in academic papers. The benchmark was motivated by the NeurIPS 2025 incident in which 53 accepted papers were found to contain fabricated citations that passed peer review.
 
@@ -62,7 +62,7 @@ configs:
 
 ### Versioning note
 
-The paper's numbers are computed against tag `v1.2.0`. Later releases (`v1.2.1`, `v1.2.2`) replace stale generation-pipeline explanation strings with diagnoses verified against CrossRef/arXiv/DBLP records (per-entry fix logs in the source repository); labels, hallucination types, tiers, sub-tests, and split membership are byte-identical to `v1.2.0`, so every reported number is unaffected. The released corpus is post-relabel throughout: a systematic ground-truth audit corrected entries where real papers were wrongly flagged `HALLUCINATED`.
+The paper's numbers are computed against tag `v1.2.0`. `v1.2.1` and `v1.2.2` replace stale generation-pipeline explanation strings with diagnoses verified against CrossRef/arXiv/DBLP records (per-entry fix logs in the source repository); labels, hallucination types, tiers, sub-tests, and split membership are byte-identical to `v1.2.0` in those two releases, so every reported number is unaffected by them. `v1.2.3` carries two ground-truth corrections: `subtests.doi_resolves` is `null` rather than `false` on 110 entries that recorded a failed DOI resolution while carrying no `doi` field (`dev_public` 48, `test_public` 41, `test_crossdomain` 21), and 4 `real_world` entries are retyped to `plausible_fabrication`, which moves them from tiers 1–2 into tier 3. The paper's per-tier and tier-weighted figures are computed against `v1.2.0` and predate that retype. The released corpus is post-relabel throughout: a systematic ground-truth audit corrected entries where real papers were wrongly flagged `HALLUCINATED`.
 
 ## Loading
 
@@ -70,10 +70,10 @@ The paper's numbers are computed against tag `v1.2.0`. Later releases (`v1.2.1`,
 from datasets import load_dataset
 
 # Default config (all labels visible)
-ds = load_dataset("hallmark-neurips2026/HALLMARK")
+ds = load_dataset("<owner>/HALLMARK")
 
 # Blind config (labels stripped — for leaderboard submissions)
-blind = load_dataset("hallmark-neurips2026/HALLMARK", "blind")
+blind = load_dataset("<owner>/HALLMARK", "blind")
 ```
 
 The `default` config exposes the full schema with ground-truth labels. The `blind` config strips
@@ -208,14 +208,14 @@ This section follows the *Datasheets for Datasets* template (Gebru et al., 2021)
   - **Not** a substitute for end-to-end retraction review of any specific paper.
 
 ### Distribution
-- **How is the dataset distributed?** HuggingFace Datasets Hub, MIT license, with this card and Croissant metadata (`croissant.json`, including RAI fields).
-- **DOI / persistent identifier.** Provided by HuggingFace upon publication.
+- **How is the dataset distributed?** From the source GitHub repository under `data/v1.2/`, MIT license, with this card and Croissant metadata (`croissant.json`, including RAI fields). A HuggingFace Datasets Hub mirror is planned.
+- **DOI / persistent identifier.** Planned at Zenodo, per `HOSTING.md`.
 
 ### Maintenance
 - **Who maintains the dataset?** Anonymized for review. Post-acceptance, contact details will be added.
 - **Will the dataset be updated?** Yes. Versioning follows semver-style tags on the source repo (`v1.0`, `v1.1`, …). New hallucination instances are added quarterly; the hidden test split rotates annually to mitigate contamination. See the source repository's `CHANGELOG.md` and tagged releases.
 - **How can users contribute?** A community contribution interface (`hallmark contribute …` CLI) is documented in the source repo. Submitted entries pass through the same six-sub-test verification pipeline before inclusion.
-- **Will old versions be retained?** Yes — every tagged release is permanently retained as a HuggingFace revision.
+- **Will old versions be retained?** Yes — every tagged release would be retained as a HuggingFace revision once the mirror is published, and the tags themselves are retained in the source repository.
 
 ---
 

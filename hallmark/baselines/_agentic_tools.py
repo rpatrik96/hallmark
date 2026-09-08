@@ -9,6 +9,10 @@ Tool set mirrors bibtex-updater's lookup sources:
 - search_crossref  — CrossRef title/author search
 - search_openalex  — OpenAlex polite pool
 - search_arxiv     — arXiv API
+
+Every outbound request passes through a process-wide, per-service rate limiter
+first (see "Per-service pacing" below), because the sources publish their limits
+per caller while Stage 2 calls them from several worker threads at once.
 """
 
 from __future__ import annotations
@@ -16,6 +20,7 @@ from __future__ import annotations
 import datetime as dt
 import email.utils
 import logging
+import math
 import os
 import re
 import threading
@@ -225,6 +230,160 @@ def _normalise(raw: dict) -> dict[str, str]:
 
 
 # ---------------------------------------------------------------------------
+# Per-service pacing
+# ---------------------------------------------------------------------------
+
+# Source APIs publish their limits per *caller*, not per process and not per thread, so
+# retry-on-429 is not pacing. Stage 2 runs 6-8 worker threads that all reach the sources
+# through this module, and each is free to fire the moment its last request returned. A
+# 2026-09 Stage-2 run measured what that costs on the tightest source: arXiv answered 21
+# requests and rejected 356, answering for roughly the first minute and returning 429
+# from then on, while CrossRef (93 of 93) and OpenAlex (100 of 101) stayed clean in the
+# same run. Stage 1 escapes this because it goes through ``bibtex-check``, which paces
+# per service itself; Stage 2 never invokes that CLI and so inherited none of it.
+#
+# Budgets are requests per minute, shared by every thread in the process. arXiv's
+# published ceiling is ~20/min per caller; the others sit under their source's
+# documented allowance. ``dblp``, ``openreview`` and ``openlibrary`` have no caller in
+# this module yet — they are listed so a tool added later inherits pacing rather than
+# repeating the defect.
+_DEFAULT_SERVICE_RATES: dict[str, float] = {
+    "arxiv": 20.0,
+    "crossref": 300.0,
+    "openalex": 150.0,
+    "dblp": 30.0,
+    "semanticscholar": 10.0,
+    "openreview": 30.0,
+    "openlibrary": 30.0,
+    # ``bibtex-check`` is a subprocess with its own outbound calls, paced internally by
+    # its ``--rate-limit`` flag. What this budget caps is how often we start one.
+    "bibtexupdater": 60.0,
+}
+
+# ``HALLMARK_ARXIV_RATE=10`` halves arXiv's budget, which is what a run sharded across
+# two processes needs: the published limit belongs to the caller, so the processes have
+# to divide it between them. Mirrors bibtex-updater's ``BIBTEX_ARXIV_RATE``.
+_RATE_ENV_TEMPLATE = "HALLMARK_{service}_RATE"
+
+
+class _ServiceRateLimiter:
+    """Space requests to one service evenly across every thread in the process.
+
+    Admissions are handed out one interval apart rather than as a refillable burst. The
+    measured arXiv rejections began after a burst, so a bucket that let eight workers
+    through at once would reproduce them.
+    """
+
+    def __init__(self, rate_per_minute: float) -> None:
+        self._lock = threading.Lock()
+        self._next_free = 0.0
+        self.rate_per_minute = 0.0
+        self._interval = 0.0
+        self.set_rate(rate_per_minute)
+
+    def set_rate(self, rate_per_minute: float) -> None:
+        """Adopt a new budget, keeping the pacing state already accrued.
+
+        A non-positive rate means "unpaced", which is what an unknown service gets.
+        """
+        with self._lock:
+            self.rate_per_minute = rate_per_minute
+            self._interval = 60.0 / rate_per_minute if rate_per_minute > 0.0 else 0.0
+
+    def acquire(self) -> float:
+        """Block until the next request to this service may go out.
+
+        Returns:
+            Seconds spent waiting, for logging and for tests.
+        """
+        with self._lock:
+            if self._interval <= 0.0:
+                return 0.0
+            now = time.monotonic()
+            start = max(now, self._next_free)
+            self._next_free = start + self._interval
+            wait = start - now
+        if wait > 0.0:
+            time.sleep(wait)
+        return wait
+
+
+# One limiter per service, shared by every worker thread. Guarded by its own lock.
+_rate_limiters: dict[str, _ServiceRateLimiter] = {}
+_rate_limiter_lock = threading.Lock()
+
+
+def _configured_rate(service: str) -> float:
+    """Return the requests-per-minute budget for *service*.
+
+    Reads ``HALLMARK_<SERVICE>_RATE`` and falls back to the built-in default when that
+    is unset, unparseable, non-finite, or not positive. A malformed knob must never take
+    a run down, so it is logged and ignored.
+
+    Args:
+        service: Service key, e.g. ``"arxiv"``.
+
+    Returns:
+        Requests per minute; ``0.0`` means the service is unpaced.
+    """
+    default = _DEFAULT_SERVICE_RATES.get(service, 0.0)
+    raw = os.environ.get(_RATE_ENV_TEMPLATE.format(service=service.upper()))
+    if raw is None or not raw.strip():
+        return default
+    try:
+        value = float(raw)
+    except ValueError:
+        logger.warning(
+            "Ignoring %s=%r: not a number; using %s requests/min for %s",
+            _RATE_ENV_TEMPLATE.format(service=service.upper()),
+            raw,
+            default,
+            service,
+        )
+        return default
+    if not math.isfinite(value) or value <= 0.0:
+        logger.warning(
+            "Ignoring %s=%r: not a positive finite rate; using %s requests/min for %s",
+            _RATE_ENV_TEMPLATE.format(service=service.upper()),
+            raw,
+            default,
+            service,
+        )
+        return default
+    return value
+
+
+def _limiter_for(service: str) -> _ServiceRateLimiter:
+    """Return the process-wide limiter for *service*, creating it on first use.
+
+    The configured rate is re-read on every call so an env change takes effect without a
+    restart; the limiter object itself is kept, so the budget stays shared.
+    """
+    rate = _configured_rate(service)
+    with _rate_limiter_lock:
+        limiter = _rate_limiters.get(service)
+        if limiter is None:
+            limiter = _ServiceRateLimiter(rate)
+            _rate_limiters[service] = limiter
+        elif limiter.rate_per_minute != rate:
+            limiter.set_rate(rate)
+    return limiter
+
+
+def _pace(service: str) -> float:
+    """Block until this process may issue another request to *service*.
+
+    Sits in front of the request, in addition to the retry-on-throttle behaviour behind
+    it: pacing keeps us inside the budget, retries handle the times we are told we are
+    outside it anyway.
+    """
+    waited = _limiter_for(service).acquire()
+    if waited > 0.0:
+        logger.debug("Paced %s for %.2fs", service, waited)
+    return waited
+
+
+# ---------------------------------------------------------------------------
 # resolve_doi
 # ---------------------------------------------------------------------------
 
@@ -252,6 +411,7 @@ def resolve_doi(doi: str) -> dict[str, str]:
     url = f"https://api.crossref.org/works/{urllib.parse.quote(normalized_doi, safe='/')}"
     headers = {"User-Agent": f"HALLMARK/1.0 (mailto:{_OPENALEX_MAILTO})"}
 
+    _pace("crossref")
     try:
         resp = httpx.get(url, headers=headers, timeout=10.0, follow_redirects=True)
     except httpx.RequestError as exc:
@@ -314,6 +474,7 @@ def search_crossref(query: str, limit: int = 5) -> list[dict[str, str]]:
     url = "https://api.crossref.org/works?" + urllib.parse.urlencode(params)
     headers = {"User-Agent": f"HALLMARK/1.0 (mailto:{_OPENALEX_MAILTO})"}
 
+    _pace("crossref")
     try:
         resp = httpx.get(url, headers=headers, timeout=15.0, follow_redirects=True)
     except httpx.RequestError as exc:
@@ -392,6 +553,7 @@ def search_openalex(query: str, limit: int = 5) -> list[dict[str, str]]:
             params["api_key"] = key
         url = "https://api.openalex.org/works?" + urllib.parse.urlencode(params)
 
+        _pace("openalex")
         try:
             resp = httpx.get(url, timeout=15.0, follow_redirects=True)
         except httpx.RequestError as exc:
@@ -481,6 +643,7 @@ def search_arxiv(query: str, limit: int = 5) -> list[dict[str, str]]:
     }
     url = "https://export.arxiv.org/api/query?" + urllib.parse.urlencode(params)
 
+    _pace("arxiv")
     try:
         resp = httpx.get(url, timeout=_ARXIV_TIMEOUT_SECONDS, follow_redirects=True)
     except httpx.RequestError as exc:
@@ -575,6 +738,7 @@ def search_semantic_scholar(query: str, limit: int = 5) -> list[dict[str, str]]:
 
     resp = None
     for headers in header_variants:
+        _pace("semanticscholar")
         try:
             resp = httpx.get(url, headers=headers, timeout=15.0, follow_redirects=True)
         except httpx.RequestError as exc:
@@ -632,64 +796,108 @@ def verify_with_bibtex_updater(bibtex: str) -> dict[str, str]:
 
     Returns:
         Flat dict with keys ``status``, ``confidence``, ``mismatched_fields``,
-        ``api_sources``, ``errors``.  All values are strings (empty if absent).
+        ``unconfirmed_fields``, ``api_sources``, ``errors``. All values are
+        strings (empty if absent).
 
     Raises:
         RuntimeError: ``bibtex-check`` not on PATH, or subprocess failure.
     """
-    import json as _json
-    import os
-    import shutil
-    import subprocess
-    import tempfile
-    from pathlib import Path
+    from hallmark.baselines.bibtexupdater import (
+        SourceOutageError,
+        _run_bibtex_check_subprocess,
+        resolve_bibtex_check_bin,
+    )
+    from hallmark.dataset.schema import BlindEntry
+    from hallmark.dataset.text_utils import parse_bibtex_entry
 
-    bin_path = shutil.which("bibtex-check")
-    if bin_path is None:
+    raw_bibtex = bibtex if bibtex.lstrip().startswith("@") else f"@misc{{x,\n{bibtex}\n}}"
+    parsed = parse_bibtex_entry(raw_bibtex)
+    if parsed is None:
+        raise RuntimeError("bibtex-check received invalid BibTeX")
+    entry = BlindEntry(
+        bibtex_key=parsed["key"],
+        bibtex_type=parsed["type"],
+        fields=parsed["fields"],
+        raw_bibtex=raw_bibtex,
+    )
+
+    if resolve_bibtex_check_bin() is None:
         raise RuntimeError(
             "bibtex-check not found on PATH. Install with: pipx install bibtex-updater"
         )
 
-    with tempfile.TemporaryDirectory() as td:
-        bib_path = Path(td) / "input.bib"
-        jsonl_path = Path(td) / "out.jsonl"
-        bib_path.write_text(
-            bibtex if bibtex.lstrip().startswith("@") else f"@misc{{x,\n{bibtex}\n}}"
+    _pace("bibtexupdater")
+    try:
+        # The run this call returned says whether the binary started. The
+        # module-level accessors report whichever wrapper call ran most
+        # recently, and reading those under a fan-out turns a completed check
+        # into an error record against this entry.
+        run = _run_bibtex_check_subprocess(
+            [entry], timeout=180.0, rate_limit=120, academic_only=True
         )
-
-        cmd = [
-            bin_path,
-            str(bib_path),
-            "--jsonl",
-            str(jsonl_path),
-            "--rate-limit",
-            "120",
-            "--academic-only",
-        ]
-        s2_key = os.environ.get("S2_API_KEY")
-        if s2_key:
-            cmd.extend(["--s2-api-key", s2_key])
-
-        try:
-            subprocess.run(cmd, capture_output=True, text=True, timeout=180.0, check=False)
-        except subprocess.TimeoutExpired as exc:
-            raise RuntimeError("bibtex-check timed out after 180s") from exc
-
-        if not jsonl_path.exists():
-            raise RuntimeError("bibtex-check produced no output")
-
-        lines = [ln for ln in jsonl_path.read_text().splitlines() if ln.strip()]
-        if not lines:
-            raise RuntimeError("bibtex-check returned empty output")
-
-        rec = _json.loads(lines[0])
+    except SourceOutageError as exc:
         return {
-            "status": _trunc(rec.get("status", "unknown")),
-            "confidence": _trunc(rec.get("confidence", "")),
-            "mismatched_fields": _trunc(", ".join(rec.get("mismatched_fields", []) or [])),
-            "api_sources": _trunc(", ".join(rec.get("api_sources", []) or [])),
-            "errors": _trunc("; ".join(str(e) for e in rec.get("errors", []) or [])),
+            "status": "sources_unavailable",
+            "confidence": "",
+            "mismatched_fields": "",
+            "unconfirmed_fields": "",
+            "api_sources": "",
+            "errors": _trunc(str(exc)),
         }
+
+    if not run.ran:
+        raise RuntimeError(
+            "bibtex-check not found on PATH. Install with: pipx install bibtex-updater"
+        )
+    raw_records: list[dict[str, object]] = list(run.raw_records)
+    if not raw_records and run.predictions:
+        # Malformed legacy output can omit ``key``. Preserve the verdict the
+        # shared parser recovered without bypassing its outage handling.
+        import ast
+
+        prediction = run.predictions[0]
+        reason = prediction.reason or ""
+        status_match = re.search(r"Status: ([^;]+)", reason)
+        mismatched_match = re.search(r"Mismatched: (\[[^;]*\])", reason)
+        mismatched: list[str] = []
+        if mismatched_match:
+            try:
+                parsed_mismatched = ast.literal_eval(mismatched_match.group(1))
+            except (SyntaxError, ValueError):
+                pass
+            else:
+                if isinstance(parsed_mismatched, list):
+                    mismatched = [str(field) for field in parsed_mismatched]
+        raw_records = [
+            {
+                "key": entry.bibtex_key,
+                "status": status_match.group(1) if status_match else "unknown",
+                "confidence": prediction.confidence,
+                "mismatched_fields": mismatched,
+                "api_sources": prediction.api_sources_queried,
+            }
+        ]
+    if not raw_records:
+        raise RuntimeError("bibtex-check produced no output")
+
+    rec = next(
+        (record for record in raw_records if record.get("key") == entry.bibtex_key),
+        raw_records[0],
+    )
+
+    def _join_values(value: object, separator: str) -> str:
+        if not isinstance(value, list):
+            return ""
+        return separator.join(str(item) for item in value)
+
+    return {
+        "status": _trunc(rec.get("status", "unknown")),
+        "confidence": _trunc(rec.get("confidence", "")),
+        "mismatched_fields": _trunc(_join_values(rec.get("mismatched_fields"), ", ")),
+        "unconfirmed_fields": _trunc(_join_values(rec.get("unconfirmed_fields"), ", ")),
+        "api_sources": _trunc(_join_values(rec.get("api_sources"), ", ")),
+        "errors": _trunc(_join_values(rec.get("errors"), "; ")),
+    }
 
 
 _HALLUCINATION_TYPE_INSTRUCTION = """\

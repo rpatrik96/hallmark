@@ -19,6 +19,16 @@ Resume semantics: skips bibtex_keys present in the existing checkpoint
 JSONL (matching pattern `agentic_btu_openai_<safe_model>.jsonl` written by
 the underlying verifier). Smoke-test with `--max-entries 3 --workers 2`.
 
+Records whose reason marks a failure (`[Agentic error]` / `[Error fallback]`)
+are NOT treated as done — they are retried, matching what
+``llm_agentic._load_checkpoint(skip_failed=True)`` already does. The verifier
+writes its own checkpoint line, so a poisoned line cannot be intercepted before
+the write; instead, once the failed share of the run crosses the batch-health
+threshold the run is refused, the failed lines this run added are quarantined
+into a `<jsonl>.rejected-<timestamp>.jsonl` sidecar, and the process exits
+non-zero. A share that high is a transport outage, not a property of the
+bibliography, and checkpointing it is what makes an outage permanent.
+
 Rate-limit notes
 ================
 OpenRouter:        ~200 RPM cap on chat completions for paid users.
@@ -36,7 +46,6 @@ import json
 import logging
 import os
 import sys
-import threading
 import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
@@ -49,6 +58,12 @@ sys.path.insert(0, str(ROOT))
 # not by mutating ``os.environ``. The CLI ``hallmark evaluate --workers N``
 # is the recommended entry point; this script remains as a thin shim.
 
+from hallmark.baselines.checkpoint_guard import (  # noqa: E402
+    PoisonedBatchError,
+    RunHealthTracker,
+    is_error_record,
+    quarantine_error_records,
+)
 from hallmark.baselines.llm_agentic import (  # noqa: E402
     verify_agentic_btu_openai,
     verify_agentic_openai,
@@ -81,6 +96,15 @@ def _checkpoint_path(checkpoint_dir: Path, model: str) -> Path:
 
 
 def _read_done_keys(jsonl_path: Path) -> set[str]:
+    """Keys with a real verdict in the checkpoint.
+
+    A record whose reason marks a failure is not done: it carries no verdict, and
+    counting it as done is what froze a wifi outage into 2,500 permanent
+    ``not_found``-shaped results on 2026-09-02. Failed keys are dropped here so
+    the next run retries them, the same rule
+    ``llm_agentic._load_checkpoint(skip_failed=True)`` applies. A later good
+    record for the same key wins over an earlier failed one.
+    """
     if not jsonl_path.exists():
         return set()
     keys: set[str] = set()
@@ -88,7 +112,25 @@ def _read_done_keys(jsonl_path: Path) -> set[str]:
         if not line.strip():
             continue
         rec = json.loads(line)
-        keys.add(rec["bibtex_key"])
+        key = rec["bibtex_key"]
+        if is_error_record(rec):
+            keys.discard(key)
+        else:
+            keys.add(key)
+    return keys
+
+
+def _read_error_keys(jsonl_path: Path) -> set[str]:
+    """Keys whose checkpoint records carry no verdict."""
+    if not jsonl_path.exists():
+        return set()
+    keys: set[str] = set()
+    for line in jsonl_path.read_text().splitlines():
+        if not line.strip():
+            continue
+        rec = json.loads(line)
+        if is_error_record(rec):
+            keys.add(str(rec.get("bibtex_key", "")))
     return keys
 
 
@@ -123,6 +165,8 @@ def main() -> None:
 
     verifier_fn, verifier_prefix = VERIFIERS[args.verifier]
     jsonl_path = args.checkpoint_dir / f"{verifier_prefix}_{_safe_model(args.model)}.jsonl"
+    if not args.dry_run:
+        quarantine_error_records(jsonl_path, _read_error_keys(jsonl_path))
     done_keys = _read_done_keys(jsonl_path)
 
     entries = load_split(split=args.split, version=args.version)
@@ -148,9 +192,10 @@ def main() -> None:
         logger.info("Nothing to do.")
         return
 
-    lock = threading.Lock()
     completed = 0
     start = time.time()
+    tracker = RunHealthTracker(checkpoint_path=jsonl_path)
+    poisoned: PoisonedBatchError | None = None
 
     or_api_key = os.environ.get("OPENROUTER_API_KEY")
     if not or_api_key:
@@ -168,6 +213,7 @@ def main() -> None:
             # ``base_url`` parameter in commit 8fbd06e).
             "base_url": OPENROUTER_BASE_URL,
             "api_key": or_api_key,
+            "retry_failed": True,
         }
         # tool_augmented has no cache_db_path arg.
         if args.verifier != "tool_augmented":
@@ -183,7 +229,20 @@ def main() -> None:
                 "api_calls": 0,
                 "api_sources_queried": [],
             }
-        p = preds[0]
+        p = next(
+            (pred for pred in preds if pred.bibtex_key == getattr(entry, "bibtex_key", None)),
+            None,
+        )
+        if p is None:
+            return {
+                "bibtex_key": getattr(entry, "bibtex_key", "?"),
+                "label": "UNCERTAIN",
+                "confidence": 0.5,
+                "reason": "[Error fallback] verifier returned no prediction for this entry",
+                "wall_clock_seconds": 0.0,
+                "api_calls": 0,
+                "api_sources_queried": [],
+            }
         return {
             "bibtex_key": p.bibtex_key,
             "label": p.label,
@@ -195,17 +254,30 @@ def main() -> None:
         }
 
     # The underlying verify_agentic_btu_openai writes its own per-entry
-    # checkpoint line; we just track completion here for progress logging.
+    # checkpoint line, so the guard cannot intercept the write; it scores the
+    # records the run produced and quarantines the failed lines afterwards.
     with ThreadPoolExecutor(max_workers=args.workers) as ex:
         futures = {ex.submit(call_one, e): e for e in remaining}
         for fut in as_completed(futures):
             entry = futures[fut]
             try:
-                _ = fut.result()
+                rec = fut.result()
             except Exception as e:
                 logger.exception("Unhandled error on %s: %s", entry.bibtex_key, e)
-            with lock:
-                pass
+                rec = {
+                    "bibtex_key": getattr(entry, "bibtex_key", "?"),
+                    "label": "UNCERTAIN",
+                    "confidence": 0.5,
+                    "reason": f"[Error fallback] Unhandled: {e}",
+                }
+            try:
+                tracker.add(rec)
+            except PoisonedBatchError as exc:
+                poisoned = exc
+                logger.error("%s", exc)
+                for pending in futures:
+                    pending.cancel()
+                break
             completed += 1
             if completed % 5 == 0:
                 elapsed = time.time() - start
@@ -218,6 +290,11 @@ def main() -> None:
                     rate,
                     eta_min,
                 )
+
+    sidecar = quarantine_error_records(jsonl_path, {e.bibtex_key for e in remaining})
+    if poisoned is not None:
+        detail = f"\nRefused records: {sidecar}" if sidecar else ""
+        raise SystemExit(f"{poisoned}{detail}")
 
     logger.info("Done. Processed %d entries.", completed)
 

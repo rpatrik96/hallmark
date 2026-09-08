@@ -1,0 +1,391 @@
+"""Regressions for four metric functions that were silently wrong.
+
+Each test here pins a property that the full suite passed without: the bugs were
+in the direction that flatters results, so nothing downstream complained. The
+docstrings say what the broken behaviour was, because the fix is only obvious
+once you know what it replaced.
+"""
+
+from __future__ import annotations
+
+import logging
+
+import pytest
+
+from hallmark.dataset.schema import BenchmarkEntry, EvaluationResult, Prediction
+from hallmark.evaluation.metrics import (
+    _metric_f1,
+    evaluate,
+    paired_bootstrap_test,
+    per_tier_metrics,
+    per_tier_rankings,
+    per_type_metrics,
+)
+from hallmark.evaluation.ranking_stability import ranking_sensitivity_analysis
+
+# --- Helpers ---
+
+
+def _entry(key: str, label: str, tier: int | None = None, h_type: str | None = None):
+    kwargs: dict = {
+        "bibtex_key": key,
+        "bibtex_type": "article",
+        "fields": {"title": f"Paper {key}", "author": "Author", "year": "2024"},
+        "label": label,
+        "explanation": "test",
+    }
+    if label == "HALLUCINATED":
+        kwargs["hallucination_type"] = h_type or "fabricated_doi"
+        kwargs["difficulty_tier"] = tier or 1
+    return BenchmarkEntry(**kwargs)
+
+
+def _pred(key: str, label: str, confidence: float = 0.9):
+    return Prediction(bibtex_key=key, label=label, confidence=confidence)
+
+
+def _split(n_hall: int, n_valid: int, tier: int = 1, h_type: str = "fabricated_doi"):
+    entries = [_entry(f"h{i}", "HALLUCINATED", tier, h_type) for i in range(n_hall)]
+    entries += [_entry(f"v{i}", "VALID") for i in range(n_valid)]
+    return entries
+
+
+# --- 1. Two-sided p-value must be direction-symmetric ---
+
+
+def test_two_sided_p_value_is_symmetric_under_argument_order():
+    """The p-value must not depend on which tool is named first.
+
+    The old form was ``min(1, 2 * P(diff <= 0))``. When A is worse than B every
+    bootstrap difference is <= 0, so it returned 1.0 however large the gap.
+    Callers enumerate pairs in sorted-name order, so about half of every
+    pairwise leaderboard comparison was non-significant by construction.
+    """
+    entries = _split(n_hall=100, n_valid=100)
+    # ``strong`` catches every hallucination; ``weak`` calls everything VALID,
+    # so its F1 on the HALLUCINATED class is 0.
+    strong = [_pred(e.bibtex_key, e.label) for e in entries]
+    weak = [_pred(e.bibtex_key, "VALID") for e in entries]
+
+    diff_ab, p_ab, _ = paired_bootstrap_test(
+        entries, strong, weak, _metric_f1, n_bootstrap=300, seed=0
+    )
+    diff_ba, p_ba, _ = paired_bootstrap_test(
+        entries, weak, strong, _metric_f1, n_bootstrap=300, seed=0
+    )
+
+    assert diff_ab > 0 > diff_ba, "the two orderings must report opposite signs"
+    assert p_ab == p_ba, f"p-value is order-dependent: {p_ab} vs {p_ba}"
+    assert p_ba < 0.05, (
+        f"a tool separated by a large margin must be significant when named second, not p={p_ba}"
+    )
+
+
+def test_two_sided_p_value_is_high_for_identical_tools():
+    """Sanity guard on the other side: identical predictions are not significant."""
+    entries = _split(n_hall=60, n_valid=60)
+    preds = [_pred(e.bibtex_key, e.label) for e in entries]
+    _, p, _ = paired_bootstrap_test(
+        entries, preds, list(preds), _metric_f1, n_bootstrap=300, seed=0
+    )
+    assert p > 0.05
+
+
+def test_bootstrap_ci_contains_point_estimate_with_missing_predictions():
+    """A point estimate must lie inside its own published interval.
+
+    The bootstrap backfilled a missing prediction as VALID at confidence 0.5 and
+    scored it, while ``evaluate`` excludes it, so the two sides described
+    different populations: on this fixture the detection rate is 1.0 against an
+    interval around 0.25. Both sides now resample only the answered entries.
+    """
+    entries = _split(n_hall=40, n_valid=40)
+    predictions = [_pred(f"h{i}", "HALLUCINATED") for i in range(10)]
+    predictions += [_pred(f"v{i}", "VALID") for i in range(10)]
+
+    result = evaluate(entries, predictions, compute_ci=True, n_bootstrap=300, ci_seed=0)
+
+    assert result.detection_rate_ci is not None
+    dr_lower, dr_upper = result.detection_rate_ci
+    assert dr_lower <= result.detection_rate <= dr_upper, (
+        f"detection rate {result.detection_rate} outside its CI {result.detection_rate_ci}"
+    )
+
+    assert result.f1_hallucination_ci is not None
+    f1_lower, f1_upper = result.f1_hallucination_ci
+    assert f1_lower <= result.f1_hallucination <= f1_upper, (
+        f"F1 {result.f1_hallucination} outside its CI {result.f1_hallucination_ci}"
+    )
+
+
+def test_aggressive_mode_scores_missing_entries_without_claiming_coverage():
+    """Aggressive mode must score an unanswered entry and still report it unanswered.
+
+    The synthesized missing-entry records were stamped ``evaluated=False``, so
+    every scoring site skipped them and aggressive mode returned the
+    conservative numbers under the aggressive label. They are answers now, while
+    coverage, response coverage and the evaluated count are measured from the
+    caller's own predictions so the manufactured records do not inflate them.
+    """
+    entries = [
+        _entry("h1", "HALLUCINATED"),  # answered, and the tool got it wrong
+        _entry("h2", "HALLUCINATED"),  # no prediction
+        _entry("h3", "HALLUCINATED"),  # no prediction
+    ]
+    predictions = [_pred("h1", "VALID")]
+
+    cons = evaluate(entries, predictions, eval_mode="conservative")
+    aggr = evaluate(entries, predictions, eval_mode="aggressive")
+
+    assert cons.detection_rate == pytest.approx(0.0)
+    assert aggr.detection_rate == pytest.approx(2 / 3)
+    assert aggr.detection_rate != cons.detection_rate
+
+    assert aggr.coverage == cons.coverage == pytest.approx(1 / 3)
+    assert aggr.response_coverage == cons.response_coverage == pytest.approx(1 / 3)
+    assert aggr.num_evaluated == cons.num_evaluated == 1
+
+
+# --- 2. Per-type metrics need a real FPR denominator ---
+
+
+def test_per_type_fpr_is_not_structurally_zero():
+    """Per-type FPR must reflect real false positives.
+
+    Grouping strictly by ``hallucination_type`` puts only hallucinated entries
+    in a type's group, forcing precision to 1.0, FPR to 0.0 and F1 to the
+    deterministic ``2*DR/(1+DR)``. ``per_tier_metrics`` was fixed for exactly
+    this; ``per_type_metrics`` was not.
+    """
+    entries = _split(n_hall=10, n_valid=10, h_type="chimeric_title")
+    # Detect every hallucination AND flag every valid entry: FPR must be 1.0.
+    preds = {e.bibtex_key: _pred(e.bibtex_key, "HALLUCINATED") for e in entries}
+
+    pt = per_type_metrics(entries, preds)
+    row = pt["chimeric_title"]
+
+    assert row["detection_rate"] == 1.0
+    assert row["false_positive_rate"] == 1.0, (
+        "every valid entry was flagged, so per-type FPR cannot be 0.0"
+    )
+    assert row["precision"] == 0.5
+    assert row["count"] == 10, "count must stay the hallucinated count for the type"
+    assert row["num_valid"] == 10
+
+
+def test_per_type_f1_is_not_a_function_of_detection_rate_alone():
+    """F1 must move when false positives change and DR does not."""
+    entries = _split(n_hall=10, n_valid=10, h_type="near_miss_title")
+
+    clean = {e.bibtex_key: _pred(e.bibtex_key, e.label) for e in entries}
+    noisy = {e.bibtex_key: _pred(e.bibtex_key, "HALLUCINATED") for e in entries}
+
+    f1_clean = per_type_metrics(entries, clean)["near_miss_title"]["f1"]
+    f1_noisy = per_type_metrics(entries, noisy)["near_miss_title"]["f1"]
+
+    assert per_type_metrics(entries, clean)["near_miss_title"]["detection_rate"] == 1.0
+    assert per_type_metrics(entries, noisy)["near_miss_title"]["detection_rate"] == 1.0
+    assert f1_clean > f1_noisy, "identical DR, more FPs, F1 must drop"
+
+
+def test_per_type_valid_group_keeps_its_own_semantics():
+    """The ``valid`` pseudo-type must not have the valid entries added twice."""
+    entries = _split(n_hall=4, n_valid=6)
+    preds = {e.bibtex_key: _pred(e.bibtex_key, e.label) for e in entries}
+    row = per_type_metrics(entries, preds)["valid"]
+    assert row["count"] == 6
+    assert row["num_valid"] == 0
+
+
+# --- 3. The tier-weight sweep must see false positives ---
+
+
+def test_tier_weight_sweep_distinguishes_tools_differing_only_in_false_positives():
+    """The sweep read ``tm["fpr"]`` while per_tier_metrics emits
+    ``false_positive_rate``, so the default fired every time, total_fp was
+    always 0, and the swept quantity was weighted recall. Two tools identical
+    except for their false positives came out perfectly concordant.
+    """
+    entries = _split(n_hall=30, n_valid=30)
+
+    # Both detect everything; only ``sloppy`` also flags every valid entry.
+    careful = [_pred(e.bibtex_key, e.label) for e in entries]
+    sloppy = [_pred(e.bibtex_key, "HALLUCINATED") for e in entries]
+
+    out = ranking_sensitivity_analysis(
+        entries, {"careful": careful, "sloppy": sloppy}, n_samples=25, seed=0
+    )
+
+    ranges = out.per_tool_range
+    careful_min = min(ranges["careful"])
+    sloppy_max = max(ranges["sloppy"])
+    assert careful_min > sloppy_max, (
+        "a tool that flags every valid entry must score below one that does not; "
+        f"got careful={ranges['careful']} sloppy={ranges['sloppy']}"
+    )
+
+
+def test_per_tier_metrics_emits_false_positive_rate_not_fpr():
+    """Pins the key name the sweep and the rankings depend on."""
+    entries = _split(n_hall=5, n_valid=5, tier=2)
+    preds = {e.bibtex_key: _pred(e.bibtex_key, e.label) for e in entries}
+    tier_data = per_tier_metrics(entries, preds)[2]
+    assert "false_positive_rate" in tier_data
+    assert "fpr" not in tier_data
+
+
+def test_per_tier_rankings_accepts_fpr_alias_and_orders_ascending():
+    """``fpr`` is documented as a valid argument, so it must not silently
+    return 0.0 for every tool — and for FPR, best-first means lowest."""
+    entries = _split(n_hall=10, n_valid=10, tier=1)
+    careful = [_pred(e.bibtex_key, e.label) for e in entries]
+    sloppy = [_pred(e.bibtex_key, "HALLUCINATED") for e in entries]
+
+    ranked = per_tier_rankings(entries, {"careful": careful, "sloppy": sloppy}, metric="fpr")[1]
+
+    assert dict(ranked)["sloppy"] == 1.0, "alias must resolve to false_positive_rate"
+    assert ranked[0][0] == "careful", "lowest FPR ranks first"
+
+
+# --- 4. Abstention must cost coverage ---
+
+
+def test_coverage_excludes_uncertain_predictions():
+    """UNCERTAIN is dropped from the confusion matrix, ECE, AUROC and AUPRC, so
+    counting it as covered let a tool report its easy-subset metrics at full
+    coverage. One committed run answered 68 of 500 entries at coverage 1.0.
+    """
+    entries = _split(n_hall=10, n_valid=10)
+    preds = []
+    for i, e in enumerate(entries):
+        # Answer only the first five of each class; abstain on the rest.
+        label = e.label if i % 10 < 5 else "UNCERTAIN"
+        preds.append(_pred(e.bibtex_key, label))
+
+    result = evaluate(entries, preds)
+
+    assert result.num_uncertain == 10
+    assert result.coverage == 0.5, f"answered 10 of 20 entries, got {result.coverage}"
+    assert result.response_coverage == 1.0, "a record was returned for every entry"
+    assert result.coverage_adjusted_f1 < result.f1_hallucination
+
+
+def test_full_abstention_scores_zero_coverage_not_perfect_coverage():
+    entries = _split(n_hall=5, n_valid=5)
+    preds = [_pred(e.bibtex_key, "UNCERTAIN") for e in entries]
+
+    result = evaluate(entries, preds)
+
+    assert result.coverage == 0.0
+    assert result.response_coverage == 1.0
+    assert result.coverage_adjusted_f1 == 0.0
+
+
+def test_strict_mode_still_keys_on_missing_predictions_not_abstention():
+    """Strict mode checks that the tool responded at all. An abstention is a
+    different failure from a missing prediction and must not trip it.
+    """
+    entries = _split(n_hall=5, n_valid=5)
+    preds = [_pred(e.bibtex_key, "UNCERTAIN") for e in entries]
+
+    result = evaluate(entries, preds, strict=True)  # must not raise
+    assert result.coverage == 0.0
+
+
+# --- 5. Manufactured predictions are not answers ---
+
+
+def _partial_run_with_backfills():
+    entries = _split(n_hall=3, n_valid=3)
+    predictions = [
+        _pred("h0", "VALID", 0.9),
+        _pred("h1", "VALID", 0.8),
+        _pred("v0", "HALLUCINATED", 0.6),
+        Prediction(bibtex_key="h2", label="VALID", confidence=0.5, evaluated=False),
+        Prediction(bibtex_key="v1", label="VALID", confidence=0.5, evaluated=False),
+        Prediction(bibtex_key="v2", label="VALID", confidence=0.5, evaluated=False),
+    ]
+    return entries, predictions
+
+
+def test_unevaluated_backfills_reduce_both_coverage_measures():
+    entries, predictions = _partial_run_with_backfills()
+
+    result = evaluate(entries, predictions)
+
+    assert result.coverage == 0.5
+    assert result.response_coverage == 0.5
+
+
+def test_unevaluated_backfills_do_not_affect_scored_metrics():
+    entries, predictions = _partial_run_with_backfills()
+
+    result = evaluate(entries, predictions)
+
+    assert result.false_positive_rate == 1.0
+    assert result.ece == pytest.approx(0.7666666666666667)
+    assert result.auroc == 0.0
+    assert result.per_tier_metrics[1]["num_hallucinated"] == 2
+    assert result.per_tier_metrics[1]["num_valid"] == 1
+    assert result.per_type_metrics["fabricated_doi"]["count"] == 2
+    assert result.per_type_metrics["fabricated_doi"]["num_valid"] == 1
+
+
+def test_strict_mode_rejects_a_fully_unevaluated_backfill():
+    entries = _split(n_hall=2, n_valid=2)
+    predictions = [
+        Prediction(bibtex_key=e.bibtex_key, label="VALID", evaluated=False) for e in entries
+    ]
+
+    with pytest.raises(ValueError, match="Strict mode"):
+        evaluate(entries, predictions, strict=True)
+
+
+# --- 6. Legacy error fallbacks remain visible at run level ---
+
+
+def _run_with_error_fallbacks():
+    entries = _split(n_hall=2, n_valid=2)
+    predictions = [_pred(e.bibtex_key, e.label) for e in entries]
+    predictions[1].reason = "[Error fallback] API timeout"
+    return entries, predictions
+
+
+def test_error_fallbacks_are_counted_without_changing_num_evaluated():
+    entries, predictions = _run_with_error_fallbacks()
+
+    result = evaluate(entries, predictions)
+
+    assert result.num_evaluated == 4
+    assert result.num_error_fallbacks == 1
+
+
+def test_error_fallbacks_emit_an_incomplete_evaluation_warning(caplog):
+    entries, predictions = _run_with_error_fallbacks()
+
+    with caplog.at_level(logging.WARNING):
+        evaluate(entries, predictions, tool_name="legacy", split_name="fixture")
+
+    assert "1 [Error fallback] record" in caplog.text
+
+
+# --- 7. Legacy result files do not claim unrecorded response coverage ---
+
+
+def test_result_without_response_coverage_deserializes_as_not_recorded():
+    payload = {
+        "tool_name": "legacy",
+        "split_name": "fixture",
+        "num_entries": 4,
+        "num_hallucinated": 2,
+        "num_valid": 2,
+        "detection_rate": 0.5,
+        "false_positive_rate": 0.0,
+        "f1_hallucination": 0.5,
+        "tier_weighted_f1": 0.5,
+    }
+
+    result = EvaluationResult.from_dict(payload)
+
+    assert result.response_coverage is None
+    assert "response_coverage" in result.to_dict()

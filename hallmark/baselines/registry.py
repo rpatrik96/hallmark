@@ -10,10 +10,13 @@ import logging
 import os
 from collections.abc import Callable
 from dataclasses import dataclass, field
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from hallmark.baselines.common import fallback_predictions
 from hallmark.dataset.schema import BenchmarkEntry, BlindEntry, Prediction
+
+if TYPE_CHECKING:
+    from hallmark.baselines.bibtexupdater import BibtexCheckRun
 
 logger = logging.getLogger(__name__)
 
@@ -25,7 +28,9 @@ __all__ = [
     "get_registry",
     "list_baselines",
     "register",
+    "requires_single_worker",
     "run_baseline",
+    "run_baseline_with_tool_run",
 ]
 
 
@@ -81,6 +86,11 @@ def list_baselines(*, free_only: bool = False) -> list[str]:
     return list(_REGISTRY.keys())
 
 
+def requires_single_worker(name: str, info: BaselineInfo) -> bool:
+    """True for baselines whose runner directly owns a CLI subprocess."""
+    return bool(info.cli_commands) and not name.startswith("llm_")
+
+
 def check_available(name: str) -> tuple[bool, str]:
     """Check if a baseline's dependencies are installed.
 
@@ -97,8 +107,15 @@ def check_available(name: str) -> tuple[bool, str]:
 
     info = _REGISTRY[name]
 
-    # Check CLI commands on PATH (for subprocess-based baselines)
-    missing_cmds = [cmd for cmd in info.cli_commands if shutil.which(cmd) is None]
+    # Check CLI commands, honouring the wrapper's explicit binary pin.
+    def _cli_missing(command: str) -> bool:
+        if command == "bibtex-check":
+            from hallmark.baselines.bibtexupdater import resolve_bibtex_check_bin
+
+            return resolve_bibtex_check_bin() is None
+        return shutil.which(command) is None
+
+    missing_cmds = [cmd for cmd in info.cli_commands if _cli_missing(cmd)]
     if missing_cmds:
         return (
             False,
@@ -161,14 +178,39 @@ def run_baseline(
         ValueError: If baseline is unknown.
         ImportError: If required packages are missing.
     """
+    predictions, _ = run_baseline_with_tool_run(name, entries, split=split, **kwargs)
+    return predictions
+
+
+def run_baseline_with_tool_run(
+    name: str,
+    entries: list[BenchmarkEntry],
+    split: str | None = None,
+    **kwargs: Any,
+) -> tuple[list[Prediction], BibtexCheckRun | None]:
+    """Run a baseline and report the bibtex-check run it made, if any.
+
+    A caller that persists the result needs to know whether this baseline
+    started bibtex-check and what condition that call observed. It gets both
+    from the run returned here, so provenance never has to be inferred from
+    state another baseline or another worker may have written.
+
+    Returns:
+        The predictions, and the bibtex-check run this dispatch made or None
+        when the baseline never invoked the tool.
+    """
     if name not in _REGISTRY:
         raise ValueError(f"Unknown baseline: {name}. Available: {', '.join(_REGISTRY.keys())}")
+
+    info = _REGISTRY[name]
+    workers = kwargs.get("workers", 1)
+    if isinstance(workers, int) and workers > 1 and requires_single_worker(name, info):
+        raise ValueError(f"workers > 1 is not supported for CLI baseline {name!r}")
 
     available, msg = check_available(name)
     if not available:
         raise ImportError(msg)
 
-    info = _REGISTRY[name]
     merged_kwargs = {**info.runner_kwargs, **kwargs}
     if split is not None:
         merged_kwargs.setdefault("split", split)
@@ -184,8 +226,15 @@ def run_baseline(
         if env_key:
             merged_kwargs["api_key"] = env_key
 
+    from hallmark.baselines import bibtexupdater
+
+    # Clear the wrapper's record before dispatching, so what it holds
+    # afterwards describes this baseline's run and not the previous one's.
+    bibtexupdater.reset_run_state()
+
     blind_entries = _to_blind(entries)
-    return info.runner(blind_entries, **merged_kwargs)
+    predictions = list(info.runner(blind_entries, **merged_kwargs))
+    return predictions, bibtexupdater.current_bibtex_check_run()
 
 
 # Mapping from pip package names to importable module names
@@ -803,6 +852,7 @@ def _register_builtins() -> None:
     def _run_random(entries: list[BlindEntry], **kw: Any) -> list[Prediction]:
         from hallmark.baselines.degenerate import random_baseline
 
+        kw.pop("split", None)  # dispatch-level; the baseline does not use it
         return random_baseline(entries, **kw)
 
     register(
@@ -846,6 +896,7 @@ def _register_builtins() -> None:
     def _run_venue_oracle(entries: list[BlindEntry], **kw: Any) -> list[Prediction]:
         from hallmark.baselines.degenerate import venue_oracle_baseline
 
+        kw.pop("split", None)  # dispatch-level; the baseline does not use it
         return venue_oracle_baseline(entries, **kw)
 
     register(
@@ -862,6 +913,7 @@ def _register_builtins() -> None:
 
     # --- Ensemble ---
     def _run_ensemble(entries: list[BlindEntry], **kw: Any) -> list[Prediction]:
+        from hallmark.baselines.bibtexupdater import SourceOutageError
         from hallmark.baselines.ensemble import ensemble_predict
 
         # Default: combine doi_only + bibtexupdater
@@ -875,6 +927,11 @@ def _register_builtins() -> None:
                     dep_info = _REGISTRY[dep_name]
                     dep_kwargs = dict(dep_info.runner_kwargs)
                     strategy_preds[dep_name] = dep_info.runner(entries, **dep_kwargs)
+                except SourceOutageError:
+                    # The component disowned its run. Dropping it here would
+                    # score doi_only alone under the ensemble's name -- which
+                    # is what happened with DBLP down on 2026-09-05.
+                    raise
                 except Exception as e:
                     logger.warning(f"Ensemble: skipping {dep_name}: {e}")
 
@@ -882,6 +939,7 @@ def _register_builtins() -> None:
             logger.error("Ensemble: no component baselines available")
             return fallback_predictions(entries, reason="Ensemble: no components")
 
+        kw.pop("split", None)  # dispatch-level; the ensemble does not use it
         return ensemble_predict(entries, strategy_preds, **kw)
 
     register(
