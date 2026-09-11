@@ -84,6 +84,12 @@ Any user of the tool would benefit from these.
 - `_verify_with_openai_compatible()` is the shared helper for all OpenAI-SDK-based providers
 - Generation script: `scripts/generate_llm_hallucinations.py --backend openrouter --model deepseek/deepseek-r1`
 - Parallel evaluators: `scripts/parallel_resume_test_public.py` (zero-shot), `scripts/parallel_agentic_btu_test_public.py` (agentic) — use for long-running LLM evals with checkpoint recovery
+- GEPA prompt optimization: `scripts/gepa_optimize_prompt.py` (search), `scripts/score_prompt.py` (score a candidate). Winners are committed under `results/gepa_haiku/{guarded,leaky}/`; the `logs/` and `run/` trees are gitignored run artifacts (69 MB, regenerable). `guarded` is the run with the leak blocklist active (`build_leak_blocklist`: citation keys, full author names, title 4-grams from the trainset are refused before any API call, so a candidate prompt cannot memorize trainset entries); `leaky` is without it.
+
+## Figures
+- `scripts/generate_figures.py` is the generator of record for the paper figures, including Fig. 4 (`dr_fpr_operating_points.pdf`). Needs the `figures` extra: `uv run --extra figures python scripts/generate_figures.py --results-dir results/ --output-dir figures/`
+- No Pareto front is drawn — it degenerates to one point once the two-stage cascades are included (`hallmark-paper` 96679e5)
+- The third cascade (bibtex-updater → Sonnet 4.6) ships inside the `cascade_db_diagnosis` family, whose three files share one `tool_name`; the aggressive file is loaded by path and relabelled, since it cannot be resolved by name
 
 ## Key Conventions
 - Optional dependencies (choix, harcx, openai, anthropic) use lazy imports
