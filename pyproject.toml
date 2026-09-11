@@ -48,6 +48,11 @@ scraping = [
 analysis = [
     "scikit-learn>=1.0",
 ]
+# scripts/generate_figures.py, the generator of record for the paper figures.
+figures = [
+    "matplotlib>=3.7",
+    "numpy>=1.24",
+]
 # Optional infrastructure for reproducible HALLMARK eval runs:
 # requests-cache wraps HTTP calls in a SQLite-backed cache so re-runs
 # reuse frozen API responses (see hallmark/baselines/_http_cache.py and
@@ -62,7 +67,7 @@ dev = [
     "mypy>=1.0",
     "numpy>=1.24",
 ]
-all = ["hallmark[baselines,ranking,scraping,analysis,dev]"]
+all = ["hallmark[baselines,ranking,scraping,analysis,figures,dev]"]
 # NOTE: bibtex-updater and harcx require bibtexparser 1.x which conflicts
 # with hallmark's bibtexparser>=2.0. Install them in isolation:
 #   pipx install "bibtex-updater>=1.11.0"  # wrapper target; released dev/test numbers
