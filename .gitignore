@@ -124,3 +124,7 @@ results/**/tools.sqlite
 **/*.sqlite-wal
 **/*.sqlite-shm
 results/**/stage2/
+
+# GEPA prompt-optimization run artifacts (logs hold raw prompts; run/ holds pickles)
+results/gepa_haiku/**/logs/
+results/gepa_haiku/**/run/
