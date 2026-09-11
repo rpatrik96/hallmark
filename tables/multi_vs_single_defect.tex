@@ -1,0 +1,15 @@
+\begin{table}[t]
+\caption{\textbf{Detection rate on single- vs multi-defect hallucinated entries.} A \emph{defect} is a failing per-field subtest, not a distinct \texttt{hallucination\_type}: each entry carries one type label (the injected cause) but may break several fields. \texttt{cross\_db\_agreement} is excluded because it is False for 100\% of hallucinated entries and therefore restates the label. UNCERTAIN and missing predictions count as \emph{misses}, so all models are scored over the full denominator; the GPT-5.4 cascade is the only candidate that abstains. FPR is a single number per model: valid entries have no defects, so it cannot be split by defect count. Split: \texttt{dev\_public} (459 single-defect, 147 multi-defect, 513 valid).}
+\label{tab:multi-vs-single-defect}
+\centering
+\small
+\begin{tabular}{lrrrrr}
+\toprule
+\textbf{Model} & \textbf{DR single} & \textbf{DR multi} & $\Delta$ & \textbf{FPR} & \textbf{UNC} \\
+\midrule
+GPT-5.4 + BTU (cascade) & 0.956 & 0.952 & -0.004 & 0.039 & 21 \\
+Opus 4.7 & 0.880 & 0.986 & +0.106 & 0.154 & 0 \\
+bibtex-updater & 0.821 & 1.000 & +0.179 & 0.092 & 0 \\
+\bottomrule
+\end{tabular}
+\end{table}
