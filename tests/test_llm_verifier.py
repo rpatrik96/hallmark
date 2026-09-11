@@ -15,6 +15,8 @@ import pytest
 from hallmark.baselines.llm_verifier import (
     ANTHROPIC_MODELS,
     CUTOFF_AWARE_ADDENDUM,
+    HF_MODELS,
+    HF_ROUTER_BASE_URL,
     OPENAI_MODELS,
     OPENROUTER_MODELS,
     VERIFICATION_PROMPT,
@@ -672,14 +674,14 @@ class TestCheckpointRetryFailed:
 
 
 # ---------------------------------------------------------------------------
-# Qwen3 dense series + Claude Haiku 4.5 OpenRouter registrations (2026-08-03)
+# Claude Haiku 4.5 OpenRouter registration (2026-08-03)
+#
+# The Qwen3 dense series (4B/8B/14B/32B) was deregistered from OpenRouter on
+# 2026-08-10 — that sweep runs against the HuggingFace Inference API instead.
 # ---------------------------------------------------------------------------
 
 
 _NEW_2026_08_MODELS = {
-    "qwen3-8b": "qwen/qwen3-8b",
-    "qwen3-14b": "qwen/qwen3-14b",
-    "qwen3-32b": "qwen/qwen3-32b",
     "claude-haiku-4-5": "anthropic/claude-haiku-4.5",
 }
 
@@ -700,7 +702,7 @@ def _mock_openai_capturing(captured: list[dict[str, object]]) -> MagicMock:
     return mock_openai
 
 
-class TestQwen3AndHaikuRegistration:
+class TestHaikuRegistration:
     @pytest.mark.parametrize(("friendly", "model_id"), sorted(_NEW_2026_08_MODELS.items()))
     def test_model_id_in_openrouter_models(self, friendly: str, model_id: str) -> None:
         assert OPENROUTER_MODELS[friendly] == model_id
@@ -742,17 +744,17 @@ class TestQwen3AndHaikuRegistration:
 class TestNoThinkGuard:
     """Qwen3 dense models must get the /no_think switch appended to the prompt.
 
-    Verified live 2026-08-03 (provider=DeepInfra): API-level switches
-    (reasoning.enabled, reasoning.max_tokens, chat_template_kwargs) are all
-    ignored, and unguarded qwen3-32b truncates mid-JSON. Only /no_think works.
+    Verified live 2026-08-11 on the HF router (Featherless): without the switch
+    the reply carries 264 completion tokens of inline <think> reasoning ahead of
+    the JSON verdict; with it, 19.
     """
 
     def _call(self, model: str, **kwargs: object) -> dict[str, object]:
-        from hallmark.baselines.llm_verifier import verify_with_openrouter
+        from hallmark.baselines.llm_verifier import verify_with_huggingface
 
         captured: list[dict[str, object]] = []
         with patch.dict("sys.modules", {"openai": _mock_openai_capturing(captured)}):
-            verify_with_openrouter([_make_entry()], model=model, api_key="k", **kwargs)
+            verify_with_huggingface([_make_entry()], model=model, api_key="k", **kwargs)
         assert len(captured) == 1
         return captured[0]
 
@@ -762,7 +764,7 @@ class TestNoThinkGuard:
         assert isinstance(messages, list)
         return str(messages[0]["content"])
 
-    @pytest.mark.parametrize("model", ["qwen/qwen3-8b", "qwen/qwen3-14b", "qwen/qwen3-32b"])
+    @pytest.mark.parametrize("model", sorted(HF_MODELS.values()))
     def test_qwen3_dense_appends_no_think(self, model: str) -> None:
         prompt = self._prompt(self._call(model))
         assert prompt.endswith("/no_think")
@@ -770,25 +772,97 @@ class TestNoThinkGuard:
         assert '"predicted_hallucination_type"' in prompt
 
     def test_non_thinking_model_prompt_untouched(self) -> None:
-        prompt = self._prompt(self._call("anthropic/claude-haiku-4.5"))
+        prompt = self._prompt(self._call("meta-llama/Llama-3.3-70B-Instruct:featherless-ai"))
         assert "/no_think" not in prompt
 
     def test_no_think_composes_with_cutoff_aware_prompt(self) -> None:
-        prompt = self._prompt(self._call("qwen/qwen3-32b", cutoff_aware=True))
+        prompt = self._prompt(self._call(HF_MODELS["qwen3-32b"], cutoff_aware=True))
         assert CUTOFF_AWARE_ADDENDUM in prompt
         assert prompt.endswith("/no_think")
 
     def test_no_think_composes_with_caller_prompt_fn(self) -> None:
         prompt = self._prompt(
-            self._call("qwen/qwen3-14b", prompt_fn=lambda entry: f"custom:{entry.bibtex_key}")
+            self._call(HF_MODELS["qwen3-14b"], prompt_fn=lambda entry: f"custom:{entry.bibtex_key}")
         )
         assert prompt == "custom:test2024\n\n/no_think"
 
     def test_no_api_level_reasoning_field_by_default(self) -> None:
-        """DeepInfra ignores it; no model may opt in silently."""
-        assert "extra_body" not in self._call("qwen/qwen3-32b")
+        """/no_think is the mechanism; no model may opt into the API field silently."""
+        assert "extra_body" not in self._call(HF_MODELS["qwen3-32b"])
 
     @pytest.mark.parametrize("enabled", [True, False])
     def test_reasoning_enabled_kwarg_is_explicit_opt_in(self, enabled: bool) -> None:
-        kwargs = self._call("anthropic/claude-haiku-4.5", reasoning_enabled=enabled)
+        kwargs = self._call(
+            "meta-llama/Llama-3.3-70B-Instruct:featherless-ai", reasoning_enabled=enabled
+        )
         assert kwargs["extra_body"] == {"reasoning": {"enabled": enabled}}
+
+
+class TestHuggingFaceRouter:
+    """The Qwen3 dense sweep runs through the HF router, keyed on HF_TOKEN."""
+
+    @pytest.mark.parametrize(("friendly", "model_id"), sorted(HF_MODELS.items()))
+    def test_baseline_registered(self, friendly: str, model_id: str) -> None:
+        from hallmark.baselines.registry import get_registry
+
+        info = get_registry()[f"llm_hf_{friendly.replace('-', '_')}"]
+        assert info.env_var == "HF_TOKEN"
+
+    @pytest.mark.parametrize(("friendly", "model_id"), sorted(HF_MODELS.items()))
+    def test_runner_uses_hf_router_and_model_id(self, friendly: str, model_id: str) -> None:
+        import os
+
+        from hallmark.baselines.registry import run_baseline
+        from hallmark.dataset.schema import BenchmarkEntry
+
+        entry = BenchmarkEntry(
+            bibtex_key="k",
+            bibtex_type="article",
+            fields={"title": "t", "author": "a", "year": "2024"},
+            raw_bibtex="@article{k,title={t}}",
+            label="VALID",
+        )
+        captured: list[dict[str, object]] = []
+        mock_openai = _mock_openai_capturing(captured)
+        with (
+            patch.dict("sys.modules", {"openai": mock_openai}),
+            patch.dict(os.environ, {"HF_TOKEN": "hf-test-key"}),
+        ):
+            run_baseline(f"llm_hf_{friendly.replace('-', '_')}", [entry])
+
+        assert captured[0]["model"] == model_id
+        client_kwargs = mock_openai.OpenAI.call_args.kwargs
+        assert client_kwargs["base_url"] == HF_ROUTER_BASE_URL
+        assert client_kwargs["api_key"] == "hf-test-key"
+
+
+class TestStripThinkBlock:
+    """Featherless returns reasoning inline in message.content, not as a
+    separate field. It must be stripped before parsing, or every reply falls to
+    the lossy salvage path that drops reason and hallucination type."""
+
+    def test_no_think_reply_parses_fully(self) -> None:
+        content = (
+            '<think>\n\n</think>\n\n{"label": "HALLUCINATED", "confidence": 0.8, '
+            '"reason": "no such DOI", "predicted_hallucination_type": "fabricated_doi"}'
+        )
+        pred = _parse_llm_response(content, "k")
+        assert pred.label == "HALLUCINATED"
+        assert pred.confidence == pytest.approx(0.8)
+        assert pred.reason == "no such DOI"
+        assert pred.predicted_hallucination_type == "fabricated_doi"
+
+    def test_populated_think_block_stripped(self) -> None:
+        content = (
+            '<think>\nThe user wants JSON. The label should be "VALID" I think.\n</think>\n\n'
+            '{"label": "HALLUCINATED", "confidence": 0.7, "reason": "r"}'
+        )
+        pred = _parse_llm_response(content, "k")
+        # Must read the verdict, not the label mentioned inside the reasoning.
+        assert pred.label == "HALLUCINATED"
+        assert pred.reason == "r"
+
+    def test_reply_without_think_block_unaffected(self) -> None:
+        pred = _parse_llm_response('{"label": "VALID", "confidence": 0.9, "reason": "ok"}', "k")
+        assert pred.label == "VALID"
+        assert pred.reason == "ok"

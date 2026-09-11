@@ -1,0 +1,446 @@
+[
+  {
+    "tool_name": "llm_openai",
+    "split": "dev_public",
+    "twf1_published": 0.8217620787657328,
+    "twf1_corrected": 0.8221952207371406,
+    "twf1_delta": 0.0004331419714077578,
+    "reconstruction_error": 0.0,
+    "num_uncertain": 0,
+    "outcomes": {
+      "ffe715a15b16": "HALLUCINATED",
+      "ec01d96455e0": "HALLUCINATED"
+    },
+    "sources": {
+      "ffe715a15b16": "deduced",
+      "ec01d96455e0": "measured"
+    },
+    "per_tier": {
+      "1": {
+        "dr_published": 1.0,
+        "dr_corrected": 1.0,
+        "n_published": 149,
+        "n_corrected": 148
+      },
+      "2": {
+        "dr_published": 0.7535714285714286,
+        "dr_corrected": 0.7526881720430108,
+        "n_published": 280,
+        "n_corrected": 279
+      },
+      "3": {
+        "dr_published": 0.8305084745762712,
+        "dr_corrected": 0.8324022346368715,
+        "n_published": 177,
+        "n_corrected": 179
+      }
+    }
+  },
+  {
+    "tool_name": "llm_openai_gpt-5.4",
+    "split": "dev_public",
+    "twf1_published": 0.8070329670329669,
+    "twf1_corrected": 0.8075405523893028,
+    "twf1_delta": 0.0005075853563358823,
+    "reconstruction_error": 1.1102230246251565e-16,
+    "num_uncertain": 0,
+    "outcomes": {
+      "ffe715a15b16": "HALLUCINATED",
+      "ec01d96455e0": "HALLUCINATED"
+    },
+    "sources": {
+      "ffe715a15b16": "measured",
+      "ec01d96455e0": "measured"
+    },
+    "per_tier": {
+      "1": {
+        "dr_published": 0.9731543624161074,
+        "dr_corrected": 0.972972972972973,
+        "n_published": 149,
+        "n_corrected": 148
+      },
+      "2": {
+        "dr_published": 0.6678571428571428,
+        "dr_corrected": 0.6666666666666666,
+        "n_published": 280,
+        "n_corrected": 279
+      },
+      "3": {
+        "dr_published": 0.751412429378531,
+        "dr_corrected": 0.7541899441340782,
+        "n_published": 177,
+        "n_corrected": 179
+      }
+    }
+  },
+  {
+    "tool_name": "llm_openrouter_claude_opus_4_7",
+    "split": "dev_public",
+    "twf1_published": 0.8514492753623188,
+    "twf1_corrected": 0.8518518518518519,
+    "twf1_delta": 0.00040257648953301306,
+    "reconstruction_error": 0.0,
+    "num_uncertain": 0,
+    "outcomes": {
+      "ffe715a15b16": "HALLUCINATED",
+      "ec01d96455e0": "HALLUCINATED"
+    },
+    "sources": {
+      "ffe715a15b16": "measured",
+      "ec01d96455e0": "measured"
+    },
+    "per_tier": {
+      "1": {
+        "dr_published": 0.6753246753246753,
+        "dr_corrected": 0.673202614379085,
+        "n_published": 154,
+        "n_corrected": 153
+      },
+      "2": {
+        "dr_published": 0.7885304659498208,
+        "dr_corrected": 0.7877697841726619,
+        "n_published": 279,
+        "n_corrected": 278
+      },
+      "3": {
+        "dr_published": 0.7630057803468208,
+        "dr_corrected": 0.7657142857142857,
+        "n_published": 173,
+        "n_corrected": 175
+      }
+    }
+  },
+  {
+    "tool_name": "llm_openrouter_claude_sonnet_4_6",
+    "split": "dev_public",
+    "twf1_published": 0.8340080971659918,
+    "twf1_corrected": 0.8344549125168236,
+    "twf1_delta": 0.00044681535083179735,
+    "reconstruction_error": 1.1102230246251565e-16,
+    "num_uncertain": 0,
+    "outcomes": {
+      "ffe715a15b16": "HALLUCINATED",
+      "ec01d96455e0": "HALLUCINATED"
+    },
+    "sources": {
+      "ffe715a15b16": "measured",
+      "ec01d96455e0": "measured"
+    },
+    "per_tier": {
+      "1": {
+        "dr_published": 0.9415584415584416,
+        "dr_corrected": 0.9411764705882353,
+        "n_published": 154,
+        "n_corrected": 153
+      },
+      "2": {
+        "dr_published": 0.7240143369175627,
+        "dr_corrected": 0.7230215827338129,
+        "n_published": 279,
+        "n_corrected": 278
+      },
+      "3": {
+        "dr_published": 0.7283236994219653,
+        "dr_corrected": 0.7314285714285714,
+        "n_published": 173,
+        "n_corrected": 175
+      }
+    }
+  },
+  {
+    "tool_name": "llm_openrouter_deepseek_r1",
+    "split": "dev_public",
+    "twf1_published": 0.8247895944912013,
+    "twf1_corrected": 0.8251843841228098,
+    "twf1_delta": 0.00039478963160854974,
+    "reconstruction_error": 0.00017709082426853318,
+    "num_uncertain": 18,
+    "outcomes": {
+      "ffe715a15b16": "HALLUCINATED",
+      "ec01d96455e0": "HALLUCINATED"
+    },
+    "sources": {
+      "ffe715a15b16": "measured",
+      "ec01d96455e0": "measured"
+    },
+    "per_tier": {
+      "1": {
+        "dr_published": 1.0,
+        "dr_corrected": 1.0,
+        "n_published": 149,
+        "n_corrected": 148
+      },
+      "2": {
+        "dr_published": 0.843065693430657,
+        "dr_corrected": 0.842503204876645,
+        "n_published": 280,
+        "n_corrected": 279
+      },
+      "3": {
+        "dr_published": 0.8920454545454546,
+        "dr_corrected": 0.8932516505840529,
+        "n_published": 177,
+        "n_corrected": 179
+      }
+    }
+  },
+  {
+    "tool_name": "llm_openrouter_deepseek_v3",
+    "split": "dev_public",
+    "twf1_published": 0.8213627992633517,
+    "twf1_corrected": 0.8217567070929804,
+    "twf1_delta": 0.00039390782962878124,
+    "reconstruction_error": 1.1102230246251565e-16,
+    "num_uncertain": 0,
+    "outcomes": {
+      "ffe715a15b16": "HALLUCINATED",
+      "ec01d96455e0": "HALLUCINATED"
+    },
+    "sources": {
+      "ffe715a15b16": "deduced",
+      "ec01d96455e0": "measured"
+    },
+    "per_tier": {
+      "1": {
+        "dr_published": 1.0,
+        "dr_corrected": 1.0,
+        "n_published": 149,
+        "n_corrected": 148
+      },
+      "2": {
+        "dr_published": 0.8678571428571429,
+        "dr_corrected": 0.8673835125448028,
+        "n_published": 280,
+        "n_corrected": 279
+      },
+      "3": {
+        "dr_published": 0.903954802259887,
+        "dr_corrected": 0.9050279329608939,
+        "n_published": 177,
+        "n_corrected": 179
+      }
+    }
+  },
+  {
+    "tool_name": "llm_openrouter_gemini_flash",
+    "split": "dev_public",
+    "twf1_published": 0.627831715210356,
+    "twf1_corrected": 0.6290118008078487,
+    "twf1_delta": 0.0011800855974927194,
+    "reconstruction_error": 0.0006370451832560242,
+    "num_uncertain": 13,
+    "outcomes": {
+      "ffe715a15b16": "HALLUCINATED",
+      "ec01d96455e0": "HALLUCINATED"
+    },
+    "sources": {
+      "ffe715a15b16": "measured",
+      "ec01d96455e0": "measured"
+    },
+    "per_tier": {
+      "1": {
+        "dr_published": 0.7034482758620689,
+        "dr_corrected": 0.7014445479962721,
+        "n_published": 149,
+        "n_corrected": 148
+      },
+      "2": {
+        "dr_published": 0.3898916967509025,
+        "dr_corrected": 0.3877049286388986,
+        "n_published": 280,
+        "n_corrected": 279
+      },
+      "3": {
+        "dr_published": 0.5057471264367817,
+        "dr_corrected": 0.5112695049123483,
+        "n_published": 177,
+        "n_corrected": 179
+      }
+    }
+  },
+  {
+    "tool_name": "llm_openrouter_gemini_pro",
+    "split": "dev_public",
+    "twf1_published": 0.6092413006274957,
+    "twf1_corrected": 0.6105223784405928,
+    "twf1_delta": 0.0012810778130970535,
+    "reconstruction_error": 0.0006765787724811734,
+    "num_uncertain": 37,
+    "outcomes": {
+      "ffe715a15b16": "HALLUCINATED",
+      "ec01d96455e0": "HALLUCINATED"
+    },
+    "sources": {
+      "ffe715a15b16": "measured",
+      "ec01d96455e0": "measured"
+    },
+    "per_tier": {
+      "1": {
+        "dr_published": 0.7304964539007093,
+        "dr_corrected": 0.728675483994633,
+        "n_published": 149,
+        "n_corrected": 148
+      },
+      "2": {
+        "dr_published": 0.337037037037037,
+        "dr_corrected": 0.3346608257002522,
+        "n_published": 280,
+        "n_corrected": 279
+      },
+      "3": {
+        "dr_published": 0.4853801169590643,
+        "dr_corrected": 0.49113005978633734,
+        "n_published": 177,
+        "n_corrected": 179
+      }
+    }
+  },
+  {
+    "tool_name": "llm_openrouter_llama_4_maverick",
+    "split": "dev_public",
+    "twf1_published": 0.708885616102111,
+    "twf1_corrected": 0.7091087169441724,
+    "twf1_delta": 0.0002231008420614522,
+    "reconstruction_error": 0.0,
+    "num_uncertain": 0,
+    "outcomes": {
+      "ffe715a15b16": "HALLUCINATED",
+      "ec01d96455e0": "UNCERTAIN"
+    },
+    "sources": {
+      "ffe715a15b16": "deduced",
+      "ec01d96455e0": "measured"
+    },
+    "per_tier": {
+      "1": {
+        "dr_published": 0.8791946308724832,
+        "dr_corrected": 0.8783783783783784,
+        "n_published": 149,
+        "n_corrected": 148
+      },
+      "2": {
+        "dr_published": 0.4714285714285714,
+        "dr_corrected": 0.4731182795698925,
+        "n_published": 280,
+        "n_corrected": 279
+      },
+      "3": {
+        "dr_published": 0.615819209039548,
+        "dr_corrected": 0.6145251396648045,
+        "n_published": 177,
+        "n_corrected": 179
+      }
+    }
+  },
+  {
+    "tool_name": "llm_openrouter_mistral",
+    "split": "dev_public",
+    "twf1_published": 0.7652733118971062,
+    "twf1_corrected": 0.7659049474137822,
+    "twf1_delta": 0.000631635516675999,
+    "reconstruction_error": 0.0006212603728324995,
+    "num_uncertain": 12,
+    "outcomes": {
+      "ffe715a15b16": "HALLUCINATED",
+      "ec01d96455e0": "HALLUCINATED"
+    },
+    "sources": {
+      "ffe715a15b16": "measured",
+      "ec01d96455e0": "measured"
+    },
+    "per_tier": {
+      "1": {
+        "dr_published": 0.9662162162162162,
+        "dr_corrected": 0.9659879474068663,
+        "n_published": 149,
+        "n_corrected": 148
+      },
+      "2": {
+        "dr_published": 0.5869565217391305,
+        "dr_corrected": 0.5854760791647188,
+        "n_published": 280,
+        "n_corrected": 279
+      },
+      "3": {
+        "dr_published": 0.7093023255813954,
+        "dr_corrected": 0.7125503442899831,
+        "n_published": 177,
+        "n_corrected": 179
+      }
+    }
+  },
+  {
+    "tool_name": "llm_openrouter_qwen",
+    "split": "dev_public",
+    "twf1_published": 0.8212334113973458,
+    "twf1_corrected": 0.8216498532715207,
+    "twf1_delta": 0.00041644187417488876,
+    "reconstruction_error": 9.849496012892534e-05,
+    "num_uncertain": 2,
+    "outcomes": {
+      "ffe715a15b16": "HALLUCINATED",
+      "ec01d96455e0": "HALLUCINATED"
+    },
+    "sources": {
+      "ffe715a15b16": "measured",
+      "ec01d96455e0": "measured"
+    },
+    "per_tier": {
+      "1": {
+        "dr_published": 0.9731543624161074,
+        "dr_corrected": 0.972972972972973,
+        "n_published": 149,
+        "n_corrected": 148
+      },
+      "2": {
+        "dr_published": 0.7785714285714286,
+        "dr_corrected": 0.7777777777777778,
+        "n_published": 280,
+        "n_corrected": 279
+      },
+      "3": {
+        "dr_published": 0.8920454545454546,
+        "dr_corrected": 0.8932516505840529,
+        "n_published": 177,
+        "n_corrected": 179
+      }
+    }
+  },
+  {
+    "tool_name": "llm_openrouter_qwen_max",
+    "split": "dev_public",
+    "twf1_published": 0.817864077669903,
+    "twf1_corrected": 0.8182878016356608,
+    "twf1_delta": 0.00042372396575784954,
+    "reconstruction_error": 0.00017490014264476272,
+    "num_uncertain": 1,
+    "outcomes": {
+      "ffe715a15b16": "HALLUCINATED",
+      "ec01d96455e0": "HALLUCINATED"
+    },
+    "sources": {
+      "ffe715a15b16": "measured",
+      "ec01d96455e0": "measured"
+    },
+    "per_tier": {
+      "1": {
+        "dr_published": 0.9798657718120806,
+        "dr_corrected": 0.9797297297297297,
+        "n_published": 149,
+        "n_corrected": 148
+      },
+      "2": {
+        "dr_published": 0.7785714285714286,
+        "dr_corrected": 0.7777777777777778,
+        "n_published": 280,
+        "n_corrected": 279
+      },
+      "3": {
+        "dr_published": 0.8870056497175142,
+        "dr_corrected": 0.888268156424581,
+        "n_published": 177,
+        "n_corrected": 179
+      }
+    }
+  }
+]

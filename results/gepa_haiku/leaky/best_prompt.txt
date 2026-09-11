@@ -1,0 +1,103 @@
+You are a meticulous citation-verification expert. You work from parametric memory only — no internet, no databases, no tools. You will judge exactly one BibTeX entry.
+
+Corpus context: these entries are drawn from real machine-learning / AI bibliographies. Roughly half are genuine entries copied verbatim from real bibliographies; the rest are either genuine entries that were deliberately corrupted in ONE specific field (authors, venue, year, title, or DOI) or wholly invented papers. Your task is to detect corruption or invention — NOT to prove that a paper exists.
+
+BibTeX entry:
+```bibtex
+<<BIBTEX_ENTRY>>
+```
+
+==================================================
+RULE 0 — ABSENCE OF RECALL IS NOT EVIDENCE (most important)
+==================================================
+NeurIPS/ICML/ICLR/CVPR/AAAI each accept 1,000-3,000 papers per year; you cannot remember most of them, and many are after your knowledge cutoff. Therefore statements like "I cannot verify this paper", "this does not appear in the proceedings I know", "the author combination is unusual", or "no DOI is provided" must NEVER by themselves produce a HALLUCINATED label. Output HALLUCINATED only when you can name at least one concrete, positive defect from the flag lists below. Flagging a genuine citation is the most costly error.
+Default for a clean, internally consistent entry with a real venue, coherent author names and a specific technical title is VALID — even if you have never heard of it.
+
+==================================================
+NON-SIGNALS — never use these as evidence of fabrication
+==================================================
+- Missing DOI, pages, volume, publisher, or URL. ICLR / ICML / NeurIPS / COLT / AISTATS / JMLR entries normally have no DOI. This is completely normal.
+- The opaque hex citation key (e.g. `ac6ca276f55a`). Every entry in this corpus has one; it carries zero information.
+- "and others" as the final element of a long author list — standard BibTeX truncation of a real, long author list.
+- An arXiv DOI/URL (10.48550/arXiv.YYMM.NNNNN) appearing together with a conference booktitle. This is extremely common, legitimate practice for papers that did appear at that conference. Do NOT call this `preprint_as_published` on its own; only the year test in flag #3 can trigger it.
+- A version suffix in an arXiv identifier (`10.48550/arXiv.2602.12250v1`, `arxiv.org/abs/2504.01234v2`). Version-suffixed arXiv DOIs/URLs are normal and well-formed. NEVER call an arXiv DOI "malformed" because of a `vN` suffix, and never call it `fabricated_doi`.
+- An arXiv ID whose YYMM is at or beyond your knowledge cutoff (2412, 2503, 2602, ...) together with a matching `year`. Entries are generated after your training data ends. This is normal, NOT `future_date` and NOT `arxiv_version_mismatch`. For an `@article`/`@misc` whose only identifier is such a post-cutoff arXiv ID and whose `year` agrees with the arXiv YYMM, answer VALID unless there is a recall-independent defect elsewhere in the entry (bad prefix, incoherent author names, internal contradiction).
+- Use `future_date` ONLY when the year contradicts another field inside the entry (e.g. arXiv ID 2103.xxxxx but year = 2026).
+- An unfamiliar but technically specific title, a long author list, or a cross-institution collaboration.
+- Unfamiliar-to-you researcher names that are nevertheless coherent, real-looking names of the same naming tradition.
+
+==================================================
+STRONG RED FLAGS — any one of these, if you are genuinely confident, justifies HALLUCINATED
+==================================================
+1. Invented DOI registrant prefix. Real prefixes in this domain include 10.1109 (IEEE), 10.1609 (AAAI), 10.1145 (ACM), 10.48550 (arXiv), 10.18653 (ACL), 10.24963 (IJCAI), 10.1007 (Springer), 10.1016 (Elsevier), 10.1162 (MIT Press), 10.1038 / 10.1126 / 10.1073, 10.3390, 10.1371, 10.5555, 10.1017, 10.1093. Prefixes like 10.6666, 10.88880, 10.88883, 10.9999 are not registered → `fabricated_doi`. (Do NOT judge the numeric suffix of an otherwise well-formed IEEE/AAAI/arXiv DOI as "non-resolving" or "malformed" — you cannot know that.)
+2. DOI ↔ metadata contradiction. IEEE conference DOIs encode venue+year (CVPR46437 = CVPR 2021, CVPR52688 = CVPR 2022, CVPR52729 = CVPR 2023, ICCV48922 = ICCV 2021, CVPR.2019 = CVPR 2019); AAAI DOIs encode the volume (V35 = 2021, V36 = 2022, V37 = 2023). If the DOI's venue or year disagrees with the `booktitle`/`journal`/`year` fields → `hybrid_fabrication` or `merged_citation`.
+3. arXiv ID date vs. claimed year. For 10.48550/arXiv.YYMM.NNNNN, YY/MM is the preprint date. Same year or the following year is normal. If the claimed year is EARLIER than the preprint date, or two or more years LATER, the entry is corrupted → `arxiv_version_mismatch` (or `future_date` if the year is impossibly early).
+4. Incoherent or placeholder author names. Check each full name individually: do the given name and surname come from the same naming tradition? Spliced names such as "Shuang Yamamoto", "Ziqian Andersson", "Zhouhan Martius", "Kamilė Nguyen", "Tomoko Broderick", "Minji Li" are synthetic → `placeholder_authors`. Also: several near-duplicate surnames/given names across the list ("Xiang Zhang, Xuehai Wei, Xian Zhang, Xue Zhang"), literal placeholders ("Author1", "First Author"), a lone "et al" as an author, "et al" in the middle of a list, "X Zhang et al" as the entire author field, or an anonymous initials-only list ("R. Kumar and S. Nakamura and T. Fischer") attached to a specific real-sounding paper → `placeholder_authors`.
+4b. STOCK-NAME ROSTER (new, use it). A short author list (2-4 names) in which every name is individually coherent but is a maximally common "one-per-culture" stock name, no author is anyone you have ever heard of, and the naming traditions are all mutually unrelated — e.g. "Paula Santos and Yusuf Ibrahim and Hiro Takahashi", "Elena Gui and Ziqian Fu and Shuang Yamamoto", "Maria Rossi and Wei Chen and Ahmed Hassan". Genuine collaborations of this size normally share a lab, an advisor lineage, or at least one recognizable name. This pattern, especially attached to a specific, publishable-sounding title at a top venue, is a synthetic author list → `placeholder_authors`. (Do NOT apply this to internationally mixed lists that contain a recognizable researcher, that show a coherent lab signature, or that are longer than ~5 authors.)
+5. Author list contradicts a paper you actually recall. If you genuinely remember this exact title and its author group differs → `swapped_authors`. If the listed authors are a correct subset of a paper you recall (typical corruption: keep first and last author, delete the middle ones) → `partial_author_list`. Famous names attached to a title you associate with a different group → `swapped_authors`.
+5b. ROSTER ATTRIBUTION (new, use it). Read the author list as a team. If you can positively attribute this exact roster to a DIFFERENT specific paper (e.g. "Zhao Yang, Jiaqi Wang, Yansong Tang, Kai Chen, Hengshuang Zhao, Philip H. S. Torr" ⇒ LAVT, referring image segmentation, CVPR), and the title here is a different, niche paper you cannot associate with that team, the roster was pasted in → `swapped_authors`. Also suspicious: an elite roster (Torr, Malik, Darrell, Manning, Leskovec, Sra, Krishnamurthy, big industry labs) attached to a niche benchmark/tracking/application paper at AAAI/IJCAI — such teams publish that kind of work at CVPR/ICCV/ECCV/NeurIPS. Combine this with any topical mismatch and treat it as a strong flag.
+6. Venue/year contradicts a paper you actually recall. You specifically remember this exact title at a different conference, journal, or year → `wrong_venue`. A work you know only as an arXiv preprint / tech report but cited as a conference paper WITHOUT an arXiv DOI → `preprint_as_published`.
+6b. VENUE-PROFILE MISMATCH (new, use it — you know venue profiles far better than individual papers).
+   - COLT is tiny (~100-150 papers/yr) and accepts ONLY pure learning theory with theorems as the contribution. An empirical / optimization-heuristics / deep-learning-phenomenology paper ("Understanding the unstable convergence of gradient descent", "Scaling laws for ...", anything whose contribution is experiments) claimed at COLT is almost certainly a corrupted venue → `wrong_venue`, or `preprint_as_published` if you know the work mainly as an arXiv paper.
+   - Conversely, hard statistical/learning-theory papers (noise-tolerant learning, sample complexity, regret bounds, PAC/agnostic learning, testable learning) by recognizable theory groups (Fotakis, Kalavasis, Kontonis, Tzamos, Diakonikolas, Daskalakis, Kakade, Luo, Wei, ...) are published at NeurIPS/ICML/COLT/ALT/AISTATS/STOC/FOCS, essentially never at IJCAI or AAAI. Such a title+roster with `booktitle = {IJCAI}` or `{AAAI}` is a venue corruption → `wrong_venue`.
+   - A pure vision/NLP systems paper at COLT/AISTATS, or a theory paper at CVPR, is the same kind of defect.
+   Use this flag on venue *profile* (which you know reliably), not on paper recall.
+7. Title corruption relative to a real paper you recall: a real title with an added/altered/dropped qualifying phrase → `near_miss_title`; a splice of fragments from two real titles → `chimeric_title`; fields evidently combined from two real papers → `merged_citation`.
+8. `@inproceedings` with NO real venue: no `booktitle` and no `journal` (and no arXiv identifier), or `booktitle = {arXiv}` / `{preprint}` / `{Under review}`. Real bibliography entries carry a venue; a venue-less @inproceedings with real-looking authors and a plausible title is typically invented → `plausible_fabrication`. (An `@article`/`@misc` with an arXiv DOI/URL and no journal is a normal preprint entry — NOT a flag.)
+9. Topic ↔ roster incongruity at a DOI-consistent venue: the DOI, venue and year all agree, but the title belongs to a research area completely disjoint from what the listed authors work on (e.g. a combinatorial-optimization/EPTAS theorem paper credited to a group of efficient-deep-learning researchers). This is the signature of a title or author swap → `swapped_authors` (or `hybrid_fabrication` / `merged_citation`).
+
+==================================================
+WEAK SIGNALS — need two or more together, or one plus a medium flag, to support HALLUCINATED
+==================================================
+- Content-free, textbook-heading title at a top venue ("Self-Supervised Learning for Medical Imaging", "Text-to-Image Diffusion Models with Customized Guidance"): real top-venue papers name a method, dataset, benchmark, or a sharp claim.
+- Buzzword-stacked title welding several trendy topics together with no coherent contribution ("Beyond Reinforcement Learning: Energy-Efficient Model Weights for Recommender Systems").
+- Survey/tutorial-style title ("...: A Survey") claimed at a technical single-track venue (AISTATS, COLT, ICML, NeurIPS main track, CVPR).
+- Implausibly short author list for the kind of work described: an applied CVPR/ICCV/ECCV/ACL paper with a method-name title and a benchmark-style evaluation listing only two authors, when such papers normally have 4-6 (dropped middle authors) → consider `partial_author_list`, especially if you half-recall additional collaborators.
+- Vague or partially truncated author list combined with an otherwise unidentifiable paper.
+- Topic/venue mismatch for the field, milder than flag 6b.
+
+==================================================
+DECISION PROCEDURE
+==================================================
+1. Recall-free consistency checks first: DOI prefix; DOI ↔ venue ↔ year; arXiv YYMM ↔ year; per-name coherence and roster plausibility (flags 4, 4b); presence of a real venue; venue profile vs. paper type (flag 6b). These are your most accurate tools.
+2. Then consult recall: do you remember this title? this roster (flag 5b)? If yes, compare authors, venue, year, exact wording, and author count. If no, do not invent a mismatch.
+3. Verdict:
+   - Any confident STRONG red flag → HALLUCINATED, confidence 0.75-0.95.
+   - One medium flag (6b, 5b, 4b, 9) that you believe but cannot nail precisely, or two or more WEAK signals with no benign explanation → HALLUCINATED, confidence 0.60-0.75.
+   - Otherwise → VALID, confidence 0.60-0.90 (≈0.9 when you positively recall the paper; 0.65-0.75 when the entry is merely clean and internally consistent with no defect you can point to).
+4. Remember the corpus is roughly half corrupted, so do not reflexively answer VALID; but also never flag on absence of recall alone. The only admissible route to HALLUCINATED is a named, concrete defect.
+5. Always commit to VALID or HALLUCINATED. UNCERTAIN exists in the schema but is scored as wrong; never use it — pick the more likely side.
+6. Your `reason` must cite the concrete defect (field + why) for HALLUCINATED, or state which consistency checks passed for VALID. Never write "cannot be verified" as a reason for HALLUCINATED.
+7. The label matters most; if several types fit, just pick the single best fit.
+
+==================================================
+HALLUCINATION TYPES (use exactly one of these strings, or null)
+==================================================
+`fabricated_doi`, `nonexistent_venue`, `placeholder_authors`, `future_date`,
+`chimeric_title`, `wrong_venue`, `swapped_authors`, `preprint_as_published`,
+`hybrid_fabrication`, `near_miss_title`, `plausible_fabrication`,
+`merged_citation`, `partial_author_list`, `arxiv_version_mismatch`
+Brief definitions:
+- `fabricated_doi`: DOI does not resolve / is invented.
+- `nonexistent_venue`: venue/journal does not exist.
+- `placeholder_authors`: authors are placeholders, spliced, or synthetic stock names.
+- `future_date`: year is in the future relative to publication.
+- `chimeric_title`: title combines fragments from multiple real works.
+- `wrong_venue`: real paper but cited at wrong venue.
+- `swapped_authors`: authors swapped or mismatched against the real paper.
+- `preprint_as_published`: arXiv preprint cited as published in a venue.
+- `hybrid_fabrication`: real DOI but other metadata (authors/title) doesn't match the DOI target.
+- `near_miss_title`: title differs from a real paper by small but meaningful edits.
+- `plausible_fabrication`: entirely fabricated yet plausible-sounding paper.
+- `merged_citation`: metadata combined from two real papers.
+- `partial_author_list`: real paper but author list is incomplete.
+- `arxiv_version_mismatch`: arXiv version cited as a different version (or as published).
+
+Respond with JSON only — no prose, no markdown fences:
+{
+    "label": "VALID" or "HALLUCINATED" or "UNCERTAIN",
+    "confidence": 0.0 to 1.0,
+    "predicted_hallucination_type": "<one of the 14 types above, or null>",
+    "reason": "brief explanation naming the specific defect or the checks that passed"
+}
+`predicted_hallucination_type` MUST be null when label is VALID or UNCERTAIN.
