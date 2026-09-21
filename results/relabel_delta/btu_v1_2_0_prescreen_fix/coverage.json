@@ -1,0 +1,71 @@
+{
+  "definition": "declined = btu_status in hallmark ABSTENTION_STATUSES",
+  "abstention_statuses": [
+    "api_error",
+    "book_not_found",
+    "coverage_incomplete",
+    "network_error",
+    "parse_error",
+    "skipped",
+    "strict_warn_cnv",
+    "strict_warn_preprint_year",
+    "unconfirmed",
+    "url_not_found",
+    "working_paper_not_found"
+  ],
+  "abstention_statuses_source": "hallmark/baselines/bibtexupdater.py @ c608307",
+  "not_used": "CLI `abstained` flag (also marks not_found detections)",
+  "hallmark_commit": "94fccf0",
+  "working_tree_dirty": false,
+  "generated_at_utc": "2026-09-21T16:17:20.171887+00:00",
+  "dev_public": {
+    "input": "results/relabel_delta/btu_v1_2_0_prescreen_fix/bibtexupdater_dev_public_per_entry.jsonl",
+    "input_sha256": "c9ec9afcba86cbac8b3b9bffd7189a00500eb0a0d869778ee83fe33477eb2d59",
+    "n": 1119,
+    "n_declined": 147,
+    "coverage": 0.8686,
+    "selective": {
+      "dr": 0.9842,
+      "fpr": 0.0557,
+      "f1": 0.9669,
+      "n": 972
+    },
+    "conservative": {
+      "dr": 0.8201,
+      "fpr": 0.0507,
+      "f1": 0.8804,
+      "n": 1119
+    },
+    "aggressive": {
+      "dr": 0.9868,
+      "fpr": 0.1404,
+      "f1": 0.9373,
+      "n": 1119
+    }
+  },
+  "test_public": {
+    "input": "results/relabel_delta/btu_v1_2_0_prescreen_fix/bibtexupdater_test_public_per_entry.jsonl",
+    "input_sha256": "5b9886c53168062e88ef8c934a16a4dd3bf8c83565c26e68a03922d7b3a1f8ad",
+    "n": 831,
+    "n_declined": 101,
+    "coverage": 0.8785,
+    "selective": {
+      "dr": 0.9886,
+      "fpr": 0.0862,
+      "f1": 0.9667,
+      "n": 730
+    },
+    "conservative": {
+      "dr": 0.8382,
+      "fpr": 0.0801,
+      "f1": 0.8887,
+      "n": 831
+    },
+    "aggressive": {
+      "dr": 0.9904,
+      "fpr": 0.1506,
+      "f1": 0.9519,
+      "n": 831
+    }
+  }
+}

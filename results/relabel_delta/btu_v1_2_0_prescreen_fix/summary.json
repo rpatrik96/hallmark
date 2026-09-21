@@ -1,0 +1,119 @@
+{
+  "generated_at_utc": "2026-09-21T10:21:53.615668+00:00",
+  "btu_version": "1.2.0 (verdicts reused from the 2026-05-31 run)",
+  "prescreening_fix": "440d0d8",
+  "dev_public": {
+    "overrides": 48,
+    "override_gold": {
+      "VALID": 21,
+      "HALLUCINATED": 27
+    },
+    "lifted": 48,
+    "kept": 0,
+    "lifted_by_gold": {
+      "VALID": 21,
+      "HALLUCINATED": 27
+    },
+    "table1_wrapper": {
+      "before": {
+        "dr": 0.8646864686468647,
+        "fpr": 0.09161793372319688,
+        "f1": 0.8903993203058623,
+        "num_uncertain": 0
+      },
+      "after": {
+        "dr": 0.8201320132013201,
+        "fpr": 0.050682261208576995,
+        "f1": 0.8804251550044286,
+        "num_uncertain": 0
+      }
+    },
+    "table25_status_mapping": {
+      "published_style_no_prescreening": {
+        "conservative": {
+          "dr": 0.989159891598916,
+          "fpr": 0.0457516339869281,
+          "f1": 0.9668874172185431,
+          "num_uncertain": 291
+        },
+        "aggressive": {
+          "dr": 0.9933993399339934,
+          "fpr": 0.14619883040935672,
+          "f1": 0.9384255650818395,
+          "num_uncertain": 0
+        }
+      },
+      "with_fixed_prescreening": {
+        "conservative": {
+          "dr": 0.989159891598916,
+          "fpr": 0.0457516339869281,
+          "f1": 0.9668874172185431,
+          "num_uncertain": 291
+        },
+        "aggressive": {
+          "dr": 0.9933993399339934,
+          "fpr": 0.14619883040935672,
+          "f1": 0.9384255650818395,
+          "num_uncertain": 0
+        }
+      }
+    }
+  },
+  "test_public": {
+    "overrides": 31,
+    "override_gold": {
+      "VALID": 11,
+      "HALLUCINATED": 20
+    },
+    "lifted": 31,
+    "kept": 0,
+    "lifted_by_gold": {
+      "VALID": 11,
+      "HALLUCINATED": 20
+    },
+    "table1_wrapper": {
+      "before": {
+        "dr": 0.8766859344894027,
+        "fpr": 0.11538461538461539,
+        "f1": 0.900990099009901,
+        "num_uncertain": 0
+      },
+      "after": {
+        "dr": 0.838150289017341,
+        "fpr": 0.08012820512820513,
+        "f1": 0.8886618998978549,
+        "num_uncertain": 0
+      }
+    },
+    "table25_status_mapping": {
+      "published_style_no_prescreening": {
+        "conservative": {
+          "dr": 0.987220447284345,
+          "fpr": 0.04693140794223827,
+          "f1": 0.9732283464566928,
+          "num_uncertain": 241
+        },
+        "aggressive": {
+          "dr": 0.9922928709055877,
+          "fpr": 0.15384615384615385,
+          "f1": 0.9519408502772644,
+          "num_uncertain": 0
+        }
+      },
+      "with_fixed_prescreening": {
+        "conservative": {
+          "dr": 0.987220447284345,
+          "fpr": 0.04693140794223827,
+          "f1": 0.9732283464566928,
+          "num_uncertain": 241
+        },
+        "aggressive": {
+          "dr": 0.9922928709055877,
+          "fpr": 0.15384615384615385,
+          "f1": 0.9519408502772644,
+          "num_uncertain": 0
+        }
+      }
+    }
+  }
+}
