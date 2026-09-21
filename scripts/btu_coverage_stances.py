@@ -90,7 +90,10 @@ def main() -> None:
         "abstention_statuses_source": "hallmark/baselines/bibtexupdater.py @ c608307",
         "not_used": "CLI `abstained` flag (also marks not_found detections)",
         "hallmark_commit": git("rev-parse", "--short", "HEAD"),
-        "working_tree_dirty": bool(git("status", "--porcelain")),
+        # The output file itself is excluded, so a rerun does not mark its own result dirty
+        "working_tree_dirty": bool(
+            git("status", "--porcelain", "--", ".", f":!{OUT.relative_to(REPO)}")
+        ),
         "generated_at_utc": datetime.now(timezone.utc).isoformat(),
         "dev_public": score_split("dev_public"),
         "test_public": score_split("test_public"),
