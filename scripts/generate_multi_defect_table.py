@@ -4,7 +4,7 @@
 Scoring convention
 ------------------
 ``UNCERTAIN`` counts as a **miss**, so every model is scored over the full
-denominator (459 single-defect / 147 multi-defect / 513 valid on
+denominator (430 single-defect / 147 multi-defect / 513 valid on
 ``dev_public``). This differs from ``hallmark.evaluation.metrics`` and from
 ``scripts/analyze_multi_defect_detection.py``, which drop UNCERTAIN from the
 denominator entirely.
@@ -40,12 +40,17 @@ CONSTANT_FIELD = "cross_db_agreement"
 
 #: display name -> per-entry prediction dump, relative to the repo root.
 CANDIDATES: dict[str, str] = {
-    "GPT-5.4 + BTU (cascade)": "results/cascade_gpt54/gpt54_{split}_preds.jsonl",
-    "Opus 4.7": (
-        "results/checkpoints/llm_openrouter_claude_opus_4_7_{split}/"
-        "openrouter_anthropic_claude-opus-4.7.jsonl"
+    # Shared-Stage-1 rerun: every cascade row routes on GPT-5.1's Stage 1 (2026-08-06).
+    "GPT-5.4 + BTU (cascade)": "results/cascade_gpt54_shared/gpt54_{split}_preds.jsonl",
+    # Sonnet 4.6 is the strongest zero-shot LLM (highest F1) as of v1.2.3.
+    "Sonnet 4.6": (
+        "results/checkpoints/llm_openrouter_claude_sonnet_4_6_{split}/"
+        "openrouter_anthropic_claude-sonnet-4.6.jsonl"
     ),
-    "bibtex-updater": "results/relabel_delta/btu_v1_2_0/bibtexupdater_{split}_per_entry.jsonl",
+    # Rescored with the fixed pre-screening DOI check (440d0d8); tool verdicts unchanged.
+    "bibtex-updater": (
+        "results/relabel_delta/btu_v1_2_0_prescreen_fix/bibtexupdater_{split}_per_entry.jsonl"
+    ),
 }
 
 
@@ -120,6 +125,7 @@ def build_rows(data_dir: Path, split: str) -> tuple[list[dict[str, Any]], dict[s
     counts = {
         "hallucinated": len(hallucinated),
         "single": len(single),
+        "zero": sum(1 for e in hallucinated if defect_count(e) == 0),
         "multi": len(multi),
         "valid": len(valid),
     }
@@ -140,7 +146,9 @@ def to_latex(rows: list[dict[str, Any]], counts: dict[str, int], split: str) -> 
         r"that abstains. FPR is a single number per model: valid entries have no defects, "
         rf"so it cannot be split by defect count. Split: \texttt{{{split_tt}}} "
         rf"({counts['single']} single-defect, {counts['multi']} multi-defect, "
-        rf"{counts['valid']} valid).}}",
+        rf"{counts['valid']} valid). The {counts['zero']} \texttt{{future\_date}} entries have "
+        r"no defect, since only cross-database agreement checks the year "
+        r"(\cref{tab:taxonomy}), and are excluded.}",
         r"\label{tab:multi-vs-single-defect}",
         r"\centering",
         r"\small",
