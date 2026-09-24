@@ -23,7 +23,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent))
 from _rescore import load_new_entries, load_old_entries, load_pred_map
 
-REPO = Path("/Users/patrik.reizinger/Documents/GitHub/hallmark")
+REPO = Path(__file__).resolve().parents[2]
 OUT = REPO / "results/relabel_delta/todo_offline.json"
 
 # Paper-facing display name for each offline tool.

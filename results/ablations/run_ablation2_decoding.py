@@ -30,7 +30,7 @@ from hallmark.baselines.llm_verifier import verify_with_openai, verify_with_open
 from hallmark.dataset.schema import BlindEntry, Prediction, load_entries
 from hallmark.evaluation.metrics import evaluate
 
-REPO = Path("/Users/patrik.reizinger/Documents/GitHub/hallmark")
+REPO = Path(__file__).resolve().parents[2]
 SAMPLE = REPO / "results/ablations/pilot_sample_dev60.jsonl"
 OUTDIR = REPO / "results/ablations/e_decoding"
 

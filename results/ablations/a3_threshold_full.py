@@ -47,7 +47,7 @@ import json
 from pathlib import Path
 from typing import Any
 
-ROOT = Path("/Users/patrik.reizinger/Documents/GitHub/hallmark")
+ROOT = Path(__file__).resolve().parents[2]
 ABL = ROOT / "results" / "ablations"
 OUT = ABL / "a3_threshold_full"
 DEV = ROOT / "data" / "v1.2" / "dev_public.jsonl"

@@ -104,6 +104,7 @@ from __future__ import annotations
 import argparse
 import difflib
 import json
+import os
 import re
 import ssl
 import sys
@@ -174,7 +175,7 @@ RESULTS_DIR = _REPO_ROOT / "results" / "reviewer_experiments"
 PROPOSAL_PATH = RESULTS_DIR / "relabel_proposal.json"
 CACHE_PATH = RESULTS_DIR / "relabel_resolution_cache.json"
 
-MAILTO = "rpatrik1996@gmail.com"
+MAILTO = os.environ.get("HALLMARK_MAILTO", "hallmark@example.com")
 USER_AGENT = f"HALLMARK-Benchmark/2.1 (mailto:{MAILTO})"
 RELABELED_BY = "systematic-relabel-2026-05-30"
 

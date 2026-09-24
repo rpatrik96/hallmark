@@ -16,7 +16,7 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-REPO = Path("/Users/patrik.reizinger/Documents/GitHub/hallmark")
+REPO = Path(__file__).resolve().parents[3]
 PREDS = REPO / "results/gpt54_probe/llm_openai_gpt54_default_temporal_predictions.jsonl"
 SUPP = REPO / "results/temporal_supplement/temporal_supplement_2024_2025.jsonl"
 

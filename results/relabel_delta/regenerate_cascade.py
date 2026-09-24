@@ -31,7 +31,7 @@ from regenerate_summary import (
     update_per_type,
 )
 
-REPO = Path("/Users/patrik.reizinger/Documents/GitHub/hallmark")
+REPO = Path(__file__).resolve().parents[2]
 OUT = REPO / "data/v1.2/baseline_results"
 DELTA = REPO / "results/relabel_delta"
 

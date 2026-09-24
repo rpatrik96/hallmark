@@ -115,7 +115,7 @@ Pre-screening runs behind every released row, so integrate it to keep your basel
 ## Development Setup
 
 ```bash
-git clone https://github.com/rpatrik96/hallmark.git
+# anonymized for double-blind review; see https://anonymous.4open.science/r/hallmark/
 cd hallmark
 
 # Recommended: use uv

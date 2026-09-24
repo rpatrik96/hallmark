@@ -17,7 +17,7 @@ import re
 from collections import Counter
 from pathlib import Path
 
-DATA_DIR = Path("/Users/patrik.reizinger/Documents/GitHub/hallmark/data/v1.2")
+DATA_DIR = Path(__file__).resolve().parents[2] / "data/v1.2"
 
 
 def load_jsonl(path: Path) -> list[dict]:

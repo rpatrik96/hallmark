@@ -43,6 +43,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import os
 import sys
 import tempfile
 from pathlib import Path
@@ -51,7 +52,7 @@ ROOT = Path(__file__).resolve().parents[1]
 DATA_DIR = ROOT / "data" / "v1.2"
 
 # croissant.json serves the corpus from this repository, not from any hub mirror
-GITHUB_REPO = "rpatrik96/hallmark"
+CONTENT_URL_PREFIX = "https://anonymous.4open.science/api/repo/hallmark/file/"
 
 JSONL_SPLITS = [
     "dev_public",
@@ -82,8 +83,13 @@ PARQUET_HUB_PATHS = {
 }
 
 
-# strings that would break double-blind review if they reached the hub
-DEANONYMIZING_MARKERS = [b"Reizinger", b"Brendel", b"rpatrik96", b"2607.18360"]
+# strings that would break double-blind review if they reached the hub; kept out of
+# the reviewed tree, so they come from the environment (comma-separated)
+DEANONYMIZING_MARKERS = [
+    m.strip().encode()
+    for m in os.environ.get("HALLMARK_DEANON_MARKERS", "").split(",")
+    if m.strip()
+]
 
 
 def sha256(path: Path) -> str:
@@ -96,9 +102,8 @@ def croissant_checksums() -> dict[str, str]:
     expected = {}
     for obj in spec["distribution"]:
         url = obj.get("contentUrl", "")
-        marker = f"/{GITHUB_REPO}/main/"
-        if marker in url and "sha256" in obj:
-            expected[url.split(marker, 1)[1]] = obj["sha256"]
+        if url.startswith(CONTENT_URL_PREFIX) and "sha256" in obj:
+            expected[url[len(CONTENT_URL_PREFIX) :]] = obj["sha256"]
     if not expected:
         sys.exit("croissant.json declares no checksummed file in this repository")
     return expected

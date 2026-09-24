@@ -79,7 +79,7 @@
       "@id": "dev-public-file",
       "name": "dev_public.jsonl",
       "description": "Development split with ground-truth labels for model development and hyperparameter tuning.",
-      "contentUrl": "https://raw.githubusercontent.com/rpatrik96/hallmark/main/data/v1.2/dev_public.jsonl",
+      "contentUrl": "https://anonymous.4open.science/api/repo/hallmark/file/data/v1.2/dev_public.jsonl",
       "encodingFormat": "application/jsonlines",
       "sha256": "0f75d390f95a086aaf39b627369af2bd03a5eb87cd3bf4cea5d5025e203bb09e"
     },
@@ -88,7 +88,7 @@
       "@id": "test-public-file",
       "name": "test_public.jsonl",
       "description": "Public test split with ground-truth labels for evaluation and ablation studies.",
-      "contentUrl": "https://raw.githubusercontent.com/rpatrik96/hallmark/main/data/v1.2/test_public.jsonl",
+      "contentUrl": "https://anonymous.4open.science/api/repo/hallmark/file/data/v1.2/test_public.jsonl",
       "encodingFormat": "application/jsonlines",
       "sha256": "0637ffc80747c36f3e010cd613f16481dcb916f944874122b2e2d3f872429973"
     },
@@ -97,7 +97,7 @@
       "@id": "stress-test-file",
       "name": "stress_test.jsonl",
       "description": "Stress-test split focusing on theoretically-motivated hallucination types (merged_citation, partial_author_list, arxiv_version_mismatch) evaluated separately from the main benchmark.",
-      "contentUrl": "https://raw.githubusercontent.com/rpatrik96/hallmark/main/data/v1.2/stress_test.jsonl",
+      "contentUrl": "https://anonymous.4open.science/api/repo/hallmark/file/data/v1.2/stress_test.jsonl",
       "encodingFormat": "application/jsonlines",
       "sha256": "af3a11606948fea8edccbbd5c512e6efd69c1f9056032d446f01c66950da07d3"
     },
@@ -106,7 +106,7 @@
       "@id": "dev-public-blind-file",
       "name": "dev_public_blind.jsonl",
       "description": "Blinded version of the development split (no ground-truth labels) for baseline runners.",
-      "contentUrl": "https://raw.githubusercontent.com/rpatrik96/hallmark/main/data/v1.2/dev_public_blind.jsonl",
+      "contentUrl": "https://anonymous.4open.science/api/repo/hallmark/file/data/v1.2/dev_public_blind.jsonl",
       "encodingFormat": "application/jsonlines",
       "sha256": "46b9a23a1e1a7564c52ac490a492090fdc8d87f15bfea4c62bc49f8fd9ce42b7"
     },
@@ -115,7 +115,7 @@
       "@id": "test-public-blind-file",
       "name": "test_public_blind.jsonl",
       "description": "Blinded version of the public test split (no ground-truth labels) for baseline runners.",
-      "contentUrl": "https://raw.githubusercontent.com/rpatrik96/hallmark/main/data/v1.2/test_public_blind.jsonl",
+      "contentUrl": "https://anonymous.4open.science/api/repo/hallmark/file/data/v1.2/test_public_blind.jsonl",
       "encodingFormat": "application/jsonlines",
       "sha256": "0461cef293e6f2a1e1448b6fa56de72c0efd18a240cdf426377616afc00649bd"
     },
@@ -124,7 +124,7 @@
       "@id": "stress-test-blind-file",
       "name": "stress_test_blind.jsonl",
       "description": "Blinded version of the stress-test split (no ground-truth labels) for baseline runners.",
-      "contentUrl": "https://raw.githubusercontent.com/rpatrik96/hallmark/main/data/v1.2/stress_test_blind.jsonl",
+      "contentUrl": "https://anonymous.4open.science/api/repo/hallmark/file/data/v1.2/stress_test_blind.jsonl",
       "encodingFormat": "application/jsonlines",
       "sha256": "cf6f829b2ad99c6badd9eb513214e2d811e6b0fe3218a64263aeecb690ea49e3"
     },
@@ -133,7 +133,7 @@
       "@id": "metadata-file",
       "name": "metadata.json",
       "description": "Dataset metadata including split statistics, type distributions, and generation method breakdowns.",
-      "contentUrl": "https://raw.githubusercontent.com/rpatrik96/hallmark/main/data/v1.2/metadata.json",
+      "contentUrl": "https://anonymous.4open.science/api/repo/hallmark/file/data/v1.2/metadata.json",
       "encodingFormat": "application/json",
       "sha256": "ea4f34bc80e844823b9604d880b0b4a7dec63cb1c193014969f6d7fe972751a0"
     }

@@ -1,8 +1,7 @@
 # Companion website
 
-Interactive companion site for the HALLMARK paper
-([arXiv:2607.18360](https://arxiv.org/abs/2607.18360)), served via GitHub Pages
-from this directory: <https://rpatrik96.github.io/hallmark/>.
+Interactive companion site for the HALLMARK paper, served via GitHub Pages
+from this directory (URL withheld for double-blind review; open `index.html` locally).
 
 Plain HTML/CSS/JS, no build step, no external dependencies. All charts are
 hand-rolled SVG/CSS with tooltips and per-chart table views; light and dark

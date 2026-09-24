@@ -27,7 +27,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent))
 from _reconstruct import reconstruct
 
-REPO = Path("/Users/patrik.reizinger/Documents/GitHub/hallmark")
+REPO = Path(__file__).resolve().parents[2]
 OUT = REPO / "data/v1.2/baseline_results"
 DELTA = REPO / "results/relabel_delta"
 OLD_REV = "7a52362"

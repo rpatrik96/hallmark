@@ -23,7 +23,7 @@ from pathlib import Path
 from hallmark.dataset.schema import Prediction, load_entries
 from hallmark.evaluation.metrics import evaluate
 
-REPO = Path("/Users/patrik.reizinger/Documents/GitHub/hallmark")
+REPO = Path(__file__).resolve().parents[2]
 E3 = REPO / "results/reviewer_experiments/e3_variance"
 DEVLABELS = REPO / "data/v1.2/dev_public.jsonl"
 

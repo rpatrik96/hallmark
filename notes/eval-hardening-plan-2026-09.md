@@ -433,7 +433,7 @@ per-type discussion drawn from reason text inherits the conflation. Read
 
 ## Tier 4 — external validity
 
-Patrik has ruled that the wild corpus is shared and that the finding goes in the
+The author has ruled that the wild corpus is shared and that the finding goes in the
 paper as a joint result, credited.
 
 `~/Documents/GitHub/interpscience-bib-check/corpus_export.jsonl`: 5,043

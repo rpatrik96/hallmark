@@ -9,7 +9,7 @@ DR / FPR / F1 / MCC, plus label-flip counts.
 
 Usage (keys must already be in env; do NOT echo them):
     set -a; . /tmp/.or_env; . /tmp/.openai_env; set +a
-    cd /Users/patrik.reizinger/Documents/GitHub/hallmark
+    cd hallmark  # repository root
     .venv/bin/python scripts/reviewer_experiments/e3_gpt51_variance.py
 
 Cost cap: 150 entries x 3 runs = 450 API calls. Do not exceed.

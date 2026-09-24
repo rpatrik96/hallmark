@@ -32,7 +32,7 @@ import json
 from pathlib import Path
 from typing import Any
 
-REPO = Path("/Users/patrik.reizinger/Documents/GitHub/hallmark")
+REPO = Path(__file__).resolve().parents[2]
 BR = REPO / "data/v1.2/baseline_results"
 OUT = REPO / "results/relabel_delta/stage3c.json"
 

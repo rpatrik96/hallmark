@@ -24,7 +24,7 @@ from sklearn.model_selection import StratifiedKFold, cross_val_score
 from sklearn.pipeline import make_pipeline
 from sklearn.preprocessing import StandardScaler
 
-REPO = Path("/Users/patrik.reizinger/Documents/GitHub/hallmark")
+REPO = Path(__file__).resolve().parents[2]
 DEV = REPO / "data/v1.2/dev_public.jsonl"
 
 # Paper's 8 features (appendix.tex L550), in caption order.

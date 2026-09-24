@@ -11,7 +11,7 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-REPO = Path("/Users/patrik.reizinger/Documents/GitHub/hallmark")
+REPO = Path(__file__).resolve().parents[2]
 CIS = REPO / "results/relabel_delta/cis.json"
 OUT = REPO / "results/relabel_delta/cis_table.md"
 

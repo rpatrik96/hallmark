@@ -17,7 +17,7 @@ sys.path.insert(0, str(Path(__file__).parent))
 from _rescore import rescore
 from _writer import write_aggregate
 
-REPO = Path("/Users/patrik.reizinger/Documents/GitHub/hallmark")
+REPO = Path(__file__).resolve().parents[2]
 OUT = REPO / "data/v1.2/baseline_results"
 
 

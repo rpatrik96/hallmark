@@ -22,7 +22,7 @@ from pathlib import Path
 from hallmark.dataset.schema import BenchmarkEntry, Prediction
 from hallmark.evaluation.metrics import evaluate
 
-REPO = Path("/Users/patrik.reizinger/Documents/GitHub/hallmark")
+REPO = Path(__file__).resolve().parents[2]
 OLD_REV = "7a52362"  # pre-relabel state the published aggregates were built against
 
 DATA = {

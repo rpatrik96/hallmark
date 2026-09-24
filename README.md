@@ -2,12 +2,8 @@
 
 **HALL**ucination bench**MARK**: A benchmark for evaluating citation hallucination detection tools.
 
-[![Tests](https://github.com/rpatrik96/hallmark/actions/workflows/tests.yml/badge.svg)](https://github.com/rpatrik96/hallmark/actions)
-[![Baselines](https://github.com/rpatrik96/hallmark/actions/workflows/baselines.yml/badge.svg)](https://github.com/rpatrik96/hallmark/actions)
 [![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
-[![arXiv](https://img.shields.io/badge/arXiv-2607.18360-b31b1b.svg)](https://arxiv.org/abs/2607.18360)
-[![Website](https://img.shields.io/badge/website-interactive_companion-blue.svg)](https://rpatrik96.github.io/hallmark/)
 
 ## Why HALLMARK?
 
@@ -54,7 +50,7 @@ Aggressive promotion of residual `UNCERTAIN` (the "DB-as-gold-standard" stance) 
 
 ```bash
 # Recommended: clone and install in development mode
-git clone https://github.com/rpatrik96/hallmark.git
+# (anonymized for double-blind review; download from https://anonymous.4open.science/r/hallmark/)
 cd hallmark
 uv pip install -e ".[dev]"
 
@@ -344,7 +340,7 @@ target as a ranking over both questions at once. Reproduce with
 `python scripts/ablate_taxonomy_fold.py --split test_public`, which writes
 `tables/taxonomy_fold_ablation_*.csv` and rebuilds each tool's confusion matrix
 from `per_type_metrics`, validating it against that result's own published
-figures first. Discussion is in [issue #36](https://github.com/rpatrik96/hallmark/issues/36).
+figures first.
 
 ## Hosting & Croissant
 
@@ -519,7 +515,7 @@ Two caveats on that omission, both open. `bibtexupdater.py` reads `S2_API_KEY` f
 
 5. **A capability gap remains.** Even the highest-recall independent model misses 9% of hallucinations, with systematic weaknesses on subtle types (`near_miss_title`: 58%, `author_mismatch`: 45% for GPT-5.1). No tool dominates across regimes: `bibtex-updater` is cheapest and most temporally stable; Sonnet 4.6 / Opus 4.7 lead on FPR and PPV; the rule-based F1 lead collapses on `test_public`.
 
-See the [paper](https://arxiv.org/abs/2607.18360) for the full per-tier, per-type, and temporal-robustness analyses, or explore them interactively on the [companion website](https://rpatrik96.github.io/hallmark/).
+See the paper for the full per-tier, per-type, and temporal-robustness analyses, or explore them interactively on the companion website in `site/`.
 
 ### External Tool Baselines
 
@@ -625,8 +621,7 @@ abstains over one that guesses — a citation flagged as fabricated is a serious
 accusation against a named author, and at these base rates most such flags are
 wrong. **The gap between "this work does not exist" and "this entry describes a
 real work incorrectly" carries most of the real signal**, and the current
-taxonomy folds the second into the first (see
-[issue #36](https://github.com/rpatrik96/hallmark/issues/36)); on the wild
+taxonomy folds the second into the first; on the wild
 corpus, of the 324 references Stage 2 upheld as flags, 59.0% resolved to a real
 work described wrongly.
 
@@ -714,14 +709,11 @@ hallmark/
 If you use HALLMARK in your research, please cite:
 
 ```bibtex
-@misc{reizinger2026hallmarkdiagnosingfailuremodes,
+@misc{hallmark2026,
       title={HALLMARK: Diagnosing Three Failure Modes in LLM Citation Verifiers},
-      author={Patrik Reizinger and Wieland Brendel},
+      author={Anonymous},
       year={2026},
-      eprint={2607.18360},
-      archivePrefix={arXiv},
-      primaryClass={cs.CR},
-      url={https://arxiv.org/abs/2607.18360},
+      url={https://anonymous.4open.science/r/hallmark/},
 }
 ```
 

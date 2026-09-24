@@ -22,7 +22,7 @@ import json
 import sys
 from pathlib import Path
 
-REPO = Path("/Users/patrik.reizinger/Documents/GitHub/hallmark")
+REPO = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(REPO / "results/relabel_delta"))
 
 from _rescore import load_pred_map, predictions_aligned  # noqa: E402

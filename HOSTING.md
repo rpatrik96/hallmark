@@ -9,8 +9,8 @@ Release and distribution plan for HALLMARK v1.2.3.
 | Channel | URL | Format | Role |
 |---------|-----|--------|------|
 | Anonymous review repo | https://anonymous.4open.science/r/hallmark/ | git | Double-blind review access |
-| GitHub | https://github.com/rpatrik96/hallmark | git | Canonical public release |
-| Companion website | https://rpatrik96.github.io/hallmark/ | static HTML (GitHub Pages, deployed from `site/`) | Interactive results explorer + examples browser |
+| GitHub | withheld for double-blind review | git | Canonical public release |
+| Companion website | withheld for double-blind review; source in `site/` | static HTML (GitHub Pages, deployed from `site/`) | Interactive results explorer + examples browser |
 | HuggingFace mirror | withdrawn with the NeurIPS 2026 submission | — | — |
 | Zenodo DOI | planned at camera-ready | archive | Permanent archival + DOI minting |
 | PyPI | planned at camera-ready | wheel | `pip install hallmark` |

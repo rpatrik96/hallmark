@@ -22,7 +22,7 @@ from scipy.stats import spearmanr
 from hallmark.dataset.schema import BenchmarkEntry, Prediction
 from hallmark.evaluation import evaluate
 
-ROOT = Path("/Users/patrik.reizinger/Documents/GitHub/hallmark")
+ROOT = Path(__file__).resolve().parents[3]
 OUTDIR = ROOT / "results/ablations/a1_prompt_full"
 SAMPLE = OUTDIR / "sample_150.jsonl"
 CKPT = OUTDIR / "checkpoints"

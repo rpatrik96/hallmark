@@ -9,7 +9,7 @@
 ## 1. Per-source survey: what each peer actually reports
 
 ### CiteAudit — `citeaudit` (Shi et al., arXiv:2602.23452v3) — CLOSEST PEER
-Full text read (`/Users/patrik.reizinger/mcp-servers/arxiv/storage/2602.23452_*.pdf`, 67k chars).
+Full text read (`arXiv:2602.23452`, 67k chars).
 - **Dataset:** 9,442 citations — 3,356 real-world + 6,086 human-synthesized; "diverse domains, citation formats, and hallucination types." Taxonomy (Fig. 2): Title errors (keyword-sub / paraphrase / topic-conditioned fabrication), Author errors (4 perturbation ops: redundant add, deletion, name-level swap, fully-synthetic), Metadata errors (venue / year / DOI-identifier). Coarser than HALLMARK's 14-type / 3-tier taxonomy — title/author/metadata groups, no difficulty-tier or sub-test decomposition.
 - **Models evaluated:** 6 systems as baselines — Mixtral-8x7B, Llama-3.3-70B, Qwen3-Next-80B, Gemini-3-Pro, GPT-5.2, Claude-Sonnet-4.5, plus GPTZero; 5 commercial tools cited (GPTZero, CiteCheck, Citely, RefCheck_ai, SwanRef). Their own multi-agent pipeline (Gemini-3-Flash planner/judge + Qwen3-VL-235B extractor) is the proposed method, not an independent baseline.
 - **Decoding:** temperature = 0.0 on planning/judgment stages; memory-match cosine threshold 0.92 (a *fixed* operating point, not swept). §5.1.

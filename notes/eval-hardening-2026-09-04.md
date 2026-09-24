@@ -232,7 +232,7 @@ curve where the instrument looks good.
 Recorded because the pattern matters more than the instances, and every one was
 caught by someone else or by re-measuring.
 
-- Told Patrik `split_name` was missing from released results. It was present in
+- Told the author `split_name` was missing from released results. It was present in
   46 of 47; I had read the key `split`.
 - Wrote "main is red" into a PR from a local test failure. Main was green; the
   test scans a gitignored split CI cannot see.

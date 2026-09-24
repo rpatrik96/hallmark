@@ -42,7 +42,7 @@ from hallmark.baselines.llm_verifier import (
 from hallmark.dataset.schema import BenchmarkEntry, BlindEntry
 from hallmark.evaluation import evaluate
 
-ROOT = Path("/Users/patrik.reizinger/Documents/GitHub/hallmark")
+ROOT = Path(__file__).resolve().parents[3]
 OUTDIR = ROOT / "results/ablations/a1_prompt_full"
 SAMPLE = OUTDIR / "sample_150.jsonl"
 ENDPOINT = "https://openrouter.ai/api/v1"

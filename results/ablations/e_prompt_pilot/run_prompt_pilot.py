@@ -31,9 +31,9 @@ from hallmark.dataset.schema import BenchmarkEntry, BlindEntry
 from hallmark.evaluation import evaluate
 
 SAMPLE = Path(
-    "/Users/patrik.reizinger/Documents/GitHub/hallmark/results/ablations/pilot_sample_dev60.jsonl"
+    str(Path(__file__).resolve().parents[3]) + "/results/ablations/pilot_sample_dev60.jsonl"
 )
-OUTDIR = Path("/Users/patrik.reizinger/Documents/GitHub/hallmark/results/ablations/e_prompt_pilot")
+OUTDIR = Path(__file__).resolve().parents[3] / "results/ablations/e_prompt_pilot"
 MODEL = "deepseek/deepseek-v3.2"  # cheapest live OpenRouter model; prompt effect is model-agnostic
 
 # --- Prompt variants -------------------------------------------------------

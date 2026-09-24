@@ -18,7 +18,7 @@
       "mcc": 0.7706,
       "abstained": 199,
       "coverage": 0.8222,
-      "per_entry_file": "/Users/patrik.reizinger/Documents/GitHub/hallmark/results/relabel_delta/btu_v1_2_0/bibtexupdater_dev_public_per_entry.jsonl"
+      "per_entry_file": "results/relabel_delta/btu_v1_2_0/bibtexupdater_dev_public_per_entry.jsonl"
     },
     "test_public": {
       "n": 831,
@@ -35,7 +35,7 @@
       "mcc": 0.7498,
       "abstained": 171,
       "coverage": 0.7942,
-      "per_entry_file": "/Users/patrik.reizinger/Documents/GitHub/hallmark/results/relabel_delta/btu_v1_2_0/bibtexupdater_test_public_per_entry.jsonl"
+      "per_entry_file": "results/relabel_delta/btu_v1_2_0/bibtexupdater_test_public_per_entry.jsonl"
     }
   },
   "isolation": {

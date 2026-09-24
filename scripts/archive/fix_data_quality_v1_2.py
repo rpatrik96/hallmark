@@ -15,7 +15,7 @@ import sys
 from collections import defaultdict
 from pathlib import Path
 
-BASE = Path("/Users/patrik.reizinger/Documents/GitHub/hallmark/data/v1.2")
+BASE = Path(__file__).resolve().parents[2] / "data/v1.2"
 TARGET_FILES = ["dev_public.jsonl", "test_public.jsonl", "stress_test.jsonl"]
 
 # Canary template - one per file, venue_correct (not venue_real)

@@ -14,7 +14,7 @@ from pathlib import Path
 from hallmark.baselines.registry import get_registry
 from hallmark.dataset.schema import BenchmarkEntry
 
-REPO = Path("/Users/patrik.reizinger/Documents/GitHub/hallmark")
+REPO = Path(__file__).resolve().parents[2]
 DELTA = REPO / "results/relabel_delta"
 
 

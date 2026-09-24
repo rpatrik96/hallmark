@@ -2,7 +2,7 @@
 
 **Date:** 2026-05-30
 **Benchmark branch:** `chore/paper-todo-resolution` (v1.1.1 corrected data: dev 513 valid / 606 hall, n=1119; test 312/519; hidden 210/244)
-**Paper branch:** `arxiv-prep` (`/Users/patrik.reizinger/Documents/GitHub/hallmark-paper`)
+**Paper branch:** `arxiv-prep` (`hallmark-paper`)
 
 Consolidates the three Generate outputs:
 - `results/relabel_delta/todo_offline.json` — offline re-score of persisted per-entry predictions vs NEW labels (per-source DR, per-type, shortcut refit, DOI per-type status)

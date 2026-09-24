@@ -16,7 +16,7 @@ import random
 from collections import defaultdict
 from pathlib import Path
 
-ROOT = Path("/Users/patrik.reizinger/Documents/GitHub/hallmark")
+ROOT = Path(__file__).resolve().parents[3]
 DEV = ROOT / "data/v1.2/dev_public.jsonl"
 OUTDIR = ROOT / "results/ablations/a1_prompt_full"
 N = 150

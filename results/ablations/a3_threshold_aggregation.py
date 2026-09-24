@@ -24,16 +24,16 @@ import json
 from pathlib import Path
 from typing import Any
 
-ABL = Path("/Users/patrik.reizinger/Documents/GitHub/hallmark/results/ablations")
+ABL = Path(__file__).resolve().parents[2] / "results/ablations"
 SAMPLE = ABL / "pilot_sample_dev60.jsonl"
-PRED_GLOB = "/Users/patrik.reizinger/Documents/GitHub/hallmark/results/*_predictions.jsonl"
+PRED_GLOB = str(Path(__file__).resolve().parents[2]) + "/results/*_predictions.jsonl"
 AGENTIC = (
-    "/Users/patrik.reizinger/Documents/GitHub/hallmark/results/checkpoints/"
+    str(Path(__file__).resolve().parents[2]) + "/results/checkpoints/"
     "llm_agentic_btu_sonnet_4_6_dev_public/"
     "agentic_btu_openai_anthropic_claude-sonnet-4.6.jsonl"
 )
 SONNET_ZS = (
-    "/Users/patrik.reizinger/Documents/GitHub/hallmark/results/"
+    str(Path(__file__).resolve().parents[2]) + "/results/"
     "llm_openrouter_claude_sonnet_4_6_dev_public_predictions.jsonl"
 )
 
