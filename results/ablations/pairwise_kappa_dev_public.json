@@ -1,0 +1,277 @@
+{
+  "Opus 4.7 vs Sonnet 4.6": {
+    "agreement": 0.8749,
+    "kappa": 0.7456,
+    "n": 1119
+  },
+  "Opus 4.7 vs DeepSeek-R1": {
+    "agreement": 0.6819,
+    "kappa": 0.3168,
+    "n": 1119
+  },
+  "Opus 4.7 vs DeepSeek-V3.2": {
+    "agreement": 0.6533,
+    "kappa": 0.243,
+    "n": 1119
+  },
+  "Opus 4.7 vs Gemini 2.5 Flash": {
+    "agreement": 0.6899,
+    "kappa": 0.4094,
+    "n": 1119
+  },
+  "Opus 4.7 vs Mistral Large": {
+    "agreement": 0.7399,
+    "kappa": 0.4804,
+    "n": 1119
+  },
+  "Opus 4.7 vs Qwen3-235B": {
+    "agreement": 0.7024,
+    "kappa": 0.3698,
+    "n": 1119
+  },
+  "Opus 4.7 vs GPT-5.4": {
+    "agreement": 0.7891,
+    "kappa": 0.5759,
+    "n": 1119
+  },
+  "Opus 4.7 vs GPT-5.1": {
+    "agreement": 0.7587,
+    "kappa": 0.4985,
+    "n": 1119
+  },
+  "Opus 4.7 vs Llama 4 Maverick": {
+    "agreement": 0.7507,
+    "kappa": 0.5143,
+    "n": 1119
+  },
+  "Opus 4.7 vs Qwen3-VL-235B": {
+    "agreement": 0.6988,
+    "kappa": 0.3606,
+    "n": 1119
+  },
+  "Sonnet 4.6 vs DeepSeek-R1": {
+    "agreement": 0.6765,
+    "kappa": 0.3094,
+    "n": 1119
+  },
+  "Sonnet 4.6 vs DeepSeek-V3.2": {
+    "agreement": 0.6443,
+    "kappa": 0.2292,
+    "n": 1119
+  },
+  "Sonnet 4.6 vs Gemini 2.5 Flash": {
+    "agreement": 0.7113,
+    "kappa": 0.4481,
+    "n": 1119
+  },
+  "Sonnet 4.6 vs Mistral Large": {
+    "agreement": 0.756,
+    "kappa": 0.5125,
+    "n": 1119
+  },
+  "Sonnet 4.6 vs Qwen3-235B": {
+    "agreement": 0.7078,
+    "kappa": 0.3841,
+    "n": 1119
+  },
+  "Sonnet 4.6 vs GPT-5.4": {
+    "agreement": 0.8159,
+    "kappa": 0.63,
+    "n": 1119
+  },
+  "Sonnet 4.6 vs GPT-5.1": {
+    "agreement": 0.7712,
+    "kappa": 0.526,
+    "n": 1119
+  },
+  "Sonnet 4.6 vs Llama 4 Maverick": {
+    "agreement": 0.7614,
+    "kappa": 0.5343,
+    "n": 1119
+  },
+  "Sonnet 4.6 vs Qwen3-VL-235B": {
+    "agreement": 0.7006,
+    "kappa": 0.3676,
+    "n": 1119
+  },
+  "DeepSeek-R1 vs DeepSeek-V3.2": {
+    "agreement": 0.8302,
+    "kappa": 0.497,
+    "n": 1119
+  },
+  "DeepSeek-R1 vs Gemini 2.5 Flash": {
+    "agreement": 0.5344,
+    "kappa": 0.2201,
+    "n": 1119
+  },
+  "DeepSeek-R1 vs Mistral Large": {
+    "agreement": 0.6184,
+    "kappa": 0.24,
+    "n": 1119
+  },
+  "DeepSeek-R1 vs Qwen3-235B": {
+    "agreement": 0.815,
+    "kappa": 0.5286,
+    "n": 1119
+  },
+  "DeepSeek-R1 vs GPT-5.4": {
+    "agreement": 0.6962,
+    "kappa": 0.3794,
+    "n": 1119
+  },
+  "DeepSeek-R1 vs GPT-5.1": {
+    "agreement": 0.7569,
+    "kappa": 0.4307,
+    "n": 1119
+  },
+  "DeepSeek-R1 vs Llama 4 Maverick": {
+    "agreement": 0.6184,
+    "kappa": 0.3085,
+    "n": 1119
+  },
+  "DeepSeek-R1 vs Qwen3-VL-235B": {
+    "agreement": 0.8275,
+    "kappa": 0.5552,
+    "n": 1119
+  },
+  "DeepSeek-V3.2 vs Gemini 2.5 Flash": {
+    "agreement": 0.4969,
+    "kappa": 0.1866,
+    "n": 1119
+  },
+  "DeepSeek-V3.2 vs Mistral Large": {
+    "agreement": 0.647,
+    "kappa": 0.2976,
+    "n": 1119
+  },
+  "DeepSeek-V3.2 vs Qwen3-235B": {
+    "agreement": 0.7989,
+    "kappa": 0.4544,
+    "n": 1119
+  },
+  "DeepSeek-V3.2 vs GPT-5.4": {
+    "agreement": 0.6658,
+    "kappa": 0.3142,
+    "n": 1119
+  },
+  "DeepSeek-V3.2 vs GPT-5.1": {
+    "agreement": 0.7551,
+    "kappa": 0.4039,
+    "n": 1119
+  },
+  "DeepSeek-V3.2 vs Llama 4 Maverick": {
+    "agreement": 0.5773,
+    "kappa": 0.2497,
+    "n": 1119
+  },
+  "DeepSeek-V3.2 vs Qwen3-VL-235B": {
+    "agreement": 0.8168,
+    "kappa": 0.4952,
+    "n": 1119
+  },
+  "Gemini 2.5 Flash vs Mistral Large": {
+    "agreement": 0.7712,
+    "kappa": 0.5411,
+    "n": 1119
+  },
+  "Gemini 2.5 Flash vs Qwen3-235B": {
+    "agreement": 0.6014,
+    "kappa": 0.311,
+    "n": 1119
+  },
+  "Gemini 2.5 Flash vs GPT-5.4": {
+    "agreement": 0.7525,
+    "kappa": 0.5123,
+    "n": 1119
+  },
+  "Gemini 2.5 Flash vs GPT-5.1": {
+    "agreement": 0.6488,
+    "kappa": 0.3652,
+    "n": 1119
+  },
+  "Gemini 2.5 Flash vs Llama 4 Maverick": {
+    "agreement": 0.8713,
+    "kappa": 0.7216,
+    "n": 1119
+  },
+  "Gemini 2.5 Flash vs Qwen3-VL-235B": {
+    "agreement": 0.5943,
+    "kappa": 0.3027,
+    "n": 1119
+  },
+  "Mistral Large vs Qwen3-235B": {
+    "agreement": 0.6461,
+    "kappa": 0.2946,
+    "n": 1119
+  },
+  "Mistral Large vs GPT-5.4": {
+    "agreement": 0.8025,
+    "kappa": 0.6051,
+    "n": 1119
+  },
+  "Mistral Large vs GPT-5.1": {
+    "agreement": 0.7417,
+    "kappa": 0.4846,
+    "n": 1119
+  },
+  "Mistral Large vs Llama 4 Maverick": {
+    "agreement": 0.8159,
+    "kappa": 0.6312,
+    "n": 1119
+  },
+  "Mistral Large vs Qwen3-VL-235B": {
+    "agreement": 0.655,
+    "kappa": 0.3125,
+    "n": 1119
+  },
+  "Qwen3-235B vs GPT-5.4": {
+    "agreement": 0.7542,
+    "kappa": 0.5001,
+    "n": 1119
+  },
+  "Qwen3-235B vs GPT-5.1": {
+    "agreement": 0.8204,
+    "kappa": 0.5926,
+    "n": 1119
+  },
+  "Qwen3-235B vs Llama 4 Maverick": {
+    "agreement": 0.6872,
+    "kappa": 0.4229,
+    "n": 1119
+  },
+  "Qwen3-235B vs Qwen3-VL-235B": {
+    "agreement": 0.9071,
+    "kappa": 0.7729,
+    "n": 1119
+  },
+  "GPT-5.4 vs GPT-5.1": {
+    "agreement": 0.8195,
+    "kappa": 0.6348,
+    "n": 1119
+  },
+  "GPT-5.4 vs Llama 4 Maverick": {
+    "agreement": 0.8293,
+    "kappa": 0.6614,
+    "n": 1119
+  },
+  "GPT-5.4 vs Qwen3-VL-235B": {
+    "agreement": 0.7525,
+    "kappa": 0.4961,
+    "n": 1119
+  },
+  "GPT-5.1 vs Llama 4 Maverick": {
+    "agreement": 0.7274,
+    "kappa": 0.4842,
+    "n": 1119
+  },
+  "GPT-5.1 vs Qwen3-VL-235B": {
+    "agreement": 0.8061,
+    "kappa": 0.5576,
+    "n": 1119
+  },
+  "Llama 4 Maverick vs Qwen3-VL-235B": {
+    "agreement": 0.6801,
+    "kappa": 0.4116,
+    "n": 1119
+  }
+}

@@ -89,6 +89,24 @@ ZEROSHOT_FILES: dict[str, tuple[Path, str]] = {
     ),
 }
 
+# Voters used only by the (b3) ensemble, not the (a) threshold sweep: each reproduces its
+# tab:results dev_public row, so it joins the ensemble and tab:llm_agreement. Gemini 2.5 Pro
+# stays out: its only per-entry dev_public file does not reproduce its reported row.
+EXTRA_VOTER_FILES: dict[str, tuple[Path, str]] = {
+    "gpt_5_1": (
+        ROOT / "results/checkpoints/llm_openai/openai_gpt-5.1.jsonl",
+        "openai/gpt-5.1 zero-shot checkpoint (dev_public + test_public; filtered to dev)",
+    ),
+    "llama_4_maverick": (
+        ROOT / "results/new_models/llama4_maverick.jsonl",
+        "openrouter/meta-llama/llama-4-maverick",
+    ),
+    "qwen3_vl_235b": (
+        ROOT / "results/new_models/qwen_max.jsonl",
+        "openrouter/qwen/qwen3-vl-235b-a22b-instruct (FPR one entry off tab:results)",
+    ),
+}
+
 # Real-DB-resolver per-entry records (bibtexupdater; NOT LLM-drift-prone).
 BTU_RAW = ROOT / "data/v1.2/baseline_results/bibtexupdater_raw_dev_public.jsonl"
 
@@ -419,7 +437,7 @@ def main() -> None:
 
     # ---- (b3) NOISY-VOTER ENSEMBLE (N zero-shot LLMs as independent lookups) ----
     voter_preds: dict[str, dict[str, str]] = {}
-    for name, (path, _prov) in ZEROSHOT_FILES.items():
+    for name, (path, _prov) in (ZEROSHOT_FILES | EXTRA_VOTER_FILES).items():
         voter_preds[name] = {
             r["bibtex_key"]: r["label"] for r in read_jsonl(path) if r["bibtex_key"] in skeys
         }

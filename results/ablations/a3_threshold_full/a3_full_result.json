@@ -3274,7 +3274,7 @@
     },
     "b3_noisy_voter_ensemble": {
       "rationale": "the empirically faithful model of the reviewer's concern: N real, fallible verifiers as N independent 'lookups'. any-miss = flag HALL if ANY says HALL (the agentic harness rule); majority = flag HALL if >= ceil(N/2) do.",
-      "n_voters": 8,
+      "n_voters": 11,
       "voters": [
         "claude_opus_4_7",
         "claude_sonnet_4_6",
@@ -3283,52 +3283,55 @@
         "gemini_flash",
         "mistral",
         "qwen",
-        "gpt_5_4"
+        "gpt_5_4",
+        "gpt_5_1",
+        "llama_4_maverick",
+        "qwen3_vl_235b"
       ],
       "rules": {
-        "any_miss (>=1 of 8)": {
-          "DR": 0.9917,
-          "FPR": 0.8713,
-          "F1": 0.7267,
-          "MCC": 0.2461,
-          "fp": 447,
-          "fn": 5
+        "any_miss (>=1 of 11)": {
+          "DR": 0.995,
+          "FPR": 0.8811,
+          "F1": 0.7261,
+          "MCC": 0.2445,
+          "fp": 452,
+          "fn": 3
         },
-        "two_votes (>=2 of 8)": {
-          "DR": 0.9835,
-          "FPR": 0.6959,
-          "F1": 0.7646,
-          "MCC": 0.4032,
-          "fp": 357,
-          "fn": 10
+        "two_votes (>=2 of 11)": {
+          "DR": 0.9851,
+          "FPR": 0.7427,
+          "F1": 0.7538,
+          "MCC": 0.364,
+          "fp": 381,
+          "fn": 9
         },
-        "majority (>=5 of 8)": {
-          "DR": 0.8185,
-          "FPR": 0.1774,
-          "F1": 0.8315,
-          "MCC": 0.6396,
-          "fp": 91,
-          "fn": 110
+        "majority (>=6 of 11)": {
+          "DR": 0.8284,
+          "FPR": 0.2671,
+          "F1": 0.8064,
+          "MCC": 0.5651,
+          "fp": 137,
+          "fn": 104
         },
-        "supermajority (>=7 of 8)": {
-          "DR": 0.6337,
-          "FPR": 0.0565,
-          "F1": 0.7537,
-          "MCC": 0.5959,
-          "fp": 29,
-          "fn": 222
+        "supermajority (>=10 of 11)": {
+          "DR": 0.5759,
+          "FPR": 0.0487,
+          "F1": 0.7122,
+          "MCC": 0.5568,
+          "fp": 25,
+          "fn": 257
         },
-        "unanimous (>=8 of 8)": {
-          "DR": 0.4472,
+        "unanimous (>=11 of 11)": {
+          "DR": 0.4307,
           "FPR": 0.0409,
-          "F1": 0.6036,
-          "MCC": 0.461,
+          "F1": 0.5878,
+          "MCC": 0.4473,
           "fp": 21,
-          "fn": 335
+          "fn": 345
         }
       },
-      "fpr_reduction_majority_vs_anymiss_pp": 69.4,
-      "dr_change_majority_vs_anymiss_pp": -17.3
+      "fpr_reduction_majority_vs_anymiss_pp": 61.4,
+      "dr_change_majority_vs_anymiss_pp": -16.7
     }
   },
   "agentic_vs_zeroshot_sonnet": {
