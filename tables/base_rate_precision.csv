@@ -1,10 +1,10 @@
 tool,split,detection_rate,false_positive_rate,prevalence,precision,flags_per_true_finding
-bibtexupdater_test_public,test_public,0.8767,0.1154,0.0010,0.0075,132.5
-bibtexupdater_test_public,test_public,0.8767,0.1154,0.0050,0.0368,27.2
-bibtexupdater_test_public,test_public,0.8767,0.1154,0.0100,0.0713,14.0
-bibtexupdater_test_public,test_public,0.8767,0.1154,0.0500,0.2857,3.5
-bibtexupdater_test_public,test_public,0.8767,0.1154,0.2000,0.6551,1.5
-bibtexupdater_test_public,test_public,0.8767,0.1154,0.6250,0.9268,1.1
+bibtexupdater_test_public,test_public,0.8382,0.0801,0.0010,0.0104,96.5
+bibtexupdater_test_public,test_public,0.8382,0.0801,0.0050,0.0499,20.0
+bibtexupdater_test_public,test_public,0.8382,0.0801,0.0100,0.0956,10.5
+bibtexupdater_test_public,test_public,0.8382,0.0801,0.0500,0.3551,2.8
+bibtexupdater_test_public,test_public,0.8382,0.0801,0.2000,0.7234,1.4
+bibtexupdater_test_public,test_public,0.8382,0.0801,0.6250,0.9458,1.1
 cascade_db_diagnosis_aggressive_test_public,test_public,0.9923,0.1603,0.0010,0.0062,162.3
 cascade_db_diagnosis_aggressive_test_public,test_public,0.9923,0.1603,0.0050,0.0302,33.1
 cascade_db_diagnosis_aggressive_test_public,test_public,0.9923,0.1603,0.0100,0.0589,17.0

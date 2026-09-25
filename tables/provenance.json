@@ -2,7 +2,7 @@
   "base_rate_precision.csv": {
     "generator": "scripts/compute_base_rate_precision.py",
     "inputs": {
-      "data/v1.2/baseline_results/bibtexupdater_test_public.json": "132b4d2fa383b8c2f359bb62e5c9ce6ab1f3f14ce233b88edb25293d9870e517",
+      "data/v1.2/baseline_results/bibtexupdater_test_public.json": "b1fad9384ba9181ccbce37be65a4b585b4c3484d3f1d2fdad5fb65ceb9092946",
       "data/v1.2/baseline_results/cascade_db_diagnosis_aggressive_test_public.json": "f8c2b0cdc4a311a741c9528880de28fea8759cd3dd4bfd1ca715851c3f2595c5",
       "data/v1.2/baseline_results/cascade_db_diagnosis_test_public.json": "0b8e28af6ceaa9b327d17bea79a9fd5c7d59d596c7eff966dfcd076485241d77",
       "data/v1.2/baseline_results/doi_only_test_public.json": "716ed587dc829f3b549ad5e846310a4705626758c80b432e42218d4aad274fda",
@@ -27,8 +27,8 @@
   "main_results_dev_public.csv": {
     "generator": "scripts/generate_site_data.py",
     "inputs": {
-      "data/v1.2/baseline_results/bibtexupdater_dev_public.json": "ffd86c74d466d1477cf358d571f02c9ed4c4df6dc7df605ad8b8a7a596dbba39",
-      "data/v1.2/baseline_results/bibtexupdater_test_public.json": "132b4d2fa383b8c2f359bb62e5c9ce6ab1f3f14ce233b88edb25293d9870e517",
+      "data/v1.2/baseline_results/bibtexupdater_dev_public.json": "19311f0141dc25c7acf9f6f3e56f08bad2b29e9cd7044cd5e94dc82d1a1c5745",
+      "data/v1.2/baseline_results/bibtexupdater_test_public.json": "b1fad9384ba9181ccbce37be65a4b585b4c3484d3f1d2fdad5fb65ceb9092946",
       "data/v1.2/baseline_results/doi_only_dev_public.json": "6580622f7c22e40bf24bf660c4cb375b2e1d3ec45bff716c2cbc1e9f1504397e",
       "data/v1.2/baseline_results/doi_only_test_public.json": "716ed587dc829f3b549ad5e846310a4705626758c80b432e42218d4aad274fda",
       "data/v1.2/baseline_results/llm_agentic_btu_openai_dev_public.json": "c3545fea4b9bb6001146fa135e15989781e4fe757b08689a8eb11a2dc82ad407",
@@ -69,7 +69,7 @@
   "taxonomy_fold_ablation_dev_public.csv": {
     "generator": "scripts/ablate_taxonomy_fold.py",
     "inputs": {
-      "data/v1.2/baseline_results/bibtexupdater_dev_public.json": "ffd86c74d466d1477cf358d571f02c9ed4c4df6dc7df605ad8b8a7a596dbba39",
+      "data/v1.2/baseline_results/bibtexupdater_dev_public.json": "19311f0141dc25c7acf9f6f3e56f08bad2b29e9cd7044cd5e94dc82d1a1c5745",
       "data/v1.2/baseline_results/cascade_db_diagnosis_aggressive_dev_public.json": "0f54d388799fbf499937679ba7e8b779d2fe8e3b05646e7f3933b966b16f3a3a",
       "data/v1.2/baseline_results/cascade_db_diagnosis_dev_public.json": "5df803dde0d7fe80413072132677630b09761e9d313370611712ae0a7851747c",
       "data/v1.2/baseline_results/doi_only_dev_public.json": "6580622f7c22e40bf24bf660c4cb375b2e1d3ec45bff716c2cbc1e9f1504397e",
@@ -94,7 +94,7 @@
   "taxonomy_fold_ablation_dev_public_hybrid_fabrication.csv": {
     "generator": "scripts/ablate_taxonomy_fold.py",
     "inputs": {
-      "data/v1.2/baseline_results/bibtexupdater_dev_public.json": "ffd86c74d466d1477cf358d571f02c9ed4c4df6dc7df605ad8b8a7a596dbba39",
+      "data/v1.2/baseline_results/bibtexupdater_dev_public.json": "19311f0141dc25c7acf9f6f3e56f08bad2b29e9cd7044cd5e94dc82d1a1c5745",
       "data/v1.2/baseline_results/cascade_db_diagnosis_aggressive_dev_public.json": "0f54d388799fbf499937679ba7e8b779d2fe8e3b05646e7f3933b966b16f3a3a",
       "data/v1.2/baseline_results/cascade_db_diagnosis_dev_public.json": "5df803dde0d7fe80413072132677630b09761e9d313370611712ae0a7851747c",
       "data/v1.2/baseline_results/doi_only_dev_public.json": "6580622f7c22e40bf24bf660c4cb375b2e1d3ec45bff716c2cbc1e9f1504397e",
@@ -119,7 +119,7 @@
   "taxonomy_fold_ablation_dev_public_neurips_2026.csv": {
     "generator": "scripts/ablate_taxonomy_fold.py",
     "inputs": {
-      "data/v1.2/baseline_results/bibtexupdater_dev_public.json": "ffd86c74d466d1477cf358d571f02c9ed4c4df6dc7df605ad8b8a7a596dbba39",
+      "data/v1.2/baseline_results/bibtexupdater_dev_public.json": "19311f0141dc25c7acf9f6f3e56f08bad2b29e9cd7044cd5e94dc82d1a1c5745",
       "data/v1.2/baseline_results/cascade_db_diagnosis_aggressive_dev_public.json": "0f54d388799fbf499937679ba7e8b779d2fe8e3b05646e7f3933b966b16f3a3a",
       "data/v1.2/baseline_results/cascade_db_diagnosis_dev_public.json": "5df803dde0d7fe80413072132677630b09761e9d313370611712ae0a7851747c",
       "data/v1.2/baseline_results/doi_only_dev_public.json": "6580622f7c22e40bf24bf660c4cb375b2e1d3ec45bff716c2cbc1e9f1504397e",
@@ -151,7 +151,7 @@
   "taxonomy_fold_ablation_test_public.csv": {
     "generator": "scripts/ablate_taxonomy_fold.py",
     "inputs": {
-      "data/v1.2/baseline_results/bibtexupdater_test_public.json": "132b4d2fa383b8c2f359bb62e5c9ce6ab1f3f14ce233b88edb25293d9870e517",
+      "data/v1.2/baseline_results/bibtexupdater_test_public.json": "b1fad9384ba9181ccbce37be65a4b585b4c3484d3f1d2fdad5fb65ceb9092946",
       "data/v1.2/baseline_results/cascade_db_diagnosis_aggressive_test_public.json": "f8c2b0cdc4a311a741c9528880de28fea8759cd3dd4bfd1ca715851c3f2595c5",
       "data/v1.2/baseline_results/cascade_db_diagnosis_test_public.json": "0b8e28af6ceaa9b327d17bea79a9fd5c7d59d596c7eff966dfcd076485241d77",
       "data/v1.2/baseline_results/doi_only_test_public.json": "716ed587dc829f3b549ad5e846310a4705626758c80b432e42218d4aad274fda",
@@ -176,7 +176,7 @@
   "taxonomy_fold_ablation_test_public_hybrid_fabrication.csv": {
     "generator": "scripts/ablate_taxonomy_fold.py",
     "inputs": {
-      "data/v1.2/baseline_results/bibtexupdater_test_public.json": "132b4d2fa383b8c2f359bb62e5c9ce6ab1f3f14ce233b88edb25293d9870e517",
+      "data/v1.2/baseline_results/bibtexupdater_test_public.json": "b1fad9384ba9181ccbce37be65a4b585b4c3484d3f1d2fdad5fb65ceb9092946",
       "data/v1.2/baseline_results/cascade_db_diagnosis_aggressive_test_public.json": "f8c2b0cdc4a311a741c9528880de28fea8759cd3dd4bfd1ca715851c3f2595c5",
       "data/v1.2/baseline_results/cascade_db_diagnosis_test_public.json": "0b8e28af6ceaa9b327d17bea79a9fd5c7d59d596c7eff966dfcd076485241d77",
       "data/v1.2/baseline_results/doi_only_test_public.json": "716ed587dc829f3b549ad5e846310a4705626758c80b432e42218d4aad274fda",
@@ -201,7 +201,7 @@
   "taxonomy_fold_ablation_test_public_neurips_2026.csv": {
     "generator": "scripts/ablate_taxonomy_fold.py",
     "inputs": {
-      "data/v1.2/baseline_results/bibtexupdater_test_public.json": "132b4d2fa383b8c2f359bb62e5c9ce6ab1f3f14ce233b88edb25293d9870e517",
+      "data/v1.2/baseline_results/bibtexupdater_test_public.json": "b1fad9384ba9181ccbce37be65a4b585b4c3484d3f1d2fdad5fb65ceb9092946",
       "data/v1.2/baseline_results/cascade_db_diagnosis_aggressive_test_public.json": "f8c2b0cdc4a311a741c9528880de28fea8759cd3dd4bfd1ca715851c3f2595c5",
       "data/v1.2/baseline_results/cascade_db_diagnosis_test_public.json": "0b8e28af6ceaa9b327d17bea79a9fd5c7d59d596c7eff966dfcd076485241d77",
       "data/v1.2/baseline_results/doi_only_test_public.json": "716ed587dc829f3b549ad5e846310a4705626758c80b432e42218d4aad274fda",

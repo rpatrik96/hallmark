@@ -15,5 +15,5 @@ llm_openrouter_deepseek_v3,dev_public,DeepSeek-V3.2,zero-shot,0.9109,0.7018,0.72
 llm_agentic_openai,dev_public,GPT-5.1 + CrossRef/OpenAlex/arXiv,agentic,0.9670,0.4776,0.8156,0.5578,0.8922,0.1750,1.0000,0.0801,false
 llm_agentic_btu_openai,dev_public,GPT-5.1 + bibtex-updater (tool optional),agentic,0.9802,0.4698,0.8244,0.5844,0.8997,0.1250,1.0000,-0.1140,false
 llm_agentic_btu_sonnet_4_6,dev_public,Sonnet 4.6 + bibtex-updater (tool optional),agentic,0.9901,0.4308,0.8409,0.6305,0.9125,0.1179,1.0000,-0.0879,false
-bibtexupdater,dev_public,bibtex-updater,co-designed,0.8647,0.0916,0.8904,0.7706,0.9084,0.3829,0.8686,0.0238,false
+bibtexupdater,dev_public,bibtex-updater,co-designed,0.8201,0.0507,0.8804,0.7684,0.8922,0.3215,0.8686,0.0294,false
 llm_tool_augmented,dev_public,GPT-5.1 + bibtex-updater (always-call; output in prompt),co-designed,0.8432,0.1443,0.8564,0.6977,0.8726,0.0783,0.9294,0.1121,false

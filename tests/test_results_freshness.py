@@ -501,10 +501,10 @@ def test_per_type_rows_with_num_valid_are_not_flagged(tmp_path):
 
 @pytest.mark.skipif(not _REAL_RESULTS_DIR.is_dir(), reason="real results dir not present")
 def test_the_released_results_report_the_superseded_definition():
-    """Pins the count: 39 of the 42 released results, reported and not fatal."""
+    """Pins the count: 37 of the 42 released results, reported and not fatal."""
     res = crf.check_freshness(_REAL_RESULTS_DIR, version="v1.2", data_dir=_REAL_DATA_DIR)
     flagged = [r.result_file for r in res.reports if r.superseded_per_type]
-    assert len(flagged) == 39, f"{len(flagged)} of {len(res.reports)} flagged: {flagged[:5]}"
+    assert len(flagged) == 37, f"{len(flagged)} of {len(res.reports)} flagged: {flagged[:5]}"
     assert res.passed, res.errors
 
 

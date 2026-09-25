@@ -26,7 +26,7 @@ which is exactly how the previous one came to be switched off; the count check
 still applies to it. A result whose ``per_type_metrics`` rows predate
 ``num_valid``/``precision`` is reported the same way: those rows scored their
 false positives inside the type, so their f1 is 2*DR/(1+DR) and their
-false-positive rate 0.0, and 39 of the 42 released results carry them.
+false-positive rate 0.0, and 37 of the 42 released results carry them.
 
 Files under ``<results-dir>/archive/`` are skipped. A run kept for the record --
 a CI sample, a smoke run, a probe -- scores no current split, and parking it
@@ -106,7 +106,7 @@ KNOWN_STALE_TABLES: dict[str, str] = {}
 #: and the released directory publishes ``per_type_metrics.f1`` under both.
 #:
 #: A result carrying the old rows is reported **unverifiable**, on the contract
-#: that already covers a result predating ``split_sha256``: 39 of the 42
+#: that already covers a result predating ``split_sha256``: 37 of the 42
 #: released results carry it, and a fatal check tripping on all of them at once
 #: is how a guard gets switched off. They are regenerated with the next release.
 CURRENT_PER_TYPE_FIELDS: tuple[str, ...] = ("num_valid", "precision")

@@ -1,5 +1,5 @@
 tool,split,real_mode_dr,as_shipped_dr,as_shipped_fpr,as_shipped_f1,as_shipped_mcc,folded_out_dr,folded_out_fpr,folded_out_f1,folded_out_mcc,as_false_positives_dr,as_false_positives_fpr,as_false_positives_f1,as_false_positives_mcc
-bibtexupdater_dev_public,dev_public,1.0000,0.8647,0.0916,0.8904,0.7706,0.8586,0.0916,0.8853,0.7656,0.8586,0.1354,0.8653,0.7229
+bibtexupdater_dev_public,dev_public,1.0000,0.8201,0.0507,0.8804,0.7684,0.8121,0.0507,0.8747,0.7631,0.8121,0.0965,0.8540,0.7166
 cascade_db_diagnosis_aggressive_dev_public,dev_public,1.0000,0.9967,0.1481,0.9393,0.8659,0.9966,0.1481,0.9368,0.8637,0.9966,0.1892,0.9175,0.8262
 cascade_db_diagnosis_dev_public,dev_public,1.0000,0.9951,0.1072,0.9542,0.8989,0.9949,0.1072,0.9522,0.8971,0.9949,0.1503,0.9322,0.8575
 doi_only_dev_public,dev_public,0.1538,0.2178,0.0429,0.3474,0.2530,0.2207,0.0429,0.3507,0.2579,0.2207,0.0482,0.3488,0.2501

@@ -2,11 +2,11 @@
   "version": "1.0",
   "files": {
     "bibtexupdater_dev_public.json": {
-      "sha256": "ffd86c74d466d1477cf358d571f02c9ed4c4df6dc7df605ad8b8a7a596dbba39",
+      "sha256": "19311f0141dc25c7acf9f6f3e56f08bad2b29e9cd7044cd5e94dc82d1a1c5745",
       "baseline": "bibtexupdater",
       "split": "dev_public",
       "num_entries": 1119,
-      "f1_hallucination": 0.8903993203058623
+      "f1_hallucination": 0.8804251550044286
     },
     "bibtexupdater_raw_dev_public.jsonl": {
       "sha256": "bfa01ad369fe974829002fef0e9296da847efaee8d07556b3ff75eb639009e09"
@@ -15,11 +15,11 @@
       "sha256": "39244a8fcbb8bc1ba08dd64eb7ff6f347e195954f207c6a61309f26080b95348"
     },
     "bibtexupdater_test_public.json": {
-      "sha256": "132b4d2fa383b8c2f359bb62e5c9ce6ab1f3f14ce233b88edb25293d9870e517",
+      "sha256": "b1fad9384ba9181ccbce37be65a4b585b4c3484d3f1d2fdad5fb65ceb9092946",
       "baseline": "bibtexupdater",
       "split": "test_public",
       "num_entries": 831,
-      "f1_hallucination": 0.900990099009901
+      "f1_hallucination": 0.8886618998978549
     },
     "cascade_db_diagnosis_aggressive_dev_public.json": {
       "sha256": "0f54d388799fbf499937679ba7e8b779d2fe8e3b05646e7f3933b966b16f3a3a",

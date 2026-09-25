@@ -4,21 +4,21 @@
   "num_entries": 831,
   "num_hallucinated": 519,
   "num_valid": 312,
-  "detection_rate": 0.8766859344894027,
-  "false_positive_rate": 0.11538461538461539,
-  "f1_hallucination": 0.900990099009901,
-  "tier_weighted_f1": 0.9163780306778823,
-  "mcc": 0.7497860459728523,
-  "macro_f1": 0.8738079329405333,
+  "detection_rate": 0.838150289017341,
+  "false_positive_rate": 0.08012820512820513,
+  "f1_hallucination": 0.8886618998978549,
+  "tier_weighted_f1": 0.9048817312531454,
+  "mcc": 0.7383749656296459,
+  "macro_f1": 0.8645359279869949,
   "union_recall_at_k": {},
   "temporal_robustness": null,
   "cost_efficiency": null,
-  "mean_api_calls": 1.8856799037304453,
-  "ece": 0.3991794010533843,
-  "auroc": 0.6741792648584556,
-  "auprc": 0.8189893946307215,
+  "mean_api_calls": 0.0,
+  "ece": 0.32597578502914526,
+  "auroc": 0.9107411936169162,
+  "auprc": 0.9252056473263868,
   "num_uncertain": 101,
-  "tier3_f1": 0.8456790123456791,
+  "tier3_f1": 0.8698412698412699,
   "detection_rate_ci": null,
   "f1_hallucination_ci": null,
   "tier_weighted_f1_ci": null,
@@ -28,124 +28,184 @@
   "tier3_f1_ci": null,
   "per_tier_metrics": {
     "1": {
-      "detection_rate": 0.9307692307692308,
-      "false_positive_rate": 0.11538461538461539,
-      "f1": 0.843205574912892,
-      "precision": 0.7707006369426752,
-      "num_hallucinated": 130,
+      "detection_rate": 0.84375,
+      "false_positive_rate": 0.08012820512820513,
+      "f1": 0.8275862068965517,
+      "precision": 0.8120300751879699,
+      "num_hallucinated": 128,
       "num_valid": 312
     },
     "2": {
-      "detection_rate": 0.8277310924369747,
-      "false_positive_rate": 0.11538461538461539,
-      "f1": 0.8365180467091294,
-      "precision": 0.8454935622317596,
+      "detection_rate": 0.7983193277310925,
+      "false_positive_rate": 0.08012820512820513,
+      "f1": 0.8388520971302429,
+      "precision": 0.8837209302325582,
       "num_hallucinated": 238,
       "num_valid": 312
     },
     "3": {
-      "detection_rate": 0.9072847682119205,
-      "false_positive_rate": 0.11538461538461539,
-      "f1": 0.8456790123456791,
-      "precision": 0.791907514450867,
-      "num_hallucinated": 151,
+      "detection_rate": 0.8954248366013072,
+      "false_positive_rate": 0.08012820512820513,
+      "f1": 0.8698412698412699,
+      "precision": 0.845679012345679,
+      "num_hallucinated": 153,
       "num_valid": 312
     }
   },
   "per_type_metrics": {
     "arxiv_version_mismatch": {
-      "detection_rate": 0.7777777777777778,
-      "false_positive_rate": 0.0,
-      "f1": 0.8750000000000001,
-      "count": 45
+      "detection_rate": 0.7555555555555555,
+      "false_positive_rate": 0.08012820512820513,
+      "f1": 0.6538461538461539,
+      "precision": 0.576271186440678,
+      "count": 45,
+      "num_valid": 312,
+      "dr_ci_lower": 0.6132633941520986,
+      "dr_ci_upper": 0.8576466497449071
     },
     "chimeric_title": {
       "detection_rate": 1.0,
-      "false_positive_rate": 0.0,
-      "f1": 1.0,
-      "count": 23
+      "false_positive_rate": 0.08012820512820513,
+      "f1": 0.647887323943662,
+      "precision": 0.4791666666666667,
+      "count": 23,
+      "num_valid": 312,
+      "dr_ci_lower": 0.8568788745827374,
+      "dr_ci_upper": 1.0
     },
     "fabricated_doi": {
       "detection_rate": 1.0,
-      "false_positive_rate": 0.0,
-      "f1": 1.0,
-      "count": 29
+      "false_positive_rate": 0.08012820512820513,
+      "f1": 0.6987951807228916,
+      "precision": 0.5370370370370371,
+      "count": 29,
+      "num_valid": 312,
+      "dr_ci_lower": 0.8830264055344442,
+      "dr_ci_upper": 1.0
     },
     "future_date": {
       "detection_rate": 1.0,
-      "false_positive_rate": 0.0,
-      "f1": 1.0,
-      "count": 29
+      "false_positive_rate": 0.08012820512820513,
+      "f1": 0.6987951807228916,
+      "precision": 0.5370370370370371,
+      "count": 29,
+      "num_valid": 312,
+      "dr_ci_lower": 0.8830264055344442,
+      "dr_ci_upper": 1.0
     },
     "hybrid_fabrication": {
       "detection_rate": 1.0,
-      "false_positive_rate": 0.0,
-      "f1": 1.0,
-      "count": 29
+      "false_positive_rate": 0.08012820512820513,
+      "f1": 0.6987951807228916,
+      "precision": 0.5370370370370371,
+      "count": 29,
+      "num_valid": 312,
+      "dr_ci_lower": 0.8830264055344442,
+      "dr_ci_upper": 1.0
     },
     "merged_citation": {
       "detection_rate": 1.0,
-      "false_positive_rate": 0.0,
-      "f1": 1.0,
-      "count": 29
+      "false_positive_rate": 0.08012820512820513,
+      "f1": 0.6987951807228916,
+      "precision": 0.5370370370370371,
+      "count": 29,
+      "num_valid": 312,
+      "dr_ci_lower": 0.8830264055344442,
+      "dr_ci_upper": 1.0
     },
     "near_miss_title": {
-      "detection_rate": 0.9,
-      "false_positive_rate": 0.0,
-      "f1": 0.9473684210526316,
-      "count": 40
+      "detection_rate": 0.875,
+      "false_positive_rate": 0.08012820512820513,
+      "f1": 0.7000000000000001,
+      "precision": 0.5833333333333334,
+      "count": 40,
+      "num_valid": 312,
+      "dr_ci_lower": 0.7388757932976187,
+      "dr_ci_upper": 0.9454058022645873
     },
     "nonexistent_venue": {
-      "detection_rate": 0.7567567567567568,
-      "false_positive_rate": 0.0,
-      "f1": 0.8615384615384616,
-      "count": 37
+      "detection_rate": 0.4594594594594595,
+      "false_positive_rate": 0.08012820512820513,
+      "f1": 0.430379746835443,
+      "precision": 0.40476190476190477,
+      "count": 37,
+      "num_valid": 312,
+      "dr_ci_lower": 0.31038327828457724,
+      "dr_ci_upper": 0.6161622047523264
     },
     "partial_author_list": {
-      "detection_rate": 0.16129032258064516,
-      "false_positive_rate": 0.0,
-      "f1": 0.27777777777777773,
-      "count": 31
+      "detection_rate": 0.12903225806451613,
+      "false_positive_rate": 0.08012820512820513,
+      "f1": 0.13333333333333333,
+      "precision": 0.13793103448275862,
+      "count": 31,
+      "num_valid": 312,
+      "dr_ci_lower": 0.05134201164644764,
+      "dr_ci_upper": 0.28852756954385356
     },
     "placeholder_authors": {
       "detection_rate": 1.0,
-      "false_positive_rate": 0.0,
-      "f1": 1.0,
-      "count": 35
+      "false_positive_rate": 0.08012820512820513,
+      "f1": 0.7252747252747253,
+      "precision": 0.5689655172413793,
+      "count": 33,
+      "num_valid": 312,
+      "dr_ci_lower": 0.8957265699643882,
+      "dr_ci_upper": 1.0
     },
     "plausible_fabrication": {
       "detection_rate": 1.0,
-      "false_positive_rate": 0.0,
-      "f1": 1.0,
-      "count": 66
+      "false_positive_rate": 0.08012820512820513,
+      "f1": 0.84472049689441,
+      "precision": 0.7311827956989247,
+      "count": 68,
+      "num_valid": 312,
+      "dr_ci_lower": 0.9465268034119508,
+      "dr_ci_upper": 1.0
     },
     "preprint_as_published": {
-      "detection_rate": 0.7241379310344828,
-      "false_positive_rate": 0.0,
-      "f1": 0.8400000000000001,
-      "count": 29
+      "detection_rate": 0.6896551724137931,
+      "false_positive_rate": 0.08012820512820513,
+      "f1": 0.5405405405405405,
+      "precision": 0.4444444444444444,
+      "count": 29,
+      "num_valid": 312,
+      "dr_ci_lower": 0.5076952952728147,
+      "dr_ci_upper": 0.8272457551023193
     },
     "swapped_authors": {
       "detection_rate": 0.9523809523809523,
-      "false_positive_rate": 0.0,
-      "f1": 0.975609756097561,
-      "count": 63
+      "false_positive_rate": 0.08012820512820513,
+      "f1": 0.810810810810811,
+      "precision": 0.7058823529411765,
+      "count": 63,
+      "num_valid": 312,
+      "dr_ci_lower": 0.8690882244316417,
+      "dr_ci_upper": 0.9836741271577875
     },
     "valid": {
       "detection_rate": 0.0,
-      "false_positive_rate": 0.11538461538461539,
+      "false_positive_rate": 0.08012820512820513,
       "f1": 0.0,
-      "count": 312
+      "precision": 0.0,
+      "count": 312,
+      "num_valid": 0,
+      "dr_ci_lower": 0.0,
+      "dr_ci_upper": 0.0
     },
     "wrong_venue": {
-      "detection_rate": 0.8823529411764706,
-      "false_positive_rate": 0.0,
-      "f1": 0.9375,
-      "count": 34
+      "detection_rate": 0.7352941176470589,
+      "false_positive_rate": 0.08012820512820513,
+      "f1": 0.5952380952380952,
+      "precision": 0.5,
+      "count": 34,
+      "num_valid": 312,
+      "dr_ci_lower": 0.5688253783710155,
+      "dr_ci_upper": 0.8539897245844621
     }
   },
   "coverage": 0.8761,
-  "coverage_adjusted_f1": 0.7893574257425743,
+  "coverage_adjusted_f1": 0.7785566905005107,
   "type_accuracy": {
     "overall": NaN,
     "main_types_only": NaN,
@@ -191,9 +251,9 @@
       "merged_citation": 0,
       "partial_author_list": 0,
       "arxiv_version_mismatch": 0,
-      "VALID": 9,
+      "VALID": 20,
       "UNCERTAIN": 0,
-      "HALLUCINATED_unknown": 28
+      "HALLUCINATED_unknown": 17
     },
     "placeholder_authors": {
       "fabricated_doi": 0,
@@ -212,7 +272,7 @@
       "arxiv_version_mismatch": 0,
       "VALID": 0,
       "UNCERTAIN": 0,
-      "HALLUCINATED_unknown": 35
+      "HALLUCINATED_unknown": 33
     },
     "future_date": {
       "fabricated_doi": 0,
@@ -267,9 +327,9 @@
       "merged_citation": 0,
       "partial_author_list": 0,
       "arxiv_version_mismatch": 0,
-      "VALID": 4,
+      "VALID": 9,
       "UNCERTAIN": 0,
-      "HALLUCINATED_unknown": 30
+      "HALLUCINATED_unknown": 25
     },
     "swapped_authors": {
       "fabricated_doi": 0,
@@ -305,9 +365,9 @@
       "merged_citation": 0,
       "partial_author_list": 0,
       "arxiv_version_mismatch": 0,
-      "VALID": 8,
+      "VALID": 9,
       "UNCERTAIN": 0,
-      "HALLUCINATED_unknown": 21
+      "HALLUCINATED_unknown": 20
     },
     "hybrid_fabrication": {
       "fabricated_doi": 0,
@@ -343,9 +403,9 @@
       "merged_citation": 0,
       "partial_author_list": 0,
       "arxiv_version_mismatch": 0,
-      "VALID": 4,
+      "VALID": 5,
       "UNCERTAIN": 0,
-      "HALLUCINATED_unknown": 36
+      "HALLUCINATED_unknown": 35
     },
     "plausible_fabrication": {
       "fabricated_doi": 0,
@@ -364,7 +424,7 @@
       "arxiv_version_mismatch": 0,
       "VALID": 0,
       "UNCERTAIN": 0,
-      "HALLUCINATED_unknown": 66
+      "HALLUCINATED_unknown": 68
     },
     "merged_citation": {
       "fabricated_doi": 0,
@@ -400,9 +460,9 @@
       "merged_citation": 0,
       "partial_author_list": 0,
       "arxiv_version_mismatch": 0,
-      "VALID": 26,
+      "VALID": 27,
       "UNCERTAIN": 0,
-      "HALLUCINATED_unknown": 5
+      "HALLUCINATED_unknown": 4
     },
     "arxiv_version_mismatch": {
       "fabricated_doi": 0,
@@ -419,9 +479,9 @@
       "merged_citation": 0,
       "partial_author_list": 0,
       "arxiv_version_mismatch": 0,
-      "VALID": 10,
+      "VALID": 11,
       "UNCERTAIN": 0,
-      "HALLUCINATED_unknown": 35
+      "HALLUCINATED_unknown": 34
     },
     "valid": {
       "fabricated_doi": 0,
@@ -438,9 +498,9 @@
       "merged_citation": 0,
       "partial_author_list": 0,
       "arxiv_version_mismatch": 0,
-      "VALID": 276,
+      "VALID": 287,
       "UNCERTAIN": 0,
-      "HALLUCINATED_unknown": 36
+      "HALLUCINATED_unknown": 25
     }
   },
   "cascade_breakdown_stats": {
@@ -468,8 +528,8 @@
     "none": {
       "count": 831,
       "fraction": 1.0,
-      "HALL": 491,
-      "VALID": 340,
+      "HALL": 460,
+      "VALID": 371,
       "UNCERTAIN": 0
     }
   },
@@ -484,7 +544,9 @@
     "splits": [
       "test_public"
     ],
-    "coverage_corrected": "coverage and num_uncertain recounted from results/relabel_delta/btu_v1_2_0/test_public/btu_raw.jsonl under ABSTENTION_STATUSES, and coverage_adjusted_f1 recomputed as f1_hallucination x coverage per its definition in metrics.py. The DR/FPR/F1 triple is unchanged and still scores abstentions as committed-VALID, which is the convention the paper reports; under that convention coverage_adjusted_f1 counts abstention twice (once as a committed miss inside F1, once through coverage) and is a lower bound, not a third scoring. See scripts/rescore_btu_from_raw.py."
+    "coverage_corrected": "coverage and num_uncertain recounted from results/relabel_delta/btu_v1_2_0/test_public/btu_raw.jsonl under ABSTENTION_STATUSES, and coverage_adjusted_f1 recomputed as f1_hallucination x coverage per its definition in metrics.py. The DR/FPR/F1 triple is unchanged and still scores abstentions as committed-VALID, which is the convention the paper reports; under that convention coverage_adjusted_f1 counts abstention twice (once as a committed miss inside F1, once through coverage) and is a lower bound, not a third scoring. See scripts/rescore_btu_from_raw.py.",
+    "rescored_from": "results/relabel_delta/btu_v1_2_0_prescreen_fix/bibtexupdater_test_public_per_entry.jsonl",
+    "rescored_input_sha256": "5b9886c53168062e88ef8c934a16a4dd3bf8c83565c26e68a03922d7b3a1f8ad"
   },
   "_btu_status_histogram": {
     "arxiv_id_mismatch": 14,
