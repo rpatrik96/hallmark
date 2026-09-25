@@ -22,11 +22,12 @@ from __future__ import annotations
 
 import json
 import sys
+from collections.abc import Iterable
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from hallmark.dataset.schema import load_entries, load_predictions
+from hallmark.dataset.schema import Prediction, load_entries, load_predictions
 from hallmark.evaluation.metrics import evaluate
 
 SUPPLEMENT = Path("results/temporal_supplement/temporal_supplement_2024_2025.jsonl")
@@ -57,14 +58,26 @@ def stratum(entry_year: str, venue: str) -> str:
     return "unknown_2025"
 
 
+def first_by_key(preds: Iterable[Prediction]) -> dict[str, Prediction]:
+    """Index predictions by key, keeping the FIRST occurrence of a repeated key."""
+    out: dict[str, Prediction] = {}
+    for p in preds:
+        out.setdefault(p.bibtex_key, p)
+    return out
+
+
 def main() -> None:
     if not GPT54_PREDS.exists():
         print(f"MISSING: {GPT54_PREDS}", file=sys.stderr)
         sys.exit(1)
 
     entries = load_entries(SUPPLEMENT)
-    gpt51 = {p.bibtex_key: p for p in load_predictions(GPT51_PREDS)}
-    gpt54 = {p.bibtex_key: p for p in load_predictions(GPT54_PREDS)}
+    # First occurrence wins. The GPT-5.1 dump holds 480 lines for 448 entries (22
+    # keys appear twice, from a resumed March run); the canonical 448-entry set
+    # keeps the first of each, so a dict built the other way round scores those 22
+    # against the wrong paper and moved the reported FPR by ~1.7 pp.
+    gpt51 = first_by_key(load_predictions(GPT51_PREDS))
+    gpt54 = first_by_key(load_predictions(GPT54_PREDS))
 
     # Bucket entries by stratum.
     buckets: dict[str, list] = {"pre_54": [], "post_54": [], "unknown": [], "unknown_2025": []}

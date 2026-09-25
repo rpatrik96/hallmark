@@ -27,7 +27,7 @@ from typing import Any
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from hallmark.dataset.schema import load_entries, load_predictions
+from hallmark.dataset.schema import Prediction, load_entries, load_predictions
 from hallmark.evaluation.metrics import evaluate
 
 # model_key -> (display, default post-cutoff eval json, cutoff-aware post eval,
@@ -35,14 +35,16 @@ from hallmark.evaluation.metrics import evaluate
 MODELS: dict[str, dict[str, str]] = {
     "llm_openai": {
         "display": "GPT-5.1",
-        "post_default": "results/temporal_supplement/llm_openai_temporal.json",
+        "post_default": "results/temporal_supplement/llm_openai_temporal_v1subset.json",
         "post_ca": "results/temporal_supplement/llm_openai_cutoff_aware_temporal.json",
         "pre_ca_preds": "results/precutoff_ablation/llm_openai_cutoff_aware_temporal_predictions.jsonl",
-        "pre_default_eval": "results/llm_openai_dev_public.json",
+        "pre_default_eval": "data/v1.2/baseline_results/llm_openai_dev_public.json",
     },
     "llm_openrouter_gemini_flash": {
         "display": "Gemini 2.5 Flash",
-        "post_default": ("results/temporal_supplement/llm_openrouter_gemini_flash_temporal.json"),
+        "post_default": (
+            "results/temporal_supplement/llm_openrouter_gemini_flash_temporal_v1subset.json"
+        ),
         "post_ca": (
             "results/temporal_supplement/llm_openrouter_gemini_flash_cutoff_aware_temporal.json"
         ),
@@ -50,14 +52,14 @@ MODELS: dict[str, dict[str, str]] = {
             "results/precutoff_ablation/"
             "llm_openrouter_gemini_flash_cutoff_aware_temporal_predictions.jsonl"
         ),
-        "pre_default_eval": "results/llm_openrouter_gemini_flash_dev_public.json",
+        "pre_default_eval": "data/v1.2/baseline_results/llm_openrouter_gemini_flash_dev_public.json",
     },
     "llm_openrouter_qwen": {
         "display": "Qwen3-235B",
-        "post_default": "results/temporal_supplement/llm_openrouter_qwen_temporal.json",
+        "post_default": ("results/temporal_supplement/llm_openrouter_qwen_temporal_v1subset.json"),
         "post_ca": "results/temporal_supplement/llm_openrouter_qwen_cutoff_aware_temporal.json",
         "pre_ca_preds": "results/precutoff_ablation/llm_openrouter_qwen_cutoff_aware_temporal_predictions.jsonl",
-        "pre_default_eval": "results/llm_openrouter_qwen_dev_public.json",
+        "pre_default_eval": "data/v1.2/baseline_results/llm_openrouter_qwen_dev_public.json",
     },
 }
 
@@ -65,8 +67,22 @@ PRECUTOFF_SAMPLE = Path("results/temporal_supplement/precutoff_sample.jsonl")
 SUPPLEMENT = Path("results/temporal_supplement/temporal_supplement_2024_2025.jsonl")
 
 
+def load_predictions_deduped(pred_path: Path) -> list[Prediction]:
+    """Load predictions, keeping the FIRST record for a repeated bibtex_key.
+
+    The default temporal dumps hold 480 lines for the 448-entry supplement (32
+    repeats from resumed March runs), and the canonical 448-entry subset keeps
+    the first of each. Keeping the last instead scores those entries against the
+    wrong paper — it is what put GPT-5.1's supplement FPR at 74.2 instead of 75.9.
+    """
+    seen: dict[str, Prediction] = {}
+    for p in load_predictions(pred_path):
+        seen.setdefault(p.bibtex_key, p)
+    return list(seen.values())
+
+
 def _pre_ca_eval(pred_path: Path, sample_path: Path) -> dict[str, Any]:
-    preds = load_predictions(pred_path)
+    preds = load_predictions_deduped(pred_path)
     entries = load_entries(sample_path)
     pred_keys = {p.bibtex_key for p in preds}
     entries = [e for e in entries if e.bibtex_key in pred_keys]
@@ -161,7 +177,7 @@ def main() -> None:
             / f"{mk_for_row}_cutoff_aware_temporal_predictions.jsonl"
         )
         try:
-            ca_preds = load_predictions(post_ca_pred_path)
+            ca_preds = load_predictions_deduped(post_ca_pred_path)
             post_ca_unc_rate = sum(1 for p in ca_preds if p.label == "UNCERTAIN") / max(
                 len(ca_preds), 1
             )
@@ -209,7 +225,7 @@ def main() -> None:
         post_unc_pct = 0.0
         mk_for_row = next(k for k, v in MODELS.items() if v["display"] == r["model"])
         try:
-            ca_preds_here = load_predictions(
+            ca_preds_here = load_predictions_deduped(
                 Path("results/temporal_supplement")
                 / f"{mk_for_row}_cutoff_aware_temporal_predictions.jsonl"
             )
