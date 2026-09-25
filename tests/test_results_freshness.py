@@ -391,6 +391,43 @@ def test_per_type_counts_that_match_are_fresh(tmp_path):
     assert res.passed and res.stale_files == []
 
 
+def _current_row(count: int) -> dict:
+    return {"count": count, "detection_rate": 0.5, "num_valid": 10, "precision": 0.5}
+
+
+@pytest.mark.parametrize(
+    ("num_uncertain", "rows", "stale"),
+    [
+        # 2 abstentions, 8 answered positives: a conservative result under the
+        # current definition, where an abstention is a non-answer (#65).
+        (2, {"fabricated_doi": _current_row(5), "wrong_venue": _current_row(3)}, False),
+        # the shortfall exceeds the abstentions, so the block is another run's
+        (1, {"fabricated_doi": _current_row(5), "wrong_venue": _current_row(3)}, True),
+        # superseded rows counted every positive, so they must match exactly
+        (
+            2,
+            {
+                "fabricated_doi": {"count": 5, "detection_rate": 0.5},
+                "wrong_venue": {"count": 3, "detection_rate": 0.5},
+            },
+            True,
+        ),
+    ],
+)
+def test_per_type_shortfall_is_allowed_only_for_abstentions(tmp_path, num_uncertain, rows, stale):
+    data_dir, _split_file, results_dir = _build_env(tmp_path, n_hall=10, n_valid=10)
+    result_file = results_dir / "mytool_dev_public.json"
+    _write_result(
+        result_file, tool="mytool", split="dev_public", n_entries=20, n_hall=10, n_valid=10
+    )
+    payload = json.loads(result_file.read_text())
+    payload["num_uncertain"] = num_uncertain
+    payload["per_type_metrics"] = {**rows, "valid": {"count": 10}}
+    result_file.write_text(json.dumps(payload))
+    res = crf.check_freshness(results_dir, version="v1.2", data_dir=data_dir)
+    assert (res.stale_files == ["mytool_dev_public.json"]) is stale, res.reports[0].reasons
+
+
 @pytest.mark.skipif(not _REAL_RESULTS_DIR.is_dir(), reason="real results dir not present")
 def test_the_regenerated_claude_dev_results_are_fresh_and_unregistered():
     """The two Claude dev results were stale (per-type over 633 positives against a
@@ -501,10 +538,10 @@ def test_per_type_rows_with_num_valid_are_not_flagged(tmp_path):
 
 @pytest.mark.skipif(not _REAL_RESULTS_DIR.is_dir(), reason="real results dir not present")
 def test_the_released_results_report_the_superseded_definition():
-    """Pins the count: 37 of the 42 released results, reported and not fatal."""
+    """Pins the count: 31 of the 42 released results, reported and not fatal."""
     res = crf.check_freshness(_REAL_RESULTS_DIR, version="v1.2", data_dir=_REAL_DATA_DIR)
     flagged = [r.result_file for r in res.reports if r.superseded_per_type]
-    assert len(flagged) == 37, f"{len(flagged)} of {len(res.reports)} flagged: {flagged[:5]}"
+    assert len(flagged) == 31, f"{len(flagged)} of {len(res.reports)} flagged: {flagged[:5]}"
     assert res.passed, res.errors
 
 

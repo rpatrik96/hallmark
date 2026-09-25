@@ -22,46 +22,46 @@
       "f1_hallucination": 0.8886618998978549
     },
     "cascade_db_diagnosis_aggressive_dev_public.json": {
-      "sha256": "0f54d388799fbf499937679ba7e8b779d2fe8e3b05646e7f3933b966b16f3a3a",
+      "sha256": "634256d6a8971ad51aa7c6ef91a35924e5765b0d02b7064520ed2ec1e8d9adb7",
       "baseline": "cascade_db_diagnosis",
       "split": "dev_public",
       "num_entries": 1119,
-      "f1_hallucination": 0.9393468118195957
+      "f1_hallucination": 0.9795918367346937
     },
     "cascade_db_diagnosis_aggressive_stress_test.json": {
-      "sha256": "8e12d13b07e0dd37a8ce0bc9bd1dfe09b8075df0f957a32567be4f527290a4ed",
+      "sha256": "18b1324be7c62f966dc6889b010f7b062b486fd35353488a0d33c4ef0e930e50",
       "baseline": "cascade_db_diagnosis",
       "split": "stress_test",
       "num_entries": 121,
-      "f1_hallucination": 0.9789029535864979
+      "f1_hallucination": 0.9831932773109243
     },
     "cascade_db_diagnosis_aggressive_test_public.json": {
-      "sha256": "f8c2b0cdc4a311a741c9528880de28fea8759cd3dd4bfd1ca715851c3f2595c5",
+      "sha256": "0cbbbc32b81726090fc2cbd56545c7f3efa46a9c4dbef3573b56e52a76faea10",
       "baseline": "cascade_db_diagnosis",
       "split": "test_public",
       "num_entries": 831,
-      "f1_hallucination": 0.9501845018450185
+      "f1_hallucination": 0.978116079923882
     },
     "cascade_db_diagnosis_dev_public.json": {
-      "sha256": "5df803dde0d7fe80413072132677630b09761e9d313370611712ae0a7851747c",
+      "sha256": "74ca0418bd39feafb65bdd26571aa40ab698a12128d82e4b2e13aafb8952fb07",
       "baseline": "cascade_db_diagnosis",
       "split": "dev_public",
       "num_entries": 1119,
-      "f1_hallucination": 0.946550048590865
+      "f1_hallucination": 0.9763481551561022
     },
     "cascade_db_diagnosis_stress_test.json": {
-      "sha256": "623222b43e505060ddd7fcf5c209c7961f77395bccc177d0fc09f41f5adfa21c",
+      "sha256": "9d5a3f23888e22809ddf55b7d4270eca0c15fd7d1dfe4422fa28d6ed2ef5f09e",
       "baseline": "cascade_db_diagnosis",
       "split": "stress_test",
       "num_entries": 121,
-      "f1_hallucination": 0.9748743718592965
+      "f1_hallucination": 0.9826086956521739
     },
     "cascade_db_diagnosis_test_public.json": {
-      "sha256": "0b8e28af6ceaa9b327d17bea79a9fd5c7d59d596c7eff966dfcd076485241d77",
+      "sha256": "63c09162668e91560a7de0347ea408e36f9ea868b9d11f6e0cac8d2ecff41434",
       "baseline": "cascade_db_diagnosis",
       "split": "test_public",
       "num_entries": 831,
-      "f1_hallucination": 0.9571263035921205
+      "f1_hallucination": 0.9750271444082519
     },
     "doi_only_dev_public.json": {
       "sha256": "6580622f7c22e40bf24bf660c4cb375b2e1d3ec45bff716c2cbc1e9f1504397e",
