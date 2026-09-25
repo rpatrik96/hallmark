@@ -1,17 +1,18 @@
 """Pairwise agreement (Cohen's kappa) between zero-shot LLM baselines on dev_public.
 
-Backs tab:llm_agreement in the paper: all C(11,2)=55 pairs of the eleven zero-shot
-baselines whose stored per-entry dev_public predictions reproduce their tab:results
-row (the same eleven files the a3 noisy-voter ensemble uses). Gemini 2.5 Pro is the
-one zero-shot baseline left out: its only per-entry dev_public file is a different
-run from the one reported. Predictions are filtered to dev_public keys, since the
-GPT-5.1 checkpoint holds dev_public and test_public together. UNCERTAIN is scored as committed-VALID, matching the paper's scoring
-convention (sec:main_results) -- this convention exactly reproduces the
-previously published DeepSeek-V3.2 vs Qwen3-235B cell (79.9% agreement,
-kappa=0.454).
+Backs tab:llm_agreement in the paper: all C(12,2)=66 pairs of the twelve zero-shot
+baselines of tab:results, each with stored per-entry dev_public predictions (the same
+twelve files the a3 noisy-voter ensemble uses). Predictions are filtered to dev_public
+keys, since the GPT-5.1 checkpoint holds dev_public and test_public together.
+
+UNCERTAIN is scored as committed-VALID so every pair is compared on all 1,119 entries.
+This differs from tab:results, which excludes an LLM's UNCERTAIN verdicts from
+DR/FPR/F1; it exactly reproduces the previously published DeepSeek-V3.2 vs Qwen3-235B
+cell (79.9% agreement, kappa=0.454).
 
 Caveat: the two Anthropic prediction files come from the later OpenRouter
-snapshot and carry its drift caveat (app:coverage).
+snapshot and carry its drift caveat (app:coverage); they do not reproduce their
+tab:results rows exactly (Opus 4.7: .909/.162/.889 vs .906/.154/.890).
 
 Usage:
     python scripts/compute_pairwise_kappa.py            # prints matrix + LaTeX rows
@@ -38,6 +39,7 @@ FILES = {
     "GPT-5.1": REPO / "results/checkpoints/llm_openai/openai_gpt-5.1.jsonl",
     "Llama 4 Maverick": REPO / "results/new_models/llama4_maverick.jsonl",
     "Qwen3-VL-235B": REPO / "results/new_models/qwen_max.jsonl",
+    "Gemini 2.5 Pro": REPO / "results/new_models/gemini_pro.jsonl",
 }
 DEV = REPO / "data/v1.2/dev_public.jsonl"
 

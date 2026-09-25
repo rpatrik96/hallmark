@@ -89,9 +89,9 @@ ZEROSHOT_FILES: dict[str, tuple[Path, str]] = {
     ),
 }
 
-# Voters used only by the (b3) ensemble, not the (a) threshold sweep: each reproduces its
-# tab:results dev_public row, so it joins the ensemble and tab:llm_agreement. Gemini 2.5 Pro
-# stays out: its only per-entry dev_public file does not reproduce its reported row.
+# Voters used only by the (b3) ensemble, not the (a) threshold sweep: the remaining four
+# zero-shot baselines of tab:results. Each file reproduces its tab:results dev_public row
+# (UNCERTAIN excluded, as in tab:results), so all twelve zero-shot LLMs vote.
 EXTRA_VOTER_FILES: dict[str, tuple[Path, str]] = {
     "gpt_5_1": (
         ROOT / "results/checkpoints/llm_openai/openai_gpt-5.1.jsonl",
@@ -103,7 +103,11 @@ EXTRA_VOTER_FILES: dict[str, tuple[Path, str]] = {
     ),
     "qwen3_vl_235b": (
         ROOT / "results/new_models/qwen_max.jsonl",
-        "openrouter/qwen/qwen3-vl-235b-a22b-instruct (FPR one entry off tab:results)",
+        "openrouter/qwen/qwen3-vl-235b-a22b-instruct",
+    ),
+    "gemini_2_5_pro": (
+        ROOT / "results/new_models/gemini_pro.jsonl",
+        "openrouter/google/gemini-2.5-pro (37 UNCERTAIN; excluded in tab:results)",
     ),
 }
 

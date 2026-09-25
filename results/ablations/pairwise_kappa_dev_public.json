@@ -49,6 +49,11 @@
     "kappa": 0.3606,
     "n": 1119
   },
+  "Opus 4.7 vs Gemini 2.5 Pro": {
+    "agreement": 0.689,
+    "kappa": 0.4139,
+    "n": 1119
+  },
   "Sonnet 4.6 vs DeepSeek-R1": {
     "agreement": 0.6765,
     "kappa": 0.3094,
@@ -94,6 +99,11 @@
     "kappa": 0.3676,
     "n": 1119
   },
+  "Sonnet 4.6 vs Gemini 2.5 Pro": {
+    "agreement": 0.6979,
+    "kappa": 0.4281,
+    "n": 1119
+  },
   "DeepSeek-R1 vs DeepSeek-V3.2": {
     "agreement": 0.8302,
     "kappa": 0.497,
@@ -134,6 +144,11 @@
     "kappa": 0.5552,
     "n": 1119
   },
+  "DeepSeek-R1 vs Gemini 2.5 Pro": {
+    "agreement": 0.4906,
+    "kappa": 0.1766,
+    "n": 1119
+  },
   "DeepSeek-V3.2 vs Gemini 2.5 Flash": {
     "agreement": 0.4969,
     "kappa": 0.1866,
@@ -169,6 +184,11 @@
     "kappa": 0.4952,
     "n": 1119
   },
+  "DeepSeek-V3.2 vs Gemini 2.5 Pro": {
+    "agreement": 0.4495,
+    "kappa": 0.1465,
+    "n": 1119
+  },
   "Gemini 2.5 Flash vs Mistral Large": {
     "agreement": 0.7712,
     "kappa": 0.5411,
@@ -199,6 +219,11 @@
     "kappa": 0.3027,
     "n": 1119
   },
+  "Gemini 2.5 Flash vs Gemini 2.5 Pro": {
+    "agreement": 0.8436,
+    "kappa": 0.6217,
+    "n": 1119
+  },
   "Mistral Large vs Qwen3-235B": {
     "agreement": 0.6461,
     "kappa": 0.2946,
@@ -224,6 +249,11 @@
     "kappa": 0.3125,
     "n": 1119
   },
+  "Mistral Large vs Gemini 2.5 Pro": {
+    "agreement": 0.7364,
+    "kappa": 0.4708,
+    "n": 1119
+  },
   "Qwen3-235B vs GPT-5.4": {
     "agreement": 0.7542,
     "kappa": 0.5001,
@@ -244,6 +274,11 @@
     "kappa": 0.7729,
     "n": 1119
   },
+  "Qwen3-235B vs Gemini 2.5 Pro": {
+    "agreement": 0.538,
+    "kappa": 0.2248,
+    "n": 1119
+  },
   "GPT-5.4 vs GPT-5.1": {
     "agreement": 0.8195,
     "kappa": 0.6348,
@@ -259,6 +294,11 @@
     "kappa": 0.4961,
     "n": 1119
   },
+  "GPT-5.4 vs Gemini 2.5 Pro": {
+    "agreement": 0.7301,
+    "kappa": 0.47,
+    "n": 1119
+  },
   "GPT-5.1 vs Llama 4 Maverick": {
     "agreement": 0.7274,
     "kappa": 0.4842,
@@ -269,9 +309,24 @@
     "kappa": 0.5576,
     "n": 1119
   },
+  "GPT-5.1 vs Gemini 2.5 Pro": {
+    "agreement": 0.6229,
+    "kappa": 0.3328,
+    "n": 1119
+  },
   "Llama 4 Maverick vs Qwen3-VL-235B": {
     "agreement": 0.6801,
     "kappa": 0.4116,
+    "n": 1119
+  },
+  "Llama 4 Maverick vs Gemini 2.5 Pro": {
+    "agreement": 0.7936,
+    "kappa": 0.545,
+    "n": 1119
+  },
+  "Qwen3-VL-235B vs Gemini 2.5 Pro": {
+    "agreement": 0.5398,
+    "kappa": 0.2331,
     "n": 1119
   }
 }
