@@ -1,7 +1,7 @@
 tool,split,real_mode_dr,as_shipped_dr,as_shipped_fpr,as_shipped_f1,as_shipped_mcc,folded_out_dr,folded_out_fpr,folded_out_f1,folded_out_mcc,as_false_positives_dr,as_false_positives_fpr,as_false_positives_f1,as_false_positives_mcc
-bibtexupdater_test_public,test_public,0.7806,0.8767,0.1154,0.9010,0.7498,0.9574,0.1154,0.9184,0.8414,0.9574,0.4026,0.6986,0.5344
-cascade_db_diagnosis_aggressive_test_public,test_public,0.9831,0.9923,0.1603,0.9502,0.8637,1.0000,0.1603,0.9186,0.8446,1.0000,0.5155,0.6659,0.4918
-cascade_db_diagnosis_test_public,test_public,0.9775,0.9897,0.1122,0.9622,0.8972,1.0000,0.1122,0.9416,0.8887,1.0000,0.4857,0.6790,0.5141
+bibtexupdater_test_public,test_public,0.7426,0.8382,0.0801,0.8887,0.7384,0.9184,0.0801,0.9152,0.8380,0.9184,0.3661,0.6981,0.5261
+cascade_db_diagnosis_aggressive_test_public,test_public,0.9789,0.9904,0.0577,0.9781,0.9410,1.0000,0.0577,0.9691,0.9412,1.0000,0.4554,0.6929,0.5373
+cascade_db_diagnosis_test_public,test_public,0.9777,0.9890,0.0577,0.9750,0.9380,1.0000,0.0577,0.9623,0.9348,1.0000,0.4422,0.6600,0.5242
 doi_only_test_public,test_public,0.2911,0.1908,0.0417,0.3138,0.2114,0.1064,0.0417,0.1846,0.1247,0.1064,0.1494,0.1523,-0.0596
 llm_agentic_btu_openai_test_public,test_public,0.9367,0.9595,0.3558,0.8830,0.6608,0.9787,0.3558,0.8251,0.6529,0.9787,0.6066,0.6195,0.3983
 llm_agentic_btu_sonnet_4_6_test_public,test_public,0.9789,0.9904,0.3429,0.9018,0.7214,1.0000,0.3429,0.8405,0.6902,1.0000,0.6175,0.6246,0.4168

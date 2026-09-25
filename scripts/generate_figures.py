@@ -280,7 +280,7 @@ def load_operating_point_extras(results_dir: Path) -> list[dict]:
     # ``cascade_db_diagnosis`` family, whose three files share one internal
     # ``tool_name`` -- which is why the family is in ``_OPPOINT_EXCLUDED`` and
     # cannot be resolved by tool name. The *aggressive* file is the row the
-    # paper reports (Tab. 1: DR .997, FPR .148, "the aggressive stance"), so it
+    # paper reports (Tab. 1: DR .990, FPR .037, the 2026-09-21 rerun), so it
     # is pulled in explicitly by path and relabelled. Without this the figure
     # silently drops one of the three cascades.
     sonnet_cascade = (
