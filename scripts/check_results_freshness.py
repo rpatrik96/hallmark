@@ -84,19 +84,6 @@ DEFAULT_TABLES_DIR = Path("tables")
 #: Ratchet DOWN only: a name leaves this dict when the result is regenerated, and
 #: adding one is a decision to ship a number scored against data that has moved.
 KNOWN_STALE: dict[str, str] = {
-    "llm_openrouter_claude_opus_4_7_dev_public.json": (
-        "per-type counts sum to 633 positives (the pre-relabel dev_public) while the "
-        "headline counts say 606 / 513: the top-level counts were patched, the per-type "
-        "block was not, so the per-type figures describe a different split. The "
-        "taxonomy-fold ablation drops this file because its rebuilt MCC (0.6625) does "
-        "not reproduce the published 0.6828. Needs a re-run under the current labels."
-    ),
-    "llm_openrouter_claude_sonnet_4_6_dev_public.json": (
-        "per-type counts sum to 633 positives (the pre-relabel dev_public) while the "
-        "headline counts say 606 / 513, as for the Opus 4.7 file above. Its rebuilt MCC "
-        "happens to land within the ablation's 0.02 tolerance, so it was scored there "
-        "as if current. Needs a re-run under the current labels."
-    ),
     "harc_with_s2key_dev_public.json": (
         "scored against the pre-relabel ground truth (633 hallucinated / 486 valid "
         "against the current 606 / 513). Full coverage at n=1,119, but its DR 0.209 "

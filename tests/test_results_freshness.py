@@ -392,18 +392,18 @@ def test_per_type_counts_that_match_are_fresh(tmp_path):
 
 
 @pytest.mark.skipif(not _REAL_RESULTS_DIR.is_dir(), reason="real results dir not present")
-def test_the_two_patched_claude_dev_results_are_caught_and_registered():
-    """Pins the finding: per-type over 633 positives, headline 606, and they are
-    in KNOWN_STALE so the guard stays green without forgetting them."""
+def test_the_regenerated_claude_dev_results_are_fresh_and_unregistered():
+    """The two Claude dev results were stale (per-type over 633 positives against a
+    606 headline) until the v1.2.3 rescores replaced them. Pins that they are now
+    fresh and have left KNOWN_STALE, which only ratchets down."""
     res = crf.check_freshness(_REAL_RESULTS_DIR, version="v1.2", data_dir=_REAL_DATA_DIR)
     by_name = {r.result_file: r for r in res.reports}
     for name in (
         "llm_openrouter_claude_opus_4_7_dev_public.json",
         "llm_openrouter_claude_sonnet_4_6_dev_public.json",
     ):
-        assert by_name[name].is_stale, f"{name} not flagged"
-        assert any("per_type" in reason for reason in by_name[name].reasons)
-        assert name in crf.KNOWN_STALE, f"{name} flagged but not registered"
+        assert not by_name[name].is_stale, f"{name} flagged: {by_name[name].reasons}"
+        assert name not in crf.KNOWN_STALE, f"{name} fresh but still registered"
     assert res.passed, res.errors
 
 
