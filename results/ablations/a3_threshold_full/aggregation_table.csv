@@ -1,12 +1,12 @@
 instantiation,rule,DR,FPR,F1,MCC,fp,fn
-field-level (real DB resolver),any_field_miss (k>=1 of 4),0.7591,0.1392,0.8088,0.6186,71,145
-field-level (real DB resolver),two_fields (k>=2 of 4),0.3654,0.0314,0.5251,0.4071,16,382
-field-level (real DB resolver),majority_fields (k>=3 of 4),0.2492,0.0157,0.3947,0.3332,8,452
-field-level (real DB resolver),unanimous_fields (k>=4 of 4),0.1279,0.0118,0.2248,0.2202,6,525
+field-level (real DB resolver),any_field_miss (k>=1 of 4),0.7857,0.1314,0.8284,0.6524,67,129
+field-level (real DB resolver),two_fields (k>=2 of 4),0.4153,0.0294,0.5767,0.4513,15,352
+field-level (real DB resolver),majority_fields (k>=3 of 4),0.2159,0.0098,0.3528,0.3145,5,472
+field-level (real DB resolver),unanimous_fields (k>=4 of 4),0.0764,0.0059,0.1413,0.1712,3,556
 structured subtests,any_miss (k>=1 of 4),0.9505,0.0,0.9746,0.9476,0,30
-structured subtests,two_of_four (k>=2),0.269,0.0,0.4239,0.3799,0,443
-structured subtests,majority (k>=3 of 4),0.0479,0.0,0.0913,0.1501,0,577
-structured subtests,unanimous (k>=4),0.0017,0.0,0.0033,0.0275,0,605
+structured subtests,two_of_four (k>=2),0.2244,0.0,0.3666,0.3422,0,470
+structured subtests,majority (k>=3 of 4),0.0149,0.0,0.0293,0.0828,0,597
+structured subtests,unanimous (k>=4),0.0,0.0,0.0,0.0,0,606
 structured subtests,cross_db_agreement_only,1.0,0.0351,0.9854,0.968,18,0
 noisy-voter ensemble,any_miss (>=1 of 11),0.995,0.8811,0.7261,0.2445,452,3
 noisy-voter ensemble,two_votes (>=2 of 11),0.9851,0.7427,0.7538,0.364,381,9
