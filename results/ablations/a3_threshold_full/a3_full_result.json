@@ -3176,48 +3176,48 @@
       ],
       "rules": {
         "any_field_miss (k>=1 of 4)": {
-          "DR": 0.7591,
-          "FPR": 0.1392,
-          "F1": 0.8088,
-          "MCC": 0.6186,
-          "fp": 71,
-          "fn": 145,
-          "tp": 457,
-          "tn": 439
+          "DR": 0.7857,
+          "FPR": 0.1314,
+          "F1": 0.8284,
+          "MCC": 0.6524,
+          "fp": 67,
+          "fn": 129,
+          "tp": 473,
+          "tn": 443
         },
         "two_fields (k>=2 of 4)": {
-          "DR": 0.3654,
-          "FPR": 0.0314,
-          "F1": 0.5251,
-          "MCC": 0.4071,
-          "fp": 16,
-          "fn": 382,
-          "tp": 220,
-          "tn": 494
+          "DR": 0.4153,
+          "FPR": 0.0294,
+          "F1": 0.5767,
+          "MCC": 0.4513,
+          "fp": 15,
+          "fn": 352,
+          "tp": 250,
+          "tn": 495
         },
         "majority_fields (k>=3 of 4)": {
-          "DR": 0.2492,
-          "FPR": 0.0157,
-          "F1": 0.3947,
-          "MCC": 0.3332,
-          "fp": 8,
-          "fn": 452,
-          "tp": 150,
-          "tn": 502
+          "DR": 0.2159,
+          "FPR": 0.0098,
+          "F1": 0.3528,
+          "MCC": 0.3145,
+          "fp": 5,
+          "fn": 472,
+          "tp": 130,
+          "tn": 505
         },
         "unanimous_fields (k>=4 of 4)": {
-          "DR": 0.1279,
-          "FPR": 0.0118,
-          "F1": 0.2248,
-          "MCC": 0.2202,
-          "fp": 6,
-          "fn": 525,
-          "tp": 77,
-          "tn": 504
+          "DR": 0.0764,
+          "FPR": 0.0059,
+          "F1": 0.1413,
+          "MCC": 0.1712,
+          "fp": 3,
+          "fn": 556,
+          "tp": 46,
+          "tn": 507
         }
       },
-      "fpr_reduction_majority_vs_anymiss_pp": 12.3,
-      "dr_change_majority_vs_anymiss_pp": -51.0
+      "fpr_reduction_majority_vs_anymiss_pp": 12.2,
+      "dr_change_majority_vs_anymiss_pp": -57.0
     },
     "b2_benchmark_structured_checks": {
       "note": "ground-truth subtests are clean on valid entries by construction -> any-miss FPR ~0; stricter k-of-n only sheds DR. Reported for completeness; the empirically faithful any-miss/majority contrast is b1 (real resolver) and b3 (voters).",
@@ -3237,28 +3237,28 @@
           "fn": 30
         },
         "two_of_four (k>=2)": {
-          "DR": 0.269,
+          "DR": 0.2244,
           "FPR": 0.0,
-          "F1": 0.4239,
-          "MCC": 0.3799,
+          "F1": 0.3666,
+          "MCC": 0.3422,
           "fp": 0,
-          "fn": 443
+          "fn": 470
         },
         "majority (k>=3 of 4)": {
-          "DR": 0.0479,
+          "DR": 0.0149,
           "FPR": 0.0,
-          "F1": 0.0913,
-          "MCC": 0.1501,
+          "F1": 0.0293,
+          "MCC": 0.0828,
           "fp": 0,
-          "fn": 577
+          "fn": 597
         },
         "unanimous (k>=4)": {
-          "DR": 0.0017,
+          "DR": 0.0,
           "FPR": 0.0,
-          "F1": 0.0033,
-          "MCC": 0.0275,
+          "F1": 0.0,
+          "MCC": 0.0,
           "fp": 0,
-          "fn": 605
+          "fn": 606
         },
         "cross_db_agreement_only": {
           "DR": 1.0,
@@ -3270,7 +3270,7 @@
         }
       },
       "fpr_reduction_majority_vs_anymiss_pp": 0.0,
-      "dr_change_majority_vs_anymiss_pp": -90.3
+      "dr_change_majority_vs_anymiss_pp": -93.6
     },
     "b3_noisy_voter_ensemble": {
       "rationale": "the empirically faithful model of the reviewer's concern: N real, fallible verifiers as N independent 'lookups'. any-miss = flag HALL if ANY says HALL (the agentic harness rule); majority = flag HALL if >= ceil(N/2) do.",
