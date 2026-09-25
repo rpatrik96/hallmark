@@ -2,36 +2,36 @@
   "cutoff_gpt51": "2024-09-01",
   "cutoff_gpt54": "2025-08-31",
   "supplement": "results/temporal_supplement/temporal_supplement_2024_2025.jsonl",
-  "supplement_size": 448,
+  "supplement_size": 858,
   "strata": [
     {
       "stratum": "pre_54",
-      "n": 417,
-      "gpt51_fpr": 0.7423728813559322,
+      "n": 750,
+      "gpt51_fpr": 0.7593220338983051,
       "gpt54_fpr": 0.41333333333333333,
       "gpt51_dr": 0.9482758620689655,
       "gpt54_dr": 0.8717948717948718,
-      "gpt51_unc_rate": 0.014388489208633094,
+      "gpt51_unc_rate": 0.008,
       "gpt54_unc_rate": 0.0
     },
     {
       "stratum": "post_54",
-      "n": 21,
+      "n": 58,
       "gpt51_fpr": null,
       "gpt54_fpr": null,
       "gpt51_dr": 1.0,
       "gpt54_dr": 1.0,
-      "gpt51_unc_rate": 0.14285714285714285,
+      "gpt51_unc_rate": 0.05172413793103448,
       "gpt54_unc_rate": 0.0
     }
   ],
   "aggregate": {
-    "gpt51_fpr": 0.7423728813559322,
+    "gpt51_fpr": 0.7593220338983051,
     "gpt54_fpr": 0.41333333333333333,
     "gpt51_dr": 0.9583333333333334,
     "gpt54_dr": 0.8986486486486487,
     "gpt51_unc": 9,
     "gpt54_unc": 0,
-    "n": 448
+    "n": 858
   }
 }
