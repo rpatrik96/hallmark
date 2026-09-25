@@ -8,8 +8,8 @@ structured subtests,two_of_four (k>=2),0.269,0.0,0.4239,0.3799,0,443
 structured subtests,majority (k>=3 of 4),0.0479,0.0,0.0913,0.1501,0,577
 structured subtests,unanimous (k>=4),0.0017,0.0,0.0033,0.0275,0,605
 structured subtests,cross_db_agreement_only,1.0,0.0351,0.9854,0.968,18,0
-noisy-voter ensemble,any_miss (>=1 of 11),0.995,0.8811,0.7261,0.2445,452,3
-noisy-voter ensemble,two_votes (>=2 of 11),0.9851,0.7427,0.7538,0.364,381,9
-noisy-voter ensemble,majority (>=6 of 11),0.8284,0.2671,0.8064,0.5651,137,104
-noisy-voter ensemble,supermajority (>=10 of 11),0.5759,0.0487,0.7122,0.5568,25,257
-noisy-voter ensemble,unanimous (>=11 of 11),0.4307,0.0409,0.5878,0.4473,21,345
+noisy-voter ensemble,any_miss (>=1 of 12),0.995,0.8811,0.7261,0.2445,452,3
+noisy-voter ensemble,two_votes (>=2 of 12),0.9851,0.7427,0.7538,0.364,381,9
+noisy-voter ensemble,majority (>=7 of 12),0.7789,0.191,0.8027,0.5859,98,134
+noisy-voter ensemble,supermajority (>=11 of 12),0.495,0.0468,0.6452,0.4925,24,306
+noisy-voter ensemble,unanimous (>=12 of 12),0.3201,0.0312,0.4755,0.3687,16,412

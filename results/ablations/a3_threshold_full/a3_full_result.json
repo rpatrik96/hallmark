@@ -3274,7 +3274,7 @@
     },
     "b3_noisy_voter_ensemble": {
       "rationale": "the empirically faithful model of the reviewer's concern: N real, fallible verifiers as N independent 'lookups'. any-miss = flag HALL if ANY says HALL (the agentic harness rule); majority = flag HALL if >= ceil(N/2) do.",
-      "n_voters": 11,
+      "n_voters": 12,
       "voters": [
         "claude_opus_4_7",
         "claude_sonnet_4_6",
@@ -3286,10 +3286,11 @@
         "gpt_5_4",
         "gpt_5_1",
         "llama_4_maverick",
-        "qwen3_vl_235b"
+        "qwen3_vl_235b",
+        "gemini_2_5_pro"
       ],
       "rules": {
-        "any_miss (>=1 of 11)": {
+        "any_miss (>=1 of 12)": {
           "DR": 0.995,
           "FPR": 0.8811,
           "F1": 0.7261,
@@ -3297,7 +3298,7 @@
           "fp": 452,
           "fn": 3
         },
-        "two_votes (>=2 of 11)": {
+        "two_votes (>=2 of 12)": {
           "DR": 0.9851,
           "FPR": 0.7427,
           "F1": 0.7538,
@@ -3305,33 +3306,33 @@
           "fp": 381,
           "fn": 9
         },
-        "majority (>=6 of 11)": {
-          "DR": 0.8284,
-          "FPR": 0.2671,
-          "F1": 0.8064,
-          "MCC": 0.5651,
-          "fp": 137,
-          "fn": 104
+        "majority (>=7 of 12)": {
+          "DR": 0.7789,
+          "FPR": 0.191,
+          "F1": 0.8027,
+          "MCC": 0.5859,
+          "fp": 98,
+          "fn": 134
         },
-        "supermajority (>=10 of 11)": {
-          "DR": 0.5759,
-          "FPR": 0.0487,
-          "F1": 0.7122,
-          "MCC": 0.5568,
-          "fp": 25,
-          "fn": 257
+        "supermajority (>=11 of 12)": {
+          "DR": 0.495,
+          "FPR": 0.0468,
+          "F1": 0.6452,
+          "MCC": 0.4925,
+          "fp": 24,
+          "fn": 306
         },
-        "unanimous (>=11 of 11)": {
-          "DR": 0.4307,
-          "FPR": 0.0409,
-          "F1": 0.5878,
-          "MCC": 0.4473,
-          "fp": 21,
-          "fn": 345
+        "unanimous (>=12 of 12)": {
+          "DR": 0.3201,
+          "FPR": 0.0312,
+          "F1": 0.4755,
+          "MCC": 0.3687,
+          "fp": 16,
+          "fn": 412
         }
       },
-      "fpr_reduction_majority_vs_anymiss_pp": 61.4,
-      "dr_change_majority_vs_anymiss_pp": -16.7
+      "fpr_reduction_majority_vs_anymiss_pp": 69.0,
+      "dr_change_majority_vs_anymiss_pp": -21.6
     }
   },
   "agentic_vs_zeroshot_sonnet": {
