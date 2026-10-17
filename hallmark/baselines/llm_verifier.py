@@ -204,7 +204,9 @@ _NO_THINK_SUFFIX = "/no_think"
 # any temperature/top_p/top_k, so the request must omit them and the model runs
 # at its default sampling. OpenRouter silently drops the field for the same
 # models, which is why the anthropic/claude-opus-4.7 mirror ran without error.
-_NO_SAMPLING_PARAMS_MODELS: frozenset[str] = frozenset({"claude-opus-4-7"})
+_NO_SAMPLING_PARAMS_MODELS: frozenset[str] = frozenset(
+    {"claude-opus-4-7", "anthropic/claude-opus-4.7"}
+)
 
 # Reference dict of OpenAI model IDs for documentation and kwarg overrides.
 # The llm_openai baseline defaults to "gpt-5.1"; pass model= to use any entry here.

@@ -193,13 +193,18 @@ def _complete(
         # Only text blocks carry `.text`; skip thinking/tool-use blocks.
         text = "".join(b.text for b in msg.content if b.type == "text").strip()
         return text, "anthropic"
+    # OpenRouter drops temperature for Opus 4.7+ anyway; omitting it keeps the
+    # request identical to the native arm.
+    or_sampling: dict[str, Any] = (
+        {} if model in _NO_SAMPLING_PARAMS_MODELS else {"temperature": temperature}
+    )
     resp = client.chat.completions.create(
         model=model,
         messages=[{"role": "user", "content": prompt}],
         max_completion_tokens=max_completion_tokens,
-        temperature=temperature,  # match the main verifier path (default 0.0)
         seed=seed,  # determinism parity with hallmark.baselines.llm_verifier
         timeout=timeout,  # per-request timeout — critical to prevent hangs
+        **or_sampling,
     )
     upstream = (resp.model_extra or {}).get("provider")
     return resp.choices[0].message.content or "", upstream
