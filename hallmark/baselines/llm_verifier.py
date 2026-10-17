@@ -199,6 +199,13 @@ _NO_THINK_MODELS: frozenset[str] = frozenset(
 )
 _NO_THINK_SUFFIX = "/no_think"
 
+# Native Anthropic model IDs that reject sampling parameters. From Opus 4.7 on,
+# the Messages API returns 400 "`temperature` is deprecated for this model" for
+# any temperature/top_p/top_k, so the request must omit them and the model runs
+# at its default sampling. OpenRouter silently drops the field for the same
+# models, which is why the anthropic/claude-opus-4.7 mirror ran without error.
+_NO_SAMPLING_PARAMS_MODELS: frozenset[str] = frozenset({"claude-opus-4-7"})
+
 # Reference dict of OpenAI model IDs for documentation and kwarg overrides.
 # The llm_openai baseline defaults to "gpt-5.1"; pass model= to use any entry here.
 # Confirmed live via GET /v1/models on 2026-04-22: gpt-5.1, gpt-5.2, gpt-5.4,
@@ -640,11 +647,14 @@ def verify_with_anthropic(
     client = anthropic.Anthropic(**client_kwargs_anth)
 
     def call_fn(prompt: str) -> str:
+        sampling: dict[str, Any] = (
+            {} if model in _NO_SAMPLING_PARAMS_MODELS else {"temperature": 0.0}
+        )
         resp = client.messages.create(
             model=model,
             max_tokens=256,
-            temperature=0.0,
             messages=[{"role": "user", "content": prompt}],
+            **sampling,
         )
         # Only text blocks carry `.text`; skip thinking/tool-use blocks.
         return "".join(block.text for block in resp.content if block.type == "text").strip()

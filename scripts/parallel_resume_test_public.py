@@ -91,6 +91,7 @@ from hallmark.baselines.checkpoint_guard import (  # noqa: E402
     PoisonedBatchError,
 )
 from hallmark.baselines.llm_verifier import (  # noqa: E402
+    _NO_SAMPLING_PARAMS_MODELS,
     _NO_THINK_MODELS,
     _NO_THINK_SUFFIX,
     HF_ROUTER_BASE_URL,
@@ -177,13 +178,17 @@ def _complete(
     non-standard top-level ``provider`` field.
     """
     if anthropic is not None and isinstance(client, anthropic.Anthropic):
-        # No seed: the Messages API has no such parameter.
+        # No seed: the Messages API has no such parameter. Opus 4.7+ also
+        # rejects temperature, so it is left out for those models.
+        sampling: dict[str, Any] = (
+            {} if model in _NO_SAMPLING_PARAMS_MODELS else {"temperature": temperature}
+        )
         msg = client.messages.create(
             model=model,
             max_tokens=max_completion_tokens,
-            temperature=temperature,
             messages=[{"role": "user", "content": prompt}],
             timeout=timeout,
+            **sampling,
         )
         # Only text blocks carry `.text`; skip thinking/tool-use blocks.
         text = "".join(b.text for b in msg.content if b.type == "text").strip()
