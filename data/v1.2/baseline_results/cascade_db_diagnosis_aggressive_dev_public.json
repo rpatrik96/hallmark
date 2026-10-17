@@ -11,14 +11,14 @@
   "tool_version": null,
   "source_condition": null,
   "split_sha256": "8cfb4a95ccac59624e03b07199368e7a61b124f426b661174757e38eacbde4ea",
-  "run_timestamp": "2026-10-15T07:15:17.727504+00:00",
+  "run_timestamp": "2026-10-17T09:46:48.472609+00:00",
   "mcc": 0.9711235041197337,
   "macro_f1": 0.9855488903381611,
   "union_recall_at_k": {},
   "temporal_robustness": null,
-  "cost_efficiency": 0.0385055600496028,
+  "cost_efficiency": 0.03851363350597951,
   "mean_api_calls": 2.421805183199285,
-  "ece": 0.11981233243967879,
+  "ece": 0.11974084003574673,
   "auroc": 0.983670473609498,
   "auprc": 0.9804356791594413,
   "num_uncertain": 0,
@@ -519,10 +519,10 @@
       "UNCERTAIN": 0
     },
     "stage2_diagnosis": {
-      "count": 237,
-      "fraction": 0.21179624664879357,
+      "count": 236,
+      "fraction": 0.21090259159964253,
       "HALL": 235,
-      "VALID": 2,
+      "VALID": 1,
       "UNCERTAIN": 0
     },
     "prescreening": {
@@ -533,10 +533,10 @@
       "UNCERTAIN": 0
     },
     "none": {
-      "count": 0,
-      "fraction": 0.0,
+      "count": 1,
+      "fraction": 0.0008936550491510277,
       "HALL": 0,
-      "VALID": 0,
+      "VALID": 1,
       "UNCERTAIN": 0
     }
   },
@@ -549,7 +549,7 @@
     "stage2_bucket": 237,
     "stage2_reused": 0,
     "stage2_fresh": 237,
-    "rescored_v1_2_4_utc": "2026-10-15T07:15:17.728673+00:00",
+    "rescored_v1_2_4_utc": "2026-10-17T09:46:48.473616+00:00",
     "rescore_note": "v1.2.4 labels; predictions unchanged, no API calls",
     "eval_mode": "aggressive",
     "released_from": "results/cascade_sonnet46_shared/sonnet46_dev_public.json"

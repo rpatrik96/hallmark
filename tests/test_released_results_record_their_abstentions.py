@@ -24,7 +24,9 @@ RESULTS = Path(__file__).resolve().parent.parent / "data/v1.2/baseline_results"
 #: Splits whose released result was corrected, and the abstention count in the
 #: raw output behind it. Pinned rather than recomputed: a test that re-derives
 #: its own expectation from the same file cannot catch the file changing.
-EXPECTED_ABSTENTIONS = {"dev_public": 147, "test_public": 101}
+#: v1.2.4 re-ran the 9 entries the released raw output had skipped (their fields
+#: were cut off at a LaTeX brace); 3 of them abstain, so 147/101 became 149/102.
+EXPECTED_ABSTENTIONS = {"dev_public": 149, "test_public": 102}
 
 
 @pytest.mark.parametrize("split", sorted(EXPECTED_ABSTENTIONS))
@@ -72,15 +74,16 @@ def test_the_triple_still_uses_the_committed_convention():
     longer sits on the same basis as the rest of the cohort. The values are the
     v1.2.0 prescreen-fix rescore the paper reports
     (results/relabel_delta/release_btu_v120.py) on the v1.2.4 labels, still scored
-    with abstentions committed as VALID (0.8201 / 0.0507 / 0.8804 on v1.2.3).
+    with abstentions committed as VALID (0.8201 / 0.0507 / 0.8804 on v1.2.3), after
+    the truncated-field re-run of 9 entries.
     """
     path = RESULTS / "bibtexupdater_dev_public.json"
     if not path.is_file():
         pytest.skip("released result not present")
     result = json.loads(path.read_text())
-    assert result["detection_rate"] == pytest.approx(0.8195, abs=5e-4)
-    assert result["false_positive_rate"] == pytest.approx(0.0377, abs=5e-4)
-    assert result["f1_hallucination"] == pytest.approx(0.8858, abs=5e-4)
+    assert result["detection_rate"] == pytest.approx(0.8228, abs=5e-4)
+    assert result["false_positive_rate"] == pytest.approx(0.0397, abs=5e-4)
+    assert result["f1_hallucination"] == pytest.approx(0.8869, abs=5e-4)
 
 
 @pytest.mark.parametrize("split", sorted(EXPECTED_ABSTENTIONS))

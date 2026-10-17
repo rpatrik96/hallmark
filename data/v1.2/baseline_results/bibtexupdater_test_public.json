@@ -4,20 +4,20 @@
   "num_entries": 831,
   "num_hallucinated": 524,
   "num_valid": 307,
-  "detection_rate": 0.8358778625954199,
+  "detection_rate": 0.8377862595419847,
   "false_positive_rate": 0.07166123778501629,
-  "f1_hallucination": 0.8902439024390244,
-  "tier_weighted_f1": 0.9049999999999999,
-  "mcc": 0.7419684553165057,
-  "macro_f1": 0.8654759335203972,
+  "f1_hallucination": 0.8913705583756344,
+  "tier_weighted_f1": 0.906093906093906,
+  "mcc": 0.744017504299999,
+  "macro_f1": 0.8666601684049516,
   "union_recall_at_k": {},
   "temporal_robustness": null,
   "cost_efficiency": null,
   "mean_api_calls": 0.0,
-  "ece": 0.32717915446356166,
-  "auroc": 0.9199623293632047,
-  "auprc": 0.9333472445372885,
-  "num_uncertain": 101,
+  "ece": 0.32811176577523427,
+  "auroc": 0.9192350249894323,
+  "auprc": 0.9335178928164579,
+  "num_uncertain": 102,
   "tier3_f1": 0.8782051282051282,
   "detection_rate_ci": null,
   "f1_hallucination_ci": null,
@@ -36,10 +36,10 @@
       "num_valid": 307
     },
     "2": {
-      "detection_rate": 0.7942386831275721,
+      "detection_rate": 0.7983539094650206,
       "false_positive_rate": 0.07166123778501629,
-      "f1": 0.8427947598253276,
-      "precision": 0.8976744186046511,
+      "f1": 0.8453159041394336,
+      "precision": 0.8981481481481481,
       "num_hallucinated": 243,
       "num_valid": 307
     },
@@ -94,14 +94,14 @@
       "dr_ci_upper": 1.0
     },
     "hybrid_fabrication": {
-      "detection_rate": 0.96875,
+      "detection_rate": 1.0,
       "false_positive_rate": 0.07166123778501629,
-      "f1": 0.7294117647058823,
-      "precision": 0.5849056603773585,
+      "f1": 0.7441860465116279,
+      "precision": 0.5925925925925926,
       "count": 32,
       "num_valid": 307,
-      "dr_ci_lower": 0.8425539219962727,
-      "dr_ci_upper": 0.9944622826374491
+      "dr_ci_lower": 0.8928172849426366,
+      "dr_ci_upper": 1.0
     },
     "merged_citation": {
       "detection_rate": 1.0,
@@ -204,8 +204,8 @@
       "dr_ci_upper": 0.8367363660170444
     }
   },
-  "coverage": 0.8761,
-  "coverage_adjusted_f1": 0.7799426829268292,
+  "coverage": 0.8773,
+  "coverage_adjusted_f1": 0.781999390862944,
   "type_accuracy": {
     "overall": NaN,
     "main_types_only": NaN,
@@ -384,9 +384,9 @@
       "merged_citation": 0,
       "partial_author_list": 0,
       "arxiv_version_mismatch": 0,
-      "VALID": 1,
+      "VALID": 0,
       "UNCERTAIN": 0,
-      "HALLUCINATED_unknown": 31
+      "HALLUCINATED_unknown": 32
     },
     "near_miss_title": {
       "fabricated_doi": 0,
@@ -528,8 +528,8 @@
     "none": {
       "count": 831,
       "fraction": 1.0,
-      "HALL": 460,
-      "VALID": 371,
+      "HALL": 461,
+      "VALID": 370,
       "UNCERTAIN": 0
     }
   },
@@ -546,7 +546,8 @@
     ],
     "coverage_corrected": "coverage and num_uncertain recounted from results/relabel_delta/btu_v1_2_0/test_public/btu_raw.jsonl under ABSTENTION_STATUSES, and coverage_adjusted_f1 recomputed as f1_hallucination x coverage per its definition in metrics.py. The DR/FPR/F1 triple is unchanged and still scores abstentions as committed-VALID, which is the convention the paper reports; under that convention coverage_adjusted_f1 counts abstention twice (once as a committed miss inside F1, once through coverage) and is a lower bound, not a third scoring. See scripts/rescore_btu_from_raw.py.",
     "rescored_from": "results/relabel_delta/btu_v1_2_0_prescreen_fix/bibtexupdater_test_public_per_entry.jsonl",
-    "rescored_input_sha256": "5b9886c53168062e88ef8c934a16a4dd3bf8c83565c26e68a03922d7b3a1f8ad"
+    "rescored_input_sha256": "5b9886c53168062e88ef8c934a16a4dd3bf8c83565c26e68a03922d7b3a1f8ad",
+    "rerun_truncated_fields": "9 restored entries re-run 2026-10-17 (bibtex-check 1.2.0, pre-#69 wrapper); see results/rerun_truncated_fields/rerun_log.json"
   },
   "_btu_status_histogram": {
     "arxiv_id_mismatch": 14,

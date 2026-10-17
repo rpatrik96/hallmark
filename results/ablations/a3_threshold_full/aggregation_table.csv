@@ -1,15 +1,15 @@
 instantiation,rule,DR,FPR,F1,MCC,fp,fn
-field-level (real DB resolver),any_field_miss (k>=1 of 4),0.7857,0.1314,0.8284,0.6524,67,129
-field-level (real DB resolver),two_fields (k>=2 of 4),0.4153,0.0294,0.5767,0.4513,15,352
-field-level (real DB resolver),majority_fields (k>=3 of 4),0.2159,0.0098,0.3528,0.3145,5,472
-field-level (real DB resolver),unanimous_fields (k>=4 of 4),0.0764,0.0059,0.1413,0.1712,3,556
-structured subtests,any_miss (k>=1 of 4),0.9505,0.0,0.9746,0.9476,0,30
-structured subtests,two_of_four (k>=2),0.2244,0.0,0.3666,0.3422,0,470
-structured subtests,majority (k>=3 of 4),0.0149,0.0,0.0293,0.0828,0,597
-structured subtests,unanimous (k>=4),0.0,0.0,0.0,0.0,0,606
-structured subtests,cross_db_agreement_only,1.0,0.0351,0.9854,0.968,18,0
-noisy-voter ensemble,any_miss (>=1 of 12),0.995,0.8811,0.7261,0.2445,452,3
-noisy-voter ensemble,two_votes (>=2 of 12),0.9851,0.7427,0.7538,0.364,381,9
-noisy-voter ensemble,majority (>=7 of 12),0.7789,0.191,0.8027,0.5859,98,134
-noisy-voter ensemble,supermajority (>=11 of 12),0.495,0.0468,0.6452,0.4925,24,306
-noisy-voter ensemble,unanimous (>=12 of 12),0.3201,0.0312,0.4755,0.3687,16,412
+field-level (real DB resolver),any_field_miss (k>=1 of 4),0.7823,0.1238,0.8306,0.6556,62,133
+field-level (real DB resolver),two_fields (k>=2 of 4),0.4157,0.022,0.5799,0.4598,11,357
+field-level (real DB resolver),majority_fields (k>=3 of 4),0.2128,0.01,0.3485,0.3089,5,481
+field-level (real DB resolver),unanimous_fields (k>=4 of 4),0.0753,0.006,0.1394,0.168,3,565
+structured subtests,any_miss (k>=1 of 4),0.9512,0.0,0.975,0.9475,0,30
+structured subtests,two_of_four (k>=2),0.2276,0.0,0.3709,0.3423,0,475
+structured subtests,majority (k>=3 of 4),0.0146,0.0,0.0288,0.0815,0,606
+structured subtests,unanimous (k>=4),0.0,0.0,0.0,0.0,0,615
+structured subtests,cross_db_agreement_only,1.0,0.0357,0.9856,0.9679,18,0
+noisy-voter ensemble,any_miss (>=1 of 12),0.9886,0.8869,0.7281,0.2179,447,7
+noisy-voter ensemble,two_votes (>=2 of 12),0.9789,0.746,0.7558,0.3491,376,13
+noisy-voter ensemble,majority (>=7 of 12),0.7675,0.1984,0.7953,0.5664,100,143
+noisy-voter ensemble,supermajority (>=11 of 12),0.4894,0.0476,0.6404,0.4842,24,314
+noisy-voter ensemble,unanimous (>=12 of 12),0.3171,0.0317,0.4722,0.3629,16,420

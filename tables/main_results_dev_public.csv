@@ -1,19 +1,19 @@
 tool,split,display_name,category,detection_rate,false_positive_rate,f1_hallucination,mcc,tier_weighted_f1,ece,coverage,delta_fpr,known_stale
 doi_only,dev_public,DOI-only,citation-database,0.2146,0.0437,0.3433,0.2469,0.2650,0.0878,1.0000,-0.0013,false
-llm_openrouter_gemini_pro,dev_public,Gemini 2.5 Pro,zero-shot,0.4687,0.0509,0.6204,0.4637,0.6044,0.3055,0.9669,0.0092,false
-llm_openrouter_claude_opus_4_7,dev_public,Claude Opus 4.7,zero-shot,0.8992,0.1488,0.8898,0.7523,0.9116,0.0529,1.0000,0.0499,false
+llm_openrouter_gemini_pro,dev_public,Gemini 2.5 Pro,zero-shot,0.4721,0.0530,0.6228,0.4638,0.6087,0.3048,0.9669,0.0071,false
+llm_openrouter_claude_opus_4_7,dev_public,Claude Opus 4.7,zero-shot,0.8992,0.1488,0.8898,0.7523,0.9116,0.0513,1.0000,0.0499,false
 llm_openrouter_claude_sonnet_4_6,dev_public,Claude Sonnet 4.6,zero-shot,0.9107,0.1538,0.8945,0.7606,0.9167,0.0399,0.9821,0.0268,false
-llm_openrouter_gemini_flash,dev_public,Gemini 2.5 Flash,zero-shot,0.4926,0.1018,0.6247,0.4186,0.6230,0.2733,0.9884,0.0057,false
-llm_openrouter_llama_4_maverick,dev_public,Llama 4 Maverick,zero-shot,0.6049,0.1488,0.7006,0.4633,0.7035,0.1841,1.0000,0.0206,false
-llm_openai_gpt54,dev_public,GPT-5.4 (zero-shot),zero-shot,0.7577,0.2302,0.7786,0.5254,0.8026,0.2083,1.0000,-0.0087,false
-llm_openrouter_mistral,dev_public,Mistral Large,zero-shot,0.7058,0.2550,0.7362,0.4489,0.7597,0.2370,0.9893,0.0317,false
+llm_openrouter_gemini_flash,dev_public,Gemini 2.5 Flash,zero-shot,0.4959,0.1018,0.6276,0.4214,0.6274,0.2714,0.9884,0.0090,false
+llm_openrouter_llama_4_maverick,dev_public,Llama 4 Maverick,zero-shot,0.6065,0.1508,0.7011,0.4626,0.7051,0.1842,1.0000,0.0186,false
+llm_openai_gpt54,dev_public,GPT-5.4 (zero-shot),zero-shot,0.7577,0.2341,0.7773,0.5215,0.8019,0.2101,1.0000,-0.0126,false
+llm_openrouter_mistral,dev_public,Mistral Large,zero-shot,0.7074,0.2555,0.7373,0.4500,0.7613,0.2363,0.9884,0.0312,false
 llm_openai,dev_public,GPT-5.1 (zero-shot),zero-shot,0.8276,0.4147,0.7637,0.4285,0.8188,0.1946,1.0000,0.0641,false
 llm_openrouter_qwen,dev_public,Qwen3-235B,zero-shot,0.8469,0.5427,0.7392,0.3335,0.8159,0.2875,0.9982,0.0794,false
 llm_openrouter_qwen_max,dev_public,Qwen3-VL-235B,zero-shot,0.8488,0.5586,0.7362,0.3209,0.8138,0.2926,0.9991,0.0798,false
-llm_openrouter_deepseek_r1,dev_public,DeepSeek-R1,zero-shot,0.8874,0.6278,0.7383,0.3071,0.8232,0.2405,0.9839,-0.3102,false
+llm_openrouter_deepseek_r1,dev_public,DeepSeek-R1,zero-shot,0.8874,0.6298,0.7378,0.3052,0.8229,0.2415,0.9839,-0.3079,false
 llm_openrouter_deepseek_v3,dev_public,DeepSeek-V3.2,zero-shot,0.8976,0.7143,0.7230,0.2348,0.8164,0.3242,1.0000,0.0251,false
 llm_agentic_openai,dev_public,GPT-5.1 + CrossRef/OpenAlex/arXiv,agentic,0.9642,0.4722,0.8202,0.5599,0.8945,0.1705,1.0000,0.0783,false
 llm_agentic_btu_openai,dev_public,GPT-5.1 + bibtex-updater (tool optional),agentic,0.9740,0.4683,0.8262,0.5782,0.8997,0.1223,1.0000,-0.1165,false
-llm_agentic_btu_sonnet_4_6,dev_public,Sonnet 4.6 + bibtex-updater (tool optional),agentic,0.9837,0.4286,0.8426,0.6249,0.9124,0.1175,1.0000,-0.0898,false
-bibtexupdater,dev_public,bibtex-updater,co-designed,0.8195,0.0377,0.8858,0.7796,0.8946,0.3260,0.8686,0.0340,false
-llm_tool_augmented,dev_public,GPT-5.1 + bibtex-updater (always-call; output in prompt),co-designed,0.8348,0.1426,0.8538,0.6903,0.8690,0.0802,0.9294,0.1083,false
+llm_agentic_btu_sonnet_4_6,dev_public,Sonnet 4.6 + bibtex-updater (tool optional),agentic,0.9837,0.4286,0.8426,0.6249,0.9124,0.1175,1.0000,-0.0866,false
+bibtexupdater,dev_public,bibtex-updater,co-designed,0.8228,0.0397,0.8869,0.7806,0.8971,0.3271,0.8668,0.0320,false
+llm_tool_augmented,dev_public,GPT-5.1 + bibtex-updater (always-call; output in prompt),co-designed,0.8348,0.1447,0.8530,0.6883,0.8686,0.0792,0.9294,0.1062,false
