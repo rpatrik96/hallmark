@@ -65,6 +65,19 @@ def test_anthropic_native_call() -> None:
     assert fake.kwargs["messages"][0]["content"] == module.build_prompt(_ENTRY, "claude-sonnet-4-6")
 
 
+def test_anthropic_opus_4_7_omits_temperature() -> None:
+    module = _load_script()
+    client = anthropic.Anthropic(api_key="test-key")
+    fake = _FakeMessages()
+    client.messages = fake  # type: ignore[assignment]
+
+    rec = module.call_one(client, "claude-opus-4-7", _ENTRY, 30.0, 3, 1024, 0.0, 42, "anthropic")
+
+    assert rec["label"] == "VALID"
+    assert "temperature" not in fake.kwargs
+    assert fake.kwargs["max_tokens"] == 1024
+
+
 def test_openrouter_records_upstream_provider() -> None:
     module = _load_script()
     resp = SimpleNamespace(
