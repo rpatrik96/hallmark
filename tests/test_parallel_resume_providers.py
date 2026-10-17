@@ -121,3 +121,23 @@ def test_anthropic_rate_limit_is_retried(monkeypatch: pytest.MonkeyPatch) -> Non
     rec = module.call_one(client, "claude-opus-4-7", _ENTRY, 30.0, 3, 1024, 0.0, 42, "anthropic")
     assert calls["n"] == 2
     assert rec["label"] == "VALID"
+
+
+def test_openrouter_opus_4_7_omits_temperature() -> None:
+    module = _load_script()
+    resp = SimpleNamespace(
+        choices=[SimpleNamespace(message=SimpleNamespace(content=_REPLY))],
+        model_extra={"provider": "Amazon Bedrock"},
+    )
+    sent: dict[str, Any] = {}
+
+    def _create(**kwargs: Any) -> Any:
+        sent.update(kwargs)
+        return resp
+
+    client = SimpleNamespace(chat=SimpleNamespace(completions=SimpleNamespace(create=_create)))
+    module.call_one(
+        client, "anthropic/claude-opus-4.7", _ENTRY, 30.0, 3, 1024, 0.0, 42, "openrouter"
+    )
+    assert "temperature" not in sent
+    assert sent["max_completion_tokens"] == 1024
