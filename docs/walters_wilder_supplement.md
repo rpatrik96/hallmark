@@ -69,6 +69,24 @@ When several fields are wrong, the most identity-defining field wins
 - **4 cross-version duplicates** (same work cited by both GPT-3.5 and GPT-4 for a
   topic) and **4 unparseable** rows.
 
+### Generator provenance
+
+The source corpus was produced by **ChatGPT-3.5** and **GPT-4** (the study ran in
+2023 through the ChatGPT interface; no API model IDs or snapshot dates are recorded
+by the authors, so none are claimed here). Every converted entry keeps its
+generator in the `bibtex_key` prefix — `ww_35_*` for ChatGPT-3.5, `ww_4_*` for
+GPT-4 — which is the only per-entry generator attribution in the whole benchmark.
+
+| Generator | n | VALID | HALLUCINATED | `plausible_fabrication` | fabrication rate |
+|---|---|---|---|---|---|
+| ChatGPT-3.5 | 119 | 19 | 100 | 92 | 0.773 |
+| GPT-4 | 222 | 153 | 69 | 47 | 0.212 |
+
+These rates are **not** the 55% / 18% the authors report: the conversion keeps
+journal articles only and drops the 34 real articles whose sole error is a
+year/volume/page slip, both of which remove non-fabricated citations from the
+denominator.
+
 ### Result: 341 entries, 172 VALID / 169 HALLUCINATED
 
 All 341 pass `hallmark.contribution.validate_entry.validate_batch`. Built by
