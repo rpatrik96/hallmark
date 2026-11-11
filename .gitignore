@@ -132,3 +132,6 @@ results/gepa_haiku/**/run/
 
 # Recheck HTTP cache (also holds test_hidden lookups)
 results/relabel_recheck/http_cache.json
+
+# Hall of Hallucinations raw share-report HTML (68 MB, regenerable via scripts/hall_of_hallucinations/scrape_hall.py)
+results/hall_of_hallucinations/raw/
