@@ -63,7 +63,7 @@
       },
       "after": {
         "label": "HALLUCINATED",
-        "hallucination_type": "swapped_authors",
+        "hallucination_type": "partial_author_list",
         "difficulty_tier": 2
       }
     }
