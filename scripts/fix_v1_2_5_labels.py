@@ -54,6 +54,7 @@ AUTHORS = "swapped_authors"
 VENUE = "wrong_venue"
 PREPRINT = "preprint_as_published"
 PARTIAL = "partial_author_list"
+VERSION_MIX = "arxiv_version_mismatch"
 
 DEFECT = {
     WRONG_DOI: "identifier belongs to a different paper",
@@ -61,6 +62,7 @@ DEFECT = {
     VENUE: "venue is not where the paper was published",
     PREPRINT: "venue is claimed for a paper that exists only as a preprint",
     PARTIAL: "author list leaves out a real author",
+    VERSION_MIX: "metadata mixes a preprint with a different published version",
 }
 
 # split, key, expected current relabeled_by (guard), new type, explanation
@@ -97,10 +99,12 @@ TO_HALLUCINATED: list[tuple[str, str, str, str, str]] = [
         "test_public",
         "d632f7211d63",
         "systematic-relabel-2026-05-30",
-        PREPRINT,
-        "Fixing Data Augmentation to Improve Adversarial Robustness cited as NeurIPS 2021; it exists "
-        "only on arXiv (2103.01946). Its arXiv comment says it was accepted to NeurIPS 2021 as two "
-        "separate papers with other titles (arXiv 2111.05328, 2110.09468); neither is this one.",
+        VERSION_MIX,
+        "Fixing Data Augmentation to Improve Adversarial Robustness cited as NeurIPS 2021 with "
+        "arXiv 2103.01946. That preprint's own comment says it was accepted to NeurIPS 2021 as two "
+        "separate, updated papers with their own arXiv records; the one with these six authors in "
+        "this order is 'Data Augmentation Can Improve Robustness' (arXiv 2111.05328). The citation "
+        "pairs the earlier preprint's title and ID with the later paper's venue.",
     ),
     (
         "test_public",

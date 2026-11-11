@@ -50,8 +50,8 @@
       },
       "after": {
         "label": "HALLUCINATED",
-        "hallucination_type": "preprint_as_published",
-        "difficulty_tier": 2
+        "hallucination_type": "arxiv_version_mismatch",
+        "difficulty_tier": 3
       }
     },
     {
