@@ -53,12 +53,14 @@ WRONG_DOI = "hybrid_fabrication"
 AUTHORS = "swapped_authors"
 VENUE = "wrong_venue"
 PREPRINT = "preprint_as_published"
+PARTIAL = "partial_author_list"
 
 DEFECT = {
     WRONG_DOI: "identifier belongs to a different paper",
     AUTHORS: "author list matches no version of the paper",
     VENUE: "venue is not where the paper was published",
     PREPRINT: "venue is claimed for a paper that exists only as a preprint",
+    PARTIAL: "author list leaves out a real author",
 }
 
 # split, key, expected current relabeled_by (guard), new type, explanation
@@ -104,10 +106,12 @@ TO_HALLUCINATED: list[tuple[str, str, str, str, str]] = [
         "test_public",
         "d27ac16ca85a",
         "systematic-relabel-2026-05-30",
-        AUTHORS,
+        PARTIAL,
         "PaLM-E (ICML 2023); 'Driess ... Ichter, Tompson, et al.' skips the 7th author, Ayzaan "
         "Wahid, who is 7th on every version (PMLR, OpenReview, arXiv v1, DBLP), so the leading list "
-        "matches no version. The v1.2.4 recheck passed it because it checked membership, not order.",
+        "matches no version. Every cited name is a real author; one is left out before 'et al.', "
+        "so the type is partial_author_list (its usual form drops authors without 'et al.'). The "
+        "v1.2.4 recheck passed it because it checked membership, not order.",
     ),
 ]
 
