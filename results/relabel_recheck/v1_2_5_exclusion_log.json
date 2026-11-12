@@ -1,0 +1,216 @@
+{
+  "reason": "year no version of the paper carries; no matching taxonomy type",
+  "excluded_by": "opencite-errata-recheck-2026-11-11",
+  "entries": [
+    {
+      "bibtex_key": "b6a26b30b14a",
+      "evidence": "arXiv 1902.00450 v1 2019-02 to v4 2020-09, journal-ref ICML 2020; PMLR v119 bica20a",
+      "record": {
+        "bibtex_key": "b6a26b30b14a",
+        "bibtex_type": "inproceedings",
+        "fields": {
+          "title": "Time Series Deconfounder: Estimating Treatment Effects over Time in the Presence of Hidden Confounders",
+          "author": "Ioana Bica and Ahmed M. Alaa and Mihaela van der Schaar",
+          "booktitle": "ICML",
+          "year": "2021",
+          "doi": "10.48550/arXiv.1902.00450"
+        },
+        "label": "VALID",
+        "explanation": "LLM-generated via openai(gpt-5.1). Prompt: 'Bibliography on causal inference with machine learning'. Verification: Authors don't match CrossRef: 'Bica, Ioana and Alaa, Ahmed M. and van der Schaar, Mihaela' vs 'Defu Cao and James Enouen and Yujing Wang and Xiangchen Song and Chuizheng Meng and Hao Niu and Yan Liu'",
+        "generation_method": "llm_generated",
+        "source_conference": null,
+        "source": "llm_generated",
+        "publication_date": "2021-01-01",
+        "added_to_benchmark": "2026-02-14",
+        "subtests": {
+          "doi_resolves": true,
+          "title_exists": true,
+          "authors_match": true,
+          "fields_complete": true,
+          "cross_db_agreement": true,
+          "venue_correct": true
+        },
+        "raw_bibtex": null,
+        "schema_version": "1.0",
+        "relabeled_from": "HALLUCINATED",
+        "relabel_reason": "Real paper (Ioana Bica, Ahmed M. Alaa, Mihaela van der Schaar, 'Time Series Deconfounder', ICML 2020); 'swapped_authors' from CrossRef matching a different paper.",
+        "relabeled_by": "mislabel-audit-2026-05-30-leak-followup"
+      }
+    },
+    {
+      "bibtex_key": "bb59c4bd80e7",
+      "evidence": "arXiv 2002.05709 v1-v3 2020; PMLR v119 (ICML 2020) chen20j",
+      "record": {
+        "bibtex_key": "bb59c4bd80e7",
+        "bibtex_type": "inproceedings",
+        "fields": {
+          "title": "A Simple Framework for Contrastive Learning of Visual Representations",
+          "author": "Ting Chen and Simon Kornblith and Mohammad Norouzi and Geoffrey Hinton",
+          "booktitle": "ICML",
+          "year": "2021",
+          "doi": "10.48550/arXiv.2002.05709"
+        },
+        "label": "VALID",
+        "explanation": "Real paper (Ting Chen, Simon Kornblith, Mohammad Norouzi, Geoffrey Hinton, 'A Simple Framework for Contrastive Learning of Visual Representations', ICML 2020); CrossRef matched wrong record — correct authors and venue independently re-verified.",
+        "generation_method": "llm_generated",
+        "source_conference": null,
+        "source": "llm_generated",
+        "publication_date": "2021-01-01",
+        "added_to_benchmark": "2026-02-14",
+        "subtests": {
+          "doi_resolves": true,
+          "title_exists": true,
+          "authors_match": true,
+          "fields_complete": true,
+          "cross_db_agreement": true,
+          "venue_correct": true
+        },
+        "raw_bibtex": null,
+        "schema_version": "1.0",
+        "relabeled_from": "HALLUCINATED",
+        "relabel_reason": "Real paper (Ting Chen, Simon Kornblith, Mohammad Norouzi, Geoffrey Hinton, 'A Simple Framework for Contrastive Learning of Visual Representations', ICML 2020); CrossRef matched wrong record — correct authors and venue independently re-verified.",
+        "relabeled_by": "mislabel-audit-2026-05-30-leak-followup"
+      }
+    },
+    {
+      "bibtex_key": "c437b8d2fcd4",
+      "evidence": "arXiv 2006.11239 v1 2020-06, v2 2020-12; NeurIPS 2020 proceedings",
+      "record": {
+        "bibtex_key": "c437b8d2fcd4",
+        "bibtex_type": "inproceedings",
+        "fields": {
+          "title": "Denoising Diffusion Probabilistic Models",
+          "author": "Jonathan Ho and Ajay Jain and Pieter Abbeel",
+          "booktitle": "NeurIPS",
+          "year": "2021",
+          "doi": "10.48550/arXiv.2006.11239"
+        },
+        "label": "VALID",
+        "explanation": "Real paper (Jonathan Ho, Ajay Jain, Pieter Abbeel, 'Denoising Diffusion Probabilistic Models', NeurIPS 2020); 'swapped_authors' verdict came from CrossRef returning a different paper — correct authors confirmed via arXiv.",
+        "generation_method": "llm_generated",
+        "source_conference": null,
+        "source": "llm_generated",
+        "publication_date": "2021-01-01",
+        "added_to_benchmark": "2026-02-14",
+        "subtests": {
+          "doi_resolves": true,
+          "title_exists": true,
+          "authors_match": true,
+          "fields_complete": true,
+          "cross_db_agreement": true,
+          "venue_correct": true
+        },
+        "raw_bibtex": null,
+        "schema_version": "1.0",
+        "relabeled_from": "HALLUCINATED",
+        "relabel_reason": "Real paper (Jonathan Ho, Ajay Jain, Pieter Abbeel, 'Denoising Diffusion Probabilistic Models', NeurIPS 2020); 'swapped_authors' verdict came from CrossRef returning a different paper — correct authors confirmed via arXiv.",
+        "relabeled_by": "mislabel-audit-2026-05-30-leak-followup"
+      }
+    },
+    {
+      "bibtex_key": "b97858a4638f",
+      "evidence": "arXiv 2004.07211 v1-v2 2020; NeurIPS 2020 proceedings",
+      "record": {
+        "bibtex_key": "b97858a4638f",
+        "bibtex_type": "inproceedings",
+        "fields": {
+          "title": "Dark Experience for General Continual Learning: A Strong, Simple Baseline",
+          "author": "Pietro Buzzega and Matteo Boschini and Angelo Porrello and Davide Abati and Simone Calderara",
+          "booktitle": "NeurIPS",
+          "year": "2021",
+          "doi": "10.48550/arXiv.2004.07211"
+        },
+        "label": "VALID",
+        "explanation": "Real paper (Pietro Buzzega et al., 'Dark Experience for General Continual Learning', NeurIPS 2020); CrossRef retrieval failure produced author mismatch; correct authors and venue confirmed.",
+        "generation_method": "llm_generated",
+        "source_conference": null,
+        "source": "llm_generated",
+        "publication_date": "2021-01-01",
+        "added_to_benchmark": "2026-02-14",
+        "subtests": {
+          "doi_resolves": true,
+          "title_exists": true,
+          "authors_match": true,
+          "venue_correct": true,
+          "fields_complete": true,
+          "cross_db_agreement": true
+        },
+        "raw_bibtex": null,
+        "schema_version": "1.0",
+        "relabeled_from": "HALLUCINATED",
+        "relabel_reason": "Real paper (Pietro Buzzega et al., 'Dark Experience for General Continual Learning', NeurIPS 2020); CrossRef retrieval failure produced author mismatch; correct authors and venue confirmed.",
+        "relabeled_by": "mislabel-audit-2026-05-30-leak-followup"
+      }
+    },
+    {
+      "bibtex_key": "bbd1bcc55e09",
+      "evidence": "arXiv 2002.05287 v1-v2 2020-02, 'Published as a conference paper at ICLR 2020'",
+      "record": {
+        "bibtex_key": "bbd1bcc55e09",
+        "bibtex_type": "inproceedings",
+        "fields": {
+          "title": "Geom-GCN: Geometric Graph Convolutional Networks",
+          "author": "Hongbin Pei and Bingzhe Wei and Kevin Chang and Yu Lei Lei and Bo Yang",
+          "booktitle": "ICLR",
+          "year": "2021",
+          "doi": "10.48550/arXiv.2002.05287"
+        },
+        "label": "VALID",
+        "explanation": "Real paper (Hongbin Pei et al., 'Geom-GCN: Geometric Graph Convolutional Networks', ICLR 2020); CrossRef retrieval failure produced mismatch verdict; correct authors and venue confirmed.",
+        "generation_method": "llm_generated",
+        "source_conference": null,
+        "source": "llm_generated",
+        "publication_date": "2021-01-01",
+        "added_to_benchmark": "2026-02-14",
+        "subtests": {
+          "doi_resolves": true,
+          "title_exists": true,
+          "authors_match": true,
+          "venue_correct": true,
+          "fields_complete": true,
+          "cross_db_agreement": true
+        },
+        "raw_bibtex": null,
+        "schema_version": "1.0",
+        "relabeled_from": "HALLUCINATED",
+        "relabel_reason": "Real paper (Hongbin Pei et al., 'Geom-GCN: Geometric Graph Convolutional Networks', ICLR 2020); CrossRef retrieval failure produced mismatch verdict; correct authors and venue confirmed.",
+        "relabeled_by": "mislabel-audit-2026-05-30-leak-followup"
+      }
+    },
+    {
+      "bibtex_key": "f34f26c83153",
+      "evidence": "arXiv 2001.00326 v1-v2 2020-01, 'Published at ICLR 2020'; OpenReview HJxyZkBKDr",
+      "record": {
+        "bibtex_key": "f34f26c83153",
+        "bibtex_type": "inproceedings",
+        "fields": {
+          "title": "{NAS-Bench-201}: Extending the Scope of Reproducible Neural Architecture Search",
+          "author": "Xuanyi Dong and Yi Yang",
+          "booktitle": "ICLR",
+          "year": "2021",
+          "url": "https://openreview.net/forum?id=HJxyZkBKDr"
+        },
+        "label": "VALID",
+        "explanation": "LLM-generated via openai(gpt-5.1). Prompt: 'Bibliography on neural architecture search'. Verification: Authors don't match CrossRef: 'Dong, Xuanyi and Yang, Yi' vs 'Nikita Klyuchnikov and Ilya Trofimov and Ekaterina Artemova and Mikhail Salnikov and Maxim Fedorov and Alexander Filippov and Evgeny Burnaev'",
+        "generation_method": "llm_generated",
+        "source_conference": null,
+        "source": "llm_generated",
+        "publication_date": "2021-01-01",
+        "added_to_benchmark": "2026-02-14",
+        "subtests": {
+          "doi_resolves": null,
+          "title_exists": true,
+          "authors_match": true,
+          "fields_complete": true,
+          "cross_db_agreement": true,
+          "venue_correct": true
+        },
+        "raw_bibtex": null,
+        "schema_version": "1.0",
+        "relabeled_from": "HALLUCINATED",
+        "relabel_reason": "Real paper (Xuanyi Dong and Yi Yang, 'NAS-Bench-201: Extending the Scope of Reproducible Neural Architecture Search', ICLR 2020 spotlight); CrossRef retrieval failure; correct authors and venue confirmed.",
+        "relabeled_by": "mislabel-audit-2026-05-30-leak-followup"
+      }
+    }
+  ]
+}
