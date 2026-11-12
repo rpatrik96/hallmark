@@ -22,7 +22,7 @@ HALLMARK draws on best practices from established benchmarks:
 ## Features
 
 - **Hallucination taxonomy**: 14 types across 3 difficulty tiers (Easy / Medium / Hard)
-- **2,526 annotated entries**: 826 valid + 1,246 hallucinated with ground truth across the public splits, plus a 454-entry hidden split
+- **2,520 annotated entries**: 803 valid + 1,263 hallucinated with ground truth across the public splits, plus a 454-entry hidden split
 - **6 sub-tests per entry**: DOI resolution, title matching, author consistency, venue verification, field completeness, cross-database agreement
 - **Evaluation metrics**: Detection Rate, F1, tier-weighted F1, [`detect@k`](#evaluation-metrics) (fraction detected within k strategies), [ECE](#evaluation-metrics) (expected calibration error)
 - **Built-in baselines**: DOI-only, bibtex-updater, HaRC, verify-citations, LLM-based (OpenAI, Anthropic, OpenRouter), agentic LLMs with tool use, ensemble, DB-first cascade with hallucination-mode diagnosis, plus ports of two recent papers — `hallucitechecker` ([Sakai et al. 2026](https://arxiv.org/abs/2604.26835)) and `checkifexist` ([Abbonato 2026](https://arxiv.org/abs/2602.15871) Algorithm 1) (CiteVerifier and hallucinator are available as wrapper modules but not registered in the default registry)
@@ -362,15 +362,16 @@ mlcroissant validate --jsonld croissant.json
 
 | Split | Valid | Hallucinated | Total | Purpose |
 |-------|-------|-------------|-------|---------|
-| `dev_public` | 513 | 606 | 1,119 | Development and tuning |
-| `test_public` | 312 | 519 | 831 | Public leaderboard |
+| `dev_public` | 501 | 618 | 1,119 | Development and tuning |
+| `test_public` | 299 | 526 | 825 | Public leaderboard |
 | `test_hidden` | — | — | 454 | Anti-gaming evaluation |
-| `stress_test` | 1 | 121 | 122 | Stress-test types depth |
+| `stress_test` | 3 | 119 | 122 | Stress-test types depth |
 
-> **stress_test design note**: The `stress_test` split is all-hallucinated by design. It contains
+> **stress_test design note**: The `stress_test` split is hallucinated by design. It contains
 > challenging edge cases (merged citations, partial author lists, arXiv version mismatches) intended
-> to stress-test detection robustness beyond the main splits. Because there are no valid entries,
-> FPR and specificity are undefined for this split. Use **detection rate** as the primary metric
+> to stress-test detection robustness beyond the main splits. Its 3 valid entries are a contamination
+> canary and two perturbations that turned out to be no-ops (an author list "reduced" to the same
+> length), so FPR and specificity rest on 3 entries and are not meaningful for this split. Use **detection rate** as the primary metric
 > when reporting `stress_test` results.
 
 Tier distribution per split: ~27% Tier 1, ~47% Tier 2, ~26% Tier 3 (hallucinated entries).
