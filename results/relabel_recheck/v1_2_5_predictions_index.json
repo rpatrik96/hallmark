@@ -1,0 +1,275 @@
+{
+ "note": "Per-entry predictions behind every v1.2.5 result. Rows are keyed by bibtex_key; some files still hold the six v1.2.5-excluded test_public entries, so score against data/v1.2/<split>.jsonl membership (missing key -> VALID@0.5, as in the release).",
+ "results": {
+  "data/v1.2/baseline_results/bibtexupdater_dev_public.json": {
+   "predictions": "results/relabel_delta/btu_v1_2_0_prescreen_fix/bibtexupdater_dev_public_per_entry.jsonl",
+   "eval_mode": "conservative",
+   "format": "bibtexupdater per-entry (pred_label)"
+  },
+  "data/v1.2/baseline_results/bibtexupdater_test_public.json": {
+   "predictions": "results/relabel_delta/btu_v1_2_0_prescreen_fix/bibtexupdater_test_public_per_entry.jsonl",
+   "eval_mode": "conservative",
+   "format": "bibtexupdater per-entry (pred_label)"
+  },
+  "data/v1.2/baseline_results/cascade_db_diagnosis_aggressive_dev_public.json": {
+   "predictions": "results/cascade_sonnet46_shared/sonnet46_dev_public_preds.jsonl",
+   "eval_mode": "aggressive",
+   "format": "Prediction jsonl"
+  },
+  "data/v1.2/baseline_results/cascade_db_diagnosis_aggressive_stress_test.json": {
+   "predictions": "results/cascade_sonnet46_shared/sonnet46_stress_test_preds.jsonl",
+   "eval_mode": "aggressive",
+   "format": "Prediction jsonl"
+  },
+  "data/v1.2/baseline_results/cascade_db_diagnosis_aggressive_test_public.json": {
+   "predictions": "results/cascade_sonnet46_shared/sonnet46_test_public_preds.jsonl",
+   "eval_mode": "aggressive",
+   "format": "Prediction jsonl"
+  },
+  "data/v1.2/baseline_results/cascade_db_diagnosis_dev_public.json": {
+   "predictions": "results/cascade_sonnet46_shared/sonnet46_dev_public_preds.jsonl",
+   "eval_mode": "conservative",
+   "format": "Prediction jsonl"
+  },
+  "data/v1.2/baseline_results/cascade_db_diagnosis_stress_test.json": {
+   "predictions": "results/cascade_sonnet46_shared/sonnet46_stress_test_preds.jsonl",
+   "eval_mode": "conservative",
+   "format": "Prediction jsonl"
+  },
+  "data/v1.2/baseline_results/cascade_db_diagnosis_test_public.json": {
+   "predictions": "results/cascade_sonnet46_shared/sonnet46_test_public_preds.jsonl",
+   "eval_mode": "conservative",
+   "format": "Prediction jsonl"
+  },
+  "data/v1.2/baseline_results/doi_only_dev_public.json": {
+   "predictions": "results/doi_only_dev_public_predictions.jsonl",
+   "eval_mode": "conservative",
+   "format": "Prediction jsonl"
+  },
+  "data/v1.2/baseline_results/doi_only_test_public.json": {
+   "predictions": "results/doi_only_test_public_predictions.jsonl",
+   "eval_mode": "conservative",
+   "format": "Prediction jsonl"
+  },
+  "data/v1.2/baseline_results/llm_agentic_btu_openai_dev_public.json": {
+   "predictions": "results/temporal_checkpoints/agentic_btu_openai_gpt-5.1.jsonl",
+   "eval_mode": "conservative",
+   "format": "Prediction jsonl"
+  },
+  "data/v1.2/baseline_results/llm_agentic_btu_openai_test_public.json": {
+   "predictions": "results/llm_agentic_btu_openai_test_public_predictions.jsonl",
+   "eval_mode": "conservative",
+   "format": "Prediction jsonl"
+  },
+  "data/v1.2/baseline_results/llm_agentic_btu_sonnet_4_6_dev_public.json": {
+   "predictions": "results/checkpoints/llm_agentic_btu_sonnet_4_6_dev_public_v2/agentic_btu_openai_anthropic_claude-sonnet-4.6.jsonl",
+   "eval_mode": "conservative",
+   "format": "Prediction jsonl"
+  },
+  "data/v1.2/baseline_results/llm_agentic_btu_sonnet_4_6_test_public.json": {
+   "predictions": "results/llm_agentic_btu_sonnet_4_6_test_public_predictions.jsonl",
+   "eval_mode": "conservative",
+   "format": "Prediction jsonl"
+  },
+  "data/v1.2/baseline_results/llm_agentic_openai_dev_public.json": {
+   "predictions": "results/llm_agentic_openai_dev_public_predictions.jsonl",
+   "eval_mode": "conservative",
+   "format": "Prediction jsonl"
+  },
+  "data/v1.2/baseline_results/llm_agentic_openai_test_public.json": {
+   "predictions": "results/llm_agentic_openai_test_public_predictions.jsonl",
+   "eval_mode": "conservative",
+   "format": "Prediction jsonl"
+  },
+  "data/v1.2/baseline_results/llm_openai_dev_public.json": {
+   "predictions": "results/checkpoints/llm_openai/openai_gpt-5.1.jsonl",
+   "eval_mode": "conservative",
+   "format": "Prediction jsonl"
+  },
+  "data/v1.2/baseline_results/llm_openai_gpt54_dev_public.json": {
+   "predictions": "results/checkpoints/llm_openai_gpt54_dev_public_v3/openai_gpt-5.4.jsonl",
+   "eval_mode": "conservative",
+   "format": "Prediction jsonl"
+  },
+  "data/v1.2/baseline_results/llm_openai_gpt54_test_public.json": {
+   "predictions": "results/checkpoints/llm_openai_gpt54_test_public/openai_gpt-5.4.jsonl",
+   "eval_mode": "conservative",
+   "format": "Prediction jsonl"
+  },
+  "data/v1.2/baseline_results/llm_openai_test_public.json": {
+   "predictions": "results/checkpoints/llm_openai/openai_gpt-5.1.jsonl",
+   "eval_mode": "conservative",
+   "format": "Prediction jsonl"
+  },
+  "data/v1.2/baseline_results/llm_openrouter_claude_opus_4_7_dev_public.json": {
+   "predictions": "results/checkpoints/llm_openrouter_claude_opus_4_7_dev_public/openrouter_anthropic_claude-opus-4.7.jsonl",
+   "eval_mode": "conservative",
+   "format": "Prediction jsonl"
+  },
+  "data/v1.2/baseline_results/llm_openrouter_claude_opus_4_7_test_public.json": {
+   "predictions": "results/checkpoints/llm_openrouter_claude_opus_4_7_test_public/openrouter_anthropic_claude-opus-4.7.jsonl",
+   "eval_mode": "conservative",
+   "format": "Prediction jsonl"
+  },
+  "data/v1.2/baseline_results/llm_openrouter_claude_sonnet_4_6_dev_public.json": {
+   "predictions": "results/checkpoints/llm_openrouter_claude_sonnet_4_6_dev_public/openrouter_anthropic_claude-sonnet-4.6.jsonl",
+   "eval_mode": "conservative",
+   "format": "Prediction jsonl"
+  },
+  "data/v1.2/baseline_results/llm_openrouter_claude_sonnet_4_6_test_public.json": {
+   "predictions": "results/checkpoints/llm_openrouter_claude_sonnet_4_6_test_public/openrouter_anthropic_claude-sonnet-4.6.jsonl",
+   "eval_mode": "conservative",
+   "format": "Prediction jsonl"
+  },
+  "data/v1.2/baseline_results/llm_openrouter_deepseek_r1_dev_public.json": {
+   "predictions": "results/llm_openrouter_deepseek_r1_dev_public_predictions.jsonl",
+   "eval_mode": "conservative",
+   "format": "Prediction jsonl"
+  },
+  "data/v1.2/baseline_results/llm_openrouter_deepseek_r1_test_public.json": {
+   "predictions": "results/llm_openrouter_deepseek_r1_test_public_predictions.jsonl",
+   "eval_mode": "conservative",
+   "format": "Prediction jsonl"
+  },
+  "data/v1.2/baseline_results/llm_openrouter_deepseek_v3_dev_public.json": {
+   "predictions": "results/llm_openrouter_deepseek_v3_dev_public_predictions.jsonl",
+   "eval_mode": "conservative",
+   "format": "Prediction jsonl"
+  },
+  "data/v1.2/baseline_results/llm_openrouter_deepseek_v3_test_public.json": {
+   "predictions": "results/llm_openrouter_deepseek_v3_test_public_predictions.jsonl",
+   "eval_mode": "conservative",
+   "format": "Prediction jsonl"
+  },
+  "data/v1.2/baseline_results/llm_openrouter_gemini_flash_dev_public.json": {
+   "predictions": "results/llm_openrouter_gemini_flash_dev_public_predictions.jsonl",
+   "eval_mode": "conservative",
+   "format": "Prediction jsonl"
+  },
+  "data/v1.2/baseline_results/llm_openrouter_gemini_flash_test_public.json": {
+   "predictions": "results/llm_openrouter_gemini_flash_test_public_predictions.jsonl",
+   "eval_mode": "conservative",
+   "format": "Prediction jsonl"
+  },
+  "data/v1.2/baseline_results/llm_openrouter_gemini_pro_dev_public.json": {
+   "predictions": "results/new_models/gemini_pro.jsonl",
+   "eval_mode": "conservative",
+   "format": "Prediction jsonl"
+  },
+  "data/v1.2/baseline_results/llm_openrouter_gemini_pro_test_public.json": {
+   "predictions": "results/llm_openrouter_gemini_pro_test_public_predictions.jsonl",
+   "eval_mode": "conservative",
+   "format": "Prediction jsonl"
+  },
+  "data/v1.2/baseline_results/llm_openrouter_llama_4_maverick_dev_public.json": {
+   "predictions": "results/new_models/llama4_maverick.jsonl",
+   "eval_mode": "conservative",
+   "format": "Prediction jsonl"
+  },
+  "data/v1.2/baseline_results/llm_openrouter_llama_4_maverick_test_public.json": {
+   "predictions": "results/llm_openrouter_llama_4_maverick_test_public_predictions.jsonl",
+   "eval_mode": "conservative",
+   "format": "Prediction jsonl"
+  },
+  "data/v1.2/baseline_results/llm_openrouter_mistral_dev_public.json": {
+   "predictions": "results/llm_openrouter_mistral_dev_public_predictions.jsonl",
+   "eval_mode": "conservative",
+   "format": "Prediction jsonl"
+  },
+  "data/v1.2/baseline_results/llm_openrouter_mistral_test_public.json": {
+   "predictions": "results/llm_openrouter_mistral_test_public_predictions.jsonl",
+   "eval_mode": "conservative",
+   "format": "Prediction jsonl"
+  },
+  "data/v1.2/baseline_results/llm_openrouter_qwen_dev_public.json": {
+   "predictions": "results/llm_openrouter_qwen_dev_public_predictions.jsonl",
+   "eval_mode": "conservative",
+   "format": "Prediction jsonl"
+  },
+  "data/v1.2/baseline_results/llm_openrouter_qwen_max_dev_public.json": {
+   "predictions": "results/new_models/qwen_max.jsonl",
+   "eval_mode": "conservative",
+   "format": "Prediction jsonl"
+  },
+  "data/v1.2/baseline_results/llm_openrouter_qwen_max_test_public.json": {
+   "predictions": "results/llm_openrouter_qwen_max_test_public_predictions.jsonl",
+   "eval_mode": "conservative",
+   "format": "Prediction jsonl"
+  },
+  "data/v1.2/baseline_results/llm_openrouter_qwen_test_public.json": {
+   "predictions": "results/llm_openrouter_qwen_test_public_predictions.jsonl",
+   "eval_mode": "conservative",
+   "format": "Prediction jsonl"
+  },
+  "data/v1.2/baseline_results/llm_tool_augmented_dev_public.json": {
+   "predictions": "data/v1.2/baseline_results/llm_tool_augmented_dev_public.jsonl",
+   "eval_mode": "conservative",
+   "format": "Prediction jsonl"
+  },
+  "data/v1.2/baseline_results/llm_tool_augmented_test_public.json": {
+   "predictions": "results/llm_tool_augmented_test_public_predictions.jsonl",
+   "eval_mode": "conservative",
+   "format": "Prediction jsonl"
+  },
+  "results/cascade_gpt51/gpt51_dev_public.json": {
+   "predictions": "results/cascade_gpt51/gpt51_dev_public_preds.jsonl",
+   "eval_mode": "conservative + aggressive (both in the json)",
+   "format": "Prediction jsonl"
+  },
+  "results/cascade_gpt51/gpt51_stress_test.json": {
+   "predictions": "results/cascade_gpt51/gpt51_stress_test_preds.jsonl",
+   "eval_mode": "conservative + aggressive (both in the json)",
+   "format": "Prediction jsonl"
+  },
+  "results/cascade_gpt51/gpt51_test_public.json": {
+   "predictions": "results/cascade_gpt51/gpt51_test_public_preds.jsonl",
+   "eval_mode": "conservative + aggressive (both in the json)",
+   "format": "Prediction jsonl"
+  },
+  "results/cascade_gpt54/gpt54_dev_public.json": {
+   "predictions": "results/cascade_gpt54/gpt54_dev_public_preds.jsonl",
+   "eval_mode": "conservative + aggressive (both in the json)",
+   "format": "Prediction jsonl"
+  },
+  "results/cascade_gpt54/gpt54_stress_test.json": {
+   "predictions": "results/cascade_gpt54/gpt54_stress_test_preds.jsonl",
+   "eval_mode": "conservative + aggressive (both in the json)",
+   "format": "Prediction jsonl"
+  },
+  "results/cascade_gpt54/gpt54_test_public.json": {
+   "predictions": "results/cascade_gpt54/gpt54_test_public_preds.jsonl",
+   "eval_mode": "conservative + aggressive (both in the json)",
+   "format": "Prediction jsonl"
+  },
+  "results/cascade_gpt54_shared/gpt54_dev_public.json": {
+   "predictions": "results/cascade_gpt54_shared/gpt54_dev_public_preds.jsonl",
+   "eval_mode": "conservative + aggressive (both in the json)",
+   "format": "Prediction jsonl"
+  },
+  "results/cascade_gpt54_shared/gpt54_stress_test.json": {
+   "predictions": "results/cascade_gpt54_shared/gpt54_stress_test_preds.jsonl",
+   "eval_mode": "conservative + aggressive (both in the json)",
+   "format": "Prediction jsonl"
+  },
+  "results/cascade_gpt54_shared/gpt54_test_public.json": {
+   "predictions": "results/cascade_gpt54_shared/gpt54_test_public_preds.jsonl",
+   "eval_mode": "conservative + aggressive (both in the json)",
+   "format": "Prediction jsonl"
+  },
+  "results/cascade_sonnet46_shared/sonnet46_dev_public.json": {
+   "predictions": "results/cascade_sonnet46_shared/sonnet46_dev_public_preds.jsonl",
+   "eval_mode": "conservative + aggressive (both in the json)",
+   "format": "Prediction jsonl"
+  },
+  "results/cascade_sonnet46_shared/sonnet46_stress_test.json": {
+   "predictions": "results/cascade_sonnet46_shared/sonnet46_stress_test_preds.jsonl",
+   "eval_mode": "conservative + aggressive (both in the json)",
+   "format": "Prediction jsonl"
+  },
+  "results/cascade_sonnet46_shared/sonnet46_test_public.json": {
+   "predictions": "results/cascade_sonnet46_shared/sonnet46_test_public_preds.jsonl",
+   "eval_mode": "conservative + aggressive (both in the json)",
+   "format": "Prediction jsonl"
+  }
+ }
+}
