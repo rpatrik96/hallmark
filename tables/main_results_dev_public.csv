@@ -12,7 +12,7 @@ llm_openrouter_qwen,dev_public,Qwen3-235B,zero-shot,0.8444,0.5440,0.7390,0.3292,
 llm_openrouter_qwen_max,dev_public,Qwen3-VL-235B,zero-shot,0.8463,0.5600,0.7361,0.3164,0.8132,0.2935,0.9991,0.0855,false
 llm_openrouter_deepseek_r1,dev_public,DeepSeek-R1,zero-shot,0.8847,0.6316,0.7376,0.2996,0.8222,0.2424,0.9839,-0.3128,false
 llm_openrouter_deepseek_v3,dev_public,DeepSeek-V3.2,zero-shot,0.8932,0.7186,0.7216,0.2237,0.8146,0.3269,1.0000,0.0339,false
-llm_agentic_openai,dev_public,GPT-5.1 + CrossRef/OpenAlex/arXiv,agentic,0.9644,0.4691,0.8226,0.5634,0.8960,0.1679,1.0000,0.0694,false
+llm_agentic_openai,dev_public,GPT-5.1 + CrossRef/OpenAlex/arXiv,agentic,0.9628,0.4651,0.8230,0.5642,0.8954,0.1683,1.0000,0.0667,false
 llm_agentic_btu_openai,dev_public,GPT-5.1 + bibtex-updater (tool optional),agentic,0.9725,0.4671,0.8273,0.5775,0.9000,0.1232,1.0000,-0.1226,false
 llm_agentic_btu_sonnet_4_6,dev_public,Sonnet 4.6 + bibtex-updater (tool optional),agentic,0.9822,0.4271,0.8436,0.6244,0.9126,0.1166,1.0000,-0.0960,false
 bibtexupdater,dev_public,bibtex-updater,co-designed,0.8204,0.0379,0.8864,0.7796,0.8961,0.3262,0.8668,0.0357,false
