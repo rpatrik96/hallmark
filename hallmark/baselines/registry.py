@@ -692,6 +692,36 @@ def _register_builtins() -> None:
         )
     )
 
+    # --- LLM: Agentic OpenAI GPT-6 Luna ---
+    # Model-pinned like llm_agentic_openai_gpt_5_4, for the bibtex-updater -> luna
+    # cascade Stage 2. Luna accepts only the default temperature and needs
+    # reasoning_effort="none" for function tools on chat completions; the agentic
+    # loop applies both (_OPENAI_SAMPLING_OVERRIDES in llm_agentic).
+    def _run_llm_agentic_openai_gpt_6_luna(
+        entries: list[BlindEntry], **kw: Any
+    ) -> list[Prediction]:
+        from hallmark.baselines.llm_agentic import verify_agentic_openai
+
+        kw.setdefault("model", "gpt-6-luna")
+        return verify_agentic_openai(entries, **kw)
+
+    register(
+        BaselineInfo(
+            name="llm_agentic_openai_gpt_6_luna",
+            description=(
+                "GPT-6 Luna with tool-use: resolve_doi, search_crossref, "
+                "search_openalex, search_arxiv (up to 5 tool calls per entry). "
+                "Native OpenAI endpoint; default temperature, reasoning_effort=none."
+            ),
+            runner=_run_llm_agentic_openai_gpt_6_luna,
+            pip_packages=["openai"],
+            requires_api_key=True,
+            is_free=False,
+            env_var="OPENAI_API_KEY",
+            confidence_type="probabilistic",
+        )
+    )
+
     # --- LLM: Agentic Anthropic ---
     def _run_llm_agentic_anthropic(entries: list[BlindEntry], **kw: Any) -> list[Prediction]:
         from hallmark.baselines.llm_agentic import verify_agentic_anthropic

@@ -54,6 +54,17 @@ MAX_TOOL_CALLS = 5
 OPENAI_MODEL = "gpt-5.1"
 ANTHROPIC_MODEL = "claude-sonnet-4-6"
 
+# Per-model request parameters that replace the default ``temperature=0.0``.
+# gpt-6-luna (probed 2026-10-21) rejects any temperature but the default (400
+# "'temperature' does not support 0.0 with this model"), and on
+# /v1/chat/completions rejects function tools unless reasoning is off (400
+# "Function tools with reasoning_effort are not supported ... set
+# reasoning_effort to 'none'"). So luna runs at default sampling with no
+# reasoning. ``seed`` is still accepted and still sent.
+_OPENAI_SAMPLING_OVERRIDES: dict[str, dict[str, Any]] = {
+    "gpt-6-luna": {"reasoning_effort": "none"},
+}
+
 # Module-level lock that serialises every JSONL checkpoint append in this
 # module.  Required because macOS's ``O_APPEND`` is *not* atomic for writes
 # >512 bytes, and our prediction records routinely exceed that once the
@@ -241,15 +252,16 @@ def _run_agentic_openai(
         for t in active_tool_defs
     ]
 
+    sampling = _OPENAI_SAMPLING_OVERRIDES.get(model, {"temperature": 0.0})
     for _call_idx in range(MAX_TOOL_CALLS + 1):
         resp = client.chat.completions.create(
             model=model,
             messages=messages,
             tools=openai_tools,
             tool_choice="auto",
-            temperature=0.0,
             seed=42,
             max_completion_tokens=1024,
+            **sampling,
         )
         total_tokens += resp.usage.total_tokens if resp.usage else 0
         choice = resp.choices[0]
