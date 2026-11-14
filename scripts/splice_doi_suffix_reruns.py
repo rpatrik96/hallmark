@@ -15,7 +15,7 @@ All 138 entries are re-run, not only some verdicts: the 404 pushed tools to
 HALLUCINATED on hallucinated entries too, so detections there were not earned.
 
 Re-run files: ``results/relabel_recheck/doi_suffix_reruns/<tool>_<split>.jsonl``.
-Spliced predictions: ``results/relabel_recheck/doi_suffix_reruns/<tool>_<split>_spliced.jsonl``.
+Spliced predictions: ``results/<tool>_<split>_predictions.jsonl`` (the canonical per-entry file).
 Log: ``results/relabel_recheck/doi_suffix_rerun_log.json``.
 
 Usage:
@@ -120,7 +120,7 @@ def main() -> None:
             if "run_timestamp" in merged:
                 merged["run_timestamp"] = now
 
-            spliced_path = RERUNS / f"{stem}_spliced.jsonl"
+            spliced_path = REPO / "results" / f"{stem}_predictions.jsonl"
             log["results"][stem] = {
                 "rerun_keys": "doi_rerun_targets.json"
                 if stem in TARGETS

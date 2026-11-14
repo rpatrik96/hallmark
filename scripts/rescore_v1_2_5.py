@@ -28,6 +28,13 @@ and are used only if they reproduce the release (see ``DOI_ONLY_PREDS``).
 HaRC (``harc_with_s2key_dev_public``) stays in ``KNOWN_STALE``: it is scored
 against the pre-relabel ground truth and has no per-entry predictions.
 
+After the DOI re-runs (scripts/splice_doi_suffix_reruns.py), the doi_only and
+llm_agentic_openai sources point at their spliced per-entry files, which no longer
+reproduce the v1.2.4 release by construction; the original sources are
+results/relabel_recheck/doi_only_{split}_v1_2_4_inputs_predictions.jsonl and
+results/temporal_checkpoints/agentic_openai_gpt-5.1.jsonl (dev) /
+git history of results/llm_agentic_openai_test_public_predictions.jsonl (test).
+
 Usage:
     uv run python scripts/rescore_v1_2_5.py [--dry-run]
 """
@@ -55,7 +62,7 @@ RESULTS = REPO / "data/v1.2/baseline_results"
 LOG = REPO / "results/relabel_recheck/v1_2_5_rescore_log.json"
 CHECK = ("detection_rate", "false_positive_rate", "f1_hallucination", "ece")
 
-DOI_ONLY_PREDS = "results/relabel_recheck/doi_only_{split}_v1_2_4_inputs_predictions.jsonl"
+DOI_ONLY_PREDS = "results/doi_only_{split}_predictions.jsonl"
 BTU_PREDS = "results/relabel_delta/btu_v1_2_0_prescreen_fix/bibtexupdater_{split}_per_entry.jsonl"
 CASCADE = "results/cascade_sonnet46_shared/sonnet46_{split}_preds.jsonl"
 
@@ -98,7 +105,7 @@ SOURCES: dict[str, tuple[str, str, str]] = {
         "std",
     ),
     "llm_agentic_openai_dev_public": (
-        "results/temporal_checkpoints/agentic_openai_gpt-5.1.jsonl",
+        "results/llm_agentic_openai_dev_public_predictions.jsonl",
         "conservative",
         "std",
     ),
