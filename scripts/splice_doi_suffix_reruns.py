@@ -44,6 +44,7 @@ from hallmark.evaluation.validate import compute_sha256  # noqa: E402
 SUFFIX_COMMIT = "eacc9af"
 RERUNS = REPO / "results/relabel_recheck/doi_suffix_reruns"
 LOG = REPO / "results/relabel_recheck/doi_suffix_rerun_log.json"
+TARGETS = json.loads((REPO / "results/relabel_recheck/doi_rerun_targets.json").read_text())
 RESULTS = REPO / "data/v1.2/baseline_results"
 SPLITS = ("dev_public", "test_public")
 
@@ -90,7 +91,9 @@ def main() -> None:
             if not rerun_path.exists():
                 failures.append(f"{stem}: re-run file missing ({rerun_path.relative_to(REPO)})")
                 continue
-            keys = suffix_keys(split)
+            # doi_only re-ran all 138 DOI-suffix keys; the agentic tools re-run only
+            # their resolve_doi targets (results/relabel_recheck/doi_rerun_targets.json).
+            keys = set(TARGETS[stem]["keys"]) if stem in TARGETS else suffix_keys(split)
             base = load_predictions(REPO / base_rel, loader)
             rerun = load_predictions(rerun_path, "std")
             missing = keys - rerun.keys()
@@ -119,6 +122,9 @@ def main() -> None:
 
             spliced_path = RERUNS / f"{stem}_spliced.jsonl"
             log["results"][stem] = {
+                "rerun_keys": "doi_rerun_targets.json"
+                if stem in TARGETS
+                else "all DOI-suffix keys",
                 "base_predictions": base_rel,
                 "rerun": str(rerun_path.relative_to(REPO)),
                 "spliced_predictions": str(spliced_path.relative_to(REPO)),

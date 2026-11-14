@@ -132,3 +132,6 @@ results/gepa_haiku/**/run/
 
 # Recheck HTTP cache (also holds test_hidden lookups)
 results/relabel_recheck/http_cache.json
+
+# DOI re-run shard checkpoints and tool caches (regenerable)
+results/relabel_recheck/doi_suffix_reruns/_work/
