@@ -1,0 +1,45 @@
+{
+ "tool_name": "reference-audit-strict",
+ "split": "test_public",
+ "mapping": "strict",
+ "predictions_file": "reference-audit-strict_test_public_predictions.jsonl",
+ "predictions_sha256": "44575cc812da14ce021a9b34121459b0919137864c2b966bf9f0bac100d97676",
+ "blind_split_file": "test_public_blind.jsonl",
+ "blind_split_sha256": "0461cef293e6f2a1e1448b6fa56de72c0efd18a240cdf426377616afc00649bd",
+ "entries": 831,
+ "labels": {
+  "HALLUCINATED": 492,
+  "UNCERTAIN": 34,
+  "VALID": 303,
+  "not evaluated": 2
+ },
+ "excluded_canaries": [],
+ "pipeline_version": "0.23",
+ "model": "gpt-6-luna",
+ "llm_enabled": true,
+ "source_backend": "api",
+ "partial_authors": "error",
+ "reference_audit_sha": "a2da0a1df6ef3401c2bf2aa31c45565fa5518bed",
+ "hallmark_sha": "a2da0a1df6ef3401c2bf2aa31c45565fa5518bed",
+ "hallmark_version": "v1.2",
+ "started_at": "2026-11-08T03:18:53.597488+00:00",
+ "wall_seconds": 2706,
+ "from_cache": 8,
+ "counts": {
+  "exactly_one": 599,
+  "multiple": 7,
+  "none": 211,
+  "unparsed": 2,
+  "unresolved": 12
+ },
+ "run_dir": "benchmarks/runs/luna023api_test_public",
+ "generated_at": "2026-11-08T04:13:04.738564+00:00",
+ "field_repair_patch": {
+  "entries": [
+   "e65a9f529e01",
+   "f746e1c10ae9"
+  ],
+  "note": "Failed the .bib round-trip on f774fa4 inputs; re-audited 2026-11-08 at 0.23 + gpt-6-luna, API backend, with v1.2.4 repaired fields."
+ },
+ "run_note": "Rerun by us 2026-11-08 on the public APIs (no ClickHouse), fresh entry_verdict_cache; replaces nothing, sits next to luna_pipeline_0.23 (author run, ClickHouse)."
+}

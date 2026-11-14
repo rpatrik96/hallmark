@@ -1,0 +1,37 @@
+{
+  "tool_name": "reference-audit-strict",
+  "split": "test_public",
+  "mapping": "strict",
+  "predictions_file": "reference-audit-strict_test_public_predictions.jsonl",
+  "predictions_sha256": "cbdf893a0fdcfe88acbece88efb5ad805d9759e8dc1d3b736be28860ea7c9d37",
+  "blind_split_file": "test_public_blind.jsonl",
+  "blind_split_sha256": "0461cef293e6f2a1e1448b6fa56de72c0efd18a240cdf426377616afc00649bd",
+  "entries": 831,
+  "labels": {
+    "HALLUCINATED": 512,
+    "UNCERTAIN": 10,
+    "VALID": 307,
+    "not evaluated": 2
+  },
+  "excluded_canaries": [],
+  "pipeline_version": "0.23",
+  "model": "gpt-6-luna",
+  "llm_enabled": true,
+  "source_backend": "clickhouse",
+  "partial_authors": "error",
+  "reference_audit_sha": "f100559ac17b0a022f0021d6eb249a66652c6e57",
+  "hallmark_sha": "f774fa40675daa83eca6201637a94c4536b7bb3e",
+  "hallmark_version": "v1.2",
+  "started_at": "2026-10-09T12:41:41.011002+00:00",
+  "wall_seconds": 1276,
+  "from_cache": 3,
+  "counts": {
+    "exactly_one": 604,
+    "multiple": 4,
+    "none": 219,
+    "unparsed": 2,
+    "unresolved": 2
+  },
+  "run_dir": "benchmarks/runs/hallmark/test_public-partial-error",
+  "generated_at": "2026-10-09T13:12:23.932895+00:00"
+}
