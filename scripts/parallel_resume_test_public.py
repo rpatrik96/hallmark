@@ -74,8 +74,14 @@ import sys
 import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
+from typing import Any
 
 import openai
+
+try:
+    import anthropic
+except ImportError:  # only needed for --provider anthropic
+    anthropic = None  # type: ignore[assignment]
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
@@ -85,6 +91,7 @@ from hallmark.baselines.checkpoint_guard import (  # noqa: E402
     PoisonedBatchError,
 )
 from hallmark.baselines.llm_verifier import (  # noqa: E402
+    _NO_SAMPLING_PARAMS_MODELS,
     _NO_THINK_MODELS,
     _NO_THINK_SUFFIX,
     HF_ROUTER_BASE_URL,
@@ -95,10 +102,30 @@ from hallmark.dataset.schema import BlindEntry  # noqa: E402
 
 # Provider routing: (base_url, env var holding the key, api_sources_queried prefix).
 # Keep every provider-specific value here so adding one is a single-line change.
+# "anthropic" is the native Messages API (base_url unused); it exists so a
+# native-vs-OpenRouter comparison runs through the same prompt builder, parser,
+# worker pool and retry policy on both arms.
 PROVIDERS: dict[str, tuple[str, str, str]] = {
     "openrouter": ("https://openrouter.ai/api/v1", "OPENROUTER_API_KEY", "openrouter"),
     "huggingface": (HF_ROUTER_BASE_URL, "HF_TOKEN", "huggingface"),
+    "anthropic": ("https://api.anthropic.com", "ANTHROPIC_API_KEY", "anthropic"),
 }
+
+# Retry classification, shared by both SDKs. RateLimitError subclasses
+# APIStatusError in both, so _TRANSIENT_ERRORS must be caught first.
+_TRANSIENT_ERRORS: tuple[type[Exception], ...] = (
+    openai.RateLimitError,
+    openai.APITimeoutError,
+    openai.APIConnectionError,
+)
+_STATUS_ERRORS: tuple[type[Exception], ...] = (openai.APIStatusError,)
+if anthropic is not None:
+    _TRANSIENT_ERRORS += (
+        anthropic.RateLimitError,
+        anthropic.APITimeoutError,
+        anthropic.APIConnectionError,
+    )
+    _STATUS_ERRORS += (anthropic.APIStatusError,)
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(
@@ -135,8 +162,56 @@ def build_prompt(entry: dict, model: str) -> str:
     return prompt
 
 
+def _complete(
+    client: Any,
+    model: str,
+    prompt: str,
+    timeout: float,
+    max_completion_tokens: int,
+    temperature: float,
+    seed: int,
+) -> tuple[str, str | None]:
+    """One API call. Returns (reply text, upstream provider that served it).
+
+    The upstream provider matters for OpenRouter, which may route an Anthropic
+    model to Anthropic, Bedrock or Vertex; it reports the choice in a
+    non-standard top-level ``provider`` field.
+    """
+    if anthropic is not None and isinstance(client, anthropic.Anthropic):
+        # No seed: the Messages API has no such parameter. Opus 4.7+ also
+        # rejects temperature, so it is left out for those models.
+        sampling: dict[str, Any] = (
+            {} if model in _NO_SAMPLING_PARAMS_MODELS else {"temperature": temperature}
+        )
+        msg = client.messages.create(
+            model=model,
+            max_tokens=max_completion_tokens,
+            messages=[{"role": "user", "content": prompt}],
+            timeout=timeout,
+            **sampling,
+        )
+        # Only text blocks carry `.text`; skip thinking/tool-use blocks.
+        text = "".join(b.text for b in msg.content if b.type == "text").strip()
+        return text, "anthropic"
+    # OpenRouter drops temperature for Opus 4.7+ anyway; omitting it keeps the
+    # request identical to the native arm.
+    or_sampling: dict[str, Any] = (
+        {} if model in _NO_SAMPLING_PARAMS_MODELS else {"temperature": temperature}
+    )
+    resp = client.chat.completions.create(
+        model=model,
+        messages=[{"role": "user", "content": prompt}],
+        max_completion_tokens=max_completion_tokens,
+        seed=seed,  # determinism parity with hallmark.baselines.llm_verifier
+        timeout=timeout,  # per-request timeout — critical to prevent hangs
+        **or_sampling,
+    )
+    upstream = (resp.model_extra or {}).get("provider")
+    return resp.choices[0].message.content or "", upstream
+
+
 def call_one(
-    client: openai.OpenAI,
+    client: Any,
     model: str,
     entry: dict,
     timeout: float = 120.0,
@@ -167,15 +242,9 @@ def call_one(
     last_err: Exception | None = None
     for attempt in range(max_retries):
         try:
-            resp = client.chat.completions.create(
-                model=model,
-                messages=[{"role": "user", "content": prompt}],
-                max_completion_tokens=max_completion_tokens,
-                temperature=temperature,  # match the main verifier path (default 0.0)
-                seed=seed,  # determinism parity with hallmark.baselines.llm_verifier
-                timeout=timeout,  # per-request timeout — critical to prevent hangs
+            content, upstream = _complete(
+                client, model, prompt, timeout, max_completion_tokens, temperature, seed
             )
-            content = resp.choices[0].message.content or ""
             pred = _parse_llm_response(content, entry["bibtex_key"])
             elapsed = time.time() - start
             return {
@@ -187,12 +256,9 @@ def call_one(
                 "wall_clock_seconds": elapsed,
                 "api_calls": 1,
                 "api_sources_queried": [f"{source_prefix}/{model}"],
+                "upstream_provider": upstream,
             }
-        except (
-            openai.RateLimitError,
-            openai.APITimeoutError,
-            openai.APIConnectionError,
-        ) as e:
+        except _TRANSIENT_ERRORS as e:
             last_err = e
             backoff = 2 ** (attempt + 1)  # 2, 4, 8 seconds
             logger.warning(
@@ -204,7 +270,7 @@ def call_one(
                 backoff,
             )
             time.sleep(backoff)
-        except openai.APIStatusError as e:
+        except _STATUS_ERRORS as e:
             last_err = e
             # Retry 5xx (server-side, usually transient); bail on 4xx.
             status = getattr(e, "status_code", 0) or 0
@@ -249,6 +315,7 @@ def call_one(
         # failure is detected — null is also the required value for a successful
         # VALID verdict; --retry-failed keys on the reason prefix instead.
         "predicted_hallucination_type": None,
+        "upstream_provider": None,
         "wall_clock_seconds": elapsed,
         "api_calls": max_retries,
         "api_sources_queried": [],
@@ -272,7 +339,8 @@ def main() -> None:
         help=(
             "Inference provider. 'openrouter' (default) uses OPENROUTER_API_KEY; "
             "'huggingface' uses HF_TOKEN and the HF Inference Providers router, "
-            "which is where the Qwen3 dense sweep runs."
+            "which is where the Qwen3 dense sweep runs; 'anthropic' is the native "
+            "Messages API via ANTHROPIC_API_KEY."
         ),
     )
     parser.add_argument(
@@ -363,12 +431,22 @@ def main() -> None:
 
     # Create client once; timeout is set at client level as default and also
     # passed per-call to catch hangs even if the SDK default changes.
-    client = openai.OpenAI(
-        base_url=base_url,
-        api_key=api_key or "dry-run",
-        timeout=args.timeout,
-        max_retries=0,  # We handle retries manually to log backoffs
-    )
+    client: Any
+    if args.provider == "anthropic":
+        if anthropic is None:
+            raise SystemExit("anthropic package not installed (required for --provider anthropic)")
+        client = anthropic.Anthropic(
+            api_key=api_key or "dry-run",
+            timeout=args.timeout,
+            max_retries=0,  # We handle retries manually to log backoffs
+        )
+    else:
+        client = openai.OpenAI(
+            base_url=base_url,
+            api_key=api_key or "dry-run",
+            timeout=args.timeout,
+            max_retries=0,  # We handle retries manually to log backoffs
+        )
 
     jsonl_path = args.checkpoint_dir / args.jsonl_name
     args.checkpoint_dir.mkdir(parents=True, exist_ok=True)
