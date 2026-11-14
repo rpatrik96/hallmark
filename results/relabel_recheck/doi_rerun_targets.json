@@ -1002,6 +1002,7 @@
    "b8c375205802",
    "b9997d54853b",
    "b9ce7ba367a4",
+   "bab601214933",
    "bc1f64228618",
    "bea92ce9a99b",
    "c10b9a06aa1b",
@@ -1058,6 +1059,66 @@
    "f9903a136c8f",
    "fadee14255aa",
    "ff065f4c5765"
+  ]
+ },
+ "cascade_gpt51_stress_test": {
+  "group": "B",
+  "split": "stress_test",
+  "source": "results/cascade_gpt51/gpt51_stress_test_preds.jsonl",
+  "keys": [
+   "c422fb8fa33a",
+   "c486d43c96ef",
+   "c5e8ea87f67e",
+   "c8157fa681e2",
+   "f0705faf2add",
+   "f1c8c081e454",
+   "fcf55577fa8b"
+  ]
+ },
+ "cascade_gpt54_stress_test": {
+  "group": "B",
+  "split": "stress_test",
+  "source": "results/cascade_gpt54/gpt54_stress_test_preds.jsonl",
+  "keys": [
+   "a58c8d4c5deb",
+   "c422fb8fa33a",
+   "c486d43c96ef",
+   "c5e8ea87f67e",
+   "c8157fa681e2",
+   "ce433073ce55",
+   "de3196602b22",
+   "f0705faf2add",
+   "f1c8c081e454",
+   "f87f2b6ebf78",
+   "fcf55577fa8b"
+  ]
+ },
+ "cascade_gpt54_shared_stress_test": {
+  "group": "B",
+  "split": "stress_test",
+  "source": "results/cascade_gpt54_shared/gpt54_stress_test_preds.jsonl",
+  "keys": [
+   "c422fb8fa33a",
+   "c486d43c96ef",
+   "c5e8ea87f67e",
+   "c8157fa681e2",
+   "f0705faf2add",
+   "f1c8c081e454",
+   "fcf55577fa8b"
+  ]
+ },
+ "cascade_sonnet46_shared_stress_test": {
+  "group": "B",
+  "split": "stress_test",
+  "source": "results/cascade_sonnet46_shared/sonnet46_stress_test_preds.jsonl",
+  "keys": [
+   "c422fb8fa33a",
+   "c486d43c96ef",
+   "c5e8ea87f67e",
+   "c8157fa681e2",
+   "f0705faf2add",
+   "f1c8c081e454",
+   "fcf55577fa8b"
   ]
  }
 }
