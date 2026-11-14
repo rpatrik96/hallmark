@@ -67,6 +67,14 @@ CONFIGS: dict[str, tuple[str, dict, str | None]] = {
         None,
     ),
     "cascade_gpt51": ("gpt-5.1", {}, "llm_agentic_openai"),
+    # One GPT-5.4 Stage-2 run backs both cascade_gpt54 and cascade_gpt54_shared
+    # (identical Stage-2 rows on every shared key), so it re-runs their union.
+    "cascade_gpt54": ("gpt-5.4", {}, "llm_agentic_openai_gpt_5_4"),
+}
+
+#: Re-run tool -> target stems whose keys it covers (default: itself).
+TARGET_STEMS: dict[str, tuple[str, ...]] = {
+    "cascade_gpt54": ("cascade_gpt54", "cascade_gpt54_shared"),
 }
 
 
@@ -117,10 +125,13 @@ def main() -> None:
     targets = json.loads(TARGETS.read_text())
     OUT.mkdir(parents=True, exist_ok=True)
     for split in args.splits:
-        spec = targets.get(f"{args.tool}_{split}")
-        if not spec or not spec["keys"]:
+        keys = {
+            k
+            for stem in TARGET_STEMS.get(args.tool, (args.tool,))
+            for k in targets.get(f"{stem}_{split}", {}).get("keys", [])
+        }
+        if not keys:
             continue
-        keys = set(spec["keys"])
         rows = (REPO / f"data/v1.2/{split}.jsonl").read_text().splitlines()
         entries = [
             e
