@@ -11,6 +11,7 @@ from __future__ import annotations
 import json
 import logging
 import random
+import re
 import sys
 import time
 import xml.etree.ElementTree as ET
@@ -206,7 +207,9 @@ def scrape_arxiv_2026(
                 "year": pub_year,
             }
             if arxiv_id:
-                fields["doi"] = f"10.48550/arXiv.{arxiv_id}"
+                # Unversioned: arXiv's DataCite DOI 404s with a vN suffix.
+                bare_id = re.sub(r"v\d+$", "", arxiv_id)
+                fields["doi"] = f"10.48550/arXiv.{bare_id}"
                 fields["url"] = arxiv_url
 
             # Determine category tag for venue field

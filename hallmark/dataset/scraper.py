@@ -348,7 +348,10 @@ def scrape_arxiv_recent(
                 "year": pub_year,
             }
             if arxiv_id:
-                fields["doi"] = f"10.48550/arXiv.{arxiv_id}"
+                # The Atom <id> carries the version (.../abs/2401.12345v1), but
+                # arXiv's DataCite DOI is unversioned: the versioned form 404s.
+                bare_id = re.sub(r"v\d+$", "", arxiv_id)
+                fields["doi"] = f"10.48550/arXiv.{bare_id}"
                 fields["url"] = arxiv_url
 
             # Primary category tag

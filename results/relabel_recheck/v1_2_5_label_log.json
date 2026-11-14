@@ -1,0 +1,99 @@
+{
+  "dev_public": [
+    {
+      "bibtex_key": "ed071a6dfa34",
+      "before": {
+        "label": "VALID",
+        "hallucination_type": null,
+        "relabeled_by": "mislabel-audit-2026-05-29"
+      },
+      "after": {
+        "label": "HALLUCINATED",
+        "hallucination_type": "hybrid_fabrication",
+        "difficulty_tier": 2
+      }
+    },
+    {
+      "bibtex_key": "fa77166308b0",
+      "before": {
+        "label": "VALID",
+        "hallucination_type": null,
+        "relabeled_by": "mislabel-audit-2026-05-30-postfix-followup"
+      },
+      "after": {
+        "label": "HALLUCINATED",
+        "hallucination_type": "swapped_authors",
+        "difficulty_tier": 2
+      }
+    },
+    {
+      "bibtex_key": "a0478afc6fb9",
+      "before": {
+        "label": "VALID",
+        "hallucination_type": null,
+        "relabeled_by": "mislabel-audit-2026-05-30-cnv-followup"
+      },
+      "after": {
+        "label": "HALLUCINATED",
+        "hallucination_type": "wrong_venue",
+        "difficulty_tier": 2
+      }
+    }
+  ],
+  "test_public": [
+    {
+      "bibtex_key": "d632f7211d63",
+      "before": {
+        "label": "VALID",
+        "hallucination_type": null,
+        "relabeled_by": "systematic-relabel-2026-05-30"
+      },
+      "after": {
+        "label": "HALLUCINATED",
+        "hallucination_type": "arxiv_version_mismatch",
+        "difficulty_tier": 3
+      }
+    },
+    {
+      "bibtex_key": "d27ac16ca85a",
+      "before": {
+        "label": "VALID",
+        "hallucination_type": null,
+        "relabeled_by": "systematic-relabel-2026-05-30"
+      },
+      "after": {
+        "label": "HALLUCINATED",
+        "hallucination_type": "partial_author_list",
+        "difficulty_tier": 2
+      }
+    }
+  ],
+  "stress_test": [
+    {
+      "bibtex_key": "bcc2d959b101",
+      "before": {
+        "label": "HALLUCINATED",
+        "hallucination_type": "partial_author_list",
+        "relabeled_by": null
+      },
+      "after": {
+        "label": "VALID",
+        "hallucination_type": null,
+        "difficulty_tier": null
+      }
+    },
+    {
+      "bibtex_key": "acbaa1cad903",
+      "before": {
+        "label": "HALLUCINATED",
+        "hallucination_type": "partial_author_list",
+        "relabeled_by": null
+      },
+      "after": {
+        "label": "VALID",
+        "hallucination_type": null,
+        "difficulty_tier": null
+      }
+    }
+  ]
+}

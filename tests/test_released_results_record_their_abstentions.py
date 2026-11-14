@@ -73,17 +73,18 @@ def test_the_triple_still_uses_the_committed_convention():
     If these move, the released result has been re-scored selectively and no
     longer sits on the same basis as the rest of the cohort. The values are the
     v1.2.0 prescreen-fix rescore the paper reports
-    (results/relabel_delta/release_btu_v120.py) on the v1.2.4 labels, still scored
-    with abstentions committed as VALID (0.8201 / 0.0507 / 0.8804 on v1.2.3), after
-    the truncated-field re-run of 9 entries.
+    (results/relabel_delta/release_btu_v120.py) on the v1.2.5 labels, still scored
+    with abstentions committed as VALID (0.8201 / 0.0507 / 0.8804 on v1.2.3;
+    0.8228 / 0.0397 / 0.8869 on v1.2.4 after the truncated-field re-run of 9
+    entries), rescored by scripts/rescore_v1_2_5.py.
     """
     path = RESULTS / "bibtexupdater_dev_public.json"
     if not path.is_file():
         pytest.skip("released result not present")
     result = json.loads(path.read_text())
-    assert result["detection_rate"] == pytest.approx(0.8228, abs=5e-4)
-    assert result["false_positive_rate"] == pytest.approx(0.0397, abs=5e-4)
-    assert result["f1_hallucination"] == pytest.approx(0.8869, abs=5e-4)
+    assert result["detection_rate"] == pytest.approx(0.8204, abs=5e-4)
+    assert result["false_positive_rate"] == pytest.approx(0.0379, abs=5e-4)
+    assert result["f1_hallucination"] == pytest.approx(0.8864, abs=5e-4)
 
 
 @pytest.mark.parametrize("split", sorted(EXPECTED_ABSTENTIONS))
