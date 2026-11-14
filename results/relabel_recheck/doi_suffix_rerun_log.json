@@ -1434,6 +1434,364 @@
           "after": "HALLUCINATED"
         }
       }
+    },
+    "cascade_gpt51_dev_public": {
+      "rerun_keys": "doi_rerun_targets.json",
+      "base_predictions": "results/cascade_gpt51/gpt51_dev_public_preds.jsonl",
+      "rerun": "results/relabel_recheck/doi_suffix_reruns/cascade_gpt51_dev_public.jsonl",
+      "n_rerun": 43,
+      "verdict_changes": 0,
+      "per_key": {
+        "02dcaa2e4555": {
+          "before": "HALLUCINATED",
+          "after": "HALLUCINATED"
+        },
+        "07d69ea24ed9": {
+          "before": "HALLUCINATED",
+          "after": "HALLUCINATED"
+        },
+        "08ebaa54f666": {
+          "before": "HALLUCINATED",
+          "after": "HALLUCINATED"
+        },
+        "09d390a6a348": {
+          "before": "HALLUCINATED",
+          "after": "HALLUCINATED"
+        },
+        "0f265de753bd": {
+          "before": "HALLUCINATED",
+          "after": "HALLUCINATED"
+        },
+        "26d2ae9ea0e6": {
+          "before": "HALLUCINATED",
+          "after": "HALLUCINATED"
+        },
+        "2c5f8471a545": {
+          "before": "HALLUCINATED",
+          "after": "HALLUCINATED"
+        },
+        "335cad9423a8": {
+          "before": "HALLUCINATED",
+          "after": "HALLUCINATED"
+        },
+        "348d177caec3": {
+          "before": "HALLUCINATED",
+          "after": "HALLUCINATED"
+        },
+        "4407d6409a44": {
+          "before": "HALLUCINATED",
+          "after": "HALLUCINATED"
+        },
+        "46bb7c407957": {
+          "before": "HALLUCINATED",
+          "after": "HALLUCINATED"
+        },
+        "758c627287f2": {
+          "before": "HALLUCINATED",
+          "after": "HALLUCINATED"
+        },
+        "87a25c18d319": {
+          "before": "HALLUCINATED",
+          "after": "HALLUCINATED"
+        },
+        "883321e7088f": {
+          "before": "HALLUCINATED",
+          "after": "HALLUCINATED"
+        },
+        "8c43969b72ce": {
+          "before": "HALLUCINATED",
+          "after": "HALLUCINATED"
+        },
+        "91ff2674f171": {
+          "before": "HALLUCINATED",
+          "after": "HALLUCINATED"
+        },
+        "a0478afc6fb9": {
+          "before": "HALLUCINATED",
+          "after": "HALLUCINATED"
+        },
+        "a3f1f22d00f2": {
+          "before": "HALLUCINATED",
+          "after": "HALLUCINATED"
+        },
+        "aaefe29933ae": {
+          "before": "HALLUCINATED",
+          "after": "HALLUCINATED"
+        },
+        "ac0393b63e90": {
+          "before": "HALLUCINATED",
+          "after": "HALLUCINATED"
+        },
+        "b4268fa6464e": {
+          "before": "HALLUCINATED",
+          "after": "HALLUCINATED"
+        },
+        "b64d4175823c": {
+          "before": "HALLUCINATED",
+          "after": "HALLUCINATED"
+        },
+        "b65a90c68b6a": {
+          "before": "HALLUCINATED",
+          "after": "HALLUCINATED"
+        },
+        "b939e55d7555": {
+          "before": "HALLUCINATED",
+          "after": "HALLUCINATED"
+        },
+        "bd3eeeb03bae": {
+          "before": "HALLUCINATED",
+          "after": "HALLUCINATED"
+        },
+        "c080618bff76": {
+          "before": "HALLUCINATED",
+          "after": "HALLUCINATED"
+        },
+        "c280cf485c57": {
+          "before": "HALLUCINATED",
+          "after": "HALLUCINATED"
+        },
+        "c39bb75de89c": {
+          "before": "HALLUCINATED",
+          "after": "HALLUCINATED"
+        },
+        "c5499dfe46ab": {
+          "before": "HALLUCINATED",
+          "after": "HALLUCINATED"
+        },
+        "c74be625b875": {
+          "before": "HALLUCINATED",
+          "after": "HALLUCINATED"
+        },
+        "c90346f3c334": {
+          "before": "HALLUCINATED",
+          "after": "HALLUCINATED"
+        },
+        "d21804b268a8": {
+          "before": "HALLUCINATED",
+          "after": "HALLUCINATED"
+        },
+        "d28797194fbf": {
+          "before": "HALLUCINATED",
+          "after": "HALLUCINATED"
+        },
+        "d52773275761": {
+          "before": "HALLUCINATED",
+          "after": "HALLUCINATED"
+        },
+        "d628305f4d99": {
+          "before": "HALLUCINATED",
+          "after": "HALLUCINATED"
+        },
+        "d861e506bb2a": {
+          "before": "HALLUCINATED",
+          "after": "HALLUCINATED"
+        },
+        "d99a37cb1e28": {
+          "before": "HALLUCINATED",
+          "after": "HALLUCINATED"
+        },
+        "db9d82ff3f94": {
+          "before": "HALLUCINATED",
+          "after": "HALLUCINATED"
+        },
+        "dc6a4e41636e": {
+          "before": "HALLUCINATED",
+          "after": "HALLUCINATED"
+        },
+        "e7b8d9a1670b": {
+          "before": "HALLUCINATED",
+          "after": "HALLUCINATED"
+        },
+        "eb130616b4f8": {
+          "before": "HALLUCINATED",
+          "after": "HALLUCINATED"
+        },
+        "eee1d119e4bb": {
+          "before": "HALLUCINATED",
+          "after": "HALLUCINATED"
+        },
+        "fdcf8e3071b7": {
+          "before": "HALLUCINATED",
+          "after": "HALLUCINATED"
+        }
+      },
+      "spliced_at": "2026-11-14T12:55:53.471614+00:00"
+    },
+    "cascade_gpt51_test_public": {
+      "rerun_keys": "doi_rerun_targets.json",
+      "base_predictions": "results/cascade_gpt51/gpt51_test_public_preds.jsonl",
+      "rerun": "results/relabel_recheck/doi_suffix_reruns/cascade_gpt51_test_public.jsonl",
+      "n_rerun": 32,
+      "verdict_changes": 0,
+      "per_key": {
+        "0400a5cc0574": {
+          "before": "HALLUCINATED",
+          "after": "HALLUCINATED"
+        },
+        "0aa27bba8814": {
+          "before": "HALLUCINATED",
+          "after": "HALLUCINATED"
+        },
+        "59a91d89ebf6": {
+          "before": "HALLUCINATED",
+          "after": "HALLUCINATED"
+        },
+        "72f55675658a": {
+          "before": "HALLUCINATED",
+          "after": "HALLUCINATED"
+        },
+        "76575ee28c63": {
+          "before": "HALLUCINATED",
+          "after": "HALLUCINATED"
+        },
+        "91ef806cacba": {
+          "before": "HALLUCINATED",
+          "after": "HALLUCINATED"
+        },
+        "9948f15525f1": {
+          "before": "HALLUCINATED",
+          "after": "HALLUCINATED"
+        },
+        "9f685db5c103": {
+          "before": "HALLUCINATED",
+          "after": "HALLUCINATED"
+        },
+        "a132a5fe8cac": {
+          "before": "HALLUCINATED",
+          "after": "HALLUCINATED"
+        },
+        "a48a0719a01c": {
+          "before": "HALLUCINATED",
+          "after": "HALLUCINATED"
+        },
+        "aa4f869fcde2": {
+          "before": "HALLUCINATED",
+          "after": "HALLUCINATED"
+        },
+        "ae61732dac84": {
+          "before": "HALLUCINATED",
+          "after": "HALLUCINATED"
+        },
+        "aeb36cffe99f": {
+          "before": "HALLUCINATED",
+          "after": "HALLUCINATED"
+        },
+        "b9997d54853b": {
+          "before": "HALLUCINATED",
+          "after": "HALLUCINATED"
+        },
+        "c3e070166df2": {
+          "before": "HALLUCINATED",
+          "after": "HALLUCINATED"
+        },
+        "c4ae380c6a6b": {
+          "before": "HALLUCINATED",
+          "after": "HALLUCINATED"
+        },
+        "c4bf3225b268": {
+          "before": "HALLUCINATED",
+          "after": "HALLUCINATED"
+        },
+        "c6ec6c9321e8": {
+          "before": "HALLUCINATED",
+          "after": "HALLUCINATED"
+        },
+        "c9eb3730e6f6": {
+          "before": "HALLUCINATED",
+          "after": "HALLUCINATED"
+        },
+        "cd1ea43c3e9d": {
+          "before": "HALLUCINATED",
+          "after": "HALLUCINATED"
+        },
+        "cda00fd304be": {
+          "before": "HALLUCINATED",
+          "after": "HALLUCINATED"
+        },
+        "d1f15c4f13d0": {
+          "before": "HALLUCINATED",
+          "after": "HALLUCINATED"
+        },
+        "d27ac16ca85a": {
+          "before": "HALLUCINATED",
+          "after": "HALLUCINATED"
+        },
+        "d632f7211d63": {
+          "before": "HALLUCINATED",
+          "after": "HALLUCINATED"
+        },
+        "dae94ac1c507": {
+          "before": "HALLUCINATED",
+          "after": "HALLUCINATED"
+        },
+        "e424f6b06856": {
+          "before": "HALLUCINATED",
+          "after": "HALLUCINATED"
+        },
+        "e729d705557a": {
+          "before": "HALLUCINATED",
+          "after": "HALLUCINATED"
+        },
+        "e7e5083fa94f": {
+          "before": "HALLUCINATED",
+          "after": "HALLUCINATED"
+        },
+        "ea8f22b53d36": {
+          "before": "HALLUCINATED",
+          "after": "HALLUCINATED"
+        },
+        "f1d3c02da59c": {
+          "before": "HALLUCINATED",
+          "after": "HALLUCINATED"
+        },
+        "f50ca73d1b08": {
+          "before": "HALLUCINATED",
+          "after": "HALLUCINATED"
+        },
+        "f746e1c10ae9": {
+          "before": "HALLUCINATED",
+          "after": "HALLUCINATED"
+        }
+      },
+      "spliced_at": "2026-11-14T12:55:53.471614+00:00"
+    },
+    "cascade_gpt51_stress_test": {
+      "rerun_keys": "doi_rerun_targets.json",
+      "base_predictions": "results/cascade_gpt51/gpt51_stress_test_preds.jsonl",
+      "rerun": "results/relabel_recheck/doi_suffix_reruns/cascade_gpt51_stress_test.jsonl",
+      "n_rerun": 7,
+      "verdict_changes": 0,
+      "per_key": {
+        "c422fb8fa33a": {
+          "before": "HALLUCINATED",
+          "after": "HALLUCINATED"
+        },
+        "c486d43c96ef": {
+          "before": "HALLUCINATED",
+          "after": "HALLUCINATED"
+        },
+        "c5e8ea87f67e": {
+          "before": "HALLUCINATED",
+          "after": "HALLUCINATED"
+        },
+        "c8157fa681e2": {
+          "before": "HALLUCINATED",
+          "after": "HALLUCINATED"
+        },
+        "f0705faf2add": {
+          "before": "HALLUCINATED",
+          "after": "HALLUCINATED"
+        },
+        "f1c8c081e454": {
+          "before": "HALLUCINATED",
+          "after": "HALLUCINATED"
+        },
+        "fcf55577fa8b": {
+          "before": "HALLUCINATED",
+          "after": "HALLUCINATED"
+        }
+      },
+      "spliced_at": "2026-11-14T12:55:53.471614+00:00"
     }
   }
 }

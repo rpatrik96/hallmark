@@ -8,9 +8,11 @@ shard has its own resume checkpoint and tool cache, so an interrupted run picks
 up where it stopped. Output, one Prediction per line:
 ``results/relabel_recheck/doi_suffix_reruns/<tool>_<split>.jsonl``.
 
-Only ``llm_agentic_openai`` is wired here: GPT-5.1, native OpenAI API
-(``OPENAI_API_KEY``), the April system prompt and four tools of the released
-run; the only intended difference is the DataCite fallback in ``resolve_doi``.
+Wired tools (all native OpenAI, ``OPENAI_API_KEY``; see ``CONFIGS``): the
+standalone ``llm_agentic_openai`` (April prompt and four tools of the released
+run) and Stage 2 of ``cascade_gpt51`` (harness defaults of its 2026-08-06 run).
+The only intended difference from the original runs is the DataCite fallback
+in ``resolve_doi``.
 
 Usage:
     set -a && source .env && set +a
@@ -54,22 +56,54 @@ OUT = REPO / "results/relabel_recheck/doi_suffix_reruns"
 WORK = OUT / "_work"
 
 
+#: tool -> (model, extra kwargs, Stage-2 tag or None). The cascade Stage-2 runs
+#: (2026-08-06) used the harness defaults -- today's SYSTEM_PROMPT and the five
+#: TOOL_DEFINITIONS, unchanged since -- so they pass no overrides; their rows are
+#: tagged exactly as cascade.run_cascade tags them.
+CONFIGS: dict[str, tuple[str, dict, str | None]] = {
+    "llm_agentic_openai": (
+        "gpt-5.1",
+        {"tool_defs": FOUR_TOOLS, "system_prompt": APRIL_PROMPT},
+        None,
+    ),
+    "cascade_gpt51": ("gpt-5.1", {}, "llm_agentic_openai"),
+}
+
+
+def tag_stage2(p: Prediction, stage2_baseline: str) -> Prediction:
+    """Wrap a raw Stage-2 prediction exactly as ``cascade.run_cascade`` does."""
+    return Prediction(
+        bibtex_key=p.bibtex_key,
+        label=p.label,
+        confidence=p.confidence,
+        reason=f"[Stage 2: {stage2_baseline}] {p.reason}",
+        subtest_results=dict(p.subtest_results),
+        api_sources_queried=list(p.api_sources_queried),
+        wall_clock_seconds=p.wall_clock_seconds,
+        api_calls=p.api_calls,
+        source=p.source or "tool",
+        predicted_hallucination_type=p.predicted_hallucination_type,
+        cascade_stage="stage2_diagnosis",
+    )
+
+
 def run_shard(tool: str, split: str, idx: int, entries: list[BenchmarkEntry]) -> list[Prediction]:
-    if tool != "llm_agentic_openai":
+    if tool not in CONFIGS:
         raise SystemExit(f"{tool}: not wired in this script")
+    model, extra, stage2_tag = CONFIGS[tool]
     shard_dir = WORK / f"{tool}_{split}_shard{idx}"
     shard_dir.mkdir(parents=True, exist_ok=True)
-    return verify_agentic_openai(
+    preds = verify_agentic_openai(
         [e.to_blind() for e in entries],
-        model="gpt-5.1",
+        model=model,
         api_key=os.environ["OPENAI_API_KEY"],
         base_url=None,
         checkpoint_dir=shard_dir,
         cache_db_path=shard_dir / "tools.sqlite",
-        checkpoint_name=f"agentic_openai_shard{idx}",
-        tool_defs=FOUR_TOOLS,
-        system_prompt=APRIL_PROMPT,
+        checkpoint_name=f"{tool}_shard{idx}",
+        **extra,
     )
+    return [tag_stage2(p, stage2_tag) for p in preds] if stage2_tag else preds
 
 
 def main() -> None:
