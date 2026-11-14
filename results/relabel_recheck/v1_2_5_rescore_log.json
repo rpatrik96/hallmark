@@ -1,0 +1,1657 @@
+{
+  "old_rev": "c62d296",
+  "rescored_at": "2026-11-12T02:25:21.290748+00:00",
+  "results": {
+    "bibtexupdater_dev_public": {
+      "split": "dev_public",
+      "predictions": "results/relabel_delta/btu_v1_2_0_prescreen_fix/bibtexupdater_dev_public_per_entry.jsonl",
+      "eval_mode": "conservative",
+      "inputs": "v1.2.4 (predictions reused; DOI-suffix fix eacc9af not re-run)",
+      "reproduced_v1_2_4": true,
+      "v1_2_4": {
+        "detection_rate": 0.8227642276422764,
+        "false_positive_rate": 0.03968253968253968,
+        "f1_hallucination": 0.8869412795793165,
+        "ece": 0.32707151412324453,
+        "num_entries": 1119,
+        "num_hallucinated": 615,
+        "num_valid": 504
+      },
+      "v1_2_5": {
+        "detection_rate": 0.8203883495145631,
+        "false_positive_rate": 0.03792415169660679,
+        "f1_hallucination": 0.8863636363636362,
+        "ece": 0.32617785907409363,
+        "num_entries": 1119,
+        "num_hallucinated": 618,
+        "num_valid": 501
+      }
+    },
+    "bibtexupdater_test_public": {
+      "split": "test_public",
+      "predictions": "results/relabel_delta/btu_v1_2_0_prescreen_fix/bibtexupdater_test_public_per_entry.jsonl",
+      "eval_mode": "conservative",
+      "inputs": "v1.2.4 (predictions reused; DOI-suffix fix eacc9af not re-run)",
+      "reproduced_v1_2_4": true,
+      "v1_2_4": {
+        "detection_rate": 0.8377862595419847,
+        "false_positive_rate": 0.07166123778501629,
+        "f1_hallucination": 0.8913705583756344,
+        "ece": 0.32811176577523427,
+        "num_entries": 831,
+        "num_hallucinated": 524,
+        "num_valid": 307
+      },
+      "v1_2_5": {
+        "detection_rate": 0.8346007604562737,
+        "false_positive_rate": 0.07357859531772576,
+        "f1_hallucination": 0.8895643363728469,
+        "ece": 0.32720328730410464,
+        "num_entries": 825,
+        "num_hallucinated": 526,
+        "num_valid": 299
+      }
+    },
+    "cascade_db_diagnosis_aggressive_dev_public": {
+      "split": "dev_public",
+      "predictions": "results/cascade_sonnet46_shared/sonnet46_dev_public_preds.jsonl",
+      "eval_mode": "aggressive",
+      "inputs": "v1.2.4 (predictions reused; DOI-suffix fix eacc9af not re-run)",
+      "reproduced_v1_2_4": true,
+      "v1_2_4": {
+        "detection_rate": 0.9902439024390244,
+        "false_positive_rate": 0.01984126984126984,
+        "f1_hallucination": 0.9870340356564019,
+        "ece": 0.11974084003574673,
+        "num_entries": 1119,
+        "num_hallucinated": 615,
+        "num_valid": 504
+      },
+      "v1_2_5": {
+        "detection_rate": 0.988673139158576,
+        "false_positive_rate": 0.015968063872255488,
+        "f1_hallucination": 0.9878738884397736,
+        "ece": 0.12063449508489725,
+        "num_entries": 1119,
+        "num_hallucinated": 618,
+        "num_valid": 501
+      }
+    },
+    "cascade_db_diagnosis_aggressive_stress_test": {
+      "split": "stress_test",
+      "predictions": "results/cascade_sonnet46_shared/sonnet46_stress_test_preds.jsonl",
+      "eval_mode": "aggressive",
+      "inputs": "v1.2.4 (predictions reused; DOI-suffix fix eacc9af not re-run)",
+      "reproduced_v1_2_4": true,
+      "v1_2_4": {
+        "detection_rate": 0.9669421487603306,
+        "false_positive_rate": null,
+        "f1_hallucination": 0.9831932773109243,
+        "ece": 0.02652892561983472,
+        "num_entries": 121,
+        "num_hallucinated": 121,
+        "num_valid": 0
+      },
+      "v1_2_5": {
+        "detection_rate": 0.9831932773109243,
+        "false_positive_rate": 0.0,
+        "f1_hallucination": 0.9915254237288135,
+        "ece": 0.04305785123966943,
+        "num_entries": 121,
+        "num_hallucinated": 119,
+        "num_valid": 2
+      }
+    },
+    "cascade_db_diagnosis_aggressive_test_public": {
+      "split": "test_public",
+      "predictions": "results/cascade_sonnet46_shared/sonnet46_test_public_preds.jsonl",
+      "eval_mode": "aggressive",
+      "inputs": "v1.2.4 (predictions reused; DOI-suffix fix eacc9af not re-run)",
+      "reproduced_v1_2_4": true,
+      "v1_2_4": {
+        "detection_rate": 0.9904580152671756,
+        "false_positive_rate": 0.04234527687296417,
+        "f1_hallucination": 0.9829545454545454,
+        "ece": 0.10787003610108274,
+        "num_entries": 831,
+        "num_hallucinated": 524,
+        "num_valid": 307
+      },
+      "v1_2_5": {
+        "detection_rate": 0.9904942965779467,
+        "false_positive_rate": 0.033444816053511704,
+        "f1_hallucination": 0.9858088930936613,
+        "ece": 0.11120000000000001,
+        "num_entries": 825,
+        "num_hallucinated": 526,
+        "num_valid": 299
+      }
+    },
+    "cascade_db_diagnosis_dev_public": {
+      "split": "dev_public",
+      "predictions": "results/cascade_sonnet46_shared/sonnet46_dev_public_preds.jsonl",
+      "eval_mode": "conservative",
+      "inputs": "v1.2.4 (predictions reused; DOI-suffix fix eacc9af not re-run)",
+      "reproduced_v1_2_4": true,
+      "v1_2_4": {
+        "detection_rate": 0.9887005649717514,
+        "false_positive_rate": 0.01984126984126984,
+        "f1_hallucination": 0.9849906191369605,
+        "ece": 0.09293719806763329,
+        "num_entries": 1119,
+        "num_hallucinated": 615,
+        "num_valid": 504
+      },
+      "v1_2_5": {
+        "detection_rate": 0.9868913857677902,
+        "false_positive_rate": 0.015968063872255488,
+        "f1_hallucination": 0.9859681945743686,
+        "ece": 0.09390338164251213,
+        "num_entries": 1119,
+        "num_hallucinated": 618,
+        "num_valid": 501
+      }
+    },
+    "cascade_db_diagnosis_stress_test": {
+      "split": "stress_test",
+      "predictions": "results/cascade_sonnet46_shared/sonnet46_stress_test_preds.jsonl",
+      "eval_mode": "conservative",
+      "inputs": "v1.2.4 (predictions reused; DOI-suffix fix eacc9af not re-run)",
+      "reproduced_v1_2_4": true,
+      "v1_2_4": {
+        "detection_rate": 0.9658119658119658,
+        "false_positive_rate": null,
+        "f1_hallucination": 0.9826086956521739,
+        "ece": 0.032564102564102554,
+        "num_entries": 121,
+        "num_hallucinated": 121,
+        "num_valid": 0
+      },
+      "v1_2_5": {
+        "detection_rate": 0.9826086956521739,
+        "false_positive_rate": 0.0,
+        "f1_hallucination": 0.9912280701754386,
+        "ece": 0.032564102564102554,
+        "num_entries": 121,
+        "num_hallucinated": 119,
+        "num_valid": 2
+      }
+    },
+    "cascade_db_diagnosis_test_public": {
+      "split": "test_public",
+      "predictions": "results/cascade_sonnet46_shared/sonnet46_test_public_preds.jsonl",
+      "eval_mode": "conservative",
+      "inputs": "v1.2.4 (predictions reused; DOI-suffix fix eacc9af not re-run)",
+      "reproduced_v1_2_4": true,
+      "v1_2_4": {
+        "detection_rate": 0.9891067538126361,
+        "false_positive_rate": 0.04234527687296417,
+        "f1_hallucination": 0.980561555075594,
+        "ece": 0.07669712793733625,
+        "num_entries": 831,
+        "num_hallucinated": 524,
+        "num_valid": 307
+      },
+      "v1_2_5": {
+        "detection_rate": 0.9891540130151844,
+        "false_positive_rate": 0.033444816053511704,
+        "f1_hallucination": 0.9838187702265372,
+        "ece": 0.08006578947368423,
+        "num_entries": 825,
+        "num_hallucinated": 526,
+        "num_valid": 299
+      }
+    },
+    "doi_only_dev_public": {
+      "split": "dev_public",
+      "predictions": "results/relabel_recheck/doi_only_dev_public_v1_2_4_inputs_predictions.jsonl",
+      "eval_mode": "conservative",
+      "inputs": "v1.2.4 (predictions reused; DOI-suffix fix eacc9af not re-run)",
+      "reproduced_v1_2_4": true,
+      "v1_2_4": {
+        "detection_rate": 0.2146341463414634,
+        "false_positive_rate": 0.04365079365079365,
+        "f1_hallucination": 0.3433029908972692,
+        "ece": 0.0877569258266308,
+        "num_entries": 1119,
+        "num_hallucinated": 615,
+        "num_valid": 504
+      },
+      "v1_2_5": {
+        "detection_rate": 0.21359223300970873,
+        "false_positive_rate": 0.043912175648702596,
+        "f1_hallucination": 0.3419689119170984,
+        "ece": 0.090437890974084,
+        "num_entries": 1119,
+        "num_hallucinated": 618,
+        "num_valid": 501
+      }
+    },
+    "doi_only_test_public": {
+      "split": "test_public",
+      "predictions": "results/relabel_recheck/doi_only_test_public_v1_2_4_inputs_predictions.jsonl",
+      "eval_mode": "conservative",
+      "inputs": "v1.2.4 (predictions reused; DOI-suffix fix eacc9af not re-run)",
+      "reproduced_v1_2_4": true,
+      "v1_2_4": {
+        "detection_rate": 0.18893129770992367,
+        "false_positive_rate": 0.04234527687296417,
+        "f1_hallucination": 0.3113207547169811,
+        "ece": 0.14241877256317712,
+        "num_entries": 831,
+        "num_hallucinated": 524,
+        "num_valid": 307
+      },
+      "v1_2_5": {
+        "detection_rate": 0.188212927756654,
+        "false_positive_rate": 0.043478260869565216,
+        "f1_hallucination": 0.3103448275862069,
+        "ece": 0.14739393939393938,
+        "num_entries": 825,
+        "num_hallucinated": 526,
+        "num_valid": 299
+      }
+    },
+    "llm_agentic_btu_openai_dev_public": {
+      "split": "dev_public",
+      "predictions": "results/temporal_checkpoints/agentic_btu_openai_gpt-5.1.jsonl",
+      "eval_mode": "conservative",
+      "inputs": "v1.2.4 (predictions reused; DOI-suffix fix eacc9af not re-run)",
+      "reproduced_v1_2_4": true,
+      "v1_2_4": {
+        "detection_rate": 0.9739837398373984,
+        "false_positive_rate": 0.46825396825396826,
+        "f1_hallucination": 0.8262068965517242,
+        "ece": 0.12227882037533458,
+        "num_entries": 1119,
+        "num_hallucinated": 615,
+        "num_valid": 504
+      },
+      "v1_2_5": {
+        "detection_rate": 0.9724919093851133,
+        "false_positive_rate": 0.46706586826347307,
+        "f1_hallucination": 0.8272539573296629,
+        "ece": 0.12317247542448616,
+        "num_entries": 1119,
+        "num_hallucinated": 618,
+        "num_valid": 501
+      }
+    },
+    "llm_agentic_btu_openai_test_public": {
+      "split": "test_public",
+      "predictions": "results/llm_agentic_btu_openai_test_public_predictions.jsonl",
+      "eval_mode": "conservative",
+      "inputs": "v1.2.4 (predictions reused; DOI-suffix fix eacc9af not re-run)",
+      "reproduced_v1_2_4": true,
+      "v1_2_4": {
+        "detection_rate": 0.9561068702290076,
+        "false_positive_rate": 0.3517915309446254,
+        "f1_hallucination": 0.884377758164166,
+        "ece": 0.07015643802647403,
+        "num_entries": 831,
+        "num_hallucinated": 524,
+        "num_valid": 307
+      },
+      "v1_2_5": {
+        "detection_rate": 0.9562737642585551,
+        "false_positive_rate": 0.34448160535117056,
+        "f1_hallucination": 0.8886925795053005,
+        "ece": 0.06684848484848484,
+        "num_entries": 825,
+        "num_hallucinated": 526,
+        "num_valid": 299
+      }
+    },
+    "llm_agentic_btu_sonnet_4_6_dev_public": {
+      "split": "dev_public",
+      "predictions": "results/checkpoints/llm_agentic_btu_sonnet_4_6_dev_public_v2/agentic_btu_openai_anthropic_claude-sonnet-4.6.jsonl",
+      "eval_mode": "conservative",
+      "inputs": "v1.2.4 (predictions reused; DOI-suffix fix eacc9af not re-run)",
+      "reproduced_v1_2_4": true,
+      "v1_2_4": {
+        "detection_rate": 0.983739837398374,
+        "false_positive_rate": 0.42857142857142855,
+        "f1_hallucination": 0.8426183844011143,
+        "ece": 0.11754244861483368,
+        "num_entries": 1119,
+        "num_hallucinated": 615,
+        "num_valid": 504
+      },
+      "v1_2_5": {
+        "detection_rate": 0.982200647249191,
+        "false_positive_rate": 0.42714570858283435,
+        "f1_hallucination": 0.8436414176511465,
+        "ece": 0.11664879356568363,
+        "num_entries": 1119,
+        "num_hallucinated": 618,
+        "num_valid": 501
+      }
+    },
+    "llm_agentic_btu_sonnet_4_6_test_public": {
+      "split": "test_public",
+      "predictions": "results/llm_agentic_btu_sonnet_4_6_test_public_predictions.jsonl",
+      "eval_mode": "conservative",
+      "inputs": "v1.2.4 (predictions reused; DOI-suffix fix eacc9af not re-run)",
+      "reproduced_v1_2_4": true,
+      "v1_2_4": {
+        "detection_rate": 0.9866412213740458,
+        "false_positive_rate": 0.34201954397394135,
+        "f1_hallucination": 0.9022687609075043,
+        "ece": 0.07730445246690723,
+        "num_entries": 831,
+        "num_hallucinated": 524,
+        "num_valid": 307
+      },
+      "v1_2_5": {
+        "detection_rate": 0.9866920152091255,
+        "false_positive_rate": 0.3311036789297659,
+        "f1_hallucination": 0.9073426573426573,
+        "ece": 0.07762424242424247,
+        "num_entries": 825,
+        "num_hallucinated": 526,
+        "num_valid": 299
+      }
+    },
+    "llm_agentic_openai_dev_public": {
+      "split": "dev_public",
+      "predictions": "results/temporal_checkpoints/agentic_openai_gpt-5.1.jsonl",
+      "eval_mode": "conservative",
+      "inputs": "v1.2.4 (predictions reused; DOI-suffix fix eacc9af not re-run)",
+      "reproduced_v1_2_4": true,
+      "v1_2_4": {
+        "detection_rate": 0.9642276422764228,
+        "false_positive_rate": 0.4722222222222222,
+        "f1_hallucination": 0.8201936376210235,
+        "ece": 0.17054512957998189,
+        "num_entries": 1119,
+        "num_hallucinated": 615,
+        "num_valid": 504
+      },
+      "v1_2_5": {
+        "detection_rate": 0.9644012944983819,
+        "false_positive_rate": 0.469061876247505,
+        "f1_hallucination": 0.8226363008971704,
+        "ece": 0.16786416443252902,
+        "num_entries": 1119,
+        "num_hallucinated": 618,
+        "num_valid": 501
+      }
+    },
+    "llm_agentic_openai_test_public": {
+      "split": "test_public",
+      "predictions": "results/llm_agentic_openai_test_public_predictions.jsonl",
+      "eval_mode": "conservative",
+      "inputs": "v1.2.4 (predictions reused; DOI-suffix fix eacc9af not re-run)",
+      "reproduced_v1_2_4": true,
+      "v1_2_4": {
+        "detection_rate": 0.9427480916030534,
+        "false_positive_rate": 0.5504885993485342,
+        "f1_hallucination": 0.8323504633529907,
+        "ece": 0.1588808664259929,
+        "num_entries": 831,
+        "num_hallucinated": 524,
+        "num_valid": 307
+      },
+      "v1_2_5": {
+        "detection_rate": 0.9429657794676806,
+        "false_positive_rate": 0.5384615384615384,
+        "f1_hallucination": 0.8385460693153,
+        "ece": 0.15117575757575755,
+        "num_entries": 825,
+        "num_hallucinated": 526,
+        "num_valid": 299
+      }
+    },
+    "llm_openai_dev_public": {
+      "split": "dev_public",
+      "predictions": "results/checkpoints/llm_openai/openai_gpt-5.1.jsonl",
+      "eval_mode": "conservative",
+      "inputs": "v1.2.4 (predictions reused; DOI-suffix fix eacc9af not re-run)",
+      "reproduced_v1_2_4": true,
+      "v1_2_4": {
+        "detection_rate": 0.8276422764227642,
+        "false_positive_rate": 0.4146825396825397,
+        "f1_hallucination": 0.7636909227306826,
+        "ece": 0.19460232350312745,
+        "num_entries": 1119,
+        "num_hallucinated": 615,
+        "num_valid": 504
+      },
+      "v1_2_5": {
+        "detection_rate": 0.8268608414239482,
+        "false_positive_rate": 0.41317365269461076,
+        "f1_hallucination": 0.7649700598802396,
+        "ece": 0.19370866845397675,
+        "num_entries": 1119,
+        "num_hallucinated": 618,
+        "num_valid": 501
+      }
+    },
+    "llm_openai_gpt54_dev_public": {
+      "split": "dev_public",
+      "predictions": "results/checkpoints/llm_openai_gpt54_dev_public_v3/openai_gpt-5.4.jsonl",
+      "eval_mode": "conservative",
+      "inputs": "v1.2.4 (predictions reused; DOI-suffix fix eacc9af not re-run)",
+      "reproduced_v1_2_4": true,
+      "v1_2_4": {
+        "detection_rate": 0.7577235772357723,
+        "false_positive_rate": 0.23412698412698413,
+        "f1_hallucination": 0.7773144286905754,
+        "ece": 0.21012511170688097,
+        "num_entries": 1119,
+        "num_hallucinated": 615,
+        "num_valid": 504
+      },
+      "v1_2_5": {
+        "detection_rate": 0.7556634304207119,
+        "false_positive_rate": 0.23353293413173654,
+        "f1_hallucination": 0.7770382695507486,
+        "ece": 0.21101876675603215,
+        "num_entries": 1119,
+        "num_hallucinated": 618,
+        "num_valid": 501
+      }
+    },
+    "llm_openai_gpt54_test_public": {
+      "split": "test_public",
+      "predictions": "results/checkpoints/llm_openai_gpt54_test_public/openai_gpt-5.4.jsonl",
+      "eval_mode": "conservative",
+      "inputs": "v1.2.4 (predictions reused; DOI-suffix fix eacc9af not re-run)",
+      "reproduced_v1_2_4": true,
+      "v1_2_4": {
+        "detection_rate": 0.7767175572519084,
+        "false_positive_rate": 0.22149837133550487,
+        "f1_hallucination": 0.8148148148148148,
+        "ece": 0.1952346570397107,
+        "num_entries": 831,
+        "num_hallucinated": 524,
+        "num_valid": 307
+      },
+      "v1_2_5": {
+        "detection_rate": 0.7737642585551331,
+        "false_positive_rate": 0.22073578595317725,
+        "f1_hallucination": 0.8148148148148149,
+        "ece": 0.19679999999999992,
+        "num_entries": 825,
+        "num_hallucinated": 526,
+        "num_valid": 299
+      }
+    },
+    "llm_openai_test_public": {
+      "split": "test_public",
+      "predictions": "results/checkpoints/llm_openai/openai_gpt-5.1.jsonl",
+      "eval_mode": "conservative",
+      "inputs": "v1.2.4 (predictions reused; DOI-suffix fix eacc9af not re-run)",
+      "reproduced_v1_2_4": true,
+      "v1_2_4": {
+        "detection_rate": 0.8492366412213741,
+        "false_positive_rate": 0.4788273615635179,
+        "f1_hallucination": 0.7974910394265234,
+        "ece": 0.18141997593261086,
+        "num_entries": 831,
+        "num_hallucinated": 524,
+        "num_valid": 307
+      },
+      "v1_2_5": {
+        "detection_rate": 0.8479087452471483,
+        "false_positive_rate": 0.4782608695652174,
+        "f1_hallucination": 0.7999999999999999,
+        "ece": 0.1794909090909091,
+        "num_entries": 825,
+        "num_hallucinated": 526,
+        "num_valid": 299
+      }
+    },
+    "llm_openrouter_claude_opus_4_7_dev_public": {
+      "split": "dev_public",
+      "predictions": "results/checkpoints/llm_openrouter_claude_opus_4_7_dev_public/openrouter_anthropic_claude-opus-4.7.jsonl",
+      "eval_mode": "conservative",
+      "inputs": "v1.2.4 (predictions reused; DOI-suffix fix eacc9af not re-run)",
+      "reproduced_v1_2_4": true,
+      "v1_2_4": {
+        "detection_rate": 0.8991869918699187,
+        "false_positive_rate": 0.1488095238095238,
+        "f1_hallucination": 0.8897827835880933,
+        "ece": 0.05125111706881193,
+        "num_entries": 1119,
+        "num_hallucinated": 615,
+        "num_valid": 504
+      },
+      "v1_2_5": {
+        "detection_rate": 0.8964401294498382,
+        "false_positive_rate": 0.14770459081836326,
+        "f1_hallucination": 0.8892455858747993,
+        "ece": 0.052680965147453046,
+        "num_entries": 1119,
+        "num_hallucinated": 618,
+        "num_valid": 501
+      }
+    },
+    "llm_openrouter_claude_opus_4_7_test_public": {
+      "split": "test_public",
+      "predictions": "results/checkpoints/llm_openrouter_claude_opus_4_7_test_public/openrouter_anthropic_claude-opus-4.7.jsonl",
+      "eval_mode": "conservative",
+      "inputs": "v1.2.4 (predictions reused; DOI-suffix fix eacc9af not re-run)",
+      "reproduced_v1_2_4": true,
+      "v1_2_4": {
+        "detection_rate": 0.8967495219885278,
+        "false_positive_rate": 0.1986970684039088,
+        "f1_hallucination": 0.8907882241215574,
+        "ece": 0.06259036144578393,
+        "num_entries": 831,
+        "num_hallucinated": 524,
+        "num_valid": 307
+      },
+      "v1_2_5": {
+        "detection_rate": 0.8952380952380953,
+        "false_positive_rate": 0.18394648829431437,
+        "f1_hallucination": 0.8952380952380953,
+        "ece": 0.057949029126213504,
+        "num_entries": 825,
+        "num_hallucinated": 526,
+        "num_valid": 299
+      }
+    },
+    "llm_openrouter_claude_sonnet_4_6_dev_public": {
+      "split": "dev_public",
+      "predictions": "results/checkpoints/llm_openrouter_claude_sonnet_4_6_dev_public/openrouter_anthropic_claude-sonnet-4.6.jsonl",
+      "eval_mode": "conservative",
+      "inputs": "v1.2.4 (predictions reused; DOI-suffix fix eacc9af not re-run)",
+      "reproduced_v1_2_4": true,
+      "v1_2_4": {
+        "detection_rate": 0.9107438016528926,
+        "false_positive_rate": 0.15384615384615385,
+        "f1_hallucination": 0.8944805194805195,
+        "ece": 0.039872611464967685,
+        "num_entries": 1119,
+        "num_hallucinated": 615,
+        "num_valid": 504
+      },
+      "v1_2_5": {
+        "detection_rate": 0.9095394736842105,
+        "false_positive_rate": 0.15071283095723015,
+        "f1_hallucination": 0.8955465587044535,
+        "ece": 0.040782529572338536,
+        "num_entries": 1119,
+        "num_hallucinated": 618,
+        "num_valid": 501
+      }
+    },
+    "llm_openrouter_claude_sonnet_4_6_test_public": {
+      "split": "test_public",
+      "predictions": "results/checkpoints/llm_openrouter_claude_sonnet_4_6_test_public/openrouter_anthropic_claude-sonnet-4.6.jsonl",
+      "eval_mode": "conservative",
+      "inputs": "v1.2.4 (predictions reused; DOI-suffix fix eacc9af not re-run)",
+      "reproduced_v1_2_4": true,
+      "v1_2_4": {
+        "detection_rate": 0.918918918918919,
+        "false_positive_rate": 0.1806020066889632,
+        "f1_hallucination": 0.9083969465648855,
+        "ece": 0.03723378212974253,
+        "num_entries": 831,
+        "num_hallucinated": 524,
+        "num_valid": 307
+      },
+      "v1_2_5": {
+        "detection_rate": 0.9192307692307692,
+        "false_positive_rate": 0.15807560137457044,
+        "f1_hallucination": 0.9157088122605365,
+        "ece": 0.04424167694204681,
+        "num_entries": 825,
+        "num_hallucinated": 526,
+        "num_valid": 299
+      }
+    },
+    "llm_openrouter_deepseek_r1_dev_public": {
+      "split": "dev_public",
+      "predictions": "results/llm_openrouter_deepseek_r1_dev_public_predictions.jsonl",
+      "eval_mode": "conservative",
+      "inputs": "v1.2.4 (predictions reused; DOI-suffix fix eacc9af not re-run)",
+      "reproduced_v1_2_4": true,
+      "v1_2_4": {
+        "detection_rate": 0.8874172185430463,
+        "false_positive_rate": 0.6297786720321932,
+        "f1_hallucination": 0.7377838953888506,
+        "ece": 0.24151680290644928,
+        "num_entries": 1119,
+        "num_hallucinated": 615,
+        "num_valid": 504
+      },
+      "v1_2_5": {
+        "detection_rate": 0.8846787479406919,
+        "false_positive_rate": 0.631578947368421,
+        "f1_hallucination": 0.7376373626373627,
+        "ece": 0.242425068119891,
+        "num_entries": 1119,
+        "num_hallucinated": 618,
+        "num_valid": 501
+      }
+    },
+    "llm_openrouter_deepseek_r1_test_public": {
+      "split": "test_public",
+      "predictions": "results/llm_openrouter_deepseek_r1_test_public_predictions.jsonl",
+      "eval_mode": "conservative",
+      "inputs": "v1.2.4 (predictions reused; DOI-suffix fix eacc9af not re-run)",
+      "reproduced_v1_2_4": true,
+      "v1_2_4": {
+        "detection_rate": 0.8038277511961722,
+        "false_positive_rate": 0.3218884120171674,
+        "f1_hallucination": 0.8106151990349818,
+        "ece": 0.1862672811059911,
+        "num_entries": 831,
+        "num_hallucinated": 524,
+        "num_valid": 307
+      },
+      "v1_2_5": {
+        "detection_rate": 0.801909307875895,
+        "false_positive_rate": 0.31877729257641924,
+        "f1_hallucination": 0.8115942028985508,
+        "ece": 0.18577160493827158,
+        "num_entries": 825,
+        "num_hallucinated": 526,
+        "num_valid": 299
+      }
+    },
+    "llm_openrouter_deepseek_v3_dev_public": {
+      "split": "dev_public",
+      "predictions": "results/llm_openrouter_deepseek_v3_dev_public_predictions.jsonl",
+      "eval_mode": "conservative",
+      "inputs": "v1.2.4 (predictions reused; DOI-suffix fix eacc9af not re-run)",
+      "reproduced_v1_2_4": true,
+      "v1_2_4": {
+        "detection_rate": 0.8975609756097561,
+        "false_positive_rate": 0.7142857142857143,
+        "f1_hallucination": 0.7229862475442044,
+        "ece": 0.32419124218052,
+        "num_entries": 1119,
+        "num_hallucinated": 615,
+        "num_valid": 504
+      },
+      "v1_2_5": {
+        "detection_rate": 0.8932038834951457,
+        "false_positive_rate": 0.718562874251497,
+        "f1_hallucination": 0.7215686274509805,
+        "ece": 0.3268722073279714,
+        "num_entries": 1119,
+        "num_hallucinated": 618,
+        "num_valid": 501
+      }
+    },
+    "llm_openrouter_deepseek_v3_test_public": {
+      "split": "test_public",
+      "predictions": "results/llm_openrouter_deepseek_v3_test_public_predictions.jsonl",
+      "eval_mode": "conservative",
+      "inputs": "v1.2.4 (predictions reused; DOI-suffix fix eacc9af not re-run)",
+      "reproduced_v1_2_4": true,
+      "v1_2_4": {
+        "detection_rate": 0.9026717557251909,
+        "false_positive_rate": 0.739413680781759,
+        "f1_hallucination": 0.7728758169934641,
+        "ece": 0.2829963898916981,
+        "num_entries": 831,
+        "num_hallucinated": 524,
+        "num_valid": 307
+      },
+      "v1_2_5": {
+        "detection_rate": 0.9011406844106464,
+        "false_positive_rate": 0.7525083612040134,
+        "f1_hallucination": 0.7738775510204081,
+        "ece": 0.28410909090909087,
+        "num_entries": 825,
+        "num_hallucinated": 526,
+        "num_valid": 299
+      }
+    },
+    "llm_openrouter_gemini_flash_dev_public": {
+      "split": "dev_public",
+      "predictions": "results/llm_openrouter_gemini_flash_dev_public_predictions.jsonl",
+      "eval_mode": "conservative",
+      "inputs": "v1.2.4 (predictions reused; DOI-suffix fix eacc9af not re-run)",
+      "reproduced_v1_2_4": true,
+      "v1_2_4": {
+        "detection_rate": 0.49586776859504134,
+        "false_positive_rate": 0.10179640718562874,
+        "f1_hallucination": 0.6276150627615064,
+        "ece": 0.27142857142857213,
+        "num_entries": 1119,
+        "num_hallucinated": 615,
+        "num_valid": 504
+      },
+      "v1_2_5": {
+        "detection_rate": 0.4934210526315789,
+        "false_positive_rate": 0.10240963855421686,
+        "f1_hallucination": 0.6256517205422315,
+        "ece": 0.2741410488245931,
+        "num_entries": 1119,
+        "num_hallucinated": 618,
+        "num_valid": 501
+      }
+    },
+    "llm_openrouter_gemini_flash_test_public": {
+      "split": "test_public",
+      "predictions": "results/llm_openrouter_gemini_flash_test_public_predictions.jsonl",
+      "eval_mode": "conservative",
+      "inputs": "v1.2.4 (predictions reused; DOI-suffix fix eacc9af not re-run)",
+      "reproduced_v1_2_4": true,
+      "v1_2_4": {
+        "detection_rate": 0.5,
+        "false_positive_rate": 0.11074918566775244,
+        "f1_hallucination": 0.6390243902439025,
+        "ece": 0.314596871239471,
+        "num_entries": 831,
+        "num_hallucinated": 524,
+        "num_valid": 307
+      },
+      "v1_2_5": {
+        "detection_rate": 0.49809885931558934,
+        "false_positive_rate": 0.11371237458193979,
+        "f1_hallucination": 0.6374695863746959,
+        "ece": 0.3193090909090909,
+        "num_entries": 825,
+        "num_hallucinated": 526,
+        "num_valid": 299
+      }
+    },
+    "llm_openrouter_gemini_pro_dev_public": {
+      "split": "dev_public",
+      "predictions": "results/new_models/gemini_pro.jsonl",
+      "eval_mode": "conservative",
+      "inputs": "v1.2.4 (predictions reused; DOI-suffix fix eacc9af not re-run)",
+      "reproduced_v1_2_4": true,
+      "v1_2_4": {
+        "detection_rate": 0.4720812182741117,
+        "false_positive_rate": 0.05295315682281059,
+        "f1_hallucination": 0.6227678571428572,
+        "ece": 0.3048243992606286,
+        "num_entries": 1119,
+        "num_hallucinated": 615,
+        "num_valid": 504
+      },
+      "v1_2_5": {
+        "detection_rate": 0.4696969696969697,
+        "false_positive_rate": 0.05327868852459016,
+        "f1_hallucination": 0.6206896551724138,
+        "ece": 0.3075970425138633,
+        "num_entries": 1119,
+        "num_hallucinated": 618,
+        "num_valid": 501
+      }
+    },
+    "llm_openrouter_gemini_pro_test_public": {
+      "split": "test_public",
+      "predictions": "results/llm_openrouter_gemini_pro_test_public_predictions.jsonl",
+      "eval_mode": "conservative",
+      "inputs": "v1.2.4 (predictions reused; DOI-suffix fix eacc9af not re-run)",
+      "reproduced_v1_2_4": true,
+      "v1_2_4": {
+        "detection_rate": 0.4543524416135881,
+        "false_positive_rate": 0.06007067137809187,
+        "f1_hallucination": 0.6096866096866097,
+        "ece": 0.3566047745358091,
+        "num_entries": 831,
+        "num_hallucinated": 524,
+        "num_valid": 307
+      },
+      "v1_2_5": {
+        "detection_rate": 0.452431289640592,
+        "false_positive_rate": 0.06181818181818182,
+        "f1_hallucination": 0.6079545454545454,
+        "ece": 0.3623395721925134,
+        "num_entries": 825,
+        "num_hallucinated": 526,
+        "num_valid": 299
+      }
+    },
+    "llm_openrouter_llama_4_maverick_dev_public": {
+      "split": "dev_public",
+      "predictions": "results/new_models/llama4_maverick.jsonl",
+      "eval_mode": "conservative",
+      "inputs": "v1.2.4 (predictions reused; DOI-suffix fix eacc9af not re-run)",
+      "reproduced_v1_2_4": true,
+      "v1_2_4": {
+        "detection_rate": 0.6065040650406504,
+        "false_positive_rate": 0.15079365079365079,
+        "f1_hallucination": 0.7011278195488722,
+        "ece": 0.1842448614834684,
+        "num_entries": 1119,
+        "num_hallucinated": 615,
+        "num_valid": 504
+      },
+      "v1_2_5": {
+        "detection_rate": 0.6035598705501618,
+        "false_positive_rate": 0.15169660678642716,
+        "f1_hallucination": 0.6991565135895033,
+        "ece": 0.1869258266309205,
+        "num_entries": 1119,
+        "num_hallucinated": 618,
+        "num_valid": 501
+      }
+    },
+    "llm_openrouter_llama_4_maverick_test_public": {
+      "split": "test_public",
+      "predictions": "results/llm_openrouter_llama_4_maverick_test_public_predictions.jsonl",
+      "eval_mode": "conservative",
+      "inputs": "v1.2.4 (predictions reused; DOI-suffix fix eacc9af not re-run)",
+      "reproduced_v1_2_4": true,
+      "v1_2_4": {
+        "detection_rate": 0.6252390057361377,
+        "false_positive_rate": 0.16938110749185667,
+        "f1_hallucination": 0.7250554323725056,
+        "ece": 0.1855542168674699,
+        "num_entries": 831,
+        "num_hallucinated": 524,
+        "num_valid": 307
+      },
+      "v1_2_5": {
+        "detection_rate": 0.6228571428571429,
+        "false_positive_rate": 0.17391304347826086,
+        "f1_hallucination": 0.7234513274336284,
+        "ece": 0.18963592233009705,
+        "num_entries": 825,
+        "num_hallucinated": 526,
+        "num_valid": 299
+      }
+    },
+    "llm_openrouter_mistral_dev_public": {
+      "split": "dev_public",
+      "predictions": "results/llm_openrouter_mistral_dev_public_predictions.jsonl",
+      "eval_mode": "conservative",
+      "inputs": "v1.2.4 (predictions reused; DOI-suffix fix eacc9af not re-run)",
+      "reproduced_v1_2_4": true,
+      "v1_2_4": {
+        "detection_rate": 0.7074380165289256,
+        "false_positive_rate": 0.2554890219560878,
+        "f1_hallucination": 0.7372954349698535,
+        "ece": 0.23634719710669175,
+        "num_entries": 1119,
+        "num_hallucinated": 615,
+        "num_valid": 504
+      },
+      "v1_2_5": {
+        "detection_rate": 0.7039473684210527,
+        "false_positive_rate": 0.2570281124497992,
+        "f1_hallucination": 0.7353951890034364,
+        "ece": 0.23905967450271243,
+        "num_entries": 1119,
+        "num_hallucinated": 618,
+        "num_valid": 501
+      }
+    },
+    "llm_openrouter_mistral_test_public": {
+      "split": "test_public",
+      "predictions": "results/llm_openrouter_mistral_test_public_predictions.jsonl",
+      "eval_mode": "conservative",
+      "inputs": "v1.2.4 (predictions reused; DOI-suffix fix eacc9af not re-run)",
+      "reproduced_v1_2_4": true,
+      "v1_2_4": {
+        "detection_rate": 0.6812977099236641,
+        "false_positive_rate": 0.28664495114006516,
+        "f1_hallucination": 0.736842105263158,
+        "ece": 0.2675691937424799,
+        "num_entries": 831,
+        "num_hallucinated": 524,
+        "num_valid": 307
+      },
+      "v1_2_5": {
+        "detection_rate": 0.6787072243346007,
+        "false_positive_rate": 0.29431438127090304,
+        "f1_hallucination": 0.7353244078269825,
+        "ece": 0.272060606060606,
+        "num_entries": 825,
+        "num_hallucinated": 526,
+        "num_valid": 299
+      }
+    },
+    "llm_openrouter_qwen_dev_public": {
+      "split": "dev_public",
+      "predictions": "results/llm_openrouter_qwen_dev_public_predictions.jsonl",
+      "eval_mode": "conservative",
+      "inputs": "v1.2.4 (predictions reused; DOI-suffix fix eacc9af not re-run)",
+      "reproduced_v1_2_4": true,
+      "v1_2_4": {
+        "detection_rate": 0.8469055374592834,
+        "false_positive_rate": 0.5427435387673957,
+        "f1_hallucination": 0.7391613361762616,
+        "ece": 0.2875470008952564,
+        "num_entries": 1119,
+        "num_hallucinated": 615,
+        "num_valid": 504
+      },
+      "v1_2_5": {
+        "detection_rate": 0.8444084278768234,
+        "false_positive_rate": 0.544,
+        "f1_hallucination": 0.7390070921985815,
+        "ece": 0.28844225604297224,
+        "num_entries": 1119,
+        "num_hallucinated": 618,
+        "num_valid": 501
+      }
+    },
+    "llm_openrouter_qwen_max_dev_public": {
+      "split": "dev_public",
+      "predictions": "results/new_models/qwen_max.jsonl",
+      "eval_mode": "conservative",
+      "inputs": "v1.2.4 (predictions reused; DOI-suffix fix eacc9af not re-run)",
+      "reproduced_v1_2_4": true,
+      "v1_2_4": {
+        "detection_rate": 0.848780487804878,
+        "false_positive_rate": 0.558648111332008,
+        "f1_hallucination": 0.7362482369534556,
+        "ece": 0.29262075134168286,
+        "num_entries": 1119,
+        "num_hallucinated": 615,
+        "num_valid": 504
+      },
+      "v1_2_5": {
+        "detection_rate": 0.8462783171521036,
+        "false_positive_rate": 0.56,
+        "f1_hallucination": 0.7361013370865588,
+        "ece": 0.293515205724508,
+        "num_entries": 1119,
+        "num_hallucinated": 618,
+        "num_valid": 501
+      }
+    },
+    "llm_openrouter_qwen_max_test_public": {
+      "split": "test_public",
+      "predictions": "results/llm_openrouter_qwen_max_test_public_predictions.jsonl",
+      "eval_mode": "conservative",
+      "inputs": "v1.2.4 (predictions reused; DOI-suffix fix eacc9af not re-run)",
+      "reproduced_v1_2_4": true,
+      "v1_2_4": {
+        "detection_rate": 0.9179389312977099,
+        "false_positive_rate": 0.6384364820846905,
+        "f1_hallucination": 0.8009991673605329,
+        "ece": 0.24441636582430923,
+        "num_entries": 831,
+        "num_hallucinated": 524,
+        "num_valid": 307
+      },
+      "v1_2_5": {
+        "detection_rate": 0.9144486692015209,
+        "false_positive_rate": 0.6454849498327759,
+        "f1_hallucination": 0.8016666666666667,
+        "ece": 0.24521212121212116,
+        "num_entries": 825,
+        "num_hallucinated": 526,
+        "num_valid": 299
+      }
+    },
+    "llm_openrouter_qwen_test_public": {
+      "split": "test_public",
+      "predictions": "results/llm_openrouter_qwen_test_public_predictions.jsonl",
+      "eval_mode": "conservative",
+      "inputs": "v1.2.4 (predictions reused; DOI-suffix fix eacc9af not re-run)",
+      "reproduced_v1_2_4": true,
+      "v1_2_4": {
+        "detection_rate": 0.9024856596558317,
+        "false_positive_rate": 0.6221498371335505,
+        "f1_hallucination": 0.7959527824620573,
+        "ece": 0.24900000000000114,
+        "num_entries": 831,
+        "num_hallucinated": 524,
+        "num_valid": 307
+      },
+      "v1_2_5": {
+        "detection_rate": 0.900952380952381,
+        "false_positive_rate": 0.6254180602006689,
+        "f1_hallucination": 0.7983122362869197,
+        "ece": 0.24740291262135916,
+        "num_entries": 825,
+        "num_hallucinated": 526,
+        "num_valid": 299
+      }
+    },
+    "llm_tool_augmented_dev_public": {
+      "split": "dev_public",
+      "predictions": "data/v1.2/baseline_results/llm_tool_augmented_dev_public.jsonl",
+      "eval_mode": "conservative",
+      "inputs": "v1.2.4 (predictions reused; DOI-suffix fix eacc9af not re-run)",
+      "reproduced_v1_2_4": true,
+      "v1_2_4": {
+        "detection_rate": 0.8348134991119005,
+        "false_positive_rate": 0.14465408805031446,
+        "f1_hallucination": 0.8529945553539019,
+        "ece": 0.07924999999999896,
+        "num_entries": 1119,
+        "num_hallucinated": 615,
+        "num_valid": 504
+      },
+      "v1_2_5": {
+        "detection_rate": 0.831858407079646,
+        "false_positive_rate": 0.14526315789473684,
+        "f1_hallucination": 0.8514492753623188,
+        "ece": 0.08117307692307693,
+        "num_entries": 1119,
+        "num_hallucinated": 618,
+        "num_valid": 501
+      }
+    },
+    "llm_tool_augmented_test_public": {
+      "split": "test_public",
+      "predictions": "results/llm_tool_augmented_test_public_predictions.jsonl",
+      "eval_mode": "conservative",
+      "inputs": "v1.2.4 (predictions reused; DOI-suffix fix eacc9af not re-run)",
+      "reproduced_v1_2_4": true,
+      "v1_2_4": {
+        "detection_rate": 0.8549618320610687,
+        "false_positive_rate": 0.250814332247557,
+        "f1_hallucination": 0.8541468064823642,
+        "ece": 0.09072202166064933,
+        "num_entries": 831,
+        "num_hallucinated": 524,
+        "num_valid": 307
+      },
+      "v1_2_5": {
+        "detection_rate": 0.8536121673003803,
+        "false_positive_rate": 0.2508361204013378,
+        "f1_hallucination": 0.8552380952380952,
+        "ece": 0.09271515151515149,
+        "num_entries": 825,
+        "num_hallucinated": 526,
+        "num_valid": 299
+      }
+    },
+    "cascade_gpt51/gpt51_dev_public:conservative": {
+      "split": "dev_public",
+      "predictions": "results/cascade_gpt51/gpt51_dev_public_preds.jsonl",
+      "eval_mode": "conservative",
+      "inputs": "v1.2.4 (predictions reused; DOI-suffix fix eacc9af not re-run)",
+      "reproduced_v1_2_4": true,
+      "v1_2_4": {
+        "detection_rate": 0.9739837398373984,
+        "false_positive_rate": 0.021825396825396824,
+        "f1_hallucination": 0.9779591836734695,
+        "ece": 0.09050044682752469,
+        "num_entries": 1119,
+        "num_hallucinated": 615,
+        "num_valid": 504
+      },
+      "v1_2_5": {
+        "detection_rate": 0.9724919093851133,
+        "false_positive_rate": 0.017964071856287425,
+        "f1_hallucination": 0.9788273615635179,
+        "ece": 0.0878194816800715,
+        "num_entries": 1119,
+        "num_hallucinated": 618,
+        "num_valid": 501
+      }
+    },
+    "cascade_gpt51/gpt51_dev_public:aggressive": {
+      "split": "dev_public",
+      "predictions": "results/cascade_gpt51/gpt51_dev_public_preds.jsonl",
+      "eval_mode": "aggressive",
+      "inputs": "v1.2.4 (predictions reused; DOI-suffix fix eacc9af not re-run)",
+      "reproduced_v1_2_4": true,
+      "v1_2_4": {
+        "detection_rate": 0.9739837398373984,
+        "false_positive_rate": 0.021825396825396824,
+        "f1_hallucination": 0.9779591836734695,
+        "ece": 0.09050044682752469,
+        "num_entries": 1119,
+        "num_hallucinated": 615,
+        "num_valid": 504
+      },
+      "v1_2_5": {
+        "detection_rate": 0.9724919093851133,
+        "false_positive_rate": 0.017964071856287425,
+        "f1_hallucination": 0.9788273615635179,
+        "ece": 0.0878194816800715,
+        "num_entries": 1119,
+        "num_hallucinated": 618,
+        "num_valid": 501
+      }
+    },
+    "cascade_gpt51/gpt51_stress_test:conservative": {
+      "split": "stress_test",
+      "predictions": "results/cascade_gpt51/gpt51_stress_test_preds.jsonl",
+      "eval_mode": "conservative",
+      "inputs": "v1.2.4 (predictions reused; DOI-suffix fix eacc9af not re-run)",
+      "reproduced_v1_2_4": true,
+      "v1_2_4": {
+        "detection_rate": 0.8512396694214877,
+        "false_positive_rate": null,
+        "f1_hallucination": 0.9196428571428572,
+        "ece": 0.11553719008264463,
+        "num_entries": 121,
+        "num_hallucinated": 121,
+        "num_valid": 0
+      },
+      "v1_2_5": {
+        "detection_rate": 0.865546218487395,
+        "false_positive_rate": 0.0,
+        "f1_hallucination": 0.927927927927928,
+        "ece": 0.09900826446280986,
+        "num_entries": 121,
+        "num_hallucinated": 119,
+        "num_valid": 2
+      }
+    },
+    "cascade_gpt51/gpt51_stress_test:aggressive": {
+      "split": "stress_test",
+      "predictions": "results/cascade_gpt51/gpt51_stress_test_preds.jsonl",
+      "eval_mode": "aggressive",
+      "inputs": "v1.2.4 (predictions reused; DOI-suffix fix eacc9af not re-run)",
+      "reproduced_v1_2_4": true,
+      "v1_2_4": {
+        "detection_rate": 0.8512396694214877,
+        "false_positive_rate": null,
+        "f1_hallucination": 0.9196428571428572,
+        "ece": 0.11553719008264463,
+        "num_entries": 121,
+        "num_hallucinated": 121,
+        "num_valid": 0
+      },
+      "v1_2_5": {
+        "detection_rate": 0.865546218487395,
+        "false_positive_rate": 0.0,
+        "f1_hallucination": 0.927927927927928,
+        "ece": 0.09900826446280986,
+        "num_entries": 121,
+        "num_hallucinated": 119,
+        "num_valid": 2
+      }
+    },
+    "cascade_gpt51/gpt51_test_public:conservative": {
+      "split": "test_public",
+      "predictions": "results/cascade_gpt51/gpt51_test_public_preds.jsonl",
+      "eval_mode": "conservative",
+      "inputs": "v1.2.4 (predictions reused; DOI-suffix fix eacc9af not re-run)",
+      "reproduced_v1_2_4": true,
+      "v1_2_4": {
+        "detection_rate": 0.9656488549618321,
+        "false_positive_rate": 0.04234527687296417,
+        "f1_hallucination": 0.9702780441035475,
+        "ece": 0.08231046931407934,
+        "num_entries": 831,
+        "num_hallucinated": 524,
+        "num_valid": 307
+      },
+      "v1_2_5": {
+        "detection_rate": 0.9657794676806084,
+        "false_positive_rate": 0.033444816053511704,
+        "f1_hallucination": 0.9731800766283526,
+        "ece": 0.07856969696969697,
+        "num_entries": 825,
+        "num_hallucinated": 526,
+        "num_valid": 299
+      }
+    },
+    "cascade_gpt51/gpt51_test_public:aggressive": {
+      "split": "test_public",
+      "predictions": "results/cascade_gpt51/gpt51_test_public_preds.jsonl",
+      "eval_mode": "aggressive",
+      "inputs": "v1.2.4 (predictions reused; DOI-suffix fix eacc9af not re-run)",
+      "reproduced_v1_2_4": true,
+      "v1_2_4": {
+        "detection_rate": 0.9656488549618321,
+        "false_positive_rate": 0.04234527687296417,
+        "f1_hallucination": 0.9702780441035475,
+        "ece": 0.08231046931407934,
+        "num_entries": 831,
+        "num_hallucinated": 524,
+        "num_valid": 307
+      },
+      "v1_2_5": {
+        "detection_rate": 0.9657794676806084,
+        "false_positive_rate": 0.033444816053511704,
+        "f1_hallucination": 0.9731800766283526,
+        "ece": 0.07856969696969697,
+        "num_entries": 825,
+        "num_hallucinated": 526,
+        "num_valid": 299
+      }
+    },
+    "cascade_gpt54/gpt54_dev_public:conservative": {
+      "split": "dev_public",
+      "predictions": "results/cascade_gpt54/gpt54_dev_public_preds.jsonl",
+      "eval_mode": "conservative",
+      "inputs": "v1.2.4 (predictions reused; DOI-suffix fix eacc9af not re-run)",
+      "reproduced_v1_2_4": true,
+      "v1_2_4": {
+        "detection_rate": 0.98989898989899,
+        "false_positive_rate": 0.021825396825396824,
+        "f1_hallucination": 0.9857502095557418,
+        "ece": 0.08812386156648506,
+        "num_entries": 1119,
+        "num_hallucinated": 615,
+        "num_valid": 504
+      },
+      "v1_2_5": {
+        "detection_rate": 0.9882747068676717,
+        "false_positive_rate": 0.017964071856287425,
+        "f1_hallucination": 0.9866220735785953,
+        "ece": 0.08648451730418945,
+        "num_entries": 1119,
+        "num_hallucinated": 618,
+        "num_valid": 501
+      }
+    },
+    "cascade_gpt54/gpt54_dev_public:aggressive": {
+      "split": "dev_public",
+      "predictions": "results/cascade_gpt54/gpt54_dev_public_preds.jsonl",
+      "eval_mode": "aggressive",
+      "inputs": "v1.2.4 (predictions reused; DOI-suffix fix eacc9af not re-run)",
+      "reproduced_v1_2_4": true,
+      "v1_2_4": {
+        "detection_rate": 0.9902439024390244,
+        "false_positive_rate": 0.021825396825396824,
+        "f1_hallucination": 0.9862348178137651,
+        "ece": 0.09423592493297642,
+        "num_entries": 1119,
+        "num_hallucinated": 615,
+        "num_valid": 504
+      },
+      "v1_2_5": {
+        "detection_rate": 0.988673139158576,
+        "false_positive_rate": 0.017964071856287425,
+        "f1_hallucination": 0.987075928917609,
+        "ece": 0.09307417336907955,
+        "num_entries": 1119,
+        "num_hallucinated": 618,
+        "num_valid": 501
+      }
+    },
+    "cascade_gpt54/gpt54_stress_test:conservative": {
+      "split": "stress_test",
+      "predictions": "results/cascade_gpt54/gpt54_stress_test_preds.jsonl",
+      "eval_mode": "conservative",
+      "inputs": "v1.2.4 (predictions reused; DOI-suffix fix eacc9af not re-run)",
+      "reproduced_v1_2_4": true,
+      "v1_2_4": {
+        "detection_rate": 0.9669421487603306,
+        "false_positive_rate": null,
+        "f1_hallucination": 0.9831932773109243,
+        "ece": 0.024710743801652824,
+        "num_entries": 121,
+        "num_hallucinated": 121,
+        "num_valid": 0
+      },
+      "v1_2_5": {
+        "detection_rate": 0.9831932773109243,
+        "false_positive_rate": 0.0,
+        "f1_hallucination": 0.9915254237288135,
+        "ece": 0.0247107438016529,
+        "num_entries": 121,
+        "num_hallucinated": 119,
+        "num_valid": 2
+      }
+    },
+    "cascade_gpt54/gpt54_stress_test:aggressive": {
+      "split": "stress_test",
+      "predictions": "results/cascade_gpt54/gpt54_stress_test_preds.jsonl",
+      "eval_mode": "aggressive",
+      "inputs": "v1.2.4 (predictions reused; DOI-suffix fix eacc9af not re-run)",
+      "reproduced_v1_2_4": true,
+      "v1_2_4": {
+        "detection_rate": 0.9669421487603306,
+        "false_positive_rate": null,
+        "f1_hallucination": 0.9831932773109243,
+        "ece": 0.024710743801652824,
+        "num_entries": 121,
+        "num_hallucinated": 121,
+        "num_valid": 0
+      },
+      "v1_2_5": {
+        "detection_rate": 0.9831932773109243,
+        "false_positive_rate": 0.0,
+        "f1_hallucination": 0.9915254237288135,
+        "ece": 0.0247107438016529,
+        "num_entries": 121,
+        "num_hallucinated": 119,
+        "num_valid": 2
+      }
+    },
+    "cascade_gpt54/gpt54_test_public:conservative": {
+      "split": "test_public",
+      "predictions": "results/cascade_gpt54/gpt54_test_public_preds.jsonl",
+      "eval_mode": "conservative",
+      "inputs": "v1.2.4 (predictions reused; DOI-suffix fix eacc9af not re-run)",
+      "reproduced_v1_2_4": true,
+      "v1_2_4": {
+        "detection_rate": 0.98828125,
+        "false_positive_rate": 0.026143790849673203,
+        "f1_hallucination": 0.98635477582846,
+        "ece": 0.07514669926650329,
+        "num_entries": 831,
+        "num_hallucinated": 524,
+        "num_valid": 307
+      },
+      "v1_2_5": {
+        "detection_rate": 0.9883040935672515,
+        "false_positive_rate": 0.020066889632107024,
+        "f1_hallucination": 0.9883040935672515,
+        "ece": 0.07562807881773395,
+        "num_entries": 825,
+        "num_hallucinated": 526,
+        "num_valid": 299
+      }
+    },
+    "cascade_gpt54/gpt54_test_public:aggressive": {
+      "split": "test_public",
+      "predictions": "results/cascade_gpt54/gpt54_test_public_preds.jsonl",
+      "eval_mode": "aggressive",
+      "inputs": "v1.2.4 (predictions reused; DOI-suffix fix eacc9af not re-run)",
+      "reproduced_v1_2_4": true,
+      "v1_2_4": {
+        "detection_rate": 0.9885496183206107,
+        "false_positive_rate": 0.029315960912052116,
+        "f1_hallucination": 0.9857278782112274,
+        "ece": 0.0796389891696747,
+        "num_entries": 831,
+        "num_hallucinated": 524,
+        "num_valid": 307
+      },
+      "v1_2_5": {
+        "detection_rate": 0.9885931558935361,
+        "false_positive_rate": 0.020066889632107024,
+        "f1_hallucination": 0.9885931558935361,
+        "ece": 0.08152727272727271,
+        "num_entries": 825,
+        "num_hallucinated": 526,
+        "num_valid": 299
+      }
+    },
+    "cascade_gpt54_shared/gpt54_dev_public:conservative": {
+      "split": "dev_public",
+      "predictions": "results/cascade_gpt54_shared/gpt54_dev_public_preds.jsonl",
+      "eval_mode": "conservative",
+      "inputs": "v1.2.4 (predictions reused; DOI-suffix fix eacc9af not re-run)",
+      "reproduced_v1_2_4": true,
+      "v1_2_4": {
+        "detection_rate": 0.9898819561551433,
+        "false_positive_rate": 0.021825396825396824,
+        "f1_hallucination": 0.9857262804366079,
+        "ece": 0.08807657247037431,
+        "num_entries": 1119,
+        "num_hallucinated": 615,
+        "num_valid": 504
+      },
+      "v1_2_5": {
+        "detection_rate": 0.988255033557047,
+        "false_positive_rate": 0.017964071856287425,
+        "f1_hallucination": 0.9865996649916249,
+        "ece": 0.08632634457611672,
+        "num_entries": 1119,
+        "num_hallucinated": 618,
+        "num_valid": 501
+      }
+    },
+    "cascade_gpt54_shared/gpt54_dev_public:aggressive": {
+      "split": "dev_public",
+      "predictions": "results/cascade_gpt54_shared/gpt54_dev_public_preds.jsonl",
+      "eval_mode": "aggressive",
+      "inputs": "v1.2.4 (predictions reused; DOI-suffix fix eacc9af not re-run)",
+      "reproduced_v1_2_4": true,
+      "v1_2_4": {
+        "detection_rate": 0.9902439024390244,
+        "false_positive_rate": 0.021825396825396824,
+        "f1_hallucination": 0.9862348178137651,
+        "ece": 0.09445933869526417,
+        "num_entries": 1119,
+        "num_hallucinated": 615,
+        "num_valid": 504
+      },
+      "v1_2_5": {
+        "detection_rate": 0.988673139158576,
+        "false_positive_rate": 0.017964071856287425,
+        "f1_hallucination": 0.987075928917609,
+        "ece": 0.09324396782841828,
+        "num_entries": 1119,
+        "num_hallucinated": 618,
+        "num_valid": 501
+      }
+    },
+    "cascade_gpt54_shared/gpt54_stress_test:conservative": {
+      "split": "stress_test",
+      "predictions": "results/cascade_gpt54_shared/gpt54_stress_test_preds.jsonl",
+      "eval_mode": "conservative",
+      "inputs": "v1.2.4 (predictions reused; DOI-suffix fix eacc9af not re-run)",
+      "reproduced_v1_2_4": true,
+      "v1_2_4": {
+        "detection_rate": 0.9669421487603306,
+        "false_positive_rate": null,
+        "f1_hallucination": 0.9831932773109243,
+        "ece": 0.028429752066115616,
+        "num_entries": 121,
+        "num_hallucinated": 121,
+        "num_valid": 0
+      },
+      "v1_2_5": {
+        "detection_rate": 0.9831932773109243,
+        "false_positive_rate": 0.0,
+        "f1_hallucination": 0.9915254237288135,
+        "ece": 0.011900826446281014,
+        "num_entries": 121,
+        "num_hallucinated": 119,
+        "num_valid": 2
+      }
+    },
+    "cascade_gpt54_shared/gpt54_stress_test:aggressive": {
+      "split": "stress_test",
+      "predictions": "results/cascade_gpt54_shared/gpt54_stress_test_preds.jsonl",
+      "eval_mode": "aggressive",
+      "inputs": "v1.2.4 (predictions reused; DOI-suffix fix eacc9af not re-run)",
+      "reproduced_v1_2_4": true,
+      "v1_2_4": {
+        "detection_rate": 0.9669421487603306,
+        "false_positive_rate": null,
+        "f1_hallucination": 0.9831932773109243,
+        "ece": 0.028429752066115616,
+        "num_entries": 121,
+        "num_hallucinated": 121,
+        "num_valid": 0
+      },
+      "v1_2_5": {
+        "detection_rate": 0.9831932773109243,
+        "false_positive_rate": 0.0,
+        "f1_hallucination": 0.9915254237288135,
+        "ece": 0.011900826446281014,
+        "num_entries": 121,
+        "num_hallucinated": 119,
+        "num_valid": 2
+      }
+    },
+    "cascade_gpt54_shared/gpt54_test_public:conservative": {
+      "split": "test_public",
+      "predictions": "results/cascade_gpt54_shared/gpt54_test_public_preds.jsonl",
+      "eval_mode": "conservative",
+      "inputs": "v1.2.4 (predictions reused; DOI-suffix fix eacc9af not re-run)",
+      "reproduced_v1_2_4": true,
+      "v1_2_4": {
+        "detection_rate": 0.990234375,
+        "false_positive_rate": 0.0392156862745098,
+        "f1_hallucination": 0.9835111542192047,
+        "ece": 0.07072127139364265,
+        "num_entries": 831,
+        "num_hallucinated": 524,
+        "num_valid": 307
+      },
+      "v1_2_5": {
+        "detection_rate": 0.9902534113060428,
+        "false_positive_rate": 0.033444816053511704,
+        "f1_hallucination": 0.98545101842871,
+        "ece": 0.07141625615763544,
+        "num_entries": 825,
+        "num_hallucinated": 526,
+        "num_valid": 299
+      }
+    },
+    "cascade_gpt54_shared/gpt54_test_public:aggressive": {
+      "split": "test_public",
+      "predictions": "results/cascade_gpt54_shared/gpt54_test_public_preds.jsonl",
+      "eval_mode": "aggressive",
+      "inputs": "v1.2.4 (predictions reused; DOI-suffix fix eacc9af not re-run)",
+      "reproduced_v1_2_4": true,
+      "v1_2_4": {
+        "detection_rate": 0.9904580152671756,
+        "false_positive_rate": 0.04234527687296417,
+        "f1_hallucination": 0.9829545454545454,
+        "ece": 0.07528279181708748,
+        "num_entries": 831,
+        "num_hallucinated": 524,
+        "num_valid": 307
+      },
+      "v1_2_5": {
+        "detection_rate": 0.9904942965779467,
+        "false_positive_rate": 0.033444816053511704,
+        "f1_hallucination": 0.9858088930936613,
+        "ece": 0.07706666666666667,
+        "num_entries": 825,
+        "num_hallucinated": 526,
+        "num_valid": 299
+      }
+    },
+    "cascade_sonnet46_shared/sonnet46_dev_public:conservative": {
+      "split": "dev_public",
+      "predictions": "results/cascade_sonnet46_shared/sonnet46_dev_public_preds.jsonl",
+      "eval_mode": "conservative",
+      "inputs": "v1.2.4 (predictions reused; DOI-suffix fix eacc9af not re-run)",
+      "reproduced_v1_2_4": true,
+      "v1_2_4": {
+        "detection_rate": 0.9887005649717514,
+        "false_positive_rate": 0.01984126984126984,
+        "f1_hallucination": 0.9849906191369605,
+        "ece": 0.09293719806763329,
+        "num_entries": 1119,
+        "num_hallucinated": 615,
+        "num_valid": 504
+      },
+      "v1_2_5": {
+        "detection_rate": 0.9868913857677902,
+        "false_positive_rate": 0.015968063872255488,
+        "f1_hallucination": 0.9859681945743686,
+        "ece": 0.09390338164251213,
+        "num_entries": 1119,
+        "num_hallucinated": 618,
+        "num_valid": 501
+      }
+    },
+    "cascade_sonnet46_shared/sonnet46_dev_public:aggressive": {
+      "split": "dev_public",
+      "predictions": "results/cascade_sonnet46_shared/sonnet46_dev_public_preds.jsonl",
+      "eval_mode": "aggressive",
+      "inputs": "v1.2.4 (predictions reused; DOI-suffix fix eacc9af not re-run)",
+      "reproduced_v1_2_4": true,
+      "v1_2_4": {
+        "detection_rate": 0.9902439024390244,
+        "false_positive_rate": 0.01984126984126984,
+        "f1_hallucination": 0.9870340356564019,
+        "ece": 0.11974084003574673,
+        "num_entries": 1119,
+        "num_hallucinated": 615,
+        "num_valid": 504
+      },
+      "v1_2_5": {
+        "detection_rate": 0.988673139158576,
+        "false_positive_rate": 0.015968063872255488,
+        "f1_hallucination": 0.9878738884397736,
+        "ece": 0.12063449508489725,
+        "num_entries": 1119,
+        "num_hallucinated": 618,
+        "num_valid": 501
+      }
+    },
+    "cascade_sonnet46_shared/sonnet46_stress_test:conservative": {
+      "split": "stress_test",
+      "predictions": "results/cascade_sonnet46_shared/sonnet46_stress_test_preds.jsonl",
+      "eval_mode": "conservative",
+      "inputs": "v1.2.4 (predictions reused; DOI-suffix fix eacc9af not re-run)",
+      "reproduced_v1_2_4": true,
+      "v1_2_4": {
+        "detection_rate": 0.9658119658119658,
+        "false_positive_rate": null,
+        "f1_hallucination": 0.9826086956521739,
+        "ece": 0.032564102564102554,
+        "num_entries": 121,
+        "num_hallucinated": 121,
+        "num_valid": 0
+      },
+      "v1_2_5": {
+        "detection_rate": 0.9826086956521739,
+        "false_positive_rate": 0.0,
+        "f1_hallucination": 0.9912280701754386,
+        "ece": 0.032564102564102554,
+        "num_entries": 121,
+        "num_hallucinated": 119,
+        "num_valid": 2
+      }
+    },
+    "cascade_sonnet46_shared/sonnet46_stress_test:aggressive": {
+      "split": "stress_test",
+      "predictions": "results/cascade_sonnet46_shared/sonnet46_stress_test_preds.jsonl",
+      "eval_mode": "aggressive",
+      "inputs": "v1.2.4 (predictions reused; DOI-suffix fix eacc9af not re-run)",
+      "reproduced_v1_2_4": true,
+      "v1_2_4": {
+        "detection_rate": 0.9669421487603306,
+        "false_positive_rate": null,
+        "f1_hallucination": 0.9831932773109243,
+        "ece": 0.02652892561983472,
+        "num_entries": 121,
+        "num_hallucinated": 121,
+        "num_valid": 0
+      },
+      "v1_2_5": {
+        "detection_rate": 0.9831932773109243,
+        "false_positive_rate": 0.0,
+        "f1_hallucination": 0.9915254237288135,
+        "ece": 0.04305785123966943,
+        "num_entries": 121,
+        "num_hallucinated": 119,
+        "num_valid": 2
+      }
+    },
+    "cascade_sonnet46_shared/sonnet46_test_public:conservative": {
+      "split": "test_public",
+      "predictions": "results/cascade_sonnet46_shared/sonnet46_test_public_preds.jsonl",
+      "eval_mode": "conservative",
+      "inputs": "v1.2.4 (predictions reused; DOI-suffix fix eacc9af not re-run)",
+      "reproduced_v1_2_4": true,
+      "v1_2_4": {
+        "detection_rate": 0.9891067538126361,
+        "false_positive_rate": 0.04234527687296417,
+        "f1_hallucination": 0.980561555075594,
+        "ece": 0.07669712793733625,
+        "num_entries": 831,
+        "num_hallucinated": 524,
+        "num_valid": 307
+      },
+      "v1_2_5": {
+        "detection_rate": 0.9891540130151844,
+        "false_positive_rate": 0.033444816053511704,
+        "f1_hallucination": 0.9838187702265372,
+        "ece": 0.08006578947368423,
+        "num_entries": 825,
+        "num_hallucinated": 526,
+        "num_valid": 299
+      }
+    },
+    "cascade_sonnet46_shared/sonnet46_test_public:aggressive": {
+      "split": "test_public",
+      "predictions": "results/cascade_sonnet46_shared/sonnet46_test_public_preds.jsonl",
+      "eval_mode": "aggressive",
+      "inputs": "v1.2.4 (predictions reused; DOI-suffix fix eacc9af not re-run)",
+      "reproduced_v1_2_4": true,
+      "v1_2_4": {
+        "detection_rate": 0.9904580152671756,
+        "false_positive_rate": 0.04234527687296417,
+        "f1_hallucination": 0.9829545454545454,
+        "ece": 0.10787003610108274,
+        "num_entries": 831,
+        "num_hallucinated": 524,
+        "num_valid": 307
+      },
+      "v1_2_5": {
+        "detection_rate": 0.9904942965779467,
+        "false_positive_rate": 0.033444816053511704,
+        "f1_hallucination": 0.9858088930936613,
+        "ece": 0.11120000000000001,
+        "num_entries": 825,
+        "num_hallucinated": 526,
+        "num_valid": 299
+      }
+    }
+  },
+  "refused": []
+}

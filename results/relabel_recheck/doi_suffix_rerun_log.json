@@ -1,0 +1,597 @@
+{
+  "suffix_commit": "eacc9af",
+  "results": {
+    "doi_only_dev_public": {
+      "base_predictions": "results/relabel_recheck/doi_only_dev_public_v1_2_4_inputs_predictions.jsonl",
+      "rerun": "results/relabel_recheck/doi_suffix_reruns/doi_only_dev_public.jsonl",
+      "spliced_predictions": "results/relabel_recheck/doi_suffix_reruns/doi_only_dev_public_spliced.jsonl",
+      "eval_mode": "conservative",
+      "n_rerun": 83,
+      "verdict_changes": 82,
+      "before": {
+        "detection_rate": 0.21359223300970873,
+        "false_positive_rate": 0.043912175648702596,
+        "f1_hallucination": 0.3419689119170984
+      },
+      "after": {
+        "detection_rate": 0.11650485436893204,
+        "false_positive_rate": 0.0,
+        "f1_hallucination": 0.20869565217391306
+      },
+      "per_key": {
+        "02dcaa2e4555": {
+          "before": "HALLUCINATED",
+          "after": "VALID"
+        },
+        "07d69ea24ed9": {
+          "before": "HALLUCINATED",
+          "after": "VALID"
+        },
+        "08ebaa54f666": {
+          "before": "HALLUCINATED",
+          "after": "VALID"
+        },
+        "09d390a6a348": {
+          "before": "HALLUCINATED",
+          "after": "VALID"
+        },
+        "0a3f7b6a9905": {
+          "before": "HALLUCINATED",
+          "after": "VALID"
+        },
+        "0ad0a4545b13": {
+          "before": "HALLUCINATED",
+          "after": "VALID"
+        },
+        "0f265de753bd": {
+          "before": "HALLUCINATED",
+          "after": "VALID"
+        },
+        "1c484516bb04": {
+          "before": "HALLUCINATED",
+          "after": "VALID"
+        },
+        "1cc022db3273": {
+          "before": "HALLUCINATED",
+          "after": "VALID"
+        },
+        "207663616a60": {
+          "before": "HALLUCINATED",
+          "after": "VALID"
+        },
+        "25b91c1376ed": {
+          "before": "HALLUCINATED",
+          "after": "VALID"
+        },
+        "26d2ae9ea0e6": {
+          "before": "HALLUCINATED",
+          "after": "VALID"
+        },
+        "2c5f8471a545": {
+          "before": "HALLUCINATED",
+          "after": "VALID"
+        },
+        "306b141e4e85": {
+          "before": "HALLUCINATED",
+          "after": "VALID"
+        },
+        "335cad9423a8": {
+          "before": "HALLUCINATED",
+          "after": "VALID"
+        },
+        "348d177caec3": {
+          "before": "HALLUCINATED",
+          "after": "VALID"
+        },
+        "3d81b80646ff": {
+          "before": "HALLUCINATED",
+          "after": "VALID"
+        },
+        "40af5f0eace4": {
+          "before": "HALLUCINATED",
+          "after": "VALID"
+        },
+        "4407d6409a44": {
+          "before": "HALLUCINATED",
+          "after": "VALID"
+        },
+        "46bb7c407957": {
+          "before": "HALLUCINATED",
+          "after": "VALID"
+        },
+        "49ea31cdd8c6": {
+          "before": "HALLUCINATED",
+          "after": "VALID"
+        },
+        "51bc6a1e570f": {
+          "before": "HALLUCINATED",
+          "after": "VALID"
+        },
+        "55248d48974d": {
+          "before": "HALLUCINATED",
+          "after": "VALID"
+        },
+        "698e59351803": {
+          "before": "HALLUCINATED",
+          "after": "VALID"
+        },
+        "6ce5917cf1a3": {
+          "before": "HALLUCINATED",
+          "after": "VALID"
+        },
+        "758c627287f2": {
+          "before": "HALLUCINATED",
+          "after": "VALID"
+        },
+        "79b66a9f7f38": {
+          "before": "HALLUCINATED",
+          "after": "VALID"
+        },
+        "7da0d6fcd8f5": {
+          "before": "HALLUCINATED",
+          "after": "VALID"
+        },
+        "87a25c18d319": {
+          "before": "HALLUCINATED",
+          "after": "VALID"
+        },
+        "880d5f98a1e5": {
+          "before": "HALLUCINATED",
+          "after": "VALID"
+        },
+        "883321e7088f": {
+          "before": "HALLUCINATED",
+          "after": "VALID"
+        },
+        "8c43969b72ce": {
+          "before": "HALLUCINATED",
+          "after": "VALID"
+        },
+        "8d22fd960054": {
+          "before": "HALLUCINATED",
+          "after": "VALID"
+        },
+        "91ff2674f171": {
+          "before": "HALLUCINATED",
+          "after": "VALID"
+        },
+        "a0527a7c2d1b": {
+          "before": "HALLUCINATED",
+          "after": "VALID"
+        },
+        "a1d8a34bfd70": {
+          "before": "HALLUCINATED",
+          "after": "VALID"
+        },
+        "a6d85a5ff63b": {
+          "before": "HALLUCINATED",
+          "after": "VALID"
+        },
+        "ac0393b63e90": {
+          "before": "HALLUCINATED",
+          "after": "VALID"
+        },
+        "adf6c58262bf": {
+          "before": "HALLUCINATED",
+          "after": "VALID"
+        },
+        "ae1a83a6ba02": {
+          "before": "HALLUCINATED",
+          "after": "VALID"
+        },
+        "b04a45dee19a": {
+          "before": "HALLUCINATED",
+          "after": "VALID"
+        },
+        "b06510c2fb42": {
+          "before": "HALLUCINATED",
+          "after": "VALID"
+        },
+        "b0a37fb19f6d": {
+          "before": "HALLUCINATED",
+          "after": "VALID"
+        },
+        "b2e955860c08": {
+          "before": "HALLUCINATED",
+          "after": "HALLUCINATED"
+        },
+        "b65a90c68b6a": {
+          "before": "HALLUCINATED",
+          "after": "VALID"
+        },
+        "b6dfd7844352": {
+          "before": "HALLUCINATED",
+          "after": "VALID"
+        },
+        "b875e54ef51c": {
+          "before": "HALLUCINATED",
+          "after": "VALID"
+        },
+        "bd3eeeb03bae": {
+          "before": "HALLUCINATED",
+          "after": "VALID"
+        },
+        "bf86e7a74b72": {
+          "before": "HALLUCINATED",
+          "after": "VALID"
+        },
+        "c4a3171625da": {
+          "before": "HALLUCINATED",
+          "after": "VALID"
+        },
+        "c90346f3c334": {
+          "before": "HALLUCINATED",
+          "after": "VALID"
+        },
+        "c9b3c57def78": {
+          "before": "HALLUCINATED",
+          "after": "VALID"
+        },
+        "cc3bac858db2": {
+          "before": "HALLUCINATED",
+          "after": "VALID"
+        },
+        "cc8348800b0a": {
+          "before": "HALLUCINATED",
+          "after": "VALID"
+        },
+        "cc8b980940e8": {
+          "before": "HALLUCINATED",
+          "after": "VALID"
+        },
+        "d173a4455c74": {
+          "before": "HALLUCINATED",
+          "after": "VALID"
+        },
+        "d21804b268a8": {
+          "before": "HALLUCINATED",
+          "after": "VALID"
+        },
+        "d28797194fbf": {
+          "before": "HALLUCINATED",
+          "after": "VALID"
+        },
+        "d52773275761": {
+          "before": "HALLUCINATED",
+          "after": "VALID"
+        },
+        "d97626255e19": {
+          "before": "HALLUCINATED",
+          "after": "VALID"
+        },
+        "da60d12f6e85": {
+          "before": "HALLUCINATED",
+          "after": "VALID"
+        },
+        "da7fc378590a": {
+          "before": "HALLUCINATED",
+          "after": "VALID"
+        },
+        "dbed338305d3": {
+          "before": "HALLUCINATED",
+          "after": "VALID"
+        },
+        "dc6a4e41636e": {
+          "before": "HALLUCINATED",
+          "after": "VALID"
+        },
+        "dcce861557e1": {
+          "before": "HALLUCINATED",
+          "after": "VALID"
+        },
+        "e24b9a39c5d9": {
+          "before": "HALLUCINATED",
+          "after": "VALID"
+        },
+        "e2dbb15a6e90": {
+          "before": "HALLUCINATED",
+          "after": "VALID"
+        },
+        "e37472747d60": {
+          "before": "HALLUCINATED",
+          "after": "VALID"
+        },
+        "e59d381d98e6": {
+          "before": "HALLUCINATED",
+          "after": "VALID"
+        },
+        "e83d06d96f8e": {
+          "before": "HALLUCINATED",
+          "after": "VALID"
+        },
+        "e9d375e1a7e5": {
+          "before": "HALLUCINATED",
+          "after": "VALID"
+        },
+        "e9fdba573807": {
+          "before": "HALLUCINATED",
+          "after": "VALID"
+        },
+        "ea6137655688": {
+          "before": "HALLUCINATED",
+          "after": "VALID"
+        },
+        "eb130616b4f8": {
+          "before": "HALLUCINATED",
+          "after": "VALID"
+        },
+        "ef96f9678f53": {
+          "before": "HALLUCINATED",
+          "after": "VALID"
+        },
+        "f05f8aa59e5d": {
+          "before": "HALLUCINATED",
+          "after": "VALID"
+        },
+        "f46de8aedf16": {
+          "before": "HALLUCINATED",
+          "after": "VALID"
+        },
+        "f5eac0c12735": {
+          "before": "HALLUCINATED",
+          "after": "VALID"
+        },
+        "f7f108b67b2c": {
+          "before": "HALLUCINATED",
+          "after": "VALID"
+        },
+        "f8153d49f6b9": {
+          "before": "HALLUCINATED",
+          "after": "VALID"
+        },
+        "f936e9cd2a57": {
+          "before": "HALLUCINATED",
+          "after": "VALID"
+        },
+        "fb55c73d64e0": {
+          "before": "HALLUCINATED",
+          "after": "VALID"
+        },
+        "fff0caff66df": {
+          "before": "HALLUCINATED",
+          "after": "VALID"
+        }
+      }
+    },
+    "doi_only_test_public": {
+      "base_predictions": "results/relabel_recheck/doi_only_test_public_v1_2_4_inputs_predictions.jsonl",
+      "rerun": "results/relabel_recheck/doi_suffix_reruns/doi_only_test_public.jsonl",
+      "spliced_predictions": "results/relabel_recheck/doi_suffix_reruns/doi_only_test_public_spliced.jsonl",
+      "eval_mode": "conservative",
+      "n_rerun": 55,
+      "verdict_changes": 54,
+      "before": {
+        "detection_rate": 0.188212927756654,
+        "false_positive_rate": 0.043478260869565216,
+        "f1_hallucination": 0.3103448275862069
+      },
+      "after": {
+        "detection_rate": 0.11026615969581749,
+        "false_positive_rate": 0.0,
+        "f1_hallucination": 0.1986301369863014
+      },
+      "per_key": {
+        "0400a5cc0574": {
+          "before": "HALLUCINATED",
+          "after": "VALID"
+        },
+        "0aa27bba8814": {
+          "before": "HALLUCINATED",
+          "after": "VALID"
+        },
+        "0cb3d1006ca1": {
+          "before": "HALLUCINATED",
+          "after": "VALID"
+        },
+        "0e9d5f62fd31": {
+          "before": "HALLUCINATED",
+          "after": "VALID"
+        },
+        "2a8639aaa962": {
+          "before": "HALLUCINATED",
+          "after": "VALID"
+        },
+        "36e9c687d931": {
+          "before": "HALLUCINATED",
+          "after": "VALID"
+        },
+        "59a91d89ebf6": {
+          "before": "HALLUCINATED",
+          "after": "VALID"
+        },
+        "72f55675658a": {
+          "before": "HALLUCINATED",
+          "after": "VALID"
+        },
+        "760ad0bc9e7a": {
+          "before": "HALLUCINATED",
+          "after": "VALID"
+        },
+        "76575ee28c63": {
+          "before": "HALLUCINATED",
+          "after": "VALID"
+        },
+        "7eadf7fd6991": {
+          "before": "HALLUCINATED",
+          "after": "VALID"
+        },
+        "7ee3e320c1ab": {
+          "before": "HALLUCINATED",
+          "after": "VALID"
+        },
+        "91ef806cacba": {
+          "before": "HALLUCINATED",
+          "after": "VALID"
+        },
+        "9948f15525f1": {
+          "before": "HALLUCINATED",
+          "after": "VALID"
+        },
+        "9f685db5c103": {
+          "before": "HALLUCINATED",
+          "after": "VALID"
+        },
+        "a132a5fe8cac": {
+          "before": "HALLUCINATED",
+          "after": "VALID"
+        },
+        "a381a5a70d49": {
+          "before": "HALLUCINATED",
+          "after": "VALID"
+        },
+        "a388839a9235": {
+          "before": "HALLUCINATED",
+          "after": "VALID"
+        },
+        "a3eb1d8fc192": {
+          "before": "HALLUCINATED",
+          "after": "VALID"
+        },
+        "a533aec5c94c": {
+          "before": "HALLUCINATED",
+          "after": "VALID"
+        },
+        "a8af0b91ad08": {
+          "before": "HALLUCINATED",
+          "after": "VALID"
+        },
+        "abe80f1d129a": {
+          "before": "HALLUCINATED",
+          "after": "VALID"
+        },
+        "b70805f7dc90": {
+          "before": "HALLUCINATED",
+          "after": "VALID"
+        },
+        "b89d5e48c44d": {
+          "before": "HALLUCINATED",
+          "after": "VALID"
+        },
+        "b9997d54853b": {
+          "before": "HALLUCINATED",
+          "after": "VALID"
+        },
+        "bea92ce9a99b": {
+          "before": "HALLUCINATED",
+          "after": "VALID"
+        },
+        "c10b9a06aa1b": {
+          "before": "HALLUCINATED",
+          "after": "VALID"
+        },
+        "c210a02c8fc6": {
+          "before": "HALLUCINATED",
+          "after": "VALID"
+        },
+        "c6126ebbdfce": {
+          "before": "HALLUCINATED",
+          "after": "HALLUCINATED"
+        },
+        "c6ec6c9321e8": {
+          "before": "HALLUCINATED",
+          "after": "VALID"
+        },
+        "c867cba23602": {
+          "before": "HALLUCINATED",
+          "after": "VALID"
+        },
+        "c9eb3730e6f6": {
+          "before": "HALLUCINATED",
+          "after": "VALID"
+        },
+        "cb3c903e17db": {
+          "before": "HALLUCINATED",
+          "after": "VALID"
+        },
+        "cd0c8c64160c": {
+          "before": "HALLUCINATED",
+          "after": "VALID"
+        },
+        "d0480d124ef0": {
+          "before": "HALLUCINATED",
+          "after": "VALID"
+        },
+        "d1f15c4f13d0": {
+          "before": "HALLUCINATED",
+          "after": "VALID"
+        },
+        "da1a38d886e3": {
+          "before": "HALLUCINATED",
+          "after": "VALID"
+        },
+        "dae94ac1c507": {
+          "before": "HALLUCINATED",
+          "after": "VALID"
+        },
+        "dcea07e8bbc1": {
+          "before": "HALLUCINATED",
+          "after": "VALID"
+        },
+        "e06c67e54439": {
+          "before": "HALLUCINATED",
+          "after": "VALID"
+        },
+        "e6b3904677e4": {
+          "before": "HALLUCINATED",
+          "after": "VALID"
+        },
+        "e729d705557a": {
+          "before": "HALLUCINATED",
+          "after": "VALID"
+        },
+        "e835ddd85ea6": {
+          "before": "HALLUCINATED",
+          "after": "VALID"
+        },
+        "ea4470612c9a": {
+          "before": "HALLUCINATED",
+          "after": "VALID"
+        },
+        "ea8f22b53d36": {
+          "before": "HALLUCINATED",
+          "after": "VALID"
+        },
+        "eac23e54d2cf": {
+          "before": "HALLUCINATED",
+          "after": "VALID"
+        },
+        "ef9e665113db": {
+          "before": "HALLUCINATED",
+          "after": "VALID"
+        },
+        "f1d3c02da59c": {
+          "before": "HALLUCINATED",
+          "after": "VALID"
+        },
+        "f2d16fb6b7cd": {
+          "before": "HALLUCINATED",
+          "after": "VALID"
+        },
+        "f324a547f55c": {
+          "before": "HALLUCINATED",
+          "after": "VALID"
+        },
+        "f50ca73d1b08": {
+          "before": "HALLUCINATED",
+          "after": "VALID"
+        },
+        "f530e82c6353": {
+          "before": "HALLUCINATED",
+          "after": "VALID"
+        },
+        "f8543f2d83eb": {
+          "before": "HALLUCINATED",
+          "after": "VALID"
+        },
+        "f9903a136c8f": {
+          "before": "HALLUCINATED",
+          "after": "VALID"
+        },
+        "fadee14255aa": {
+          "before": "HALLUCINATED",
+          "after": "VALID"
+        }
+      }
+    }
+  }
+}
