@@ -74,6 +74,13 @@ CONFIGS: dict[str, tuple[str, dict, str | None]] = {
     # (identical Stage-2 rows on every shared key), so it re-runs their union.
     "cascade_gpt54": ("gpt-5.4", {}, "llm_agentic_openai_gpt_5_4"),
     "cascade_luna_shared": ("gpt-6-luna", {}, "llm_agentic_openai_gpt_6_luna"),
+    # Sonnet 4.6 Stage 2 (2026-09-21) went through OpenRouter, as the registry
+    # entry llm_agentic_openrouter_claude_sonnet_4_6 routes it.
+    "cascade_sonnet46_shared": (
+        "anthropic/claude-sonnet-4.6",
+        {"base_url": "https://openrouter.ai/api/v1", "key_env": "OPENROUTER_API_KEY"},
+        "llm_agentic_openrouter_claude_sonnet_4_6",
+    ),
 }
 
 #: Re-run tool -> target stems whose keys it covers (default: itself).
@@ -103,6 +110,9 @@ def run_shard(tool: str, split: str, idx: int, entries: list[BenchmarkEntry]) ->
     if tool not in CONFIGS:
         raise SystemExit(f"{tool}: not wired in this script")
     model, extra, stage2_tag = CONFIGS[tool]
+    extra = dict(extra)
+    key_env = extra.pop("key_env", "OPENAI_API_KEY")
+    base_url = extra.pop("base_url", None)
     if model == "gpt-6-luna":
         from hallmark.baselines import llm_agentic
 
@@ -114,8 +124,8 @@ def run_shard(tool: str, split: str, idx: int, entries: list[BenchmarkEntry]) ->
     preds = verify_agentic_openai(
         [e.to_blind() for e in entries],
         model=model,
-        api_key=os.environ["OPENAI_API_KEY"],
-        base_url=None,
+        api_key=os.environ[key_env],
+        base_url=base_url,
         checkpoint_dir=shard_dir,
         cache_db_path=shard_dir / "tools.sqlite",
         checkpoint_name=f"{tool}_shard{idx}",

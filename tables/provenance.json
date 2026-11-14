@@ -3,8 +3,8 @@
     "generator": "scripts/compute_base_rate_precision.py",
     "inputs": {
       "data/v1.2/baseline_results/bibtexupdater_test_public.json": "757c7e5cc91cb84f5f9c51b560ce27e52e479e62badcafd0c1a07e769b333fdb",
-      "data/v1.2/baseline_results/cascade_db_diagnosis_aggressive_test_public.json": "f2c42f4487c705f6fad551dbadab6fe0e60513db5f22f298d28c4a02d6e42e72",
-      "data/v1.2/baseline_results/cascade_db_diagnosis_test_public.json": "1ebfbbe542a87d9890871b73874c221bfa593f9454f4f060342d54e4acbe2abd",
+      "data/v1.2/baseline_results/cascade_db_diagnosis_aggressive_test_public.json": "fa2154b187843cf089d1075c9e6ef166cdd4399ace872912f172eefb0ace363a",
+      "data/v1.2/baseline_results/cascade_db_diagnosis_test_public.json": "a3b3122ab4a54a34131e3b9c7fc4c04c2073f2e7165aa9b88014c2ce91c4a9d3",
       "data/v1.2/baseline_results/doi_only_test_public.json": "196fb33ddac6a21145531089544813fea595ceed069287fd462f9433b1275d93",
       "data/v1.2/baseline_results/llm_agentic_btu_openai_test_public.json": "48f01e21f22bd6acda0bb64f14f472fed8db4b925f1f45f3f7e8c3cdea5ccb10",
       "data/v1.2/baseline_results/llm_agentic_btu_sonnet_4_6_test_public.json": "30976398e6a305310e9655e2f5c5c763893940de520fb30ec051d3d6d49e6a1a",
@@ -69,8 +69,8 @@
     "generator": "scripts/ablate_taxonomy_fold.py",
     "inputs": {
       "data/v1.2/baseline_results/bibtexupdater_dev_public.json": "01db9b45e07e8ff049bb5d99f1052af61de2bdfa8ff7657a612c70705a8c4572",
-      "data/v1.2/baseline_results/cascade_db_diagnosis_aggressive_dev_public.json": "4122df51d1acfc19a57f91c50e44a959a157a2613af77f9f4668cf347c881053",
-      "data/v1.2/baseline_results/cascade_db_diagnosis_dev_public.json": "da62b58129fb226aebfcc9246ab17abb29b5f15efcef1f10eaeaa0fad3d5e054",
+      "data/v1.2/baseline_results/cascade_db_diagnosis_aggressive_dev_public.json": "b9c6d4c895bc4f52f08bbb6f33e04a7ab547a1bc83f0b0f096538554c9476a44",
+      "data/v1.2/baseline_results/cascade_db_diagnosis_dev_public.json": "a3e9e5e19b6573e0c9a4a73dccc2b7df389fae91ae7359ebc1fd264a994a004d",
       "data/v1.2/baseline_results/doi_only_dev_public.json": "a97e3aa2cbb642aeb772272450be8e726b5fd3bf36f93d4de92ca1c04c4e6f5f",
       "data/v1.2/baseline_results/harc_with_s2key_dev_public.json": "79d7a33050e82e3609a1418641c189bcfe98c5c06b3f14270c9a08d62c4968a6",
       "data/v1.2/baseline_results/llm_agentic_btu_openai_dev_public.json": "8ebf8207d8ae40e46c3fa2dd60bf25d3848b61319ba479dc6591971e56f4cbfb",
@@ -95,8 +95,8 @@
     "generator": "scripts/ablate_taxonomy_fold.py",
     "inputs": {
       "data/v1.2/baseline_results/bibtexupdater_dev_public.json": "01db9b45e07e8ff049bb5d99f1052af61de2bdfa8ff7657a612c70705a8c4572",
-      "data/v1.2/baseline_results/cascade_db_diagnosis_aggressive_dev_public.json": "4122df51d1acfc19a57f91c50e44a959a157a2613af77f9f4668cf347c881053",
-      "data/v1.2/baseline_results/cascade_db_diagnosis_dev_public.json": "da62b58129fb226aebfcc9246ab17abb29b5f15efcef1f10eaeaa0fad3d5e054",
+      "data/v1.2/baseline_results/cascade_db_diagnosis_aggressive_dev_public.json": "b9c6d4c895bc4f52f08bbb6f33e04a7ab547a1bc83f0b0f096538554c9476a44",
+      "data/v1.2/baseline_results/cascade_db_diagnosis_dev_public.json": "a3e9e5e19b6573e0c9a4a73dccc2b7df389fae91ae7359ebc1fd264a994a004d",
       "data/v1.2/baseline_results/doi_only_dev_public.json": "a97e3aa2cbb642aeb772272450be8e726b5fd3bf36f93d4de92ca1c04c4e6f5f",
       "data/v1.2/baseline_results/harc_with_s2key_dev_public.json": "79d7a33050e82e3609a1418641c189bcfe98c5c06b3f14270c9a08d62c4968a6",
       "data/v1.2/baseline_results/llm_agentic_btu_openai_dev_public.json": "8ebf8207d8ae40e46c3fa2dd60bf25d3848b61319ba479dc6591971e56f4cbfb",
@@ -121,8 +121,8 @@
     "generator": "scripts/ablate_taxonomy_fold.py",
     "inputs": {
       "data/v1.2/baseline_results/bibtexupdater_dev_public.json": "01db9b45e07e8ff049bb5d99f1052af61de2bdfa8ff7657a612c70705a8c4572",
-      "data/v1.2/baseline_results/cascade_db_diagnosis_aggressive_dev_public.json": "4122df51d1acfc19a57f91c50e44a959a157a2613af77f9f4668cf347c881053",
-      "data/v1.2/baseline_results/cascade_db_diagnosis_dev_public.json": "da62b58129fb226aebfcc9246ab17abb29b5f15efcef1f10eaeaa0fad3d5e054",
+      "data/v1.2/baseline_results/cascade_db_diagnosis_aggressive_dev_public.json": "b9c6d4c895bc4f52f08bbb6f33e04a7ab547a1bc83f0b0f096538554c9476a44",
+      "data/v1.2/baseline_results/cascade_db_diagnosis_dev_public.json": "a3e9e5e19b6573e0c9a4a73dccc2b7df389fae91ae7359ebc1fd264a994a004d",
       "data/v1.2/baseline_results/doi_only_dev_public.json": "a97e3aa2cbb642aeb772272450be8e726b5fd3bf36f93d4de92ca1c04c4e6f5f",
       "data/v1.2/baseline_results/harc_with_s2key_dev_public.json": "79d7a33050e82e3609a1418641c189bcfe98c5c06b3f14270c9a08d62c4968a6",
       "data/v1.2/baseline_results/llm_agentic_btu_openai_dev_public.json": "8ebf8207d8ae40e46c3fa2dd60bf25d3848b61319ba479dc6591971e56f4cbfb",
@@ -146,16 +146,16 @@
   "taxonomy_fold_ablation_stress_test.csv": {
     "generator": "scripts/ablate_taxonomy_fold.py",
     "inputs": {
-      "data/v1.2/baseline_results/cascade_db_diagnosis_aggressive_stress_test.json": "560a717e39d94d1b99a9a9a8e4627b6641a91aff29f35f9e6674c00cfac57001",
-      "data/v1.2/baseline_results/cascade_db_diagnosis_stress_test.json": "654c5f3ef768bae72886116db1c202e84c7328dec8d420e35d5d1d280f9cad8f"
+      "data/v1.2/baseline_results/cascade_db_diagnosis_aggressive_stress_test.json": "cc08f7ab5352ed719b3f2d9dec579d73931257383658e1dbf9a4e40d43c76d6f",
+      "data/v1.2/baseline_results/cascade_db_diagnosis_stress_test.json": "5d610e0a0fce15a9bf5f60c1551895ce5b027fb4b3767551e0c94293dbc82c9b"
     }
   },
   "taxonomy_fold_ablation_test_public.csv": {
     "generator": "scripts/ablate_taxonomy_fold.py",
     "inputs": {
       "data/v1.2/baseline_results/bibtexupdater_test_public.json": "757c7e5cc91cb84f5f9c51b560ce27e52e479e62badcafd0c1a07e769b333fdb",
-      "data/v1.2/baseline_results/cascade_db_diagnosis_aggressive_test_public.json": "f2c42f4487c705f6fad551dbadab6fe0e60513db5f22f298d28c4a02d6e42e72",
-      "data/v1.2/baseline_results/cascade_db_diagnosis_test_public.json": "1ebfbbe542a87d9890871b73874c221bfa593f9454f4f060342d54e4acbe2abd",
+      "data/v1.2/baseline_results/cascade_db_diagnosis_aggressive_test_public.json": "fa2154b187843cf089d1075c9e6ef166cdd4399ace872912f172eefb0ace363a",
+      "data/v1.2/baseline_results/cascade_db_diagnosis_test_public.json": "a3b3122ab4a54a34131e3b9c7fc4c04c2073f2e7165aa9b88014c2ce91c4a9d3",
       "data/v1.2/baseline_results/doi_only_test_public.json": "196fb33ddac6a21145531089544813fea595ceed069287fd462f9433b1275d93",
       "data/v1.2/baseline_results/llm_agentic_btu_openai_test_public.json": "48f01e21f22bd6acda0bb64f14f472fed8db4b925f1f45f3f7e8c3cdea5ccb10",
       "data/v1.2/baseline_results/llm_agentic_btu_sonnet_4_6_test_public.json": "30976398e6a305310e9655e2f5c5c763893940de520fb30ec051d3d6d49e6a1a",
@@ -178,8 +178,8 @@
     "generator": "scripts/ablate_taxonomy_fold.py",
     "inputs": {
       "data/v1.2/baseline_results/bibtexupdater_test_public.json": "757c7e5cc91cb84f5f9c51b560ce27e52e479e62badcafd0c1a07e769b333fdb",
-      "data/v1.2/baseline_results/cascade_db_diagnosis_aggressive_test_public.json": "f2c42f4487c705f6fad551dbadab6fe0e60513db5f22f298d28c4a02d6e42e72",
-      "data/v1.2/baseline_results/cascade_db_diagnosis_test_public.json": "1ebfbbe542a87d9890871b73874c221bfa593f9454f4f060342d54e4acbe2abd",
+      "data/v1.2/baseline_results/cascade_db_diagnosis_aggressive_test_public.json": "fa2154b187843cf089d1075c9e6ef166cdd4399ace872912f172eefb0ace363a",
+      "data/v1.2/baseline_results/cascade_db_diagnosis_test_public.json": "a3b3122ab4a54a34131e3b9c7fc4c04c2073f2e7165aa9b88014c2ce91c4a9d3",
       "data/v1.2/baseline_results/doi_only_test_public.json": "196fb33ddac6a21145531089544813fea595ceed069287fd462f9433b1275d93",
       "data/v1.2/baseline_results/llm_agentic_btu_openai_test_public.json": "48f01e21f22bd6acda0bb64f14f472fed8db4b925f1f45f3f7e8c3cdea5ccb10",
       "data/v1.2/baseline_results/llm_agentic_btu_sonnet_4_6_test_public.json": "30976398e6a305310e9655e2f5c5c763893940de520fb30ec051d3d6d49e6a1a",
@@ -202,8 +202,8 @@
     "generator": "scripts/ablate_taxonomy_fold.py",
     "inputs": {
       "data/v1.2/baseline_results/bibtexupdater_test_public.json": "757c7e5cc91cb84f5f9c51b560ce27e52e479e62badcafd0c1a07e769b333fdb",
-      "data/v1.2/baseline_results/cascade_db_diagnosis_aggressive_test_public.json": "f2c42f4487c705f6fad551dbadab6fe0e60513db5f22f298d28c4a02d6e42e72",
-      "data/v1.2/baseline_results/cascade_db_diagnosis_test_public.json": "1ebfbbe542a87d9890871b73874c221bfa593f9454f4f060342d54e4acbe2abd",
+      "data/v1.2/baseline_results/cascade_db_diagnosis_aggressive_test_public.json": "fa2154b187843cf089d1075c9e6ef166cdd4399ace872912f172eefb0ace363a",
+      "data/v1.2/baseline_results/cascade_db_diagnosis_test_public.json": "a3b3122ab4a54a34131e3b9c7fc4c04c2073f2e7165aa9b88014c2ce91c4a9d3",
       "data/v1.2/baseline_results/doi_only_test_public.json": "196fb33ddac6a21145531089544813fea595ceed069287fd462f9433b1275d93",
       "data/v1.2/baseline_results/llm_agentic_btu_openai_test_public.json": "48f01e21f22bd6acda0bb64f14f472fed8db4b925f1f45f3f7e8c3cdea5ccb10",
       "data/v1.2/baseline_results/llm_agentic_btu_sonnet_4_6_test_public.json": "30976398e6a305310e9655e2f5c5c763893940de520fb30ec051d3d6d49e6a1a",

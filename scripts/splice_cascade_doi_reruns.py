@@ -123,6 +123,34 @@ def main() -> None:
             # Keep every existing row, in file order (excluded entries included).
             pred_path.write_text("".join(spliced[k].to_json() + "\n" for k in base))
             out_path.write_text(json.dumps(doc, ensure_ascii=False))
+        # The released cascade_db_diagnosis{,_aggressive} results are scored from
+        # the sonnet46_shared predictions (rescore_v1_2_5.CASCADE); keep them in step.
+        if args.cascade == "cascade_sonnet46_shared":
+            for released, mode in (
+                (f"cascade_db_diagnosis_{split}", "conservative"),
+                (f"cascade_db_diagnosis_aggressive_{split}", "aggressive"),
+            ):
+                rpath = REPO / "data/v1.2/baseline_results" / f"{released}.json"
+                published = json.loads(rpath.read_text())
+                r = evaluate(
+                    entries,
+                    aligned(entries, spliced),
+                    published["tool_name"],
+                    split,
+                    eval_mode=mode,
+                )
+                merged = merge_into_published(published, r)
+                if "split_sha256" in merged:
+                    merged["split_sha256"] = compute_sha256(REPO / f"data/v1.2/{split}.jsonl")
+                if "run_timestamp" in merged:
+                    merged["run_timestamp"] = now
+                print(
+                    f"  {released:46s} DR {fmt(published['detection_rate'])}->"
+                    f"{fmt(merged['detection_rate'])} FPR {fmt(published['false_positive_rate'])}->"
+                    f"{fmt(merged['false_positive_rate'])}"
+                )
+                if not args.dry_run:
+                    rpath.write_text(json.dumps(merged, ensure_ascii=False, indent=2) + "\n")
     if failures:
         print("\nREFUSED:", *failures, sep="\n  ")
     if not args.dry_run:
