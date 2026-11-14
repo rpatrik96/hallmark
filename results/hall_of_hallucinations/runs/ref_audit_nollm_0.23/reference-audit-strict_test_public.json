@@ -1,0 +1,34 @@
+{
+  "tool_name": "reference-audit-strict",
+  "split": "test_public",
+  "mapping": "strict",
+  "predictions_file": "reference-audit-strict_test_public_predictions.jsonl",
+  "predictions_sha256": "874d49b95222bc6487966e8735e1742306ea55fb144c5e54aa67fd49f5596ae9",
+  "blind_split_file": "test_public_blind.jsonl",
+  "blind_split_sha256": "9b39c901ed6deb699bc5e6a0a6227f785e9409508638e2004b5eab5a6a73daa4",
+  "entries": 932,
+  "labels": {
+    "HALLUCINATED": 105,
+    "UNCERTAIN": 805,
+    "VALID": 22
+  },
+  "excluded_canaries": [],
+  "pipeline_version": "0.23",
+  "model": "gpt-6-luna",
+  "llm_enabled": false,
+  "source_backend": "api",
+  "partial_authors": "error",
+  "reference_audit_sha": "a2da0a1df6ef3401c2bf2aa31c45565fa5518bed",
+  "hallmark_sha": "eacc9afb839d981aac4346167b835e6b5437a5e3-dirty",
+  "hallmark_version": "v1.2",
+  "started_at": "2026-11-12T02:55:33.155713+00:00",
+  "wall_seconds": 3474,
+  "from_cache": 0,
+  "counts": {
+    "exactly_one": 51,
+    "none": 81,
+    "unresolved": 800
+  },
+  "run_dir": "benchmarks/runs/nollm023_hall",
+  "generated_at": "2026-11-12T03:54:17.945340+00:00"
+}

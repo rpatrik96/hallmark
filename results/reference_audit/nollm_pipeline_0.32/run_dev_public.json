@@ -1,0 +1,36 @@
+{
+  "split": "dev_public",
+  "limit": 0,
+  "seed": 0,
+  "pipeline_version": "0.32",
+  "model": "gpt-6-luna",
+  "llm_enabled": false,
+  "source_backend": "api",
+  "partial_authors": "error",
+  "hallmark_dir": "benchmarks/.hallmark",
+  "hallmark_version": "v1.2",
+  "hallmark_sha": "2e1f7914dcd4f906d5383fc5685c4fb86f80445f",
+  "reference_audit_sha": "59ed86e9eba915b263b58cb65274388e978067b1",
+  "cache": "/Users/kayoonkim/code/reference-audit/benchmarks/runs/hallmark/.cache/cache.db",
+  "chunk_size": 200,
+  "retry_unresolved": 1,
+  "started_at": "2026-10-20T05:08:19.854144+00:00",
+  "wall_seconds": 2400,
+  "entries": 1119,
+  "counts": {
+    "contradiction": 161,
+    "exactly_one": 698,
+    "multiple": 4,
+    "none": 34,
+    "unresolved": 222
+  },
+  "counts_before_retry": {
+    "contradiction": 161,
+    "exactly_one": 697,
+    "multiple": 4,
+    "none": 18,
+    "unresolved": 239
+  },
+  "from_cache": 30,
+  "llm_adjudications": 0
+}

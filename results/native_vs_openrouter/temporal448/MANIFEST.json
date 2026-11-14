@@ -1,0 +1,13 @@
+{
+ "source": "results/temporal_supplement/temporal_supplement_2024_2025.jsonl",
+ "source_sha256": "95e66fb5dd19be634858cb0054ab65c94884b35cfc71a84c459e627fb4709230",
+ "keys_from": "results/temporal_supplement/llm_openrouter_claude_sonnet_4_6_temporal_supplement_predictions.jsonl (same key set as the Opus file)",
+ "entries_sha256": "87e606555a061bbee75289446b98e646c5a54de2ea482b78798994cb3348604e",
+ "n": 448,
+ "label_year": {
+  "VALID_2024": 161,
+  "VALID_2025": 139,
+  "HALLUCINATED_2025": 62,
+  "HALLUCINATED_2024": 86
+ }
+}
