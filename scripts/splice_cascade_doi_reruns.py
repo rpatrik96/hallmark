@@ -52,20 +52,31 @@ def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument("cascade", choices=sorted(PREFIX))
     ap.add_argument("--rerun-tool", default=None)
+    ap.add_argument(
+        "--cascade-dir",
+        type=Path,
+        default=None,
+        help="cascade results dir if not results/<cascade> here (luna lives in another checkout)",
+    )
+    ap.add_argument(
+        "--json-suffix",
+        default="",
+        help="score into <prefix>_<split><suffix>.json, e.g. .v1_2_5 next to a v1.2.4 file",
+    )
     ap.add_argument("--dry-run", action="store_true")
     args = ap.parse_args()
     rerun_tool = args.rerun_tool or args.cascade
     log = json.loads(LOG.read_text())
     now = datetime.now(timezone.utc).isoformat()
     failures: list[str] = []
-    cdir = REPO / "results" / args.cascade
+    cdir = args.cascade_dir or REPO / "results" / args.cascade
     for split in SPLITS:
         stem = f"{args.cascade}_{split}"
         keys = set(TARGETS.get(stem, {}).get("keys", []))
         if not keys:
             continue
         pred_path = cdir / f"{PREFIX[args.cascade]}_{split}_preds.jsonl"
-        out_path = cdir / f"{PREFIX[args.cascade]}_{split}.json"
+        out_path = cdir / f"{PREFIX[args.cascade]}_{split}{args.json_suffix}.json"
         rerun_path = RERUNS / f"{rerun_tool}_{split}.jsonl"
         if not rerun_path.exists():
             failures.append(f"{stem}: re-run file missing ({rerun_path.relative_to(REPO)})")
@@ -101,7 +112,7 @@ def main() -> None:
         print(*line, f"changed {changed}/{len(keys)}", sep="  ")
         log["results"][stem] = {
             "rerun_keys": "doi_rerun_targets.json",
-            "base_predictions": str(pred_path.relative_to(REPO)),
+            "base_predictions": str(pred_path),
             "rerun": str(rerun_path.relative_to(REPO)),
             "n_rerun": len(keys),
             "verdict_changes": changed,

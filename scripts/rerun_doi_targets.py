@@ -30,7 +30,10 @@ from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(REPO))
+# HALLMARK_CODE_DIR runs the harness from another checkout (the luna Stage 2
+# needs the gpt-6-luna sampling override that only exists there); data,
+# targets and outputs still come from this repo.
+sys.path.insert(0, os.environ.get("HALLMARK_CODE_DIR", str(REPO)))
 
 from hallmark.baselines._agentic_tools import TOOL_DEFINITIONS  # noqa: E402
 from hallmark.baselines.llm_agentic import verify_agentic_openai  # noqa: E402
@@ -70,6 +73,7 @@ CONFIGS: dict[str, tuple[str, dict, str | None]] = {
     # One GPT-5.4 Stage-2 run backs both cascade_gpt54 and cascade_gpt54_shared
     # (identical Stage-2 rows on every shared key), so it re-runs their union.
     "cascade_gpt54": ("gpt-5.4", {}, "llm_agentic_openai_gpt_5_4"),
+    "cascade_luna_shared": ("gpt-6-luna", {}, "llm_agentic_openai_gpt_6_luna"),
 }
 
 #: Re-run tool -> target stems whose keys it covers (default: itself).
@@ -99,6 +103,12 @@ def run_shard(tool: str, split: str, idx: int, entries: list[BenchmarkEntry]) ->
     if tool not in CONFIGS:
         raise SystemExit(f"{tool}: not wired in this script")
     model, extra, stage2_tag = CONFIGS[tool]
+    if model == "gpt-6-luna":
+        from hallmark.baselines import llm_agentic
+
+        overrides = getattr(llm_agentic, "_OPENAI_SAMPLING_OVERRIDES", {})
+        if overrides.get(model) != {"reasoning_effort": "none"}:
+            raise SystemExit("gpt-6-luna needs HALLMARK_CODE_DIR with its sampling override")
     shard_dir = WORK / f"{tool}_{split}_shard{idx}"
     shard_dir.mkdir(parents=True, exist_ok=True)
     preds = verify_agentic_openai(
