@@ -57,12 +57,12 @@ def parse_cards(t: str) -> list[dict]:
     return cards
 
 
-def parse_rows(t: str) -> list[dict]:
+def parse_rows(t: str, status: str = "hallucination") -> list[dict]:
     rows = []
     for m in re.finditer(r'<tr class="citation-row"(.*?)</tr>', t, re.S):
         r = m.group(0)
         attr = dict(re.findall(r'data-([\w-]+)="([^"]*)"', r.split(">")[0]))
-        if attr.get("status") != "hallucination":
+        if attr.get("status") != status:
             continue
         notes = re.search(r'class="notes-text[^"]*"[^>]*>(.*?)</div>', r, re.S)
         rows.append(

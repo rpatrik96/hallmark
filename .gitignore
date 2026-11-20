@@ -134,4 +134,10 @@ results/gepa_haiku/**/run/
 results/relabel_recheck/http_cache.json
 
 # Hall of Hallucinations raw share-report HTML (68 MB, regenerable via scripts/hall_of_hallucinations/scrape_hall.py)
-results/hall_of_hallucinations/raw/
+results/hall_of_hallucinations/source/raw/
+results/veruscite_v1/
+results/hall_of_hallucinations/eval/hm_data/
+# Hall of Hallucinations: large or duplicate intermediates (regenerable)
+results/hall_of_hallucinations/valid/hall_verified_rows_flagged.jsonl
+results/hall_of_hallucinations/valid/checks/btu_valid337/dry_n932.jsonl
+results/hall_of_hallucinations/eval/ra_hallmark/
