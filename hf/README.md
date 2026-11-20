@@ -184,7 +184,7 @@ This section follows the *Datasheets for Datasets* template (Gebru et al., 2021)
 - **Recommended train/dev/test split.** `dev_public` for development, `test_public` for evaluation, `stress_test` for robustness analysis. `test_hidden` is reserved for a future leaderboard.
 
 ### Collection process
-- **How was the data acquired?** Real citations were scraped from DBLP. Perturbed entries were produced by deterministic transformations of real entries (e.g., year shift, author swap, venue substitution). LLM-generated entries were produced by prompting GPT, Claude, DeepSeek, Qwen, Gemini, and Mistral models to fabricate plausible citations. Real-world hallucinations were extracted from the GPTZero NeurIPS 2025 analysis (publicly released).
+- **How was the data acquired?** Real citations were scraped from DBLP. Perturbed entries were produced by deterministic transformations of real entries (e.g., year shift, author swap, venue substitution). LLM-generated entries (280 across all splits) were produced by prompting GPT-5.1 (270 entries) and GPT-4o-mini (10 entries carrying `year=2026`, generated to remove a year-based label shortcut; `dev_public` 5, `test_public` 5) to fabricate plausible citations. Generation pools for DeepSeek-R1, DeepSeek-V3.2, Qwen3-235B-A22B and Gemini 2.5 Flash exist in the source repository but contributed no entry to any released split. Real-world hallucinations were extracted from the GPTZero NeurIPS 2025 analysis (publicly released).
 - **Time frame.** Real citations are dated 1994–2024 (`publication_date` field). Perturbations and LLM generations were produced in 2026.
 - **Were any ethical review or IRB processes used?** No human subjects data; no IRB review required.
 

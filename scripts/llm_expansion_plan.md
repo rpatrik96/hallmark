@@ -1,5 +1,16 @@
 # LLM-Generated Data Expansion Plan
 
+> **Status: partially executed — this is a plan, not a record of what shipped.**
+> Only the OpenAI leg ran as written (`llm_openai.jsonl`, GPT-5.1). The Anthropic,
+> Ollama and Mistral legs were never run and no such pool files exist. Four
+> OpenRouter pools were generated instead (`llm_generated_{deepseek_r1,deepseek_v3,
+> gemini_flash,qwen}.jsonl`, 2026-02-20) but **none of their entries reached a
+> released split**. The 10 `year=2026` entries in dev/test come from
+> `scripts/generate_2026_entries.py` (GPT-4o-mini), not from this plan.
+> Released provenance: 280 `llm_generated` entries = 270 GPT-5.1 + 10 GPT-4o-mini.
+> The "backend attribution in the `source` field" item below was never implemented;
+> `source` is `null` on every LLM-generated entry.
+
 ## Goal
 Expand LLM-generated entries from ~12.6% to ~50% of hallucinated entries across main splits.
 
