@@ -1,0 +1,34 @@
+{
+  "tool_name": "reference-audit-strict",
+  "split": "stress_test",
+  "mapping": "strict",
+  "predictions_file": "reference-audit-strict_stress_test_predictions.jsonl",
+  "predictions_sha256": "46cf9469dc3e71f853a51e40d811d91aef0a645f00c178654d397d086f5ac0f4",
+  "blind_split_file": "stress_test_blind.jsonl",
+  "blind_split_sha256": "cf6f829b2ad99c6badd9eb513214e2d811e6b0fe3218a64263aeecb690ea49e3",
+  "entries": 121,
+  "labels": {
+    "HALLUCINATED": 117,
+    "VALID": 4
+  },
+  "excluded_canaries": [
+    "__canary__stress_test"
+  ],
+  "pipeline_version": "0.23",
+  "model": "gpt-6-luna",
+  "llm_enabled": true,
+  "source_backend": "clickhouse",
+  "partial_authors": "error",
+  "reference_audit_sha": "f100559ac17b0a022f0021d6eb249a66652c6e57",
+  "hallmark_sha": "f774fa40675daa83eca6201637a94c4536b7bb3e",
+  "hallmark_version": "v1.2",
+  "started_at": "2026-10-09T13:03:52.366003+00:00",
+  "wall_seconds": 406,
+  "from_cache": 1,
+  "counts": {
+    "exactly_one": 77,
+    "none": 45
+  },
+  "run_dir": "benchmarks/runs/hallmark/stress_test-partial-error",
+  "generated_at": "2026-10-09T13:12:24.574294+00:00"
+}

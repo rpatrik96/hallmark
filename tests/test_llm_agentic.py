@@ -1396,3 +1396,53 @@ class TestAgenticCheckpointSkipFailed:
         loaded = _load_checkpoint(path, skip_failed=False)
         assert "test2024" in loaded
         assert loaded["test2024"].reason.startswith("[Agentic error]")
+
+
+# ---------------------------------------------------------------------------
+# Sampling parameters per OpenAI model
+# ---------------------------------------------------------------------------
+
+
+class TestAgenticOpenaiSamplingParams:
+    """gpt-6-luna rejects temperature=0.0 and tools+reasoning (400s)."""
+
+    @staticmethod
+    def _client() -> MagicMock:
+        msg = MagicMock()
+        msg.tool_calls = None
+        msg.content = '{"label": "VALID", "confidence": 0.9, "reason": "ok"}'
+        msg.model_dump.return_value = {"role": "assistant", "content": msg.content}
+        resp = MagicMock()
+        resp.choices = [MagicMock(message=msg)]
+        resp.usage.total_tokens = 10
+        client = MagicMock()
+        client.chat.completions.create.return_value = resp
+        return client
+
+    @pytest.mark.parametrize(
+        ("model", "expect_temperature"),
+        [("gpt-6-luna", False), ("gpt-5.1", True), ("gpt-5.4", True)],
+    )
+    def test_temperature_sent_only_where_supported(
+        self, tmp_path: Path, model: str, expect_temperature: bool
+    ) -> None:
+        from hallmark.baselines.llm_agentic import _run_agentic_openai
+
+        client = self._client()
+        with AgenticToolCache(tmp_path / "c.sqlite") as cache:
+            pred = _run_agentic_openai(_make_entry(), client, cache, model, None)
+
+        kwargs = client.chat.completions.create.call_args.kwargs
+        assert ("temperature" in kwargs) is expect_temperature
+        if expect_temperature:
+            assert kwargs["temperature"] == 0.0
+            assert "reasoning_effort" not in kwargs
+        else:
+            assert kwargs["reasoning_effort"] == "none"
+        assert kwargs["seed"] == 42
+        assert pred.label == "VALID"
+
+    def test_luna_registered(self) -> None:
+        from hallmark.baselines.registry import get_registry
+
+        assert "llm_agentic_openai_gpt_6_luna" in get_registry()

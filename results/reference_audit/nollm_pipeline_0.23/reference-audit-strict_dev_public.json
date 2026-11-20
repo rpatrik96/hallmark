@@ -1,0 +1,48 @@
+{
+  "tool_name": "reference-audit-strict",
+  "split": "dev_public",
+  "mapping": "strict",
+  "predictions_file": "reference-audit-strict_dev_public_predictions.jsonl",
+  "predictions_sha256": "f6d9afbd22282d0ecb56ea79b29755e494c0910e2fd8bab5e1de2e9cd0144839",
+  "blind_split_file": "dev_public_blind.jsonl",
+  "blind_split_sha256": "46b9a23a1e1a7564c52ac490a492090fdc8d87f15bfea4c62bc49f8fd9ce42b7",
+  "entries": 1119,
+  "labels": {
+    "UNCERTAIN": 374,
+    "VALID": 592,
+    "HALLUCINATED": 153
+  },
+  "excluded_canaries": [],
+  "pipeline_version": "0.23",
+  "model": "gpt-6-luna",
+  "llm_enabled": false,
+  "source_backend": "api",
+  "partial_authors": "error",
+  "reference_audit_sha": "a2da0a1df6ef3401c2bf2aa31c45565fa5518bed",
+  "hallmark_sha": "a2da0a1df6ef3401c2bf2aa31c45565fa5518bed",
+  "hallmark_version": "v1.2",
+  "started_at": "2026-10-22T04:29:48.940598+00:00",
+  "wall_seconds": 5483,
+  "from_cache": 8,
+  "counts": {
+    "exactly_one": 743,
+    "multiple": 4,
+    "none": 34,
+    "unparsed": 7,
+    "unresolved": 331
+  },
+  "run_dir": "benchmarks/runs/nollm023_dev_public",
+  "generated_at": "2026-10-23T02:03:22.162145+00:00",
+  "field_repair_patch": {
+    "entries": [
+      "a687f76f3a21",
+      "aaefe29933ae",
+      "c080618bff76",
+      "c74be625b875",
+      "dae1eb71d49a",
+      "e7b8d9a1670b",
+      "fdcf8e3071b7"
+    ],
+    "note": "These entries failed the .bib round-trip on the f774fa4 inputs; re-audited on 2026-11-07 at pipeline 0.23, no LLM, API backend, with v1.2.4 repaired fields. Originals in pre_field_repair/."
+  }
+}

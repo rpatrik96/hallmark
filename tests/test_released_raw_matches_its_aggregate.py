@@ -191,5 +191,19 @@ def test_rescore_reproduces_the_released_coverage(monkeypatch, capsys):
         for line in (text.strip() for text in printed.splitlines())
         if line.startswith(("coverage ", "num_uncertain "))
     }
+    # v1.2.4 re-ran the entries this raw output skipped (fields cut off at a LaTeX
+    # brace); their verdicts are not in it. Add them from the re-run log.
+    rerun_log = RESULTS.parents[2] / "results/rerun_truncated_fields/rerun_log.json"
+    if rerun_log.is_file():
+        cells = [
+            c
+            for c in json.loads(rerun_log.read_text())["cells"]
+            if c["tool"] == "bibtexupdater" and c["split"] == "dev_public"
+        ]
+        abstained = sum(c["new_label"] == "UNCERTAIN" for c in cells)
+        n = released["num_entries"]
+        declined = round((1 - recomputed["coverage"]) * n) - len(cells) + abstained
+        recomputed["coverage"] = round(1 - declined / n, 4)
+        recomputed["num_uncertain"] += abstained
     assert recomputed["coverage"] == pytest.approx(released["coverage"], abs=5e-5)
     assert recomputed["num_uncertain"] == released["num_uncertain"]

@@ -250,6 +250,7 @@ def _normalise(raw: dict) -> dict[str, str]:
 _DEFAULT_SERVICE_RATES: dict[str, float] = {
     "arxiv": 20.0,
     "crossref": 300.0,
+    "datacite": 300.0,
     "openalex": 150.0,
     "dblp": 30.0,
     "semanticscholar": 10.0,
@@ -388,8 +389,62 @@ def _pace(service: str) -> float:
 # ---------------------------------------------------------------------------
 
 
+def _resolve_doi_datacite(normalized_doi: str) -> dict[str, str]:
+    """Resolve a DOI via the DataCite REST API (fallback for Crossref 404s).
+
+    Raises:
+        ValueError: DOI not registered with DataCite either (404).
+        RuntimeError: Network/API error.
+    """
+    import httpx
+
+    url = f"https://api.datacite.org/dois/{urllib.parse.quote(normalized_doi, safe='/')}"
+    headers = {"User-Agent": f"HALLMARK/1.0 (mailto:{_OPENALEX_MAILTO})"}
+
+    _pace("datacite")
+    try:
+        resp = httpx.get(url, headers=headers, timeout=10.0, follow_redirects=True)
+    except httpx.RequestError as exc:
+        raise RuntimeError(f"Network error resolving DOI {normalized_doi}: {exc}") from exc
+
+    if resp.status_code == 404:
+        raise ValueError(f"DOI not found: {normalized_doi}")
+    _raise_for_throttle(resp, "DataCite")
+    if resp.status_code != 200:
+        raise RuntimeError(f"DataCite returned HTTP {resp.status_code} for {normalized_doi}")
+
+    attrs = (resp.json().get("data") or {}).get("attributes") or {}
+    authors_str = "; ".join(
+        (
+            f"{c.get('familyName', '')} {c.get('givenName', '')}".strip()
+            if c.get("familyName")
+            else str(c.get("name", "")).strip()
+        )
+        for c in attrs.get("creators") or []
+    )
+    titles = attrs.get("titles") or []
+    title_str = titles[0].get("title", "") if titles else ""
+    container = attrs.get("container") or {}
+    publisher = attrs.get("publisher") or ""
+    if isinstance(publisher, dict):
+        publisher = publisher.get("name", "")
+    venue_str = container.get("title") or publisher
+    year = attrs.get("publicationYear")
+    year_str = str(year) if year else ""
+
+    return _normalise(
+        {
+            "authors": authors_str,
+            "title": title_str,
+            "venue": venue_str,
+            "year": year_str,
+            "doi": normalized_doi,
+        }
+    )
+
+
 def resolve_doi(doi: str) -> dict[str, str]:
-    """Resolve a DOI via CrossRef API and return normalised metadata.
+    """Resolve a DOI via CrossRef API, falling back to DataCite, and return normalised metadata.
 
     Args:
         doi: Raw DOI string (may include https://doi.org/ prefix).
@@ -418,7 +473,10 @@ def resolve_doi(doi: str) -> dict[str, str]:
         raise RuntimeError(f"Network error resolving DOI {normalized_doi}: {exc}") from exc
 
     if resp.status_code == 404:
-        raise ValueError(f"DOI not found: {normalized_doi}")
+        # Crossref only knows Crossref-registered DOIs. arXiv (10.48550), Zenodo and
+        # other DataCite DOIs 404 there even when they resolve at doi.org, so a
+        # Crossref 404 alone does not mean the DOI does not exist.
+        return _resolve_doi_datacite(normalized_doi)
     _raise_for_throttle(resp, "CrossRef")
     if resp.status_code != 200:
         raise RuntimeError(f"CrossRef returned HTTP {resp.status_code} for {normalized_doi}")
