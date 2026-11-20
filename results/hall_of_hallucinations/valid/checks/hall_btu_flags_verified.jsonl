@@ -1,0 +1,68 @@
+{"row_id": "42684", "btu_status": "partial_match", "mismatched_fields": ["title", "year"]}
+{"row_id": "96043", "btu_status": "venue_mismatch", "mismatched_fields": ["venue"]}
+{"row_id": "50208", "btu_status": "partial_match", "mismatched_fields": ["title", "author", "year", "venue"]}
+{"row_id": "49554", "btu_status": "partial_match", "mismatched_fields": ["author", "venue"]}
+{"row_id": "40653", "btu_status": "author_mismatch", "mismatched_fields": ["author"]}
+{"row_id": "88011", "btu_status": "venue_mismatch", "mismatched_fields": ["venue"]}
+{"row_id": "42777", "btu_status": "venue_mismatch", "mismatched_fields": ["venue"]}
+{"row_id": "95813", "btu_status": "invalid_year", "mismatched_fields": []}
+{"row_id": "56236", "btu_status": "partial_match", "mismatched_fields": ["author", "venue"]}
+{"row_id": "54846", "btu_status": "venue_mismatch", "mismatched_fields": ["venue"]}
+{"row_id": "50766", "btu_status": "author_mismatch", "mismatched_fields": ["author"]}
+{"row_id": "67331", "btu_status": "venue_mismatch", "mismatched_fields": ["venue"]}
+{"row_id": "45292", "btu_status": "given_name_substitution", "mismatched_fields": ["author"]}
+{"row_id": "58545", "btu_status": "given_name_substitution", "mismatched_fields": ["author", "venue"]}
+{"row_id": "84587", "btu_status": "venue_mismatch", "mismatched_fields": ["venue"]}
+{"row_id": "83697", "btu_status": "venue_mismatch", "mismatched_fields": ["venue"]}
+{"row_id": "50266", "btu_status": "venue_mismatch", "mismatched_fields": ["venue"]}
+{"row_id": "94713", "btu_status": "venue_mismatch", "mismatched_fields": ["venue"]}
+{"row_id": "68652", "btu_status": "partial_match", "mismatched_fields": ["author", "venue"]}
+{"row_id": "50219", "btu_status": "partial_match", "mismatched_fields": ["author", "venue"]}
+{"row_id": "56249", "btu_status": "partial_match", "mismatched_fields": ["title", "venue"]}
+{"row_id": "49517", "btu_status": "given_name_substitution", "mismatched_fields": ["author"]}
+{"row_id": "54572", "btu_status": "author_mismatch", "mismatched_fields": ["author"]}
+{"row_id": "71187", "btu_status": "venue_mismatch", "mismatched_fields": ["year", "venue"]}
+{"row_id": "99443", "btu_status": "partial_match", "mismatched_fields": ["title", "venue"]}
+{"row_id": "76985", "btu_status": "venue_mismatch", "mismatched_fields": ["venue"]}
+{"row_id": "95839", "btu_status": "partial_match", "mismatched_fields": ["title", "year", "venue"]}
+{"row_id": "28767", "btu_status": "year_mismatch", "mismatched_fields": ["author", "year", "venue"]}
+{"row_id": "49544", "btu_status": "given_name_substitution", "mismatched_fields": ["author"]}
+{"row_id": "92421", "btu_status": "venue_mismatch", "mismatched_fields": ["venue"]}
+{"row_id": "45305", "btu_status": "partial_match", "mismatched_fields": ["author", "venue"]}
+{"row_id": "28897", "btu_status": "given_name_substitution", "mismatched_fields": ["author"]}
+{"row_id": "28733", "btu_status": "venue_mismatch", "mismatched_fields": ["venue"]}
+{"row_id": "54851", "btu_status": "venue_mismatch", "mismatched_fields": ["venue"]}
+{"row_id": "56293", "btu_status": "author_mismatch", "mismatched_fields": ["author", "venue"]}
+{"row_id": "42660", "btu_status": "partial_match", "mismatched_fields": ["title", "author"]}
+{"row_id": "49084", "btu_status": "partial_match", "mismatched_fields": ["title", "author"]}
+{"row_id": "95777", "btu_status": "author_mismatch", "mismatched_fields": ["author"]}
+{"row_id": "92915", "btu_status": "venue_mismatch", "mismatched_fields": ["author", "venue"]}
+{"row_id": "50223", "btu_status": "venue_mismatch", "mismatched_fields": ["venue"]}
+{"row_id": "67330", "btu_status": "venue_mismatch", "mismatched_fields": ["venue"]}
+{"row_id": "30080", "btu_status": "venue_mismatch", "mismatched_fields": ["venue"]}
+{"row_id": "86784", "btu_status": "venue_mismatch", "mismatched_fields": ["venue"]}
+{"row_id": "40632", "btu_status": "not_found", "mismatched_fields": ["title", "author"]}
+{"row_id": "54841", "btu_status": "partial_match", "mismatched_fields": ["title", "author", "venue"]}
+{"row_id": "99766", "btu_status": "venue_mismatch", "mismatched_fields": ["venue"]}
+{"row_id": "34116", "btu_status": "partial_match", "mismatched_fields": ["author", "year"]}
+{"row_id": "42693", "btu_status": "partial_match", "mismatched_fields": ["title", "author"]}
+{"row_id": "92429", "btu_status": "author_mismatch", "mismatched_fields": ["author", "year", "venue"]}
+{"row_id": "67377", "btu_status": "venue_mismatch", "mismatched_fields": ["venue"]}
+{"row_id": "40941", "btu_status": "partial_match", "mismatched_fields": ["title", "author", "year"]}
+{"row_id": "67371", "btu_status": "venue_mismatch", "mismatched_fields": ["author", "venue"]}
+{"row_id": "67397", "btu_status": "partial_match", "mismatched_fields": ["author", "venue"]}
+{"row_id": "85396", "btu_status": "partial_match", "mismatched_fields": ["title", "author", "year", "venue"]}
+{"row_id": "65468", "btu_status": "partial_match", "mismatched_fields": ["title", "author", "year", "venue"]}
+{"row_id": "67403", "btu_status": "not_found", "mismatched_fields": ["title", "author"]}
+{"row_id": "34656", "btu_status": "venue_mismatch", "mismatched_fields": ["author", "venue"]}
+{"row_id": "49115", "btu_status": "not_found", "mismatched_fields": ["title", "author"]}
+{"row_id": "78049", "btu_status": "title_mismatch", "mismatched_fields": ["title"]}
+{"row_id": "49100", "btu_status": "not_found", "mismatched_fields": ["title", "author"]}
+{"row_id": "38274", "btu_status": "title_mismatch", "mismatched_fields": ["title", "venue"]}
+{"row_id": "38272", "btu_status": "venue_mismatch", "mismatched_fields": ["venue"]}
+{"row_id": "76981", "btu_status": "venue_mismatch", "mismatched_fields": ["venue"]}
+{"row_id": "72970", "btu_status": "partial_match", "mismatched_fields": ["title", "author", "year", "venue"]}
+{"row_id": "84656", "btu_status": "given_name_substitution", "mismatched_fields": ["author"]}
+{"row_id": "65278", "btu_status": "title_mismatch", "mismatched_fields": ["title", "venue"]}
+{"row_id": "45291", "btu_status": "given_name_substitution", "mismatched_fields": ["author"]}
+{"row_id": "76997", "btu_status": "venue_mismatch", "mismatched_fields": ["venue"]}

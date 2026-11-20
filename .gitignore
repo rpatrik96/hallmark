@@ -133,5 +133,18 @@ results/gepa_haiku/**/run/
 # Recheck HTTP cache (also holds test_hidden lookups)
 results/relabel_recheck/http_cache.json
 
+# Hall of Hallucinations raw share-report HTML (68 MB, regenerable via scripts/hall_of_hallucinations/scrape_hall.py)
+results/hall_of_hallucinations/source/raw/
+results/veruscite_v1/
+results/hall_of_hallucinations/eval/hm_data/
+# Hall of Hallucinations: large or duplicate intermediates (regenerable)
+results/hall_of_hallucinations/valid/hall_verified_rows_flagged.jsonl
+results/hall_of_hallucinations/valid/checks/btu_valid337/dry_n932.jsonl
+results/hall_of_hallucinations/eval/ra_hallmark/
 # DOI re-run shard checkpoints and tool caches (regenerable)
 results/relabel_recheck/doi_suffix_reruns/_work/
+# Hall of Hallucinations review sheets and site snapshot (kept private, not shipped)
+results/hall_of_hallucinations/hallucinated/hall_review_sample_100.csv
+results/hall_of_hallucinations/hallucinated/review/
+results/hall_of_hallucinations/valid/review/
+results/hall_of_hallucinations/source/hall_index_20261109.html
