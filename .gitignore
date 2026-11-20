@@ -143,3 +143,8 @@ results/hall_of_hallucinations/valid/checks/btu_valid337/dry_n932.jsonl
 results/hall_of_hallucinations/eval/ra_hallmark/
 # DOI re-run shard checkpoints and tool caches (regenerable)
 results/relabel_recheck/doi_suffix_reruns/_work/
+# Hall of Hallucinations review sheets and site snapshot (kept private, not shipped)
+results/hall_of_hallucinations/hallucinated/hall_review_sample_100.csv
+results/hall_of_hallucinations/hallucinated/review/
+results/hall_of_hallucinations/valid/review/
+results/hall_of_hallucinations/source/hall_index_20261109.html
